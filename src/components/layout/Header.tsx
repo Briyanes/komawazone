@@ -51,11 +51,9 @@ export function Header() {
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-1 flex-1">
           {[
-            { href: '/',                    label: 'Home'        },
-            { href: '/search',              label: 'Browse'      },
-            { href: '/search?sort=latest',  label: 'Terbaru'     },
-            { href: '/bookmarks',           label: 'Daftar Baca' },
-            { href: '/login',               label: 'Login'       },
+            { href: '/',                    label: 'Home'    },
+            { href: '/search',              label: 'Browse'  },
+            { href: '/search?sort=latest',  label: 'Terbaru' },
           ].map(({ href, label }) => (
             <Link
               key={label}
