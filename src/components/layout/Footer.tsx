@@ -3,19 +3,16 @@
 import Link from 'next/link';
 
 const NAVIGATE = [
-  { label: 'Update Terbaru',  href: '/search?sort=latest'       },
-  { label: 'Rekomendasi',     href: '/search?sort=rating'       },
-  { label: 'Top Minggu Ini',  href: '/search?sort=popular'      },
-  { label: 'Paling Populer',  href: '/search?sort=popular'      },
-  { label: 'Sudah Tamat',     href: '/search?status=COMPLETED'  },
-];
-
-const QUICK_LINKS = [
-  { label: 'Genre',                          href: '/genre'      },
-  { label: 'About Us',                       href: '/about'      },
-  { label: 'Advertice With Us',              href: '/advertise'  },
-  { label: 'Contact Us',                     href: '/contact'    },
-  { label: 'Terms of Service & Privacy',     href: '/terms'      },
+  { label: 'All Genre',                   href: '/genre'                    },
+  { label: 'Update Terbaru',              href: '/search?sort=latest'       },
+  { label: 'Rekomendasi',                 href: '/search?sort=rating'       },
+  { label: 'Top Minggu Ini',              href: '/search?sort=popular'      },
+  { label: 'Paling Populer',              href: '/search?sort=popular'      },
+  { label: 'Sudah Tamat',                 href: '/search?status=COMPLETED'  },
+  { label: 'About Us',                    href: '/about'                    },
+  { label: 'Advertice With Us',           href: '/advertise'                },
+  { label: 'Contact Us',                  href: '/contact'                  },
+  { label: 'Terms of Service & Privacy',  href: '/terms'                    },
 ];
 
 export function Footer() {
@@ -40,29 +37,6 @@ export function Footer() {
                 {link.label}
               </Link>
               {i < NAVIGATE.length - 1 && (
-                <span className="text-xs" style={{ color: 'var(--border-light)' }}>|</span>
-              )}
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ── QUICK LINK row ── */}
-      <div style={{ borderBottom: '1px solid var(--border-light)' }}>
-        <div className="mx-auto max-w-7xl px-4 py-3 flex flex-wrap items-center justify-center gap-x-1 gap-y-2">
-          <span className="mr-3 text-[10px] font-black uppercase tracking-widest shrink-0" style={{ color: '#FF6B35' }}>
-            Quick Link :
-          </span>
-          {QUICK_LINKS.map((link, i) => (
-            <span key={link.href} className="flex items-center gap-1">
-              <Link
-                href={link.href}
-                className="text-[11px] font-semibold uppercase tracking-wider transition-colors hover:text-[#FF6B35]"
-                style={{ color: 'var(--text-secondary)' }}
-              >
-                {link.label}
-              </Link>
-              {i < QUICK_LINKS.length - 1 && (
                 <span className="text-xs" style={{ color: 'var(--border-light)' }}>|</span>
               )}
             </span>
