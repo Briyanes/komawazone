@@ -41,7 +41,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl px-4 py-10">
 
         {/* ── 3-card grid ── */}
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="grid grid-cols-1 gap-3 md:gap-6 md:grid-cols-3">
 
           {/* Card 1 — Brand */}
           <div className="rounded-2xl p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
