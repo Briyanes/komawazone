@@ -1,111 +1,78 @@
+'use client';
+
 import Link from 'next/link';
 
-const NAV_COLS = [
-  {
-    title: 'Jelajahi',
-    links: [
-      { label: 'Home',          href: '/'                    },
-      { label: 'Browse',        href: '/search'              },
-      { label: 'Terbaru',       href: '/search?sort=latest'  },
-      { label: 'Populer',       href: '/search?sort=popular' },
-      { label: 'Rating Tinggi', href: '/search?sort=rating'  },
-    ],
-  },
-  {
-    title: 'Akun',
-    links: [
-      { label: 'Login',       href: '/login'                      },
-      { label: 'Daftar',      href: '/register'                   },
-      { label: 'Profil',      href: '/profile'                    },
-      { label: 'Daftar Baca', href: '/bookmarks'                  },
-      { label: 'Riwayat',     href: '/history'                    },
-      { label: 'Notifikasi',  href: '/profile?tab=notifications'  },
-    ],
-  },
+const TOP_LINKS = [
+  { label: 'Home',          href: '/'                    },
+  { label: 'Browse',        href: '/search'              },
+  { label: 'Terbaru',       href: '/search?sort=latest'  },
+  { label: 'Populer',       href: '/search?sort=popular' },
+  { label: 'Rating Tinggi', href: '/search?sort=rating'  },
+  { label: 'Daftar Baca',   href: '/bookmarks'           },
+  { label: 'Riwayat',       href: '/history'             },
+  { label: 'Profil',        href: '/profile'             },
 ];
 
 export function Footer() {
   const year = new Date().getFullYear();
 
   return (
-    <footer className="relative mt-20 overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+    <footer style={{ background: 'var(--bg-primary)', borderTop: '1px solid var(--border-light)' }}>
 
-      {/* Top accent line */}
-      <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent, #FF6B35 30%, #FF6B35 70%, transparent)' }} />
-
-      {/* Decorative background glow */}
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-32 -top-32 h-96 w-96 rounded-full opacity-[0.04]"
-          style={{ background: 'radial-gradient(circle, #FF6B35, transparent)' }} />
-        <div className="absolute -right-32 top-0 h-80 w-80 rounded-full opacity-[0.03]"
-          style={{ background: 'radial-gradient(circle, #FF6B35, transparent)' }} />
-      </div>
-
-      <div className="relative mx-auto max-w-7xl px-4 pt-14 pb-8">
-
-        {/* ── Main grid ─────────────────────────────────────── */}
-        <div className="grid grid-cols-2 gap-10 lg:grid-cols-[2fr_1fr_1fr]">
-
-          {/* Brand col */}
-          <div className="col-span-2 lg:col-span-1">
-            {/* Logo */}
-            <Link href="/" className="group mb-5 inline-flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl text-white font-black text-lg shadow-lg"
-                style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}>
-                KZ
-              </div>
-              <div>
-                <div className="text-base font-black tracking-tight leading-none"
-                  style={{ color: 'var(--text-primary)' }}>
-                  Komawa Zone
-                </div>
-                <div className="text-[10px] font-semibold tracking-[0.2em] uppercase mt-0.5"
-                  style={{ color: '#FF6B35' }}>
-                  Read · Discover · Enjoy
-                </div>
-              </div>
+      {/* ── Top nav row ── */}
+      <div style={{ borderBottom: '1px solid var(--border-light)' }}>
+        <div className="mx-auto max-w-7xl px-4 py-4 flex flex-wrap items-center justify-center gap-x-8 gap-y-2">
+          {TOP_LINKS.map(link => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-[11px] font-bold uppercase tracking-widest transition-colors hover:text-[#FF6B35]"
+              style={{ color: 'var(--text-secondary)' }}
+            >
+              {link.label}
             </Link>
-
-            <p className="text-sm leading-relaxed max-w-xs"
-              style={{ color: 'var(--text-tertiary)' }}>
-              Platform baca manga, manhwa & manhua. Update harian, gratis selamanya.
-            </p>
-          </div>
-
-          {/* Link cols */}
-          {NAV_COLS.map(col => (
-            <div key={col.title}>
-              <h3 className="mb-4 text-[11px] font-black uppercase tracking-[0.18em]"
-                style={{ color: '#FF6B35' }}>
-                {col.title}
-              </h3>
-              <ul className="space-y-2.5">
-                {col.links.map(l => (
-                  <li key={l.href}>
-                    <Link href={l.href}
-                      className="group flex items-center gap-1.5 text-sm transition-colors hover:text-[#FF6B35]"
-                      style={{ color: 'var(--text-secondary)' }}>
-                      <span className="h-px w-3 flex-shrink-0 transition-all group-hover:w-4"
-                        style={{ background: 'currentColor', opacity: 0.4 }} />
-                      {l.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
           ))}
         </div>
+      </div>
 
-        {/* ── Bottom bar ───────────────────────────────────── */}
-        <div className="mt-8 flex flex-col items-center justify-between gap-3 border-t pt-6 sm:flex-row"
-          style={{ borderColor: 'var(--border-light)' }}>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            © {year} <span className="font-semibold" style={{ color: 'var(--text-secondary)' }}>Komawa Zone</span>. All rights reserved.
-          </p>
-          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            Made with <span style={{ color: '#FF6B35' }}>♥</span> for manga lovers
-          </p>
-        </div>
+      {/* ── Bottom bar ── */}
+      <div className="mx-auto max-w-7xl px-4 py-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+
+        {/* Logo */}
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-lg text-white font-black text-sm shadow"
+            style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}
+          >
+            KZ
+          </div>
+          <div>
+            <div className="text-sm font-black tracking-tight leading-none" style={{ color: 'var(--text-primary)' }}>
+              Komawa Zone
+            </div>
+            <div className="text-[9px] font-semibold tracking-[0.2em] uppercase mt-0.5" style={{ color: '#FF6B35' }}>
+              Virtual Manga
+            </div>
+          </div>
+        </Link>
+
+        {/* Copyright */}
+        <p className="text-xs text-center" style={{ color: 'var(--text-tertiary)' }}>
+          © {year} komawazone.com All Rights Reserved.
+        </p>
+
+        {/* Back to top */}
+        <button
+          onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+          className="flex items-center gap-2 rounded-full px-5 py-2.5 text-[11px] font-bold uppercase tracking-widest text-white transition-opacity hover:opacity-90 shrink-0 cursor-pointer"
+          style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}
+        >
+          Back to Top
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} className="size-3">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+          </svg>
+        </button>
+
       </div>
     </footer>
   );
