@@ -172,7 +172,7 @@ export function Footer() {
 
         {/* ── Bottom bar ── */}
         <div
-          className="mt-8 flex flex-col items-center justify-center gap-1 border-t pt-6 pb-[60px] md:pb-6 text-center"
+          className="mt-8 flex flex-col items-center justify-center gap-1 border-t pt-6 pb-10 md:pb-6 text-center"
           style={{ borderColor: 'var(--border-light)' }}
         >
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
