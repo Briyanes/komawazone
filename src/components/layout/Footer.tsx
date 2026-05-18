@@ -79,8 +79,8 @@ export function Footer() {
           </div>
 
           {/* Card 2 — Navigate */}
-          <div className="rounded-2xl p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-            <p className="mb-4 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
+          <div className="rounded-2xl p-4 md:p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
+            <p className="mb-0 md:mb-4 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
               Navigate
             </p>
             <ul className="hidden md:block space-y-2.5">
@@ -109,8 +109,8 @@ export function Footer() {
           </div>
 
           {/* Card 3 — Info */}
-          <div className="rounded-2xl p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-            <p className="mb-4 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
+          <div className="rounded-2xl p-4 md:p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
+            <p className="mb-0 md:mb-4 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
               Quick Link
             </p>
             <ul className="hidden md:block space-y-2.5">
