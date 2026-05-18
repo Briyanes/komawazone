@@ -83,16 +83,15 @@ export function Footer() {
             <p className="mb-4 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
               Navigate
             </p>
-            <ul className="space-y-2.5">
+            <ul className="hidden md:block space-y-2.5">
               {[
                 { label: 'All Genre',       href: '/genre'                   },
                 { label: 'Update Terbaru',  href: '/search?sort=latest'      },
                 { label: 'Rekomendasi',     href: '/search?sort=rating'      },
                 { label: 'Top Minggu Ini',  href: '/search?sort=popular'     },
-                { label: 'Paling Populer',  href: '/search?sort=popular'     },
                 { label: 'Sudah Tamat',     href: '/search?status=COMPLETED' },
               ].map(l => (
-                <li key={l.href}>
+                <li key={l.label}>
                   <Link
                     href={l.href}
                     className="group flex items-center gap-2 text-sm transition-colors hover:text-[#FF6B35]"
@@ -114,14 +113,14 @@ export function Footer() {
             <p className="mb-4 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
               Quick Link
             </p>
-            <ul className="space-y-2.5">
+            <ul className="hidden md:block space-y-2.5">
               {[
                 { label: 'About Us',                   href: '/about'     },
                 { label: 'Advertice With Us',          href: '/advertise' },
                 { label: 'Contact Us',                 href: '/contact'   },
                 { label: 'Terms of Service & Privacy', href: '/terms'     },
               ].map(l => (
-                <li key={l.href}>
+                <li key={l.label}>
                   <Link
                     href={l.href}
                     className="group flex items-center gap-2 text-sm transition-colors hover:text-[#FF6B35]"
@@ -142,7 +141,7 @@ export function Footer() {
 
         {/* ── Bottom bar ── */}
         <div
-          className="mt-8 flex flex-col items-center justify-center gap-1 border-t pt-6 text-center"
+          className="mt-8 flex flex-col items-center justify-center gap-1 border-t pt-6 pb-24 md:pb-6 text-center"
           style={{ borderColor: 'var(--border-light)' }}
         >
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
