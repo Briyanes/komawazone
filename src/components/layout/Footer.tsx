@@ -3,14 +3,11 @@
 import Link from 'next/link';
 
 const TOP_LINKS = [
-  { label: 'Home',          href: '/'                    },
-  { label: 'Browse',        href: '/search'              },
-  { label: 'Terbaru',       href: '/search?sort=latest'  },
-  { label: 'Populer',       href: '/search?sort=popular' },
-  { label: 'Rating Tinggi', href: '/search?sort=rating'  },
-  { label: 'Daftar Baca',   href: '/bookmarks'           },
-  { label: 'Riwayat',       href: '/history'             },
-  { label: 'Profil',        href: '/profile'             },
+  { label: 'Browse',      href: '/search'    },
+  { label: 'Daftar Baca', href: '/bookmarks' },
+  { label: 'Riwayat',    href: '/history'   },
+  { label: 'Profil',     href: '/profile'   },
+  { label: 'Login',      href: '/login'     },
 ];
 
 export function Footer() {
