@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useState } from 'react';
 
 const SOCIALS = [
   {
@@ -32,6 +33,8 @@ const SOCIALS = [
 
 export function Footer() {
   const year = new Date().getFullYear();
+  const [openNav, setOpenNav] = useState(false);
+  const [openQuick, setOpenQuick] = useState(false);
 
   return (
     <footer className="mt-16" style={{ background: 'var(--bg-primary)', borderTop: '3px solid #FF6B35' }}>
@@ -80,10 +83,24 @@ export function Footer() {
 
           {/* Card 2 — Navigate */}
           <div className="rounded-2xl p-4 md:p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-            <p className="mb-0 md:mb-4 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
-              Navigate
-            </p>
-            <ul className="hidden md:block space-y-2.5">
+            {/* Mobile: clickable header */}
+            <button
+              type="button"
+              className="flex w-full items-center justify-between md:cursor-default"
+              onClick={() => setOpenNav(v => !v)}
+            >
+              <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
+                Navigate
+              </p>
+              <svg
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                className={`size-4 transition-transform duration-200 md:hidden ${openNav ? 'rotate-180' : ''}`}
+                style={{ color: '#FF6B35' }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <ul className={`${openNav ? 'block' : 'hidden'} md:block space-y-2.5 mt-3 md:mt-4`}>
               {[
                 { label: 'All Genre',       href: '/genre'                   },
                 { label: 'Update Terbaru',  href: '/search?sort=latest'      },
@@ -110,10 +127,24 @@ export function Footer() {
 
           {/* Card 3 — Info */}
           <div className="rounded-2xl p-4 md:p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-            <p className="mb-0 md:mb-4 text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
-              Quick Link
-            </p>
-            <ul className="hidden md:block space-y-2.5">
+            {/* Mobile: clickable header */}
+            <button
+              type="button"
+              className="flex w-full items-center justify-between md:cursor-default"
+              onClick={() => setOpenQuick(v => !v)}
+            >
+              <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
+                Quick Link
+              </p>
+              <svg
+                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
+                className={`size-4 transition-transform duration-200 md:hidden ${openQuick ? 'rotate-180' : ''}`}
+                style={{ color: '#FF6B35' }}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            <ul className={`${openQuick ? 'block' : 'hidden'} md:block space-y-2.5 mt-3 md:mt-4`}>
               {[
                 { label: 'About Us',                   href: '/about'     },
                 { label: 'Advertice With Us',          href: '/advertise' },
