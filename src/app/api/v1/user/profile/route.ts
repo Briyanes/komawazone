@@ -1,0 +1,71 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+import { z } from 'zod';
+
+const updateProfileSchema = z.object({
+  username: z.string().min(3).max(30).optional(),
+  bio: z.string().max(300).optional(),
+  avatar_url: z.string().url().optional(),
+});
+
+export async function GET() {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ status: 'error', error: 'Unauthorized' }, { status: 401 });
+    }
+
+    let { data, error } = await supabase
+      .from('users')
+      .select('id, email, username, avatar_url, bio, role, created_at')
+      .eq('id', user.id)
+      .single();
+
+    // Auto-create profile row if trigger missed it (e.g. user registered before migration)
+    if (error?.code === 'PGRST116') {
+      const username = user.user_metadata?.username ?? user.email?.split('@')[0] ?? 'user';
+      const { data: newRow, error: insertErr } = await supabase
+        .from('users')
+        .upsert({ id: user.id, email: user.email!, username })
+        .select('id, email, username, avatar_url, bio, role, created_at')
+        .single();
+      if (insertErr) throw insertErr;
+      data = newRow;
+      error = null;
+    }
+
+    if (error) throw error;
+    return NextResponse.json({ status: 'success', data });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Internal error';
+    return NextResponse.json({ status: 'error', error: message }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const supabase = await createClient();
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ status: 'error', error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const body = await request.json();
+    const parsed = updateProfileSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ status: 'error', error: parsed.error.flatten() }, { status: 400 });
+    }
+
+    const { error } = await supabase
+      .from('users')
+      .update(parsed.data)
+      .eq('id', user.id);
+
+    if (error) throw error;
+    return NextResponse.json({ status: 'success' });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Internal error';
+    return NextResponse.json({ status: 'error', error: message }, { status: 500 });
+  }
+}

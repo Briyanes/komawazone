@@ -1,0 +1,70 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@/lib/supabase/server';
+
+const PER_PAGE = 20;
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const q         = searchParams.get('q')          ?? '';
+    const status    = searchParams.get('status')     ?? '';
+    const genre     = searchParams.get('genre')      ?? '';
+    const sort      = searchParams.get('sort')       ?? 'latest';
+    const page      = Math.max(1, Number(searchParams.get('page')       ?? '1'));
+    const author    = searchParams.get('author')     ?? '';
+    const type      = searchParams.get('type')       ?? '';
+    const year      = searchParams.get('year')       ?? '';
+    const minRating = Number(searchParams.get('min_rating') ?? '0');
+    const from      = (page - 1) * PER_PAGE;
+    const to        = from + PER_PAGE - 1;
+
+    const supabase = await createClient();
+    let query = supabase
+      .from('manga')
+      .select('id, slug, title, cover_url, status, rating, views', { count: 'exact' })
+      .is('deleted_at', null)
+      .range(from, to);
+
+    if (q)              query = query.ilike('title', `%${q}%`);
+    if (status)         query = query.eq('status', status as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED');
+    if (genre)          query = query.contains('genres', [genre]);
+    if (author)         query = query.ilike('author', `%${author}%`);
+    if (type)           query = query.eq('type', type as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON');
+    if (year)           query = query.eq('release_year', Number(year));
+    if (minRating > 0)  query = query.gte('rating', minRating);
+
+    const sortMap: Record<string, { column: string; ascending: boolean }> = {
+      latest:  { column: 'updated_at', ascending: false },
+      popular: { column: 'views',      ascending: false },
+      rating:  { column: 'rating',     ascending: false },
+      title:   { column: 'title',      ascending: true  },
+    };
+    const s = sortMap[sort] ?? sortMap.latest;
+    query = query.order(s.column, { ascending: s.ascending });
+
+    const { data, count, error } = await query;
+    if (error) throw error;
+
+    const response = NextResponse.json({
+      status: 'success',
+      data: data ?? [],
+      meta: {
+        page,
+        perPage: PER_PAGE,
+        total: count ?? 0,
+        totalPages: Math.ceil((count ?? 0) / PER_PAGE),
+        timestamp: new Date().toISOString(),
+      },
+    });
+
+    // Cache public search results for 60s, allow stale for 300s
+    if (!q && !author) {
+      response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
+    }
+    return response;
+  } catch (err) {
+    const message = err instanceof Error ? err.message : 'Internal error';
+    return NextResponse.json({ status: 'error', error: message }, { status: 500 });
+  }
+}
+
