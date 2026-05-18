@@ -3,11 +3,11 @@
 import Link from 'next/link';
 
 const TOP_LINKS = [
+  { label: 'Home',        href: '/'          },
   { label: 'Browse',      href: '/search'    },
+  { label: 'Terbaru',     href: '/search?sort=latest' },
   { label: 'Daftar Baca', href: '/bookmarks' },
-  { label: 'Riwayat',    href: '/history'   },
-  { label: 'Profil',     href: '/profile'   },
-  { label: 'Login',      href: '/login'     },
+  { label: 'Login',       href: '/login'     },
 ];
 
 export function Footer() {
