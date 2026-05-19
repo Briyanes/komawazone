@@ -161,7 +161,7 @@ export default function AdminSettingsPage() {
   ];
 
   return (
-    <div className="max-w-xl space-y-6">
+    <div className="mx-auto max-w-xl space-y-6">
       <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
         Site Settings
       </h1>

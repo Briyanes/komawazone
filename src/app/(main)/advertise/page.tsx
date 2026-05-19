@@ -7,7 +7,7 @@ export const metadata = {
 
 export default function AdvertisePage() {
   return (
-    <div className="mx-auto max-w-3xl px-4 py-10">
+    <div className="mx-auto max-w-3xl px-4 py-6">
       <div className="mb-8 flex items-center gap-3">
         <Megaphone className="size-6" style={{ color: '#FF6B35' }} />
         <h1 className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>

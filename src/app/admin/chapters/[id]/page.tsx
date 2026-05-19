@@ -25,7 +25,7 @@ export default async function EditChapterPage({ params }: Props) {
   const manga = chapter.manga as unknown as { id: string; title: string; slug: string } | null;
 
   return (
-    <div className="max-w-3xl space-y-6">
+    <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <p className="text-xs mb-0.5" style={{ color: 'var(--text-tertiary)' }}>
           {manga?.title ?? 'Unknown manga'}
