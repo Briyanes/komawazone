@@ -186,6 +186,16 @@ img, video {
   to   { width: 100%; }
 }
 
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 8px)); }
+}
+
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+
 /* ── Glass variable override for dark ──────────────────────────────── */
 [data-theme="dark"] {
   --header-bg: rgba(9,9,9,0.85);

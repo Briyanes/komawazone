@@ -42,17 +42,17 @@ export function Header() {
         borderBottom: '1px solid var(--glass-border)',
       }}
     >
-      <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4">
+      <div className="mx-auto flex h-24 max-w-7xl items-center gap-4 px-6">
         {/* Logo */}
         <Link href="/" className="mr-2 shrink-0 flex items-center gap-2">
           <span
-            className="flex h-8 w-8 items-center justify-center rounded-xl text-white text-xs font-black shadow-md"
+            className="flex h-12 w-12 items-center justify-center rounded-2xl text-white text-base font-black shadow-lg"
             style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}
           >
             KZ
           </span>
           <span
-            className="hidden sm:inline text-sm font-black tracking-tight"
+            className="hidden sm:inline text-xl font-black tracking-tight"
             style={{ color: 'var(--text-primary)' }}
           >
             Komawa<span style={{ color: 'var(--color-primary)' }}>Zone</span>
@@ -85,7 +85,7 @@ export function Header() {
         {/* Desktop search */}
         <form
           onSubmit={handleSearch}
-          className="hidden md:flex flex-1 max-w-xs items-center gap-2 rounded-full px-3.5 py-1.5 transition-shadow focus-within:ring-2 focus-within:ring-[var(--color-primary)]/30"
+          className="hidden md:flex flex-1 max-w-lg items-center gap-2 rounded-full px-5 py-3 transition-shadow focus-within:ring-2 focus-within:ring-[var(--color-primary)]/30"
           style={{
             border: '1px solid var(--border-medium)',
             background: 'var(--bg-secondary)',
