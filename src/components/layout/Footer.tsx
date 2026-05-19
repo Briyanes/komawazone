@@ -37,7 +37,10 @@ export function Footer() {
   const [openQuick, setOpenQuick] = useState(false);
 
   return (
-    <footer className="mt-16" style={{ background: 'var(--bg-primary)', borderTop: '3px solid #FF6B35' }}>
+    <footer className="mt-16 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+      {/* Top accent gradient line */}
+      <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #FF6B35 30%, #a855f7 70%, transparent 100%)' }} />
+
       <div className="mx-auto max-w-7xl px-4 py-10">
 
         {/* ── 3-card grid ── */}
@@ -172,7 +175,7 @@ export function Footer() {
 
         {/* ── Bottom bar ── */}
         <div
-          className="mt-8 flex flex-col items-center justify-center gap-1 border-t pt-6 pb-10 md:pb-0 text-center"
+          className="mt-8 flex flex-col items-center justify-center gap-1.5 border-t pt-6 pb-10 md:pb-0 text-center"
           style={{ borderColor: 'var(--border-light)' }}
         >
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>

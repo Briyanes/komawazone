@@ -69,20 +69,20 @@ export function MangaCard({
     <Link
       href={`/manga/${slug}`}
       className={cn(
-        'group flex flex-col gap-2 rounded-lg overflow-hidden',
+        'group flex flex-col gap-1.5 rounded-xl overflow-hidden',
         'focus-visible:outline-2 focus-visible:outline-[var(--color-primary)] focus-visible:outline-offset-2',
         className
       )}
     >
       {/* Cover */}
-      <div className="relative w-full overflow-hidden rounded-lg bg-[var(--bg-tertiary)] aspect-[3/4]">
+      <div className="relative w-full overflow-hidden rounded-xl bg-[var(--bg-tertiary)] aspect-[3/4] transition-all duration-300 group-hover:shadow-lg group-hover:shadow-black/30">
         {coverUrl ? (
           <Image
             src={coverUrl}
             alt={title}
             fill
             sizes="(max-width: 640px) 33vw, (max-width: 1024px) 20vw, 160px"
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.07]"
             loading="lazy"
           />
         ) : (
@@ -118,12 +118,12 @@ export function MangaCard({
         {/* Latest chapter overlay */}
         {latestChapter && (
           <div
-            className="absolute bottom-0 inset-x-0 px-2 py-1.5"
-            style={{ background: 'linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 100%)' }}
+            className="absolute bottom-0 inset-x-0 px-2 py-2"
+            style={{ background: 'linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.4) 70%, transparent 100%)' }}
           >
-            <p className="text-[10px] font-bold text-white leading-none">Ch.{latestChapter.number}</p>
+            <p className="text-[10px] font-bold text-white leading-none tracking-wide">Ch.{latestChapter.number}</p>
             {latestChapter.release_date && (
-              <p className="text-[9px] mt-0.5" style={{ color: 'rgba(255,255,255,0.55)' }}>
+              <p className="text-[9px] mt-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
                 {timeAgo(latestChapter.release_date)}
               </p>
             )}

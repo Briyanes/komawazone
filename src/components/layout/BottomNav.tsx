@@ -23,11 +23,16 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-[var(--z-header)] md:hidden"
-      style={{ background: 'var(--bg-primary)', borderTop: '1px solid var(--border-light)' }}
+      className="fixed bottom-3 left-3 right-3 z-[var(--z-header)] md:hidden rounded-2xl"
+      style={{
+        background: 'var(--glass-bg)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        border: '1px solid var(--glass-border)',
+        boxShadow: '0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1)',
+      }}
     >
-      {/* Safe area for notched phones */}
-      <div className="flex items-center justify-around pb-safe">
+      <div className="flex items-center justify-around px-1 py-1.5">
         {navItems.map(({ href, icon: Icon, label }) => {
           const isProfile = href === '/profile';
           const resolvedHref = isProfile && !isAuthenticated ? '/login' : href;
@@ -39,23 +44,29 @@ export function BottomNav() {
             <Link
               key={href}
               href={resolvedHref}
-              className={cn(
-                'flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px]',
-                'transition-colors',
-                isActive
-                  ? 'text-[var(--color-primary)]'
-                  : 'text-[var(--text-tertiary)]'
-              )}
+              className="flex flex-1 flex-col items-center justify-center gap-0.5 py-1.5 transition-all"
               aria-label={displayLabel}
               aria-current={isActive ? 'page' : undefined}
             >
-              <ActiveIcon
-                size={22}
-                strokeWidth={isActive ? 2.5 : 2}
-                fill={isActive ? 'var(--color-primary)' : 'none'}
-                style={{ opacity: isActive ? 1 : 0.6 }}
-              />
-              <span className="text-[10px] font-medium">{displayLabel}</span>
+              <span
+                className={cn(
+                  'flex size-9 items-center justify-center rounded-xl transition-all',
+                  isActive ? 'shadow-sm' : ''
+                )}
+                style={isActive ? { background: 'var(--color-primary)', boxShadow: '0 4px 12px rgba(255,107,53,0.35)' } : {}}
+              >
+                <ActiveIcon
+                  size={19}
+                  strokeWidth={isActive ? 2.5 : 1.8}
+                  color={isActive ? '#fff' : 'var(--text-tertiary)'}
+                />
+              </span>
+              <span
+                className="text-[9px] font-semibold tracking-wide"
+                style={{ color: isActive ? 'var(--color-primary)' : 'var(--text-tertiary)' }}
+              >
+                {displayLabel}
+              </span>
             </Link>
           );
         })}

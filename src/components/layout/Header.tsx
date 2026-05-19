@@ -35,21 +35,32 @@ export function Header() {
   return (
     <header
       className="sticky top-0 z-[var(--z-header)] w-full"
-      style={{ background: 'var(--bg-primary)', borderBottom: '1px solid var(--border-light)' }}
+      style={{
+        background: 'var(--header-bg)',
+        backdropFilter: 'blur(20px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(20px) saturate(180%)',
+        borderBottom: '1px solid var(--glass-border)',
+      }}
     >
       <div className="mx-auto flex h-14 max-w-7xl items-center gap-2 px-4">
         {/* Logo */}
-        <Link
-          href="/"
-          className="mr-2 shrink-0 text-xl font-bold"
-          style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-primary)' }}
-        >
-          KZ
-          <span className="hidden sm:inline"> Komawa Zone</span>
+        <Link href="/" className="mr-2 shrink-0 flex items-center gap-2">
+          <span
+            className="flex h-8 w-8 items-center justify-center rounded-xl text-white text-xs font-black shadow-md"
+            style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}
+          >
+            KZ
+          </span>
+          <span
+            className="hidden sm:inline text-sm font-black tracking-tight"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Komawa<span style={{ color: 'var(--color-primary)' }}>Zone</span>
+          </span>
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-1 flex-1">
+        <nav className="hidden md:flex items-center gap-0.5 flex-1">
           {[
             { href: '/',                    label: 'Home'    },
             { href: '/search',              label: 'Browse'  },
@@ -59,11 +70,12 @@ export function Header() {
               key={label}
               href={href}
               className={cn(
-                'px-3 py-1.5 rounded-lg text-sm font-medium transition-colors',
+                'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
                 pathname === href
-                  ? 'text-[var(--color-primary)] bg-[var(--color-primary)]/10'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+                  ? 'text-white font-semibold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
               )}
+              style={pathname === href ? { background: 'var(--color-primary)' } : {}}
             >
               {label}
             </Link>
@@ -73,10 +85,13 @@ export function Header() {
         {/* Desktop search */}
         <form
           onSubmit={handleSearch}
-          className="hidden md:flex flex-1 max-w-sm items-center gap-2 rounded-lg border px-3 py-1.5"
-          style={{ borderColor: 'var(--border-medium)', background: 'var(--bg-secondary)' }}
+          className="hidden md:flex flex-1 max-w-xs items-center gap-2 rounded-full px-3.5 py-1.5 transition-shadow focus-within:ring-2 focus-within:ring-[var(--color-primary)]/30"
+          style={{
+            border: '1px solid var(--border-medium)',
+            background: 'var(--bg-secondary)',
+          }}
         >
-          <Search size={16} style={{ color: 'var(--text-tertiary)' }} />
+          <Search size={14} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
           <input
             type="search"
             placeholder="Cari manga..."
@@ -90,13 +105,13 @@ export function Header() {
         <div className="ml-auto flex items-center gap-1">
           {/* Mobile search toggle */}
           <button
-            className="flex md:hidden size-9 items-center justify-center rounded-lg"
+            className="flex md:hidden size-8 items-center justify-center rounded-full transition-colors hover:bg-[var(--bg-tertiary)]"
             onClick={() => { setSearchOpen(v => !v); setTimeout(() => searchRef.current?.focus(), 50); }}
             aria-label="Search"
           >
             {searchOpen
-              ? <X size={20} style={{ color: 'var(--text-secondary)' }} />
-              : <Search size={20} style={{ color: 'var(--text-secondary)' }} />
+              ? <X size={18} style={{ color: 'var(--text-secondary)' }} />
+              : <Search size={18} style={{ color: 'var(--text-secondary)' }} />
             }
           </button>
 
@@ -129,10 +144,10 @@ export function Header() {
           ) : (
             <Link
               href="/login"
-              className="hidden md:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors"
+              className="hidden md:flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
               style={{ background: 'var(--color-primary)', color: '#fff' }}
             >
-              <LogIn size={15} />
+              <LogIn size={14} />
               Masuk
             </Link>
           )}
@@ -143,10 +158,10 @@ export function Header() {
       {searchOpen && (
         <form
           onSubmit={handleSearch}
-          className="md:hidden flex items-center gap-2 border-t px-4 py-2"
-          style={{ borderColor: 'var(--border-light)', background: 'var(--bg-secondary)' }}
+          className="md:hidden flex items-center gap-2 border-t px-4 py-2.5"
+          style={{ borderColor: 'var(--glass-border)', background: 'var(--header-bg)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)' }}
         >
-          <Search size={16} style={{ color: 'var(--text-tertiary)' }} />
+          <Search size={15} style={{ color: 'var(--text-tertiary)' }} />
           <input
             ref={searchRef}
             type="search"
