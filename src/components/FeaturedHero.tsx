@@ -37,6 +37,10 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
 
   const manga = items[active];
   const bg = manga.banner_url ?? manga.cover_url;
+  
+  // Get visible items for carousel (prev, current, next)
+  const prevIndex = (active - 1 + items.length) % items.length;
+  const nextIndex = (active + 1) % items.length;
 
   return (
     <section
@@ -67,17 +71,17 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
         <>
           <button
             onClick={prev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 hidden md:flex size-9 items-center justify-center rounded-full z-10 transition-all hover:scale-110 active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)' }}
+            className="absolute left-3 top-1/2 -translate-y-1/2 hidden md:flex size-10 items-center justify-center rounded-full z-10 transition-all hover:scale-110 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)' }}
           >
-            <ChevronLeft size={18} color="white" />
+            <ChevronLeft size={20} color="white" />
           </button>
           <button
             onClick={next}
-            className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex size-9 items-center justify-center rounded-full z-10 transition-all hover:scale-110 active:scale-95"
-            style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.15)' }}
+            className="absolute right-3 top-1/2 -translate-y-1/2 hidden md:flex size-10 items-center justify-center rounded-full z-10 transition-all hover:scale-110 active:scale-95"
+            style={{ background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(12px)', border: '1px solid rgba(255,255,255,0.2)' }}
           >
-            <ChevronRight size={18} color="white" />
+            <ChevronRight size={20} color="white" />
           </button>
         </>
       )}
