@@ -129,104 +129,132 @@ async function HeroSection() {
 
 function StaticHero() {
   const stats = [
-    { value: '1.000+', label: 'Judul' },
-    { value: '50+',    label: 'Genre' },
-    { value: 'Tiap Hari', label: 'Update' },
+    { value: '1.000+', label: 'Judul'    },
+    { value: '50+',    label: 'Genre'    },
+    { value: 'Gratis', label: 'Selamanya'},
   ];
 
-  // Placeholder covers — colourful aspect-ratio boxes so no broken img requests
-  const placeholderColors = [
-    'linear-gradient(135deg,#e879f9,#a855f7)',
-    'linear-gradient(135deg,#38bdf8,#6366f1)',
-    'linear-gradient(135deg,#fb923c,#f43f5e)',
-    'linear-gradient(135deg,#34d399,#06b6d4)',
+  const covers = [
+    { bg: 'linear-gradient(160deg,#e879f9,#7c3aed)', rotate: -10, top: 0,   left: 0,   z: 1, delay: '0s'    },
+    { bg: 'linear-gradient(160deg,#38bdf8,#4f46e5)', rotate:   5, top: 18,  left: 68,  z: 3, delay: '0.15s' },
+    { bg: 'linear-gradient(160deg,#fb923c,#e11d48)', rotate:  -4, top: 95,  left: 12,  z: 2, delay: '0.05s' },
+    { bg: 'linear-gradient(160deg,#34d399,#0284c7)', rotate:  10, top: 78,  left: 88,  z: 4, delay: '0.2s'  },
   ];
 
   return (
     <section
       className="relative overflow-hidden rounded-2xl"
-      style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #a855f7 100%)' }}
+      style={{ minHeight: 'clamp(300px, 42vw, 500px)' }}
     >
-      {/* Soft glow blobs */}
-      <div className="pointer-events-none absolute -top-10 -left-10 size-48 rounded-full opacity-30 blur-3xl"
-        style={{ background: '#fff' }} />
-      <div className="pointer-events-none absolute -bottom-10 right-10 size-56 rounded-full opacity-20 blur-3xl"
-        style={{ background: '#6366f1' }} />
+      {/* ── Dark base + gradient brand accent ── */}
+      <div className="absolute inset-0" style={{ background: '#0A0A0F' }} />
+      <div
+        className="absolute inset-0 opacity-60"
+        style={{ background: 'radial-gradient(ellipse 80% 70% at 20% 50%, rgba(255,107,53,0.35) 0%, transparent 65%)' }}
+      />
+      <div
+        className="absolute inset-0 opacity-40"
+        style={{ background: 'radial-gradient(ellipse 60% 80% at 80% 30%, rgba(168,85,247,0.4) 0%, transparent 60%)' }}
+      />
+      {/* Subtle grid texture */}
+      <div
+        className="absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage: 'repeating-linear-gradient(0deg,rgba(255,255,255,1) 0px,rgba(255,255,255,1) 1px,transparent 1px,transparent 40px),repeating-linear-gradient(90deg,rgba(255,255,255,1) 0px,rgba(255,255,255,1) 1px,transparent 1px,transparent 40px)',
+        }}
+      />
 
-      <div className="relative flex flex-col gap-6 px-6 py-8 md:flex-row md:items-center md:gap-10 md:px-10 md:py-10">
+      {/* ── Content ── */}
+      <div
+        className="relative flex flex-col justify-center gap-5 px-6 py-8 md:flex-row md:items-center md:gap-12 md:px-12 md:py-12"
+        style={{ minHeight: 'clamp(300px, 42vw, 500px)' }}
+      >
+        {/* Left — text */}
+        <div className="flex-1 min-w-0 space-y-5">
 
-        {/* ── Left: text + stats + CTA ── */}
-        <div className="flex-1 min-w-0 space-y-4">
-          <p className="inline-block rounded-full bg-white/20 px-3 py-1 text-xs font-semibold text-white/90 backdrop-blur-sm">
-            ✦ Gratis · Tanpa Login
-          </p>
-          <h1
-            className="text-3xl font-bold leading-tight text-white md:text-4xl"
-            style={{ fontFamily: 'var(--font-playfair, serif)', textShadow: '0 2px 12px rgba(0,0,0,0.25)' }}
+          {/* Badge */}
+          <span
+            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white"
+            style={{ background: 'rgba(255,107,53,0.25)', border: '1px solid rgba(255,107,53,0.45)' }}
           >
-            Baca Manga &amp;<br />Manhwa Gratis
+            ✦ Gratis · Tanpa Login
+          </span>
+
+          {/* Headline */}
+          <h1
+            className="text-4xl font-black leading-[1.1] text-white md:text-5xl"
+            style={{ fontFamily: 'var(--font-playfair, serif)', textShadow: '0 4px 32px rgba(0,0,0,0.5)' }}
+          >
+            Baca Manga<br />
+            <span style={{ color: '#FF6B35' }}>&amp; Manhwa</span><br />
+            Gratis
           </h1>
-          <p className="text-sm text-white/80 leading-relaxed md:text-base">
+
+          <p className="text-sm leading-relaxed text-white/55 md:text-base max-w-sm">
             Ribuan judul, update setiap hari.<br className="hidden md:block" />
             Pengalaman baca terbaik di mobile.
           </p>
 
-          {/* Stats row */}
+          {/* Stats */}
           <div className="flex flex-wrap gap-2">
             {stats.map(s => (
-              <div key={s.label}
-                className="flex flex-col items-center rounded-xl bg-white/15 px-4 py-2 backdrop-blur-sm"
-                style={{ border: '1px solid rgba(255,255,255,0.2)' }}
+              <div
+                key={s.label}
+                className="flex flex-col items-center rounded-xl px-4 py-2"
+                style={{
+                  background: 'rgba(255,255,255,0.07)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                }}
               >
-                <span className="text-base font-bold text-white leading-none">{s.value}</span>
-                <span className="mt-0.5 text-[10px] text-white/70">{s.label}</span>
+                <span className="text-sm font-bold text-white leading-none">{s.value}</span>
+                <span className="mt-0.5 text-[10px] text-white/45">{s.label}</span>
               </div>
             ))}
           </div>
 
-          {/* CTA */}
+          {/* CTAs */}
           <div className="flex flex-wrap gap-2 pt-1">
             <Link
               href="/search"
-              className="inline-flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-bold shadow-lg transition-opacity hover:opacity-90"
-              style={{ color: '#FF6B35' }}
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
+              style={{ background: 'var(--color-primary)', boxShadow: '0 8px 28px rgba(255,107,53,0.45)' }}
             >
-              Jelajahi Semua Manga <ChevronRight size={16} />
+              Jelajahi Manga <ChevronRight size={15} />
             </Link>
             <Link
               href="/genre"
-              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-white/10"
-              style={{ border: '1.5px solid rgba(255,255,255,0.45)' }}
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white/75 transition-all hover:bg-white/10 active:scale-95"
+              style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.15)' }}
             >
               Lihat Genre
             </Link>
           </div>
         </div>
 
-        {/* ── Right: floating cover placeholders ── */}
-        <div className="hidden md:flex items-center justify-center shrink-0 relative" style={{ width: 200, height: 200 }}>
-          {placeholderColors.map((bg, i) => {
-            const positions = [
-              { top: 0,   left: 0,   rotate: -8,  z: 1 },
-              { top: 10,  left: 70,  rotate:  4,  z: 2 },
-              { top: 80,  left: 20,  rotate: -4,  z: 3 },
-              { top: 70,  left: 95,  rotate:  9,  z: 4 },
-            ][i];
-            return (
-              <div
-                key={i}
-                className="absolute overflow-hidden rounded-xl shadow-xl"
-                style={{
-                  width: 80, aspectRatio: '2/3',
-                  background: bg,
-                  top: positions.top, left: positions.left,
-                  transform: `rotate(${positions.rotate}deg)`,
-                  zIndex: positions.z,
-                  border: '2px solid rgba(255,255,255,0.25)',
-                }}
-              />
-            );
-          })}
+        {/* Right — floating cover stack */}
+        <div
+          className="hidden md:block shrink-0 relative"
+          style={{ width: 220, height: 240 }}
+        >
+          {covers.map((c, i) => (
+            <div
+              key={i}
+              className="absolute overflow-hidden rounded-2xl"
+              style={{
+                width: 90,
+                aspectRatio: '2/3',
+                background: c.bg,
+                top: c.top,
+                left: c.left,
+                transform: `rotate(${c.rotate}deg)`,
+                zIndex: c.z,
+                border: '2px solid rgba(255,255,255,0.18)',
+                boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+                animation: `fade-in 0.6s ease ${c.delay} both`,
+              }}
+            />
+          ))}
         </div>
       </div>
     </section>
