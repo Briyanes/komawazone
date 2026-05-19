@@ -182,9 +182,6 @@ export function Footer() {
             </span>
             . All Rights Reserved.
           </p>
-          <p className="text-[11px]" style={{ color: '#FF6B35' }}>
-            Made with ♥ for manga lovers
-          </p>
         </div>
 
       </div>
