@@ -61,6 +61,10 @@ export function MangaCard({
     ? Date.now() - new Date(latestChapter.release_date).getTime() < 86400000
     : false;
 
+  const isHot = latestChapter?.release_date
+    ? Date.now() - new Date(latestChapter.release_date).getTime() < 3 * 3600000
+    : false;
+
   return (
     <Link
       href={`/manga/${slug}`}
@@ -98,6 +102,15 @@ export function MangaCard({
             </span>
           )}
         </div>
+
+        {/* UP dot — updated < 3h ago */}
+        {isHot && (
+          <span
+            className="absolute top-1.5 right-1.5 size-2.5 rounded-full ring-2 ring-black/30"
+            style={{ background: '#FF6B35' }}
+            title="Baru diupdate"
+          />
+        )}
 
         {/* Quick add to reading list */}
         <QuickAddButton mangaId={id} />

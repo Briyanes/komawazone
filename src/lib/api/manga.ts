@@ -24,6 +24,7 @@ export type MangaListItem = {
   title: string;
   cover_url: string | null;
   status: 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';
+  type?: 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON';
   rating: number;
   views: number;
   chapters?: Array<{ id: string; number: number; title: string | null; release_date: string }>;
@@ -142,6 +143,37 @@ export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
     .order('rating', { ascending: false })
     .limit(limit);
 
+  if (error) throw new Error(error.message);
+  return (data ?? []) as unknown as MangaListItem[];
+}
+
+export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
+  const supabase = await createClient();
+  const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from('manga')
+    .select(`id, slug, title, cover_url, status, rating, views, chapters(id, number, title, release_date)`)
+    .is('deleted_at', null)
+    .gte('updated_at', since)
+    .order('views', { ascending: false })
+    .limit(limit);
+
+  if (error || !data || data.length === 0) return getPopularManga(limit);
+  return (data ?? []) as unknown as MangaListItem[];
+}
+
+export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null, limit = 12): Promise<MangaListItem[]> {
+  const supabase = await createClient();
+  let query = supabase
+    .from('manga')
+    .select(`id, slug, title, cover_url, status, type, rating, views, chapters(id, number, title, release_date)`)
+    .is('deleted_at', null)
+    .order('rating', { ascending: false })
+    .limit(limit);
+
+  if (type) query = query.eq('type', type);
+
+  const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
 }

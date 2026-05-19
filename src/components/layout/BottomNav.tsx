@@ -8,7 +8,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
   { href: '/',           icon: Home,     label: 'Home'      },
-  { href: '/search',     icon: Search,   label: 'Search'    },
+  { href: '/search',     icon: Search,   label: 'Browse'    },
   { href: '/history',    icon: History,  label: 'History'   },
   { href: '/bookmarks',  icon: Bookmark, label: 'Bookmark'  },
   { href: '/profile',    icon: User,     label: 'Profile'   },

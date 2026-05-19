@@ -3,8 +3,10 @@ export const revalidate = 300; // 5 minutes ISR
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { TrendingUp, Clock, ChevronRight, Flame, Sparkles, CheckCircle2 } from 'lucide-react';
-import { getLatestManga, getPopularManga, getFeaturedManga, getTopThisWeek, getNewTitles, getCompletedManga } from '@/lib/api/manga';
+import { getLatestManga, getPopularManga, getFeaturedManga, getTopThisWeek, getTopToday, getNewTitles, getCompletedManga, getRekomByType } from '@/lib/api/manga';
 import { MangaGrid } from '@/components/manga/MangaGrid';
+import { PopularTabs } from '@/components/manga/PopularTabs';
+import { RekomTabs } from '@/components/manga/RekomTabs';
 import { MangaCardSkeleton } from '@/components/ui/Skeleton';
 import { AdZone } from '@/components/ads/AdZone';
 import { ContinueReading } from '@/components/ContinueReading';
@@ -45,11 +47,11 @@ export default function HomePage() {
         <AdZone placement="HOME_MID" className="w-full" />
       </Suspense>
 
-      {/* Top This Week */}
+      {/* Populer — Harian / Mingguan / Semua */}
       <section>
-        <SectionHeader title="Top Minggu Ini" icon={<Flame size={18} />} href="/search?sort=popular" />
+        <SectionHeader title="Populer" icon={<Flame size={18} />} href="/search?sort=popular" />
         <Suspense fallback={<SkeletonGrid />}>
-          <TopThisWeekSection />
+          <PopularSection />
         </Suspense>
       </section>
 
@@ -61,11 +63,11 @@ export default function HomePage() {
         </Suspense>
       </section>
 
-      {/* Popular all-time */}
+      {/* Rekomendasi — All / Manhwa / Manga / Manhua */}
       <section>
-        <SectionHeader title="Paling Populer" icon={<TrendingUp size={18} />} href="/search?sort=popular" />
+        <SectionHeader title="Rekomendasi" icon={<TrendingUp size={18} />} href="/search?sort=rating" />
         <Suspense fallback={<SkeletonGrid />}>
-          <PopularMangaSection />
+          <RekomSection />
         </Suspense>
       </section>
 
@@ -90,9 +92,13 @@ async function LatestMangaSection() {
   return <MangaGrid items={items as Parameters<typeof MangaGrid>[0]['items']} />;
 }
 
-async function TopThisWeekSection() {
-  const items = await getTopThisWeek(12).catch(() => []);
-  return <MangaGrid items={items as Parameters<typeof MangaGrid>[0]['items']} />;
+async function PopularSection() {
+  const [daily, weekly, allTime] = await Promise.all([
+    getTopToday(12).catch(() => []),
+    getTopThisWeek(12).catch(() => []),
+    getPopularManga(12).catch(() => []),
+  ]);
+  return <PopularTabs daily={daily} weekly={weekly} allTime={allTime} />;
 }
 
 async function NewTitlesSection() {
@@ -100,9 +106,14 @@ async function NewTitlesSection() {
   return <MangaGrid items={items as Parameters<typeof MangaGrid>[0]['items']} />;
 }
 
-async function PopularMangaSection() {
-  const items = await getPopularManga(12).catch(() => []);
-  return <MangaGrid items={items as Parameters<typeof MangaGrid>[0]['items']} />;
+async function RekomSection() {
+  const [all, manga, manhwa, manhua] = await Promise.all([
+    getRekomByType(null, 12).catch(() => []),
+    getRekomByType('MANGA', 12).catch(() => []),
+    getRekomByType('MANHWA', 12).catch(() => []),
+    getRekomByType('MANHUA', 12).catch(() => []),
+  ]);
+  return <RekomTabs all={all} manga={manga} manhwa={manhwa} manhua={manhua} />;
 }
 
 async function CompletedSection() {
