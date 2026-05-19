@@ -88,7 +88,7 @@ export default function ProfilePage() {
 
   if (isLoading || !profile) {
     return (
-      <div className="mx-auto max-w-2xl px-4 py-8 space-y-4">
+      <div className="mx-auto max-w-7xl px-4 py-6 space-y-4">
         <div className="h-24 w-24 rounded-full skeleton mx-auto" />
         <div className="h-6 w-40 rounded skeleton mx-auto" />
         <div className="h-4 w-64 rounded skeleton mx-auto" />
@@ -100,7 +100,7 @@ export default function ProfilePage() {
   const joinedYear = new Date(profile.created_at).getFullYear();
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-6 space-y-6">
+    <div className="mx-auto max-w-7xl px-4 py-6 space-y-6">
       {/* Header card */}
       <div
         className="rounded-2xl p-6 text-center space-y-3"

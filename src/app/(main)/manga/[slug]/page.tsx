@@ -90,7 +90,7 @@ export default async function MangaDetailPage({ params }: Props) {
         <div className="absolute inset-0" aria-hidden
           style={{ background: 'linear-gradient(to right, rgba(0,0,0,0.4) 0%, transparent 70%)' }} />
 
-        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 md:px-8 py-8 md:py-12">
+        <div className="relative z-10 mx-auto w-full max-w-7xl px-4 py-8 md:py-12">
           <div className="flex gap-5 md:gap-8 items-center w-full">
 
             {/* Cover */}
@@ -159,7 +159,7 @@ export default async function MangaDetailPage({ params }: Props) {
 
       {/* ── ACTION BAR ───────────────────────────────────────────────── */}
       <div style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-light)' }}>
-        <div className="mx-auto max-w-7xl px-4 md:px-8 py-3 flex items-center gap-2">
+        <div className="mx-auto max-w-7xl px-4 py-3 flex items-center gap-2">
           <div className="flex-1">
             <MangaActions mangaId={manga.id} firstChapterId={firstChapter?.id} mangaSlug={slug} />
           </div>
@@ -169,7 +169,7 @@ export default async function MangaDetailPage({ params }: Props) {
       </div>
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────────── */}
-      <div className="mx-auto max-w-7xl px-4 md:px-8 py-5">
+      <div className="mx-auto max-w-7xl px-4 py-6">
         <div className="flex flex-col md:flex-row gap-5 md:gap-6">
 
           {/* ── LEFT / MAIN ── */}
