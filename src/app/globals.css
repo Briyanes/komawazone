@@ -181,6 +181,11 @@ img, video {
   to   { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes progress-fill {
+  from { width: 0%; }
+  to   { width: 100%; }
+}
+
 /* ── Glass variable override for dark ──────────────────────────────── */
 [data-theme="dark"] {
   --header-bg: rgba(9,9,9,0.85);
