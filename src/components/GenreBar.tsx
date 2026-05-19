@@ -1,23 +1,19 @@
 import Link from 'next/link';
 
 const CATEGORIES = [
-  { label: '📖 Manga',     href: '/search?type=MANGA',           accent: true  },
-  { label: '🇰🇷 Manhwa',   href: '/search?type=MANHWA',          accent: true  },
-  { label: '🇨🇳 Manhua',   href: '/search?type=MANHUA',          accent: true  },
-  { label: '⚡ Webtoon',   href: '/search?type=WEBTOON',         accent: true  },
-  { label: 'Action',       href: '/search?genre=Action'                        },
-  { label: 'Romance',      href: '/search?genre=Romance'                       },
-  { label: 'Fantasy',      href: '/search?genre=Fantasy'                       },
-  { label: 'Comedy',       href: '/search?genre=Comedy'                        },
-  { label: 'Drama',        href: '/search?genre=Drama'                         },
-  { label: 'Horror',       href: '/search?genre=Horror'                        },
-  { label: 'Isekai',       href: '/search?genre=Isekai'                        },
-  { label: 'Slice of Life',href: '/search?genre=Slice+of+Life'                 },
-  { label: 'Martial Arts', href: '/search?genre=Martial+Arts'                  },
-  { label: 'Mystery',      href: '/search?genre=Mystery'                       },
-  { label: 'Sci-Fi',       href: '/search?genre=Sci-Fi'                        },
-  { label: 'Sports',       href: '/search?genre=Sports'                        },
-  { label: 'Sudah Tamat',  href: '/search?status=COMPLETED'                    },
+  { label: 'Action',       href: '/search?genre=Action'        },
+  { label: 'Romance',      href: '/search?genre=Romance'       },
+  { label: 'Fantasy',      href: '/search?genre=Fantasy'       },
+  { label: 'Comedy',       href: '/search?genre=Comedy'        },
+  { label: 'Drama',        href: '/search?genre=Drama'         },
+  { label: 'Horror',       href: '/search?genre=Horror'        },
+  { label: 'Isekai',       href: '/search?genre=Isekai'        },
+  { label: 'Slice of Life',href: '/search?genre=Slice+of+Life' },
+  { label: 'Martial Arts', href: '/search?genre=Martial+Arts'  },
+  { label: 'Mystery',      href: '/search?genre=Mystery'       },
+  { label: 'Sci-Fi',       href: '/search?genre=Sci-Fi'        },
+  { label: 'Sports',       href: '/search?genre=Sports'        },
+  { label: 'Completed',    href: '/search?status=COMPLETED'    },
 ];
 
 export function GenreBar() {
@@ -46,20 +42,12 @@ export function GenreBar() {
           <Link
             key={i}
             href={item.href}
-            className="shrink-0 rounded-full px-4 py-1.5 text-xs font-semibold whitespace-nowrap transition-all hover:scale-105 active:scale-95"
-            style={
-              item.accent
-                ? {
-                    background: 'var(--color-primary)',
-                    color: '#fff',
-                    boxShadow: '0 2px 10px rgba(255,107,53,0.35)',
-                  }
-                : {
-                    background: 'var(--bg-secondary)',
-                    color: 'var(--text-secondary)',
-                    border: '1px solid var(--border-light)',
-                  }
-            }
+            className="shrink-0 rounded-full px-5 py-2 text-sm font-semibold whitespace-nowrap transition-all hover:scale-105 active:scale-95"
+            style={{
+              background: 'var(--bg-secondary)',
+              color: 'var(--text-secondary)',
+              border: '1px solid var(--border-light)',
+            }}
           >
             {item.label}
           </Link>
