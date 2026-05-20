@@ -42,11 +42,11 @@ export function Header() {
         borderBottom: '1px solid var(--glass-border)',
       }}
     >
-      <div className="mx-auto flex h-24 max-w-7xl items-center gap-4 px-6">
+      <div className="mx-auto flex h-14 md:h-20 max-w-7xl items-center gap-3 px-4 md:px-6">
         {/* Logo */}
         <Link href="/" className="mr-2 shrink-0 flex items-center gap-2">
           <span
-            className="flex h-12 w-12 items-center justify-center rounded-2xl text-white text-base font-black shadow-lg"
+            className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-xl md:rounded-2xl text-sm md:text-base font-black shadow-lg text-white"
             style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}
           >
             KZ

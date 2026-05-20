@@ -2,7 +2,7 @@ export const revalidate = 600; // 10 minutes ISR
 
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
-import Image from 'next/image';
+import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { Star, Eye, BookOpen, Bookmark, Heart, BarChart2, User, Pen, Calendar } from 'lucide-react';
@@ -74,7 +74,7 @@ export default async function MangaDetailPage({ params }: Props) {
   const heroBg = manga.banner_url || manga.cover_url;
 
   return (
-    <div className="w-full min-h-screen" style={{ background: 'var(--bg-primary)' }}>
+    <div className="w-full min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-primary)' }}>
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden">
@@ -101,7 +101,7 @@ export default async function MangaDetailPage({ params }: Props) {
                 boxShadow: '0 20px 60px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.1)',
               }}>
               {manga.cover_url ? (
-                <Image src={manga.cover_url} alt={manga.title} fill
+                <MangaImage src={manga.cover_url} alt={manga.title} fill
                   sizes="(max-width: 768px) 100px, 180px" className="object-cover" priority />
               ) : (
                 <div className="flex size-full items-center justify-center text-3xl"
@@ -164,7 +164,9 @@ export default async function MangaDetailPage({ params }: Props) {
             <MangaActions mangaId={manga.id} firstChapterId={firstChapter?.id} mangaSlug={slug} />
           </div>
           <ShareButtons title={manga.title} slug={slug} />
-          <ReportMangaButton mangaSlug={slug} />
+          <div className="hidden sm:block">
+            <ReportMangaButton mangaSlug={slug} />
+          </div>
         </div>
       </div>
 
@@ -244,14 +246,17 @@ export default async function MangaDetailPage({ params }: Props) {
 
             {/* Genres — mobile only, horizontal scroll */}
             {manga.genres?.length > 0 && (
-              <div className="flex sm:hidden gap-2 overflow-x-auto scrollbar-hide pb-0.5 -mx-4 px-4">
-                {manga.genres.map(g => (
-                  <Link key={g} href={`/search?genre=${encodeURIComponent(g)}`}
-                    className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors hover:opacity-80"
-                    style={{ background: 'rgba(255,107,53,0.12)', color: 'var(--color-primary)', border: '1px solid rgba(255,107,53,0.25)' }}>
-                    {g}
-                  </Link>
-                ))}
+              <div className="sm:hidden w-full overflow-hidden">
+                <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1"
+                  style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                  {manga.genres.map(g => (
+                    <Link key={g} href={`/search?genre=${encodeURIComponent(g)}`}
+                      className="shrink-0 rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap transition-colors hover:opacity-80"
+                      style={{ background: 'rgba(255,107,53,0.12)', color: 'var(--color-primary)', border: '1px solid rgba(255,107,53,0.25)' }}>
+                      {g}
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
 

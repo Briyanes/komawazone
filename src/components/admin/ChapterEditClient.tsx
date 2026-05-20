@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { Trash2, ImagePlus, Save, GripVertical, ExternalLink, Loader2, X } from 'lucide-react';
 import { uploadImage } from '@/lib/supabase/storage';
-import Image from 'next/image';
+import MangaImage from '@/components/ui/MangaImage';
 
 interface PageImage {
   id: string;
@@ -229,7 +229,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
           </div>
           {thumbnailUrl && (
             <div className="relative inline-block">
-              <Image src={thumbnailUrl} alt="thumbnail" width={100} height={68} className="rounded-lg object-cover" />
+              <MangaImage src={thumbnailUrl} alt="thumbnail" width={100} height={68} className="rounded-lg object-cover" />
               <button
                 type="button"
                 onClick={() => setThumbnailUrl('')}
@@ -330,7 +330,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
                   {img.uploading ? (
                     <Loader2 size={14} className="animate-spin opacity-40" />
                   ) : img.image_url ? (
-                    <Image
+                    <MangaImage
                       src={img.image_url}
                       alt={`Page ${img.number}`}
                       width={40}

@@ -17,6 +17,15 @@ const nextConfig: NextConfig = {
       // Shinigami Asia CDN
       { protocol: 'https', hostname: '**.shinigami.asia' },
       { protocol: 'https', hostname: 'shinigami.asia' },
+      // ManhwaLand CDN
+      { protocol: 'https', hostname: '**.manhwaland.land' },
+      { protocol: 'https', hostname: 'manhwaland.land' },
+      // jablay.gmbr.pro — manhwaland image CDN
+      { protocol: 'https', hostname: 'jablay.gmbr.pro' },
+      { protocol: 'http', hostname: 'jablay.gmbr.pro' },
+      // api-l.gmbr.pro — manhwaland cover CDN
+      { protocol: 'https', hostname: 'api-l.gmbr.pro' },
+      { protocol: 'http', hostname: 'api-l.gmbr.pro' },
       // Common manga image CDNs
       { protocol: 'https', hostname: 'i.imgur.com' },
       { protocol: 'https', hostname: 'cdn.discordapp.com' },

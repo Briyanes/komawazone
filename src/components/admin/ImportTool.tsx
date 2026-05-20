@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useTransition, useEffect, useCallback } from 'react';
+import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Link2, Search, Loader2, CheckCircle2, AlertCircle,
-  BookOpen, FileText, ChevronRight, X, Plus, Image as ImageIcon,
-  Download, ExternalLink,
+  BookOpen, FileText, ChevronRight, ChevronDown, X, Plus, Image as ImageIcon,
+  Download, ExternalLink, Upload,
 } from 'lucide-react';
+import { uploadImage } from '@/lib/supabase/storage';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -91,18 +92,22 @@ function SelectInput({ value, onChange, options }: {
   options: { value: string; label: string }[];
 }) {
   return (
-    <select
-      value={value}
-      onChange={e => onChange(e.target.value)}
-      className="w-full rounded-xl px-4 py-2.5 text-sm outline-none transition-all focus:ring-2"
-      style={{
-        background: 'var(--bg-tertiary)',
-        border: '1px solid var(--border-light)',
-        color: 'var(--text-primary)',
-      }}
-    >
-      {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-    </select>
+    <div className="relative">
+      <select
+        value={value}
+        onChange={e => onChange(e.target.value)}
+        className="w-full appearance-none rounded-xl px-4 py-2.5 pr-9 text-sm outline-none transition-all focus:ring-2"
+        style={{
+          background: 'var(--bg-tertiary)',
+          border: '1px solid var(--border-light)',
+          color: 'var(--text-primary)',
+          '--tw-ring-color': 'var(--color-primary)',
+        } as React.CSSProperties}
+      >
+        {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+      </select>
+      <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-tertiary)' }} />
+    </div>
   );
 }
 
@@ -231,12 +236,29 @@ function MangaImportTab() {
   const [genres, setGenres]     = useState<string[]>([]);
   const [saving, startSave]     = useTransition();
   const [saveErr, setSaveErr]   = useState('');
+  const [coverImgOk, setCoverImgOk] = useState(true);
+  const [uploading, setUploading]   = useState(false);
+  const coverFileRef = useRef<HTMLInputElement>(null);
+
+  const handleCoverUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const url = await uploadImage(file, 'covers');
+      setCover(url);
+      setCoverImgOk(true);
+    } catch (e) {
+      setSaveErr(e instanceof Error ? e.message : 'Upload cover gagal');
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const fillForm = useCallback((data: ScrapedManga) => {
     setTitle(data.title);
     setSlug(toSlug(data.title));
     setDesc(data.description);
     setCover(data.cover_url);
+    setCoverImgOk(true);
     setAuthor(data.author);
     setArtist(data.artist);
     setType(data.type ?? '');
@@ -289,14 +311,14 @@ function MangaImportTab() {
     <div className="space-y-5">
       {/* URL Input */}
       <CardBox>
-        <SectionTitle icon={Link2} label="URL Manga Shinigami Asia" />
+        <SectionTitle icon={Link2} label="URL Manga ManhwaLand" />
         <div className="flex gap-3">
           <input
             type="url"
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleScrape()}
-            placeholder="https://g.shinigami.asia/series/..."
+            placeholder="https://04x.manhwaland.land/manga/prison-revenge/"
             className="flex-1 rounded-xl px-4 py-2.5 text-sm outline-none transition-all focus:ring-2"
             style={{
               background: 'var(--bg-tertiary)',
@@ -330,11 +352,44 @@ function MangaImportTab() {
             {/* Cover preview */}
             {cover && (
               <div className="sm:col-span-2 flex items-start gap-4">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={cover} alt="cover" className="h-28 w-20 rounded-xl object-cover shadow-md shrink-0" />
+                {/* Direct browser fetch — browser TLS fingerprint bypasses CDN bot check.
+                    referrerpolicy="no-referrer" avoids hotlink-referer blocks. */}
+                {coverImgOk ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={cover}
+                    alt="cover"
+                    referrerPolicy="no-referrer"
+                    className="h-28 w-20 rounded-xl object-cover shadow-md shrink-0"
+                    style={{ border: '1px solid var(--border-light)' }}
+                    onError={() => setCoverImgOk(false)}
+                  />
+                ) : (
+                  <div className="flex h-28 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl text-center"
+                    style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)' }}>
+                    <ImageIcon size={18} style={{ color: 'var(--text-tertiary)' }} />
+                    <span className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>No preview</span>
+                  </div>
+                )}
                 <div className="flex-1 space-y-2">
                   <FieldLabel>Cover URL</FieldLabel>
-                  <TextInput value={cover} onChange={setCover} placeholder="https://..." />
+                  <TextInput value={cover} onChange={v => { setCover(v); setCoverImgOk(true); }} placeholder="https://..." />
+                  {/* Upload cover from device as reliable fallback for CDN-protected images */}
+                  <input
+                    ref={coverFileRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={e => { const f = e.target.files?.[0]; if (f) handleCoverUpload(f); }}
+                  />
+                  <Btn
+                    variant="secondary"
+                    onClick={() => coverFileRef.current?.click()}
+                    loading={uploading}
+                    className="text-xs"
+                  >
+                    <Upload size={12} /> Upload dari perangkat
+                  </Btn>
                 </div>
               </div>
             )}
@@ -463,7 +518,7 @@ function ChapterImportTab() {
         body: JSON.stringify({
           manga_id: mangaId,
           number: Number(chapNum),
-          title: chapTitle || null,
+          title: chapTitle || undefined,
           images,
         }),
       });
@@ -477,20 +532,28 @@ function ChapterImportTab() {
     <div className="space-y-5">
       {/* Step 1: Select manga + enter URL */}
       <CardBox>
-        <SectionTitle icon={Link2} label="URL Chapter Shinigami Asia" />
+        <SectionTitle icon={Link2} label="URL Chapter ManhwaLand" />
 
         <div className="grid gap-4 sm:grid-cols-2 mb-4">
           <div className="sm:col-span-2">
             <FieldLabel>Pilih Manga</FieldLabel>
-            <select
-              value={mangaId}
-              onChange={e => setMangaId(e.target.value)}
-              className="w-full rounded-xl px-4 py-2.5 text-sm outline-none"
-              style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
-            >
-              <option value="">— Pilih manga —</option>
-              {mangaList.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
-            </select>
+            <div className="relative">
+              <select
+                value={mangaId}
+                onChange={e => setMangaId(e.target.value)}
+                className="w-full appearance-none rounded-xl px-4 py-2.5 pr-9 text-sm outline-none transition-all focus:ring-2"
+                style={{
+                  background: 'var(--bg-tertiary)',
+                  border: '1px solid var(--border-light)',
+                  color: 'var(--text-primary)',
+                  '--tw-ring-color': 'var(--color-primary)',
+                } as React.CSSProperties}
+              >
+                <option value="">— Pilih manga —</option>
+                {mangaList.map(m => <option key={m.id} value={m.id}>{m.title}</option>)}
+              </select>
+              <ChevronDown size={14} className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-tertiary)' }} />
+            </div>
           </div>
           <div>
             <FieldLabel>Nomor Chapter</FieldLabel>
@@ -508,7 +571,7 @@ function ChapterImportTab() {
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleScrape()}
-            placeholder="https://g.shinigami.asia/chapter/..."
+            placeholder="https://04x.manhwaland.land/prison-revenge-chapter-1/"
             className="flex-1 rounded-xl px-4 py-2.5 text-sm outline-none"
             style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
           />
@@ -560,7 +623,7 @@ function ChapterImportTab() {
           <div className="flex items-start gap-2 rounded-xl px-4 py-3 text-xs mb-5"
             style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
             <ExternalLink size={13} className="mt-0.5 shrink-0" />
-            <span>Gambar akan disimpan sebagai URL eksternal (CDN Shinigami). Pastikan URL stabil dan tidak kedaluwarsa.</span>
+            <span>Gambar akan disimpan sebagai URL eksternal (CDN jablay.gmbr.pro). Pastikan URL stabil dan tidak kedaluwarsa.</span>
           </div>
 
           {saveErr && (
@@ -594,7 +657,7 @@ export function ImportTool() {
           Import dari URL
         </h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--text-tertiary)' }}>
-          Scrape metadata manga atau chapter langsung dari Shinigami Asia dengan satu klik.
+          Scrape metadata manga atau chapter langsung dari ManhwaLand dengan satu klik.
         </p>
       </div>
 
@@ -602,7 +665,7 @@ export function ImportTool() {
       <div className="grid gap-3 sm:grid-cols-2">
         {[
           {
-            step: '1', title: 'Salin URL', desc: 'Copy URL series atau chapter dari shinigami.asia',
+            step: '1', title: 'Salin URL', desc: 'Copy URL manga atau chapter dari manhwaland.land',
             icon: Link2,
           },
           {

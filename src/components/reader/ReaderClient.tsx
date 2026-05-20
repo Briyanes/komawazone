@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import MangaImage from '@/components/ui/MangaImage';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ChevronLeft, ChevronRight, List, Home, ChevronDown,
@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ChapterEngagement } from './ChapterEngagement';
+import { useReadingProgress } from '@/hooks/useReadingProgress';
 
 interface ChapterImage {
   id: string;
@@ -31,6 +32,7 @@ interface ReaderClientProps {
   chapterNumber: number;
   chapterTitle?: string;
   images: ChapterImage[];
+  mangaId: string;
   mangaSlug: string;
   mangaTitle: string;
   prevChapterId?: string;
@@ -59,6 +61,7 @@ export function ReaderClient({
   chapterId,
   chapterNumber,
   images,
+  mangaId,
   mangaSlug,
   mangaTitle,
   prevChapterId,
@@ -118,6 +121,8 @@ export function ReaderClient({
     setDarkOverlay((p as { darkOverlay?: number }).darkOverlay ?? 0);
   }, []);
 
+  const { debouncedSave } = useReadingProgress(mangaId, chapterId);
+
   // Save progress to localStorage + track view
   useEffect(() => {
     try {
@@ -172,6 +177,17 @@ export function ReaderClient({
 
   // Track scroll progress (must be declared before auto-advance effect below)
   const [scrollProgress, setScrollProgress] = useState(0);
+
+  // Persist reading progress to DB (debounced 2s) — placed after scrollProgress declaration
+  useEffect(() => {
+    debouncedSave({
+      mangaId,
+      chapterId,
+      pageNumber: currentPage,
+      readPercentage: Math.round(scrollProgress),
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentPage, scrollProgress]);
 
   // Auto-advance to next chapter in webtoon mode when near 100%
   useEffect(() => {
@@ -902,7 +918,7 @@ function ImageCard({
           </button>
         </div>
       ) : (
-        <Image
+        <MangaImage
           key={retryKey}
           src={src}
           alt={alt}

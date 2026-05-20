@@ -26,28 +26,22 @@ export function ReviewForm({ slug, onClose, onSuccess }: ReviewFormProps) {
     setError('');
 
     try {
-      console.log('Submitting review for slug:', slug, 'with rating:', rating);
       const res = await fetch(`/api/v1/manga/${slug}/reviews`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ rating, text: text.trim() || null }),
       });
 
-      console.log('Review API response:', res.status, res.statusText);
-      
       if (res.ok) {
-        console.log('Review submitted successfully');
         onSuccess?.();
         onClose();
       } else if (res.status === 401) {
         setError('Please login to submit a review');
       } else {
         const data = await res.json() as { error?: string };
-        console.error('Review API error:', data);
         setError(data.error ?? `Failed to submit review (${res.status})`);
       }
-    } catch (err) {
-      console.error('Review submission error:', err);
+    } catch {
       setError('Network error - check your connection');
     } finally {
       setLoading(false);

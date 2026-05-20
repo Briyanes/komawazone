@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Image from 'next/image';
+import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -34,22 +34,22 @@ export function HeroBannerCarousel({ items }: { items: MangaItem[] }) {
   return (
     <div className="relative w-full">
       {/* Carousel container */}
-      <div className="flex items-center justify-center gap-3">
-        {/* Left arrow */}
+      <div className="relative flex items-center justify-center">
+        {/* Left arrow — overlaid on the left side */}
         <button
           onClick={prev}
-          className="hidden sm:flex size-9 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+          className="absolute left-0 z-10 flex size-10 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
           style={{
-            background: 'rgba(255,255,255,0.1)',
+            background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(12px)',
             border: '1px solid rgba(255,255,255,0.15)',
           }}
         >
-          <ChevronLeft size={18} color="white" />
+          <ChevronLeft size={20} color="white" />
         </button>
 
         {/* Carousel items */}
-        <div className="flex gap-2 sm:gap-4 overflow-hidden">
+        <div className="flex items-center justify-center gap-3 sm:gap-5 px-12">
           {indices.map((i, pos) => {
             const item = items[i];
             const isCurrent = pos === 1;
@@ -60,26 +60,27 @@ export function HeroBannerCarousel({ items }: { items: MangaItem[] }) {
                 href={`/manga/${item.slug}`}
                 className="shrink-0 transition-all duration-300"
                 style={{
-                  width: isCurrent ? 'clamp(120px, 15vw, 160px)' : 'clamp(80px, 10vw, 110px)',
-                  opacity: isCurrent ? 1 : 0.5,
-                  transform: isCurrent ? 'scale(1)' : 'scale(0.9)',
+                  width: isCurrent ? 'clamp(150px, 20vw, 220px)' : 'clamp(110px, 14vw, 160px)',
+                  opacity: isCurrent ? 1 : 0.55,
+                  transform: isCurrent ? 'scale(1.05)' : 'scale(0.92)',
+                  zIndex: isCurrent ? 1 : 0,
                 }}
               >
                 <div
-                  className="relative overflow-hidden rounded-lg shadow-lg"
+                  className="relative overflow-hidden rounded-xl shadow-xl"
                   style={{
                     aspectRatio: '2/3',
                     border: isCurrent ? '2px solid var(--color-primary)' : '1px solid rgba(255,255,255,0.1)',
-                    boxShadow: isCurrent ? '0 8px 24px rgba(255,107,53,0.4)' : 'none',
+                    boxShadow: isCurrent ? '0 12px 40px rgba(255,107,53,0.5)' : '0 4px 16px rgba(0,0,0,0.4)',
                   }}
                 >
                   {item.cover_url ? (
-                    <Image
+                    <MangaImage
                       src={item.cover_url}
                       alt={item.title}
                       fill
                       className="object-cover"
-                      sizes={isCurrent ? '160px' : '110px'}
+                      sizes="(max-width: 640px) 42vw, 220px"
                       priority={isCurrent}
                     />
                   ) : (
@@ -87,36 +88,36 @@ export function HeroBannerCarousel({ items }: { items: MangaItem[] }) {
                       <span className="text-3xl opacity-30">📖</span>
                     </div>
                   )}
-                  {/* Title overlay — center */}
-                  {isCurrent && (
-                    <div
-                      className="absolute inset-0 flex items-end p-2"
-                      style={{
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.8), transparent)',
-                      }}
-                    >
-                      <p className="text-xs font-bold text-white line-clamp-2 leading-tight">
-                        {item.title}
-                      </p>
-                    </div>
-                  )}
+                  {/* Title overlay */}
+                  <div
+                    className="absolute inset-0 flex items-end p-3"
+                    style={{
+                      background: isCurrent
+                        ? 'linear-gradient(to top, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)'
+                        : 'linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%)',
+                    }}
+                  >
+                    <p className={`font-bold text-white line-clamp-2 leading-tight ${isCurrent ? 'text-sm' : 'text-xs opacity-80'}`}>
+                      {item.title}
+                    </p>
+                  </div>
                 </div>
               </Link>
             );
           })}
         </div>
 
-        {/* Right arrow */}
+        {/* Right arrow — overlaid on the right side */}
         <button
           onClick={next}
-          className="hidden sm:flex size-9 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+          className="absolute right-0 z-10 flex size-10 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
           style={{
-            background: 'rgba(255,255,255,0.1)',
+            background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(12px)',
             border: '1px solid rgba(255,255,255,0.15)',
           }}
         >
-          <ChevronRight size={18} color="white" />
+          <ChevronRight size={20} color="white" />
         </button>
       </div>
 

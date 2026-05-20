@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import MangaImage from '@/components/ui/MangaImage';
 import { History, Trash2, BookOpen } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 
@@ -94,13 +94,7 @@ export default function HistoryPage() {
             <Link href={`/manga/${entry.mangaSlug}`} className="shrink-0">
               <div className="relative overflow-hidden rounded-lg" style={{ width: 52, height: 72 }}>
                 {entry.mangaCover ? (
-                  <Image
-                    src={entry.mangaCover}
-                    alt={entry.mangaTitle}
-                    fill
-                    className="object-cover"
-                    sizes="52px"
-                  />
+                  <MangaImage\n                    src={entry.mangaCover}\n                    alt={entry.mangaTitle}\n                    fill\n                    className=\"object-cover\"\n                    sizes=\"52px\"\n                  />
                 ) : (
                   <div className="flex size-full items-center justify-center text-lg" style={{ background: 'var(--bg-tertiary)' }}>
                     📖

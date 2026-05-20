@@ -189,8 +189,6 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
   const handleImageUpload = async (file: File, type: 'cover' | 'banner') => {
     if (!file) return;
     
-    console.log('handleImageUpload called', { fileName: file.name, type });
-    
     // Validate file type
     if (!file.type.startsWith('image/')) {
       setError('Please upload an image file');
@@ -208,18 +206,12 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
 
     try {
       const path = type === 'cover' ? 'covers' : 'banners';
-      console.log('Uploading to path:', path);
-      
       const url = await uploadImage(file, path);
-      
-      console.log('Upload successful, URL:', url);
-      
       setForm(prev => ({
         ...prev,
         [type === 'cover' ? 'cover_url' : 'banner_url']: url,
       }));
     } catch (err) {
-      console.error('Upload error in component:', err);
       setError(err instanceof Error ? err.message : 'Upload failed');
     } finally {
       setIsUploading(prev => ({ ...prev, [type]: false }));

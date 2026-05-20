@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import Image from 'next/image';
+import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { BookOpen, ChevronLeft, ChevronRight, Star, Eye } from 'lucide-react';
 
@@ -52,7 +52,7 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
       {/* ── Background — blurred cover ── */}
       <div className="absolute inset-0 transition-all duration-1000">
         {bg && (
-          <Image
+          <MangaImage
             key={bg}
             src={bg} alt="" fill priority
             className="object-cover transition-all duration-1000"
@@ -103,7 +103,7 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
                 boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',
               }}
             >
-              <Image src={manga.cover_url} alt={manga.title} fill className="object-cover" sizes="150px" priority />
+              <MangaImage src={manga.cover_url} alt={manga.title} fill className="object-cover" sizes="150px" priority />
             </div>
           </div>
         )}
@@ -216,7 +216,7 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
                 }}
               >
                 {item.cover_url && (
-                  <Image src={item.cover_url} alt={item.title} fill className="object-cover" sizes="52px" />
+                  <MangaImage src={item.cover_url} alt={item.title} fill className="object-cover" sizes="52px" />
                 )}
               </button>
             ))}

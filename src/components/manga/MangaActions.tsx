@@ -127,7 +127,7 @@ export function MangaActions({ mangaId, mangaSlug, firstChapterId }: MangaAction
           </Link>
           {firstChapterId && firstChapterId !== progress.chapterId && (
             <Link href={`/manga/${mangaSlug}/chapter/${firstChapterId}`} title="Mulai dari awal"
-              className={cn(btnBase, 'shrink-0 h-11 w-11 bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)] hover:bg-[var(--bg-tertiary)]')}>
+              className={cn(btnBase, 'hidden sm:inline-flex shrink-0 h-11 w-11 bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-light)] hover:bg-[var(--bg-tertiary)]')}>
               <RotateCcw size={16} />
             </Link>
           )}

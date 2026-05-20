@@ -9,23 +9,6 @@ async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   return profile?.role === 'ADMIN' ? user : null;
 }
 
-function extractNextData(html: string): Record<string, unknown> | null {
-  const m = html.match(/<script[^>]+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-  if (m) try { return JSON.parse(m[1]) as Record<string, unknown>; } catch { /* noop */ }
-  return null;
-}
-
-function extractNuxtData(html: string): Record<string, unknown> | null {
-  // Nuxt v2
-  const m1 = html.match(/window\.__NUXT__\s*=\s*(\{[\s\S]*?});\s*<\/script>/);
-  if (m1) try { return JSON.parse(m1[1]) as Record<string, unknown>; } catch { /* noop */ }
-  // Nuxt v3 __NUXT_DATA__ (dehydrated array — less useful, skip)
-  // Generic inline JSON embedded in a script tag by the platform
-  const m2 = html.match(/window\.__(?:DATA|STATE|STORE|APP_STATE)__\s*=\s*(\{[\s\S]*?});\s*<\/script>/);
-  if (m2) try { return JSON.parse(m2[1]) as Record<string, unknown>; } catch { /* noop */ }
-  return null;
-}
-
 type MangaType   = 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON';
 type MangaStatus = 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';
 
@@ -40,106 +23,75 @@ interface ScrapedManga {
   status: MangaStatus;
 }
 
-function coerceStr(v: unknown): string {
-  if (typeof v === 'string') return v;
-  if (typeof v === 'number') return String(v);
-  return '';
+/** Get meta tag content by property or name attribute */
+function getMeta(html: string, attr: string, val: string): string {
+  const m = html.match(new RegExp(`<meta[^>]+${attr}=["']${val}["'][^>]+content=["']([^"']*)["']`, 'i'))
+         ?? html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+${attr}=["']${val}["']`, 'i'));
+  return m ? m[1] : '';
 }
 
-function field(obj: Record<string, unknown>, ...keys: string[]): unknown {
-  for (const k of keys) if (k in obj) return obj[k];
-  return undefined;
+/**
+ * Read a value from manhwaland's `div.imptdt` blocks.
+ * Pattern: <div class="imptdt"> Label <i>value</i> </div>
+ * or:      <div class="imptdt"> Label <a ...>value</a> </div>
+ */
+function imptdt(html: string, label: string): string {
+  const re = new RegExp(
+    `<div[^>]+class="imptdt"[^>]*>\\s*${label}\\s*<(?:i|a[^>]*)>([^<]+)<\\/(?:i|a)>`,
+    'i',
+  );
+  const m = html.match(re);
+  return m ? m[1].trim() : '';
 }
 
-/** Recursively search for a key in a nested object and return first match */
-function deepFind(obj: unknown, ...keys: string[]): unknown {
-  if (!obj || typeof obj !== 'object') return undefined;
-  const o = obj as Record<string, unknown>;
-  for (const k of keys) if (k in o) return o[k];
-  for (const v of Object.values(o)) {
-    const found = deepFind(v, ...keys);
-    if (found !== undefined) return found;
+/** Parse manga metadata from manhwaland.land (WordPress / Madara theme) HTML */
+function parseManhwalandManga(html: string): ScrapedManga {
+  // Title: prefer H1, fallback to <title> tag stripped of site name
+  const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
+  let title = h1Match ? h1Match[1].trim() : '';
+  if (!title) {
+    const titleMatch = html.match(/<title>([^<]+)<\/title>/);
+    title = titleMatch ? titleMatch[1].replace(/\s*[-|]\s*ManhwaLand.*/i, '').trim() : '';
   }
-  return undefined;
-}
 
-function strList(raw: unknown): string[] {
-  if (!Array.isArray(raw)) return [];
-  return raw.map(item => {
-    if (typeof item === 'string') return item;
-    if (item && typeof item === 'object') {
-      const o = item as Record<string, unknown>;
-      return coerceStr(o.name ?? o.title ?? o.label ?? '');
-    }
-    return '';
-  }).filter(Boolean);
-}
+  // Description from og:description meta
+  const description = getMeta(html, 'property', 'og:description')
+    || getMeta(html, 'name', 'description');
 
-function parseMangaFromData(data: Record<string, unknown>): ScrapedManga | null {
-  // Try to find the series object at various nested paths
-  const candidates = [
-    deepFind(data, 'series'),
-    deepFind(data, 'manga'),
-    deepFind(data, 'comic'),
-    deepFind(data, 'manhwa'),
-    deepFind(data, 'detail'),
-    // pageProps itself might be the target
-    deepFind(data, 'pageProps'),
-  ];
+  // Cover: primary source is the main post image (img.wp-post-image in the thumb div)
+  // This is more reliable than og:image for manhwaland and gives api-l.gmbr.pro URLs
+  const wpPostImg = html.match(/<img[^>]+src="([^"]+)"[^>]+class="[^"]*wp-post-image[^"]*"/i)
+    ?? html.match(/<img[^>]+class="[^"]*wp-post-image[^"]*"[^>]+src="([^"]+)"/i);
+  const cover_url = (wpPostImg ? wpPostImg[1] : '')
+    || getMeta(html, 'property', 'og:image')
+    || getMeta(html, 'name', 'twitter:image');
 
-  for (const candidate of candidates) {
-    if (!candidate || typeof candidate !== 'object') continue;
-    const s = candidate as Record<string, unknown>;
+  // Genres from rel="tag" links (WordPress tags = manga genres on this site)
+  const genreMatches = html.matchAll(/rel="tag">([^<]+)<\/a>/g);
+  const genres = Array.from(genreMatches, m => m[1].trim()).filter(Boolean);
 
-    const title = coerceStr(field(s, 'title', 'name', 'series_name'));
-    if (!title) continue; // not the right object
+  // Author / Artist from div.imptdt blocks: Author <i>Name</i>
+  const author = imptdt(html, 'Author');
+  const artist = imptdt(html, 'Artist');
 
-    const description = coerceStr(field(s, 'description', 'synopsis', 'summary', 'overview'));
-    const cover_url   = coerceStr(field(s, 'cover', 'cover_url', 'coverImage', 'cover_image', 'thumbnail', 'poster', 'image'));
-
-    const genres = strList(field(s, 'genres', 'tags', 'categories', 'genre'));
-
-    const authorsRaw = field(s, 'authors', 'author', 'writers', 'writer');
-    const author = Array.isArray(authorsRaw)
-      ? strList(authorsRaw).join(', ')
-      : coerceStr(authorsRaw);
-
-    const artistsRaw = field(s, 'artists', 'artist', 'illustrators', 'illustrator', 'drawer');
-    const artist = Array.isArray(artistsRaw)
-      ? strList(artistsRaw).join(', ')
-      : coerceStr(artistsRaw);
-
-    const typeRaw = coerceStr(field(s, 'type', 'format', 'comic_type', 'media_type')).toUpperCase();
-    const typeMap: Record<string, MangaType> = {
-      MANGA: 'MANGA', MANHWA: 'MANHWA', MANHUA: 'MANHUA', WEBTOON: 'WEBTOON', ONA: 'WEBTOON',
-    };
-    const type = typeMap[typeRaw] ?? null;
-
-    const statusRaw = coerceStr(field(s, 'status', 'publication_status', 'release_status')).toUpperCase();
-    const statusMap: Record<string, MangaStatus> = {
-      ONGOING: 'ONGOING', ACTIVE: 'ONGOING', PUBLISHING: 'ONGOING',
-      COMPLETED: 'COMPLETED', FINISHED: 'COMPLETED', DONE: 'COMPLETED', END: 'COMPLETED',
-      HIATUS: 'HIATUS', ON_HIATUS: 'HIATUS',
-      DROPPED: 'DROPPED', CANCELLED: 'DROPPED', CANCELED: 'DROPPED',
-    };
-    const status = statusMap[statusRaw] ?? 'ONGOING';
-
-    return { title, description, cover_url, genres, author, artist, type, status };
-  }
-  return null;
-}
-
-function extractMetaTags(html: string): Partial<ScrapedManga> {
-  const get = (attr: string, val: string): string => {
-    const m = html.match(new RegExp(`<meta[^>]+${attr}=["']${val}["'][^>]+content=["']([^"']*)["']`, 'i'))
-           ?? html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+${attr}=["']${val}["']`, 'i'));
-    return m ? m[1] : '';
+  // Status from div.imptdt: Status <i>Ongoing</i>
+  const statusRaw = imptdt(html, 'Status').toUpperCase();
+  const statusMap: Record<string, MangaStatus> = {
+    ONGOING: 'ONGOING', ACTIVE: 'ONGOING', PUBLISHING: 'ONGOING',
+    COMPLETED: 'COMPLETED', FINISHED: 'COMPLETED', END: 'COMPLETED',
+    HIATUS: 'HIATUS',
+    DROPPED: 'DROPPED', CANCELLED: 'DROPPED', CANCELED: 'DROPPED',
   };
-  return {
-    title:       get('property', 'og:title')       || get('name', 'twitter:title'),
-    description: get('property', 'og:description') || get('name', 'description'),
-    cover_url:   get('property', 'og:image')        || get('name', 'twitter:image'),
+  const status: MangaStatus = statusMap[statusRaw] ?? 'ONGOING';
+
+  // Type from div.imptdt: Type <a>Manhwa</a>
+  const typeRaw = imptdt(html, 'Type').toUpperCase();
+  const typeMap: Record<string, MangaType> = {
+    MANGA: 'MANGA', MANHWA: 'MANHWA', MANHUA: 'MANHUA', WEBTOON: 'WEBTOON',
   };
+  const type: MangaType = typeMap[typeRaw] ?? 'MANHWA';
+
+  return { title, description, cover_url, genres, author, artist, type, status };
 }
 
 export async function POST(request: NextRequest) {
@@ -158,8 +110,8 @@ export async function POST(request: NextRequest) {
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(url);
-    if (!parsedUrl.hostname.endsWith('shinigami.asia')) {
-      return NextResponse.json({ error: 'Hanya URL dari shinigami.asia yang didukung' }, { status: 400 });
+    if (!parsedUrl.hostname.endsWith('manhwaland.land')) {
+      return NextResponse.json({ error: 'Hanya URL dari manhwaland.land yang didukung' }, { status: 400 });
     }
   } catch {
     return NextResponse.json({ error: 'URL tidak valid' }, { status: 400 });
@@ -169,9 +121,9 @@ export async function POST(request: NextRequest) {
     const res = await fetch(parsedUrl.toString(), {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Cache-Control': 'no-cache',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
+        'Referer': 'https://04x.manhwaland.land/',
       },
       signal: AbortSignal.timeout(15_000),
     });
@@ -181,25 +133,13 @@ export async function POST(request: NextRequest) {
     }
 
     const html = await res.text();
+    const scraped = parseManhwalandManga(html);
 
-    const pageData = extractNextData(html) ?? extractNuxtData(html);
-    let scraped: ScrapedManga | null = pageData ? parseMangaFromData(pageData) : null;
-
-    const meta = extractMetaTags(html);
-
-    if (!scraped) {
-      // Fallback: build from meta tags only
-      scraped = {
-        title:       meta.title       ?? '',
-        description: meta.description ?? '',
-        cover_url:   meta.cover_url   ?? '',
-        genres: [], author: '', artist: '',
-        type: null, status: 'ONGOING',
-      };
-    } else {
-      scraped.title       ||= meta.title       ?? '';
-      scraped.description ||= meta.description ?? '';
-      scraped.cover_url   ||= meta.cover_url   ?? '';
+    if (!scraped.title) {
+      return NextResponse.json(
+        { error: 'Tidak dapat mengekstrak judul. Pastikan URL adalah halaman manga (contoh: https://04x.manhwaland.land/manga/prison-revenge/)' },
+        { status: 422 },
+      );
     }
 
     return NextResponse.json({ data: scraped });

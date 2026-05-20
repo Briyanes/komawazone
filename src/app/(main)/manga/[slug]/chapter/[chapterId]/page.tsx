@@ -40,6 +40,7 @@ export default async function ChapterReaderPage({ params }: Props) {
         chapterNumber={chapter.number}
         chapterTitle={chapter.title ?? undefined}
         images={chapter.chapter_images}
+        mangaId={chapter.manga_id}
         mangaSlug={chapter.manga?.slug ?? ''}
         mangaTitle={chapter.manga?.title ?? ''}
         prevChapterId={prev?.id}

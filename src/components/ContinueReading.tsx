@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import MangaImage from '@/components/ui/MangaImage';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -93,7 +93,7 @@ export function ContinueReading() {
             >
               <div className="relative aspect-[2/3] overflow-hidden rounded-xl">
                 {manga.cover_url ? (
-                  <Image src={manga.cover_url} alt={manga.title} fill sizes="112px"
+                  <MangaImage src={manga.cover_url} alt={manga.title} fill sizes="112px"
                     className="object-cover transition-transform duration-300 group-hover:scale-105" />
                 ) : (
                   <div className="flex h-full items-center justify-center" style={{ background: 'var(--bg-tertiary)' }}>
@@ -121,7 +121,7 @@ export function ContinueReading() {
           >
             <div className="relative aspect-[2/3] overflow-hidden rounded-xl">
               {item.mangaCover ? (
-                <Image src={item.mangaCover} alt={item.mangaTitle} fill sizes="112px"
+                <MangaImage src={item.mangaCover} alt={item.mangaTitle} fill sizes="112px"
                   className="object-cover transition-transform duration-300 group-hover:scale-105" />
               ) : (
                 <div className="flex h-full items-center justify-center" style={{ background: 'var(--bg-tertiary)' }}>

@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import Image from 'next/image';
+import MangaImage from '@/components/ui/MangaImage';
 import { Star, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { QuickAddButton } from '@/components/manga/QuickAddButton';
@@ -77,7 +77,7 @@ export function MangaCard({
       {/* Cover */}
       <div className="relative w-full overflow-hidden rounded-xl bg-[var(--bg-tertiary)] aspect-[3/4] transition-all duration-300 group-hover:shadow-lg group-hover:shadow-black/30">
         {coverUrl ? (
-          <Image
+          <MangaImage
             src={coverUrl}
             alt={title}
             fill

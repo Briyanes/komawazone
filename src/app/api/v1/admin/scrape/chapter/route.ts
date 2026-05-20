@@ -9,69 +9,52 @@ async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   return profile?.role === 'ADMIN' ? user : null;
 }
 
-function extractNextData(html: string): Record<string, unknown> | null {
-  const m = html.match(/<script[^>]+id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
-  if (m) try { return JSON.parse(m[1]) as Record<string, unknown>; } catch { /* noop */ }
-  return null;
-}
+/**
+ * Extract chapter image URLs from manhwaland.land (WordPress / Madara theme) HTML.
+ *
+ * Images are lazy-loaded via JS; the no-JS fallback is a <noscript> block inside
+ * #readerarea with <img src='...'> tags — that's our reliable source.
+ */
+function parseManhwalandChapterImages(html: string): string[] {
+  const urls: string[] = [];
 
-function extractNuxtData(html: string): Record<string, unknown> | null {
-  const m1 = html.match(/window\.__NUXT__\s*=\s*(\{[\s\S]*?});\s*<\/script>/);
-  if (m1) try { return JSON.parse(m1[1]) as Record<string, unknown>; } catch { /* noop */ }
-  const m2 = html.match(/window\.__(?:DATA|STATE|STORE)__\s*=\s*(\{[\s\S]*?});\s*<\/script>/);
-  if (m2) try { return JSON.parse(m2[1]) as Record<string, unknown>; } catch { /* noop */ }
-  return null;
-}
+  // Slice to just the #readerarea section for efficiency
+  const readerareaIdx = html.indexOf('id="readerarea"');
+  const section = readerareaIdx !== -1
+    ? html.slice(readerareaIdx, readerareaIdx + 80_000)
+    : html;
 
-/** Recursively search nested objects for the first array of image-like strings */
-function findImageArray(obj: unknown, depth = 0): string[] {
-  if (depth > 10 || !obj || typeof obj !== 'object') return [];
-
-  const o = obj as Record<string, unknown>;
-  const imageKeys = ['images', 'pages', 'chapter_images', 'imgs', 'imageUrls', 'image_list', 'data'];
-
-  for (const key of imageKeys) {
-    const val = o[key];
-    if (!Array.isArray(val) || val.length === 0) continue;
-
-    // Collect URLs from the array
-    const urls = val.map((item: unknown) => {
-      if (typeof item === 'string' && /^https?:\/\//i.test(item)) return item;
-      if (item && typeof item === 'object') {
-        const img = item as Record<string, unknown>;
-        const url = img.url ?? img.image_url ?? img.src ?? img.path ?? img.link ?? img.storage_key ?? '';
-        const str = typeof url === 'string' ? url : '';
-        // Accept absolute URLs and also relative-looking CDN paths
-        return /^https?:\/\//i.test(str) ? str : str.startsWith('/') ? str : '';
-      }
-      return '';
-    }).filter(Boolean) as string[];
-
-    if (urls.length > 0) return urls;
-  }
-
-  // Recurse into children
-  for (const v of Object.values(o)) {
-    if (v && typeof v === 'object') {
-      const found = findImageArray(v, depth + 1);
-      if (found.length > 0) return found;
+  // Primary: extract src from <noscript> tags (lazy-load fallback)
+  const noscriptRe = /<noscript>([\s\S]*?)<\/noscript>/g;
+  let m: RegExpExecArray | null;
+  while ((m = noscriptRe.exec(section)) !== null) {
+    const srcRe = /src=['"]([^'"]+)['"]/g;
+    let s: RegExpExecArray | null;
+    while ((s = srcRe.exec(m[1])) !== null) {
+      if (/^https?:\/\//i.test(s[1])) urls.push(s[1]);
     }
   }
 
-  return [];
-}
+  // Fallback: data-src (another common lazy-load pattern)
+  if (urls.length === 0) {
+    const dataSrcRe = /data-src=['"]([^'"]+)['"]/g;
+    while ((m = dataSrcRe.exec(section)) !== null) {
+      if (/^https?:\/\//i.test(m[1])) urls.push(m[1]);
+    }
+  }
 
-/** Extract chapter number and title from page data if available */
-function parseChapterMeta(data: Record<string, unknown>): { number?: number; title?: string } {
-  const chapter = (
-    data?.chapter ?? (data?.props as Record<string, unknown> | undefined)?.pageProps
-  ) as Record<string, unknown> | undefined;
-  if (!chapter) return {};
-  const number = typeof chapter.number === 'number' ? chapter.number
-    : typeof chapter.chapter === 'number' ? chapter.chapter
-    : undefined;
-  const title = typeof chapter.title === 'string' ? chapter.title : undefined;
-  return { number, title };
+  // Last resort: plain <img src> inside the reader area, skip ads
+  if (urls.length === 0) {
+    const imgSrcRe = /<img[^>]+src=['"]([^'"]+)['"]/g;
+    while ((m = imgSrcRe.exec(section)) !== null) {
+      const u = m[1];
+      if (/^https?:\/\//i.test(u) && /chapter|manga.images|upload/i.test(u)) {
+        urls.push(u);
+      }
+    }
+  }
+
+  return urls;
 }
 
 export async function POST(request: NextRequest) {
@@ -90,8 +73,8 @@ export async function POST(request: NextRequest) {
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(url);
-    if (!parsedUrl.hostname.endsWith('shinigami.asia')) {
-      return NextResponse.json({ error: 'Hanya URL dari shinigami.asia yang didukung' }, { status: 400 });
+    if (!parsedUrl.hostname.endsWith('manhwaland.land')) {
+      return NextResponse.json({ error: 'Hanya URL dari manhwaland.land yang didukung' }, { status: 400 });
     }
   } catch {
     return NextResponse.json({ error: 'URL tidak valid' }, { status: 400 });
@@ -102,8 +85,8 @@ export async function POST(request: NextRequest) {
       headers: {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Accept-Language': 'en-US,en;q=0.5',
-        'Referer': 'https://shinigami.asia/',
+        'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
+        'Referer': 'https://04x.manhwaland.land/',
       },
       signal: AbortSignal.timeout(15_000),
     });
@@ -113,30 +96,24 @@ export async function POST(request: NextRequest) {
     }
 
     const html = await res.text();
-    const pageData = extractNextData(html) ?? extractNuxtData(html);
-
-    if (!pageData) {
-      return NextResponse.json(
-        { error: 'Tidak dapat mengekstrak data dari halaman. Mungkin halaman ini memerlukan JavaScript.' },
-        { status: 422 },
-      );
-    }
-
-    const images = findImageArray(pageData);
-    const meta   = parseChapterMeta(pageData);
+    const images = parseManhwalandChapterImages(html);
 
     if (!images.length) {
       return NextResponse.json(
-        { error: 'Tidak ada gambar ditemukan. Coba pastikan URL adalah halaman baca chapter.' },
+        { error: 'Tidak ada gambar ditemukan. Pastikan URL adalah halaman baca chapter (contoh: https://04x.manhwaland.land/prison-revenge-chapter-1/)' },
         { status: 422 },
       );
     }
 
+    // Extract chapter number from URL pattern: /manga-slug-chapter-72/
+    const chapterNumMatch = parsedUrl.pathname.match(/chapter[-_](\d+(?:\.\d+)?)/i);
+    const chapterNumber = chapterNumMatch ? parseFloat(chapterNumMatch[1]) : undefined;
+
     return NextResponse.json({
       data: {
-        images: images.map((url, i) => ({ number: i + 1, image_url: url })),
+        images: images.map((imgUrl, i) => ({ number: i + 1, image_url: imgUrl })),
         count: images.length,
-        meta,
+        meta: { number: chapterNumber },
       },
     });
   } catch (err) {
