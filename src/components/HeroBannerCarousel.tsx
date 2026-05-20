@@ -56,7 +56,7 @@ export function HeroBannerCarousel({ items }: { items: MangaItem[] }) {
 
             return (
               <Link
-                key={i}
+                key={`pos-${pos}`}
                 href={`/manga/${item.slug}`}
                 className="shrink-0 transition-all duration-300"
                 style={{

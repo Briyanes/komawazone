@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, BookOpen, FileText, Megaphone, BarChart2,
-  Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag,
+  Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag, Download,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -16,6 +16,7 @@ const navGroups = [
       { href: '/admin/manga',    icon: BookOpen,         label: 'Manga' },
       { href: '/admin/chapters', icon: FileText,         label: 'Chapters' },
       { href: '/admin/genres',   icon: Tag,              label: 'Genres' },
+      { href: '/admin/import',   icon: Download,         label: 'Import URL' },
     ],
   },
   {

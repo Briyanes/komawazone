@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
         hostname: '**.supabase.in',
         pathname: '/storage/v1/object/public/**',
       },
+      // Shinigami Asia CDN
+      { protocol: 'https', hostname: '**.shinigami.asia' },
+      { protocol: 'https', hostname: 'shinigami.asia' },
       // Common manga image CDNs
       { protocol: 'https', hostname: 'i.imgur.com' },
       { protocol: 'https', hostname: 'cdn.discordapp.com' },
