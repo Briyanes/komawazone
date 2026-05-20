@@ -11,6 +11,7 @@ import { MangaCardSkeleton } from '@/components/ui/Skeleton';
 import { AdZone } from '@/components/ads/AdZone';
 import { ContinueReading } from '@/components/ContinueReading';
 import { FeaturedHero } from '@/components/FeaturedHero';
+import { HeroBannerCarousel } from '@/components/HeroBannerCarousel';
 import { GenreBar } from '@/components/GenreBar';
 
 export default function HomePage() {
@@ -122,12 +123,18 @@ async function CompletedSection() {
 }
 
 async function HeroSection() {
-  const featured = await getFeaturedManga(5);
-  if (featured.length === 0) return <StaticHero />;
-  return <FeaturedHero items={featured as Parameters<typeof FeaturedHero>[0]['items']} />;
+  const [featured, latest] = await Promise.all([
+    getFeaturedManga(5).catch(() => []),
+    getLatestManga(10).catch(() => []),
+  ]);
+  if (featured.length > 0) return <FeaturedHero items={featured as Parameters<typeof FeaturedHero>[0]['items']} />;
+  const carouselItems = latest.map((m: { id: string; slug: string; title: string; cover_url?: string | null }) => ({
+    id: m.id, slug: m.slug, title: m.title, cover_url: m.cover_url ?? null,
+  }));
+  return <StaticHero carouselItems={carouselItems} />;
 }
 
-function StaticHero() {
+function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug: string; title: string; cover_url: string | null }[] }) {
   const stats = [
     { value: '1.000+', label: 'Judul'    },
     { value: '50+',    label: 'Genre'    },
@@ -232,29 +239,30 @@ function StaticHero() {
           </div>
         </div>
 
-        {/* Right — floating cover stack */}
-        <div
-          className="hidden md:block shrink-0 relative"
-          style={{ width: 220, height: 240 }}
-        >
-          {covers.map((c, i) => (
-            <div
-              key={i}
-              className="absolute overflow-hidden rounded-2xl"
-              style={{
-                width: 90,
-                aspectRatio: '2/3',
-                background: c.bg,
-                top: c.top,
-                left: c.left,
-                transform: `rotate(${c.rotate}deg)`,
-                zIndex: c.z,
-                border: '2px solid rgba(255,255,255,0.18)',
-                boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
-                animation: `fade-in 0.6s ease ${c.delay} both`,
-              }}
-            />
-          ))}
+        {/* Right — manga carousel (real covers or colour placeholders) */}
+        <div className="hidden md:flex shrink-0 items-center justify-center" style={{ width: 320 }}>
+          {carouselItems.length > 0 ? (
+            <HeroBannerCarousel items={carouselItems} />
+          ) : (
+            <div className="relative" style={{ width: 220, height: 240 }}>
+              {covers.map((c, i) => (
+                <div
+                  key={i}
+                  className="absolute overflow-hidden rounded-2xl"
+                  style={{
+                    width: 90, aspectRatio: '2/3',
+                    background: c.bg,
+                    top: c.top, left: c.left,
+                    transform: `rotate(${c.rotate}deg)`,
+                    zIndex: c.z,
+                    border: '2px solid rgba(255,255,255,0.18)',
+                    boxShadow: '0 16px 40px rgba(0,0,0,0.5)',
+                    animation: `fade-in 0.6s ease ${c.delay} both`,
+                  }}
+                />
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </section>
