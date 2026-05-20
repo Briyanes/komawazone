@@ -94,7 +94,13 @@ export default function HistoryPage() {
             <Link href={`/manga/${entry.mangaSlug}`} className="shrink-0">
               <div className="relative overflow-hidden rounded-lg" style={{ width: 52, height: 72 }}>
                 {entry.mangaCover ? (
-                  <MangaImage\n                    src={entry.mangaCover}\n                    alt={entry.mangaTitle}\n                    fill\n                    className=\"object-cover\"\n                    sizes=\"52px\"\n                  />
+                  <MangaImage
+                    src={entry.mangaCover}
+                    alt={entry.mangaTitle}
+                    fill
+                    className="object-cover"
+                    sizes="52px"
+                  />
                 ) : (
                   <div className="flex size-full items-center justify-center text-lg" style={{ background: 'var(--bg-tertiary)' }}>
                     📖
