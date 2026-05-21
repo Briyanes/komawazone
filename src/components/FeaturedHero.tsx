@@ -88,16 +88,16 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
 
       {/* ── Main content ── */}
       <div
-        className="relative flex items-end gap-4 px-4 pb-8 pt-5 sm:items-center sm:pb-6 sm:gap-5 sm:px-5 md:gap-8 md:px-10 md:py-10"
+        className="relative flex items-end gap-5 px-5 pb-10 pt-6 sm:items-center sm:pb-6 md:gap-8 md:px-10 md:py-10"
         style={{ minHeight: 'clamp(300px, 42vw, 500px)' }}
       >
         {/* Cover thumbnail */}
         {manga.cover_url && (
-          <div key={manga.id + '-cover'} className="block shrink-0" style={{ animation: 'fade-in 0.5s ease' }}>
+          <div key={manga.id + '-cover'} className="hidden sm:block shrink-0" style={{ animation: 'fade-in 0.5s ease' }}>
             <div
-              className="relative overflow-hidden rounded-xl sm:rounded-2xl"
+              className="relative overflow-hidden rounded-2xl"
               style={{
-                width: 'clamp(72px, 16vw, 150px)',
+                width: 'clamp(100px, 10vw, 150px)',
                 aspectRatio: '2/3',
                 border: '2px solid rgba(255,255,255,0.12)',
                 boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.05)',
@@ -145,7 +145,7 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
 
           {/* Title */}
           <h2
-            className="text-xl font-black text-white leading-[1.15] sm:text-2xl md:text-[clamp(1.75rem,3vw,2.5rem)] line-clamp-2"
+            className="text-2xl font-black text-white leading-[1.15] md:text-[clamp(1.75rem,3vw,2.5rem)] line-clamp-2"
             style={{ fontFamily: 'var(--font-playfair, serif)', textShadow: '0 2px 24px rgba(0,0,0,0.6)' }}
           >
             {manga.title}
