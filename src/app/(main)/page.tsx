@@ -22,8 +22,8 @@ export default function HomePage() {
         <AdZone placement="HOME_TOP" className="w-full" />
       </Suspense>
 
-      {/* Featured hero */}
-      <Suspense fallback={<StaticHero />}>
+      {/* Featured hero — desktop full hero, mobile carousel only */}
+      <Suspense fallback={<div className="hidden md:block"><StaticHero /></div>}>
         <HeroSection />
       </Suspense>
 
@@ -127,11 +127,26 @@ async function HeroSection() {
     getFeaturedManga(5).catch(() => []),
     getLatestManga(10).catch(() => []),
   ]);
-  if (featured.length > 0) return <FeaturedHero items={featured as Parameters<typeof FeaturedHero>[0]['items']} />;
+
   const carouselItems = latest.map((m: { id: string; slug: string; title: string; cover_url?: string | null }) => ({
     id: m.id, slug: m.slug, title: m.title, cover_url: m.cover_url ?? null,
   }));
-  return <StaticHero carouselItems={carouselItems} />;
+
+  return (
+    <>
+      {/* Mobile: carousel cards only */}
+      <div className="block md:hidden">
+        <HeroBannerCarousel items={carouselItems} />
+      </div>
+      {/* Desktop: full featured hero */}
+      <div className="hidden md:block">
+        {featured.length > 0
+          ? <FeaturedHero items={featured as Parameters<typeof FeaturedHero>[0]['items']} />
+          : <StaticHero carouselItems={carouselItems} />
+        }
+      </div>
+    </>
+  );
 }
 
 function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug: string; title: string; cover_url: string | null }[] }) {
