@@ -143,7 +143,7 @@ export default async function AdminDashboard() {
           </div>
           {recentManga.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10">
-              <span className="text-3xl opacity-20">📚</span>
+              <BookOpen size={28} style={{ opacity: 0.2 }} />
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>No manga yet</p>
               <Link href="/admin/manga/new" className="text-xs font-medium" style={{ color: 'var(--color-primary)' }}>
                 Add one →
@@ -193,7 +193,7 @@ export default async function AdminDashboard() {
           </div>
           {recentChapters.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10">
-              <span className="text-3xl opacity-20">📄</span>
+              <FileText size={28} style={{ opacity: 0.2 }} />
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>No chapters yet</p>
             </div>
           ) : (

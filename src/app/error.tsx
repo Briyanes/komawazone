@@ -2,6 +2,7 @@
 
 import { useEffect } from 'react';
 import Link from 'next/link';
+import { AlertTriangle } from 'lucide-react';
 
 interface ErrorPageProps {
   error: Error & { digest?: string };
@@ -15,7 +16,7 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
 
   return (
     <div className="flex min-h-[60vh] flex-col items-center justify-center gap-6 px-4 text-center">
-      <span className="text-8xl">⚠️</span>
+      <AlertTriangle size={80} style={{ color: 'var(--color-primary)' }} />
       <div className="space-y-2">
         <h1
           className="text-2xl font-bold"

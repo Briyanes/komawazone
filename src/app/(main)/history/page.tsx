@@ -102,8 +102,8 @@ export default function HistoryPage() {
                     sizes="52px"
                   />
                 ) : (
-                  <div className="flex size-full items-center justify-center text-lg" style={{ background: 'var(--bg-tertiary)' }}>
-                    📖
+                  <div className="flex size-full items-center justify-center" style={{ background: 'var(--bg-tertiary)' }}>
+                    <BookOpen size={18} style={{ color: 'var(--text-tertiary)' }} />
                   </div>
                 )}
               </div>

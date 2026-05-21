@@ -8,6 +8,7 @@ import {
   ArrowLeft, ChevronLeft, ChevronRight, List, Home, ChevronDown,
   Settings, LayoutList, BookOpen, AlignJustify, Maximize2, AlignCenter,
   ArrowLeftRight, X, Sun, Contrast, Expand, Shrink, Search, ArrowUp, ArrowDown, ImageOff,
+  Check, Moon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { ChapterEngagement } from './ChapterEngagement';
@@ -502,7 +503,7 @@ export function ReaderClient({
                       <span className="w-14 shrink-0 text-xs" style={{ opacity: isCurrent ? 1 : 0.6 }}>Ch {ch.number % 1 === 0 ? ch.number : ch.number.toFixed(1)}</span>
                       <span className="flex-1 truncate text-xs">{ch.title ?? `Chapter ${ch.number}`}</span>
                       {isRead && !isCurrent && (
-                        <span className="shrink-0 text-[10px] font-semibold" style={{ color: 'rgba(255,255,255,0.25)' }}>✓</span>
+                        <Check size={10} className="shrink-0" style={{ color: 'rgba(255,255,255,0.25)' }} />
                       )}
                     </button>
                   );
@@ -607,7 +608,7 @@ export function ReaderClient({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40 flex items-center gap-1.5">
-                        🌙 Dark Overlay
+                        <Moon size={10} /> Dark Overlay
                       </p>
                       <span className="text-[10px] text-white/40">{darkOverlay}%</span>
                     </div>

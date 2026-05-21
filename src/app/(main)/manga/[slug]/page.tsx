@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { Star, Eye, BookOpen, Bookmark, Heart, BarChart2, User, Pen, Calendar } from 'lucide-react';
+import { Star, Eye, BookOpen, Bookmark, Heart, BarChart2, User, Pen, Calendar, Sparkles } from 'lucide-react';
 import { getMangaBySlug } from '@/lib/api/manga';
 import { Badge } from '@/components/ui/Badge';
 import { ChapterListSection } from '@/components/manga/ChapterListSection';
@@ -95,8 +95,10 @@ export default async function MangaDetailPage({ params }: Props) {
                 <MangaImage src={manga.cover_url} alt={manga.title} fill
                   sizes="(max-width: 768px) 100px, 180px" className="object-cover" priority />
               ) : (
-                <div className="flex size-full items-center justify-center text-3xl"
-                  style={{ background: 'rgba(255,255,255,0.1)' }}>📖</div>
+                <div className="flex size-full items-center justify-center"
+                  style={{ background: 'rgba(255,255,255,0.1)' }}>
+                  <BookOpen size={28} className="text-white/40" />
+                </div>
               )}
             </div>
 
@@ -359,7 +361,7 @@ async function Recommendations({ genres, excludeId }: { genres: string[]; exclud
   return (
     <section className="mt-10">
       <h2 className="mb-4 flex items-center gap-2 text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-        <span style={{ color: 'var(--color-primary)' }}>✨</span>
+        <Sparkles size={16} style={{ color: 'var(--color-primary)' }} />
         Manga Serupa
       </h2>
       <MangaGrid items={items as Parameters<typeof MangaGrid>[0]['items']} />

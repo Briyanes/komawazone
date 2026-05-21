@@ -93,7 +93,7 @@ export default function ReadingListPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 gap-4">
-          <span className="text-6xl opacity-30">📚</span>
+          <BookMarked size={56} style={{ opacity: 0.3, color: 'var(--text-tertiary)' }} />
           <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Daftar ini masih kosong</p>
           <Link href="/search" className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>
             Cari manga →
