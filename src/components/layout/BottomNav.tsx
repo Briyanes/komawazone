@@ -31,6 +31,9 @@ export function BottomNav() {
         WebkitBackdropFilter: 'blur(24px) saturate(180%)',
         border: '1px solid var(--glass-border)',
         boxShadow: '0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.1)',
+        transform: 'translate3d(0,0,0)',
+        WebkitTransform: 'translate3d(0,0,0)',
+        willChange: 'transform',
       }}
     >
       <div className="flex items-center justify-around px-1 py-1.5">
