@@ -23,8 +23,9 @@ export function BottomNav() {
 
   return (
     <nav
-      className="fixed bottom-3 left-3 right-3 z-[var(--z-header)] md:hidden rounded-2xl"
+      className="fixed left-3 right-3 z-[var(--z-header)] md:hidden rounded-2xl"
       style={{
+        bottom: 'calc(12px + env(safe-area-inset-bottom))',
         background: 'var(--glass-bg)',
         backdropFilter: 'blur(24px) saturate(180%)',
         WebkitBackdropFilter: 'blur(24px) saturate(180%)',
