@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Bell, X, CheckCheck } from 'lucide-react';
-import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Notification {

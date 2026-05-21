@@ -32,9 +32,9 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
   const indices = getIndices();
 
   return (
-    <div className="relative w-full">
+    <div className={`relative w-full${compact ? ' overflow-hidden' : ''}`}>
       {/* Carousel container */}
-      <div className={`relative flex items-center justify-center${compact ? ' overflow-hidden' : ''}`}>
+      <div className="relative flex items-center justify-center">
         {/* Left arrow — overlaid on the left side */}
         <button
           onClick={prev}
@@ -49,7 +49,7 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
         </button>
 
         {/* Carousel items */}
-        <div className={`flex items-center justify-center gap-3 ${compact ? 'px-8 py-6' : 'sm:gap-5 px-12'}`}>
+        <div className={`flex items-center justify-center gap-3 ${compact ? 'px-8 pt-6 pb-10' : 'sm:gap-5 px-12'}`}>
           {indices.map((i, pos) => {
             const item = items[i];
             const isCurrent = pos === 1;

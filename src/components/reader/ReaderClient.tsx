@@ -121,7 +121,7 @@ export function ReaderClient({
     setDarkOverlay((p as { darkOverlay?: number }).darkOverlay ?? 0);
   }, []);
 
-  const { debouncedSave } = useReadingProgress(mangaId, chapterId);
+  const { debouncedSave } = useReadingProgress();
 
   // Save progress to localStorage + track view
   useEffect(() => {
@@ -144,7 +144,7 @@ export function ReaderClient({
 
     // Increment views (fire-and-forget, once per chapter load)
     fetch(`/api/v1/chapters/${chapterId}/view`, { method: 'POST' }).catch(() => {});
-  }, [chapterId, chapterNumber, mangaSlug]);
+  }, [chapterId, chapterNumber, mangaSlug, mangaTitle]);
 
   const savePrefs = useCallback((next: Partial<{ readMode: ReadMode; fitMode: FitMode; direction: Direction; brightness: number; contrast: number; darkOverlay: number }>) => {
     const current = loadPrefs();

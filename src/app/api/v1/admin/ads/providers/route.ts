@@ -21,7 +21,7 @@ async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   return user;
 }
 
-export async function GET(_request: NextRequest) {
+export async function GET() {
   const supabase = await createClient();
   if (!await assertAdmin(supabase)) {
     return NextResponse.json({ status: 'error', error: 'Forbidden' }, { status: 403 });

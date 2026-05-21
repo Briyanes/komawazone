@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: { default: 'Authentication', template: '%s | Komawa Zone' },
@@ -11,14 +12,14 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       style={{ background: 'var(--bg-secondary)' }}>
       {/* Brand header */}
       <div className="mb-8 text-center">
-        <a href="/" className="inline-block">
+        <Link href="/" className="inline-block">
           <span
             className="text-3xl font-bold"
             style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-primary)' }}
           >
             Komawa Zone
           </span>
-        </a>
+        </Link>
       </div>
 
       {/* Card */}

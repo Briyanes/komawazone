@@ -35,6 +35,7 @@ export function ReviewsCarousel({ slug }: { slug: string }) {
 
   useEffect(() => {
     fetchReviews();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slug]);
 
   if (loading || reviews.length === 0) {

@@ -22,7 +22,8 @@ export function RegisterForm() {
     formState: { errors },
   } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
 
-  const onSubmit = ({ confirmPassword: _, ...data }: RegisterInput) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const onSubmit = ({ confirmPassword: _confirmPassword, ...data }: RegisterInput) => {
     setServerError(null);
     startTransition(async () => {
       const result = await signUp(data);

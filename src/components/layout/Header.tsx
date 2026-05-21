@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, Menu, X, LogIn, User as UserIcon, Bookmark, LogOut } from 'lucide-react';
+import { Search, X, LogIn, User as UserIcon, Bookmark, LogOut } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/hooks/useAuth';

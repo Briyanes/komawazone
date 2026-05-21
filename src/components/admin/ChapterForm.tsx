@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
-import { Plus, Trash2, Save, ImagePlus, X, ChevronDown } from 'lucide-react';
+import { Plus, Save, ImagePlus, X, ChevronDown } from 'lucide-react';
 import { uploadImage } from '@/lib/supabase/storage';
 
 interface ImageRow {

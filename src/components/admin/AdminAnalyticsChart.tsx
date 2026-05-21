@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { TrendingUp, FileText, Users } from 'lucide-react';
+import { FileText, Users } from 'lucide-react';
 
 interface DayStat {
   date: string;

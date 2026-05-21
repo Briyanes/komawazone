@@ -130,17 +130,3 @@ function PageSkeleton() {
   );
 }
 
-interface BookmarkItem {
-  id: string;
-  created_at: string;
-  manga: {
-    id: string;
-    slug: string;
-    title: string;
-    cover_url: string | null;
-    status: MangaStatus;
-    rating: number;
-    views: number;
-  } | null;
-}
-

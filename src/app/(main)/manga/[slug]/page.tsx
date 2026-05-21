@@ -52,15 +52,6 @@ const statusVariantMap: Record<MangaStatus, 'ongoing' | 'completed' | 'hiatus' |
   ONGOING: 'ongoing', COMPLETED: 'completed', HIATUS: 'hiatus', DROPPED: 'dropped',
 };
 
-function StatBadge({ icon, value, label }: { icon: React.ReactNode; value: string; label?: string }) {
-  return (
-    <div className="flex flex-col items-center gap-0.5 min-w-fit">
-      <div className="flex items-center gap-1 text-white/90 font-bold text-sm">{icon}{value}</div>
-      {label && <span className="text-white/40 text-[9px] uppercase tracking-wider">{label}</span>}
-    </div>
-  );
-}
-
 export default async function MangaDetailPage({ params }: Props) {
   const { slug } = await params;
   const manga = await getMangaBySlug(slug);

@@ -113,7 +113,7 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 }
 
 // DELETE /api/v1/manga/[slug]/comments  body: { id }
-export async function DELETE(req: NextRequest, { params: _ }: RouteContext) {
+export async function DELETE(req: NextRequest) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

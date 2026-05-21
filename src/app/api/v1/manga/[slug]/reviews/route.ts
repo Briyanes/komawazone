@@ -98,7 +98,7 @@ export async function POST(
       const result = await supabase
         .from('manga_reviews' as never)
         .update({ rating, text: text || null, updated_at: new Date().toISOString() } as never)
-        .eq('id' as never, (existingReview as any).id)
+        .eq('id' as never, (existingReview as { id: string }).id)
         .select()
         .single();
       data = result.data;

@@ -210,7 +210,7 @@ export function MangaCommentSection({ mangaSlug }: { mangaSlug: string }) {
     // Optimistic update
     setLikedIds(prev => {
       const next = new Set(prev);
-      wasLiked ? next.delete(commentId) : next.add(commentId);
+      if (wasLiked) { next.delete(commentId); } else { next.add(commentId); }
       return next;
     });
     const update = (c: Comment) => c.id === commentId ? { ...c, likes_count: c.likes_count + (wasLiked ? -1 : 1) } : c;

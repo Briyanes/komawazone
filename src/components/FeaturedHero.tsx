@@ -38,10 +38,6 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
   const manga = items[active];
   const bg = manga.banner_url ?? manga.cover_url;
   
-  // Get visible items for carousel (prev, current, next)
-  const prevIndex = (active - 1 + items.length) % items.length;
-  const nextIndex = (active + 1) % items.length;
-
   return (
     <section
       className="relative overflow-hidden rounded-2xl select-none"

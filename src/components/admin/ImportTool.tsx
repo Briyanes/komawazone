@@ -680,7 +680,7 @@ export function ImportTool() {
             step: '4', title: 'Simpan', desc: 'Klik Simpan — manga/chapter langsung masuk database',
             icon: ChevronRight,
           },
-        ].map(({ step, title, desc, icon: Icon }) => (
+        ].map(({ step, title, desc }) => (
           <div key={step} className="flex items-start gap-3 rounded-xl p-4"
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
             <div className="flex size-8 shrink-0 items-center justify-center rounded-lg text-xs font-black"

@@ -249,7 +249,7 @@ export function ChapterEngagement({ chapterId }: { chapterId: string }) {
   const toggleCommentLike = async (commentId: string) => {
     if (!isAuthenticated || !user) return;
     const wasLiked = likedIds.has(commentId);
-    setLikedIds(prev => { const n = new Set(prev); wasLiked ? n.delete(commentId) : n.add(commentId); return n; });
+    setLikedIds(prev => { const n = new Set(prev); if (wasLiked) { n.delete(commentId); } else { n.add(commentId); } return n; });
     const upd = (c: Comment) => c.id === commentId ? { ...c, likes_count: c.likes_count + (wasLiked ? -1 : 1) } : c;
     setComments(prev => prev.map(upd));
     setReplies(prev => prev.map(upd));

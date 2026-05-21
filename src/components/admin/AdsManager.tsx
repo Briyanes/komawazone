@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition } from 'react';
-import { Plus, Trash2, ToggleLeft, ToggleRight, Code, Megaphone } from 'lucide-react';
+import { Plus, ToggleLeft, ToggleRight, Code, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';

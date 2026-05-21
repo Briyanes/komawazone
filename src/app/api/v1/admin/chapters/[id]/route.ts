@@ -29,12 +29,6 @@ const ImageReorderSchema = z.object({
   order: z.array(z.object({ id: z.string().uuid(), number: z.number().int().min(1) })),
 });
 
-const PatchBodySchema = z.discriminatedUnion('action', [
-  ImageAddSchema,
-  ImageDeleteSchema,
-  ImageReorderSchema,
-]).or(ChapterUpdateSchema);
-
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;

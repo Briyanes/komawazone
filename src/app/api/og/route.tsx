@@ -1,5 +1,6 @@
 import { ImageResponse } from 'next/og';
 import { NextRequest } from 'next/server';
+/* eslint-disable @next/next/no-img-element */
 
 export const runtime = 'edge';
 
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
         {cover && (
           <img
             src={cover}
+            alt=""
             style={{
               position: 'absolute',
               inset: 0,
@@ -64,7 +66,7 @@ export async function GET(request: NextRequest) {
               display: 'flex',
             }}
           >
-            <img src={cover} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            <img src={cover} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
         )}
 

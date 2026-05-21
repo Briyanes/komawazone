@@ -11,7 +11,7 @@ interface SaveProgressOptions {
   readPercentage: number;
 }
 
-export function useReadingProgress(mangaId?: string, chapterId?: string) {
+export function useReadingProgress() {
   const { user, isAuthenticated } = useAuth();
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
