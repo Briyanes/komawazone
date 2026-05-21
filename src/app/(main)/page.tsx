@@ -127,11 +127,29 @@ async function HeroSection() {
     getFeaturedManga(5).catch(() => []),
     getLatestManga(10).catch(() => []),
   ]);
+
   const carouselItems = latest.map((m: { id: string; slug: string; title: string; cover_url?: string | null }) => ({
     id: m.id, slug: m.slug, title: m.title, cover_url: m.cover_url ?? null,
   }));
-  if (featured.length > 0) return <FeaturedHero items={featured as Parameters<typeof FeaturedHero>[0]['items']} />;
-  return <StaticHero carouselItems={carouselItems} />;
+
+  const desktopHero = featured.length > 0
+    ? <FeaturedHero items={featured as Parameters<typeof FeaturedHero>[0]['items']} />
+    : <StaticHero carouselItems={carouselItems} />;
+
+  return (
+    <>
+      {/* Mobile: HeroBannerCarousel */}
+      {carouselItems.length > 0 && (
+        <div className="md:hidden">
+          <HeroBannerCarousel items={carouselItems} compact />
+        </div>
+      )}
+      {/* Desktop: FeaturedHero or StaticHero */}
+      <div className="hidden md:block">
+        {desktopHero}
+      </div>
+    </>
+  );
 }
 
 function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug: string; title: string; cover_url: string | null }[] }) {
@@ -149,7 +167,10 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
   ];
 
   return (
-    <section className="relative overflow-hidden rounded-2xl">
+    <section
+      className="relative overflow-hidden rounded-2xl"
+      style={{ minHeight: 'clamp(300px, 42vw, 500px)' }}
+    >
       {/* ── Dark base + gradient brand accent ── */}
       <div className="absolute inset-0" style={{ background: '#0A0A0F' }} />
       <div
@@ -169,9 +190,12 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
       />
 
       {/* ── Content ── */}
-      <div className="relative flex flex-col gap-5 px-5 py-6 md:flex-row md:items-center md:gap-12 md:px-12 md:py-12 md:min-h-[clamp(300px,42vw,500px)]">
+      <div
+        className="relative flex flex-col justify-center gap-5 px-6 py-8 md:flex-row md:items-center md:gap-12 md:px-12 md:py-12"
+        style={{ minHeight: 'clamp(300px, 42vw, 500px)' }}
+      >
         {/* Left — text */}
-        <div className="flex-1 min-w-0 space-y-4 md:space-y-5">
+        <div className="flex-1 min-w-0 space-y-5">
 
           {/* Badge */}
           <span
@@ -183,7 +207,7 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
 
           {/* Headline */}
           <h1
-            className="text-[2rem] font-black leading-[1.1] text-white md:text-5xl"
+            className="text-4xl font-black leading-[1.1] text-white md:text-5xl"
             style={{ fontFamily: 'var(--font-playfair, serif)', textShadow: '0 4px 32px rgba(0,0,0,0.5)' }}
           >
             Baca Manga<br />
@@ -233,12 +257,12 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
           </div>
         </div>
 
-        {/* Right — manga carousel (full-width on mobile, fixed on desktop) */}
-        <div className="flex w-full shrink-0 items-center justify-center md:w-[320px]">
+        {/* Right — manga carousel (real covers or colour placeholders) */}
+        <div className="hidden md:flex shrink-0 items-center justify-center" style={{ width: 320 }}>
           {carouselItems.length > 0 ? (
             <HeroBannerCarousel items={carouselItems} />
           ) : (
-            <div className="relative mx-auto" style={{ width: 'min(220px, 80vw)', height: 'min(240px, 87vw)' }}>
+            <div className="relative" style={{ width: 220, height: 240 }}>
               {covers.map((c, i) => (
                 <div
                   key={i}

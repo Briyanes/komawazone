@@ -12,7 +12,7 @@ interface MangaItem {
   cover_url: string | null;
 }
 
-export function HeroBannerCarousel({ items }: { items: MangaItem[] }) {
+export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; compact?: boolean }) {
   const [active, setActive] = useState(0);
 
   if (!items || items.length === 0) return null;
@@ -32,24 +32,24 @@ export function HeroBannerCarousel({ items }: { items: MangaItem[] }) {
   const indices = getIndices();
 
   return (
-    <div className="relative w-full overflow-hidden">
+    <div className="relative w-full">
       {/* Carousel container */}
-      <div className="relative flex w-full items-center justify-center">
+      <div className={`relative flex items-center justify-center${compact ? ' overflow-hidden' : ''}`}>
         {/* Left arrow — overlaid on the left side */}
         <button
           onClick={prev}
-          className="absolute left-0 z-10 flex size-9 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+          className="absolute left-0 z-10 flex size-10 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
           style={{
             background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(12px)',
             border: '1px solid rgba(255,255,255,0.15)',
           }}
         >
-          <ChevronLeft size={18} color="white" />
+          <ChevronLeft size={20} color="white" />
         </button>
 
         {/* Carousel items */}
-        <div className="flex items-center justify-center gap-2 px-10">
+        <div className={`flex items-center justify-center gap-3 ${compact ? 'px-8 py-6' : 'sm:gap-5 px-12'}`}>
           {indices.map((i, pos) => {
             const item = items[i];
             const isCurrent = pos === 1;
@@ -60,7 +60,9 @@ export function HeroBannerCarousel({ items }: { items: MangaItem[] }) {
                 href={`/manga/${item.slug}`}
                 className="shrink-0 transition-all duration-300"
                 style={{
-                  width: isCurrent ? 'min(34vw, 220px)' : 'min(23vw, 160px)',
+                  width: isCurrent
+                    ? (compact ? 'clamp(100px, 30vw, 150px)' : 'clamp(150px, 20vw, 220px)')
+                    : (compact ? 'clamp(70px, 20vw, 110px)' : 'clamp(110px, 14vw, 160px)'),
                   opacity: isCurrent ? 1 : 0.55,
                   transform: isCurrent ? 'scale(1.05)' : 'scale(0.92)',
                   zIndex: isCurrent ? 1 : 0,
@@ -110,14 +112,14 @@ export function HeroBannerCarousel({ items }: { items: MangaItem[] }) {
         {/* Right arrow — overlaid on the right side */}
         <button
           onClick={next}
-          className="absolute right-0 z-10 flex size-9 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+          className="absolute right-0 z-10 flex size-10 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
           style={{
             background: 'rgba(0,0,0,0.5)',
             backdropFilter: 'blur(12px)',
             border: '1px solid rgba(255,255,255,0.15)',
           }}
         >
-          <ChevronRight size={18} color="white" />
+          <ChevronRight size={20} color="white" />
         </button>
       </div>
 
