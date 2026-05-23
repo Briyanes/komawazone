@@ -14,13 +14,14 @@ const CreateGenreSchema = z.object({
   name: z.string().min(1).max(50),
   slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/, 'Slug must be lowercase letters, numbers, and hyphens'),
   description: z.string().max(200).optional().nullable(),
+  is_mature: z.boolean().default(false),
 });
 
 export async function GET() {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('genres')
-    .select('id, name, slug, description')
+    .select('id, name, slug, description, is_mature')
     .order('name');
   if (error) return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
   return NextResponse.json({ status: 'success', data: data ?? [] });

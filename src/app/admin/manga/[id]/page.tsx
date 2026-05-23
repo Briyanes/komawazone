@@ -11,7 +11,7 @@ export default async function EditMangaPage({ params }: Props) {
   const supabase = await createClient();
   const { data: manga } = await supabase
     .from('manga')
-    .select('id, slug, title, alt_title, description, cover_url, banner_url, status, type, author, artist, release_year, genres')
+    .select('id, slug, title, alt_title, description, cover_url, banner_url, status, type, author, artist, release_year, genres, content_rating')
     .eq('id', id)
     .single();
 
@@ -43,6 +43,7 @@ export default async function EditMangaPage({ params }: Props) {
           artist: manga.artist ?? '',
           release_year: String(manga.release_year ?? new Date().getFullYear()),
           genres: manga.genres ?? [],
+          content_rating: (manga as { content_rating?: 'general' | 'mature' }).content_rating ?? 'general',
         }}
       />
     </div>

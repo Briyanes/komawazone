@@ -16,6 +16,20 @@ export async function signIn(data: LoginInput) {
     return { error: error.message };
   }
 
+  // Get user role for redirect
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: profile } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.role === 'ADMIN') {
+      redirect('/admin');
+    }
+  }
+
   redirect('/');
 }
 

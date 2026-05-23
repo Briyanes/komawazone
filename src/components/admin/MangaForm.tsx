@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { Button } from '@/components/ui/Button';
 import {
-  Save, X, Plus, BookOpen, Pen, Image as ImageIcon, Tag, AlignLeft, Upload, Trash2,
+  Save, X, Plus, BookOpen, Pen, Image as ImageIcon, Tag, AlignLeft, Upload, Trash2, Crown,
 } from 'lucide-react';
 import { uploadImage } from '@/lib/supabase/storage';
 
@@ -32,10 +32,11 @@ interface MangaFormData {
   artist: string;
   release_year: string;
   genres: string[];
+  content_rating: 'general' | 'mature';
 }
 
 interface MangaFormProps {
-  initial?: Partial<MangaFormData> & { id?: string };
+  initial?: Partial<MangaFormData> & { id?: string; content_rating?: 'general' | 'mature' };
   mode: 'create' | 'edit';
 }
 
@@ -175,6 +176,7 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
     artist:       initial?.artist       ?? '',
     release_year: initial?.release_year ?? String(new Date().getFullYear()),
     genres:       initial?.genres       ?? [],
+    content_rating: initial?.content_rating ?? 'general',
   });
 
   const set = (field: keyof Omit<MangaFormData, 'genres'>) =>
@@ -298,7 +300,37 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
             ]}
           />
         </div>
-      </section>
+
+        {/* Content Rating */}
+        <div className="space-y-2">
+          <label className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+            Content Rating
+          </label>
+          <div className="flex gap-3">
+            {(['general', 'mature'] as const).map(val => (
+              <button
+                key={val}
+                type="button"
+                onClick={() => setForm(p => ({ ...p, content_rating: val }))}
+                className="flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm font-medium transition-all"
+                style={{
+                  borderColor: form.content_rating === val
+                    ? val === 'mature' ? '#f59e0b' : 'var(--color-primary)'
+                    : 'var(--border-light)',
+                  background: form.content_rating === val
+                    ? val === 'mature' ? 'rgba(245,158,11,0.1)' : 'rgba(255,107,53,0.1)'
+                    : 'transparent',
+                  color: form.content_rating === val
+                    ? val === 'mature' ? '#f59e0b' : 'var(--color-primary)'
+                    : 'var(--text-secondary)',
+                }}
+              >
+                {val === 'mature' && <Crown size={13} />}
+                {val === 'general' ? 'General (SFW)' : 'Mature (18+)'}
+              </button>
+            ))}
+          </div>
+        </div>
 
       {/* Creators */}
       <section className="space-y-4 rounded-xl border p-4" style={{ borderColor: 'var(--border-light)' }}>
@@ -315,6 +347,7 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
           type="number"
           placeholder={String(new Date().getFullYear())}
         />
+      </section>
       </section>
 
       {/* Cover & Banner */}

@@ -12,7 +12,7 @@ interface BannerSettings {
 }
 
 export default function AdminSettingsPage() {
-  const [siteName, setSiteName] = useState('Komawa Zone');
+  const [siteName, setSiteName] = useState('OLLUQ');
   const [siteDesc, setSiteDesc] = useState('');
   const [gaCode, setGaCode] = useState('');
   const [headerCode, setHeaderCode] = useState('');

@@ -39,12 +39,15 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  const updates: Record<string, unknown> = { ...parsed.data };
+  const updates = { ...parsed.data };
+  const updateData: Record<string, unknown> = {};
+  if (updates.name !== undefined) updateData.name = updates.name;
+  if (updates.pixel_code !== undefined) updateData.pixel_code = updates.pixel_code;
+  if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
 
   const { data, error } = await supabase
     .from('ad_providers')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .update(updates as any)
+    .update(updateData as never)
     .eq('id', id)
     .select()
     .single();

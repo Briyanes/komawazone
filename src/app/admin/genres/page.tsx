@@ -1,14 +1,16 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { Plus, Pencil, Trash2, Save, X, Tag } from 'lucide-react';
+import { Plus, Pencil, Trash2, Save, X, Tag, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/cn';
 
 interface Genre {
   id: string;
   name: string;
   slug: string;
   description: string | null;
+  is_mature: boolean;
 }
 
 function slugify(name: string) {
@@ -21,8 +23,11 @@ export default function AdminGenresPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editName, setEditName] = useState('');
   const [editSlug, setEditSlug] = useState('');
+  const [editIsMature, setEditIsMature] = useState(false);
   const [newName, setNewName] = useState('');
   const [newSlug, setNewSlug] = useState('');
+  const [newIsMature, setNewIsMature] = useState(false);
+  const [filter, setFilter] = useState<'all' | 'general' | 'mature'>('all');
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
 
@@ -45,12 +50,13 @@ export default function AdminGenresPage() {
       const res = await fetch('/api/v1/admin/genres', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: newName.trim(), slug: newSlug || slugify(newName) }),
+        body: JSON.stringify({ name: newName.trim(), slug: newSlug || slugify(newName), is_mature: newIsMature }),
       });
       const data = await res.json() as { status: string; error?: string };
       if (data.status === 'success') {
         setNewName('');
         setNewSlug('');
+        setNewIsMature(false);
         await loadGenres();
       } else {
         setError(typeof data.error === 'string' ? data.error : 'Create failed');
@@ -62,6 +68,7 @@ export default function AdminGenresPage() {
     setEditingId(genre.id);
     setEditName(genre.name);
     setEditSlug(genre.slug);
+    setEditIsMature(genre.is_mature);
   };
 
   const handleSaveEdit = (id: string) => {
@@ -69,7 +76,7 @@ export default function AdminGenresPage() {
       const res = await fetch(`/api/v1/admin/genres/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName.trim(), slug: editSlug || slugify(editName) }),
+        body: JSON.stringify({ name: editName.trim(), slug: editSlug || slugify(editName), is_mature: editIsMature }),
       });
       if (res.ok) {
         setEditingId(null);
@@ -119,8 +126,41 @@ export default function AdminGenresPage() {
               <Plus size={14} /> Add
             </Button>
           </div>
+          <label className="flex items-center gap-2 cursor-pointer w-fit select-none">
+            <input
+              type="checkbox"
+              checked={newIsMature}
+              onChange={e => setNewIsMature(e.target.checked)}
+              className="rounded"
+            />
+            <Crown size={13} style={{ color: newIsMature ? '#f59e0b' : 'var(--text-tertiary)' }} />
+            <span className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+              Genre 18+ (konten dewasa — VIP only)
+            </span>
+          </label>
           {error && <p className="text-xs text-red-500">{error}</p>}
         </div>
+      </div>
+
+      {/* Filter tabs */}
+      <div className="flex gap-1">
+        {(['all', 'general', 'mature'] as const).map(f => (
+          <button
+            key={f}
+            onClick={() => setFilter(f)}
+            className={cn(
+              'rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+              filter === f ? 'bg-[var(--color-primary)] text-white' : 'hover:bg-[var(--bg-tertiary)]',
+            )}
+            style={filter !== f ? { color: 'var(--text-secondary)' } : {}}
+          >
+            {f === 'all'
+              ? `Semua (${genres.length})`
+              : f === 'general'
+                ? `General (${genres.filter(g => !g.is_mature).length})`
+                : `18+ (${genres.filter(g => g.is_mature).length})`}
+          </button>
+        ))}
       </div>
 
       {/* Genre list */}
@@ -128,7 +168,7 @@ export default function AdminGenresPage() {
         <div className="flex items-center gap-2 px-5 py-3 border-b" style={{ borderColor: 'var(--border-light)' }}>
           <Tag size={14} style={{ color: 'var(--text-tertiary)' }} />
           <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>
-            {genres.length} genres
+            {filter === 'all' ? genres.length : filter === 'general' ? genres.filter(g => !g.is_mature).length : genres.filter(g => g.is_mature).length} genre{genres.length !== 1 ? 's' : ''}
           </span>
         </div>
 
@@ -142,7 +182,7 @@ export default function AdminGenresPage() {
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
-            {genres.map(genre => (
+            {genres.filter(g => filter === 'all' || (filter === 'general' ? !g.is_mature : g.is_mature)).map(genre => (
               <div key={genre.id} className="flex items-center gap-3 px-5 py-3">
                 {editingId === genre.id ? (
                   <>
@@ -159,6 +199,15 @@ export default function AdminGenresPage() {
                       className="w-28 rounded-lg border px-2.5 py-1.5 text-xs font-mono outline-none"
                       style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-default)', color: 'var(--text-secondary)' }}
                     />
+                    <label className="flex items-center gap-1 cursor-pointer select-none" title="Genre 18+">
+                      <input
+                        type="checkbox"
+                        checked={editIsMature}
+                        onChange={e => setEditIsMature(e.target.checked)}
+                        className="rounded"
+                      />
+                      <Crown size={12} style={{ color: editIsMature ? '#f59e0b' : 'var(--text-tertiary)' }} />
+                    </label>
                     <button
                       onClick={() => handleSaveEdit(genre.id)}
                       className="flex size-7 items-center justify-center rounded-md text-emerald-500 hover:bg-emerald-50/10"
@@ -175,13 +224,21 @@ export default function AdminGenresPage() {
                   </>
                 ) : (
                   <>
-                    <div className="flex-1 min-w-0">
+                    <div className="flex flex-1 min-w-0 items-center gap-2">
                       <span className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
                         {genre.name}
                       </span>
-                      <span className="ml-2 text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
+                      <span className="text-xs font-mono" style={{ color: 'var(--text-tertiary)' }}>
                         {genre.slug}
                       </span>
+                      {genre.is_mature && (
+                        <span
+                          className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                          style={{ background: 'rgba(245,158,11,0.15)', color: '#f59e0b' }}
+                        >
+                          <Crown size={9} />18+
+                        </span>
+                      )}
                     </div>
                     <button
                       onClick={() => startEdit(genre)}

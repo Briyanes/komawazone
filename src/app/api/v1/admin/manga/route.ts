@@ -16,6 +16,7 @@ const MangaCreateSchema = z.object({
   genres:       z.array(z.string()).default([]),
   release_year: z.number().int().min(1900).max(2100).optional(),
   rating:       z.number().min(0).max(10).optional(),
+  content_rating: z.enum(['general', 'mature']).default('general'),
 });
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -65,7 +66,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ status: 'error', error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await request.json() as unknown;
+  const body = await request.json();
   const parsed = MangaCreateSchema.safeParse(body);
   if (!parsed.success) {
     return NextResponse.json(
@@ -77,7 +78,7 @@ export async function POST(request: NextRequest) {
   const { cover_url, banner_url, ...rest } = parsed.data;
   const { data, error } = await supabase
     .from('manga')
-    .insert({ ...rest, cover_url: cover_url || null, banner_url: banner_url || null, uploaded_by: user.id } as never)
+    .insert({ ...rest, cover_url: cover_url || null, banner_url: banner_url || null, uploaded_by: user.id })
     .select()
     .single();
 
