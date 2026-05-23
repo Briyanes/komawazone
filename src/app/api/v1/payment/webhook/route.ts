@@ -108,7 +108,8 @@ export async function POST(req: NextRequest) {
       }
 
       // Get plan from metadata
-      const plan = (payment.metadata?.plan as string) || '1-month';
+      const metadata = payment.metadata as { plan?: string } | null;
+      const plan = metadata?.plan || '1-month';
       const expiresAt = calculateVIPExpiry(plan);
 
       // Create subscription
