@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
   const { cover_url, banner_url, ...rest } = parsed.data;
   const { data, error } = await supabase
     .from('manga')
-    .insert({ ...rest, cover_url: cover_url || null, banner_url: banner_url || null, uploaded_by: user.id })
+    .insert({ ...rest, cover_url: cover_url || null, banner_url: banner_url || null, uploaded_by: user.id } as never)
     .select()
     .single();
 
