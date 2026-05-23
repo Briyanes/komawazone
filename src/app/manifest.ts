@@ -2,9 +2,9 @@ import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Komawa Zone',
-    short_name: 'KomawaZone',
-    description: 'Read manga & manhwa free — thousands of titles updated daily.',
+    name: 'OLLUQ — All Look Beyond Fantasy',
+    short_name: 'OLLUQ',
+    description: 'OLLUQ: All Look Beyond Fantasy. Baca manga & manhwa gratis — thousands of titles updated daily. Beyond Every Story.',
     start_url: '/',
     display: 'standalone',
     background_color: '#0D0D0D',

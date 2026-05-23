@@ -43,7 +43,7 @@ export function LoginForm() {
           Welcome back
         </h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Sign in to continue reading
+          Sign in to continue reading — Beyond Every Story
         </p>
       </div>
 

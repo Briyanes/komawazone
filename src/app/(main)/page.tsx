@@ -154,9 +154,9 @@ async function HeroSection() {
 
 function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug: string; title: string; cover_url: string | null }[] }) {
   const stats = [
-    { value: '1.000+', label: 'Judul'    },
-    { value: '50+',    label: 'Genre'    },
-    { value: 'Gratis', label: 'Selamanya'},
+    { value: '1.000+', label: 'Judul'  },
+    { value: '50+',    label: 'Genre'  },
+    { value: 'Gratis', label: 'Selamanya' },
   ];
 
   const covers = [
@@ -202,7 +202,7 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white"
             style={{ background: 'rgba(255,107,53,0.25)', border: '1px solid rgba(255,107,53,0.45)' }}
           >
-            ✦ Gratis · Tanpa Login
+            ✦ All Look Beyond Fantasy
           </span>
 
           {/* Headline */}
@@ -210,14 +210,13 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
             className="text-4xl font-black leading-[1.1] text-white md:text-5xl"
             style={{ fontFamily: 'var(--font-playfair, serif)', textShadow: '0 4px 32px rgba(0,0,0,0.5)' }}
           >
-            Baca Manga<br />
-            <span style={{ color: '#FF6B35' }}>&amp; Manhwa</span><br />
-            Gratis
+            Beyond Every<br />
+            <span style={{ color: '#FF6B35' }}>Story</span>
           </h1>
 
           <p className="text-sm leading-relaxed text-white/55 md:text-base max-w-sm">
-            Ribuan judul, update setiap hari.<br className="hidden md:block" />
-            Pengalaman baca terbaik di mobile.
+            Temukan ribuan manga, manhwa & manhua.<br className="hidden md:block" />
+            Update setiap hari. Beyond Every Story.
           </p>
 
           {/* Stats */}
@@ -245,14 +244,14 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
               className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
               style={{ background: 'var(--color-primary)', boxShadow: '0 8px 28px rgba(255,107,53,0.45)' }}
             >
-              Jelajahi Manga <ChevronRight size={15} />
+              Mulai Journey <ChevronRight size={15} />
             </Link>
             <Link
               href="/genre"
               className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold text-white/75 transition-all hover:bg-white/10 active:scale-95"
               style={{ background: 'rgba(255,255,255,0.08)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.15)' }}
             >
-              Lihat Genre
+              Jelajahi Genre
             </Link>
           </div>
         </div>

@@ -61,7 +61,7 @@ export function RegisterForm() {
           Create account
         </h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Join Komawa Zone and track your reading
+          Join OLLUQ — Beyond Every Story
         </p>
       </div>
 
