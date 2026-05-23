@@ -17,6 +17,7 @@ interface MangaCardProps {
   latestChapter?: { number: number; release_date?: string } | null;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
+  contentRating?: 'general' | 'mature';
 }
 
 const statusVariantMap: Record<MangaStatus, 'ongoing' | 'completed' | 'hiatus' | 'dropped'> = {
@@ -56,6 +57,7 @@ export function MangaCard({
   latestChapter,
   size = 'md',
   className,
+  contentRating,
 }: MangaCardProps) {
   const isNew = latestChapter?.release_date
     ? Date.now() - new Date(latestChapter.release_date).getTime() < 86400000
@@ -103,6 +105,18 @@ export function MangaCard({
           )}
         </div>
 
+        {/* 18+ badge */}
+        {contentRating === 'mature' && (
+          <div className="absolute top-1.5 right-1.5">
+            <span
+              className="flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-extrabold text-white"
+              style={{ background: '#ef4444' }}
+            >
+              18+
+            </span>
+          </div>
+        )}
+
         {/* UP dot — updated < 3h ago */}
         {isHot && (
           <span
@@ -135,10 +149,17 @@ export function MangaCard({
       <div className="space-y-0.5 px-0.5">
         <h3
           className={cn(
-            'font-semibold leading-tight line-clamp-2',
+            'font-semibold leading-tight',
             size === 'sm' ? 'text-xs' : 'text-sm'
           )}
-          style={{ color: 'var(--text-primary)' }}
+          style={{
+            color: 'var(--text-primary)',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
         >
           {title}
         </h3>

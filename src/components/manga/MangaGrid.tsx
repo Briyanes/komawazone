@@ -12,6 +12,7 @@ interface MangaItem {
   rating?: number;
   views?: number;
   chapters?: { number: number; release_date?: string }[];
+  content_rating?: 'general' | 'mature';
 }
 
 interface MangaGridProps {
@@ -45,7 +46,10 @@ export function MangaGrid({
     );
   }
   return (
-    <div className={cn('grid gap-3 sm:gap-4', columnClasses[columns], className)}>
+    <div
+      style={{ gap: '0.75rem' }}
+      className={cn('grid sm:gap-4', columnClasses[columns], className)}
+    >
       {isLoading
         ? Array.from({ length: skeletonCount }).map((_, i) => (
             <MangaCardSkeleton key={i} />
@@ -67,6 +71,7 @@ export function MangaGrid({
                 rating={item.rating}
                 views={item.views}
                 latestChapter={latestChapter}
+                contentRating={item.content_rating}
               />
             );
           })}

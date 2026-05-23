@@ -38,11 +38,10 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
         {/* Left arrow — overlaid on the left side */}
         <button
           onClick={prev}
-          className="absolute left-0 z-10 flex size-10 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+          className="absolute left-0 z-10 flex size-12 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
           style={{
-            background: 'rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.15)',
+            background: 'rgba(0,0,0,0.7)',
+            border: '1px solid rgba(255,255,255,0.2)',
           }}
         >
           <ChevronLeft size={20} color="white" />
@@ -112,11 +111,10 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
         {/* Right arrow — overlaid on the right side */}
         <button
           onClick={next}
-          className="absolute right-0 z-10 flex size-10 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
+          className="absolute right-0 z-10 flex size-12 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
           style={{
-            background: 'rgba(0,0,0,0.5)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255,255,255,0.15)',
+            background: 'rgba(0,0,0,0.7)',
+            border: '1px solid rgba(255,255,255,0.2)',
           }}
         >
           <ChevronRight size={20} color="white" />
