@@ -3,23 +3,16 @@ import { createClient } from '@/lib/supabase/server';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import type { Metadata } from 'next';
+import type { Database } from '@/lib/database.types';
 
 export const metadata: Metadata = { title: 'Riwayat Pembayaran — OLLUQ' };
 
-interface Payment {
-  id: string;
-  amount: number;
-  payment_method: string;
-  payment_status: string;
-  tripay_transaction_id: string | null;
-  paid_at: string | null;
-  expired_at: string;
-  created_at: string;
+type Payment = Database['public']['Tables']['payments']['Row'] & {
   subscription: {
     id: string;
     plan_duration: number;
   } | null;
-}
+};
 
 const STATUS_CONFIG = {
   pending: {
@@ -77,14 +70,14 @@ export default async function PaymentHistoryPage() {
     .from('payments')
     .select(`
       *,
-      subscription!inner (
+      subscription (
         id,
         plan_duration
       )
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(50) as unknown as { data: Payment[] };
+    .limit(50) as unknown as { data: Payment[] | null };
 
   if (!payments || payments.length === 0) {
     return (
