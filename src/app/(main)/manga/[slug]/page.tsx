@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { Star, Eye, BookOpen, Bookmark, Heart, BarChart2, User, Pen, Calendar, Sparkles } from 'lucide-react';
+import { Star, Eye, BookOpen, Bookmark, Heart, BarChart2, User, Pen, Calendar, Sparkles, Crown, Lock } from 'lucide-react';
 import { getMangaBySlug } from '@/lib/api/manga';
 import { Badge } from '@/components/ui/Badge';
 import { ChapterListSection } from '@/components/manga/ChapterListSection';
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const manga = await getMangaBySlug(slug);
   if (!manga) return { title: 'Not Found' };
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://komawazone.id';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://olluq.id';
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(manga.title)}&status=${manga.status}&rating=${manga.rating ?? 0}${manga.cover_url ? `&cover=${encodeURIComponent(manga.cover_url)}` : ''}`;
   return {
     title: manga.title,
@@ -56,6 +56,27 @@ export default async function MangaDetailPage({ params }: Props) {
   const { slug } = await params;
   const manga = await getMangaBySlug(slug);
   if (!manga) notFound();
+
+  // VIP gate for mature content
+  let isVip = false;
+  let isLoggedIn = false;
+  if (manga.content_rating === 'mature') {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    isLoggedIn = !!user;
+    if (user) {
+      const { data } = await supabase
+        .from('users')
+        .select('vip_expires_at')
+        .eq('id', user.id)
+        .single();
+      const exp = (data as { vip_expires_at?: string | null } | null)?.vip_expires_at;
+      isVip = !!exp && new Date(exp) > new Date();
+    }
+  } else {
+    // For non-mature content, all users can access but are not necessarily VIP
+    // isVip remains false unless user is actually VIP
+  }
 
   const chapters = manga.chapters.slice().sort((a, b) => b.number - a.number).map(ch => ({
     ...ch,
@@ -107,6 +128,11 @@ export default async function MangaDetailPage({ params }: Props) {
               <h1 className="text-2xl font-extrabold leading-tight md:text-5xl text-white"
                 style={{ fontFamily: 'var(--font-playfair)', wordBreak: 'break-word', textShadow: '0 2px 16px rgba(0,0,0,0.8)' }}>
                 {manga.title}
+                {manga.content_rating === 'mature' && (
+                  <span className="ml-2 align-middle inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-bold text-white" style={{ background: '#ef4444', fontSize: '11px' }}>
+                    18+
+                  </span>
+                )}
               </h1>
               {manga.alt_title && (
                 <p className="text-sm md:text-base text-white/45">{manga.alt_title}</p>
@@ -264,7 +290,56 @@ export default async function MangaDetailPage({ params }: Props) {
             </Suspense>
 
             {/* Chapter list */}
-            <ChapterListSection chapters={chapters} mangaSlug={slug} />
+            {isVip ? (
+              <ChapterListSection chapters={chapters} mangaSlug={slug} />
+            ) : (
+              <div
+                className="rounded-2xl p-8 text-center space-y-4"
+                style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(245,158,11,0.35)' }}
+              >
+                <div className="flex justify-center">
+                  <span className="flex size-14 items-center justify-center rounded-full" style={{ background: '#f59e0b' }}>
+                    <Lock size={24} className="text-white" />
+                  </span>
+                </div>
+                <div>
+                  <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                    Konten 18+ — Khusus VIP
+                  </p>
+                  <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    {isLoggedIn
+                      ? 'Manga ini mengandung konten dewasa. Upgrade ke VIP untuk membaca semua chapter.'
+                      : 'Manga ini mengandung konten dewasa. Login atau upgrade ke VIP untuk membaca.'}
+                  </p>
+                </div>
+                {isLoggedIn ? (
+                  <Link
+                    href="/vip"
+                    className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white"
+                    style={{ background: '#f59e0b' }}
+                  >
+                    <Crown size={15} /> Upgrade ke VIP
+                  </Link>
+                ) : (
+                  <div className="flex justify-center gap-3">
+                    <Link
+                      href="/login"
+                      className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white"
+                      style={{ background: 'var(--color-primary)' }}
+                    >
+                      Masuk
+                    </Link>
+                    <Link
+                      href="/vip"
+                      className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold"
+                      style={{ background: '#f59e0b', color: 'white' }}
+                    >
+                      <Crown size={15} /> VIP
+                    </Link>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Comment Section */}
             <MangaCommentSection mangaSlug={slug} />
@@ -348,7 +423,7 @@ async function Recommendations({ genres, excludeId }: { genres: string[]; exclud
   const supabase = await createClient();
   const { data } = await supabase
     .from('manga')
-    .select('id, slug, title, cover_url, status, rating, views, genres')
+    .select('id, slug, title, cover_url, status, rating, views, genres, content_rating')
     .is('deleted_at', null)
     .overlaps('genres', genres as never)
     .neq('id', excludeId)
