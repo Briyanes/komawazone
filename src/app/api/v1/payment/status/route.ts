@@ -19,7 +19,7 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const searchParams = await req.nextUrl.searchParams;
+    const searchParams = req.nextUrl.searchParams;
     const paymentId = searchParams.get('id');
     const orderId = searchParams.get('order_id');
 
@@ -95,7 +95,9 @@ export async function GET(req: NextRequest) {
             .select()
             .single();
 
-          paymentData = updatedPayment;
+          if (updatedPayment) {
+            paymentData = updatedPayment;
+          }
         }
 
         return NextResponse.json({
@@ -104,7 +106,7 @@ export async function GET(req: NextRequest) {
             payment_status: tripayStatus.data.status,
             payment_channel: tripayStatus.data.paymentChannel,
             paid_at: tripayStatus.data.paidAt,
-            subscription_id: paymentData.subscription_id,
+            subscription_id: paymentData?.subscription_id,
           },
         });
       }
