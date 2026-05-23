@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, X, LogIn, User as UserIcon, Bookmark, LogOut } from 'lucide-react';
+import { Search, X, LogIn, User as UserIcon, Bookmark, LogOut, Crown, LayoutDashboard } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/hooks/useAuth';
@@ -13,7 +13,7 @@ import { Avatar } from '@/components/ui/Avatar';
 export function Header() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, isAuthenticated, signOut } = useAuth();
+  const { user, isAuthenticated, signOut, isVip } = useAuth();
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [menuOpen, setMenuOpen] = useState(false);
@@ -49,13 +49,13 @@ export function Header() {
             className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-xl md:rounded-2xl text-sm md:text-base font-black shadow-lg text-white"
             style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}
           >
-            KZ
+            OQ
           </span>
           <span
             className="hidden sm:inline text-xl font-black tracking-tight"
             style={{ color: 'var(--text-primary)' }}
           >
-            Komawa<span style={{ color: 'var(--color-primary)' }}>Zone</span>
+            OLLUQ
           </span>
         </Link>
 
@@ -126,16 +126,28 @@ export function Header() {
                 className="ml-1 rounded-full transition-opacity hover:opacity-80"
                 aria-label="User menu"
               >
-                <Avatar
-                  src={user?.user_metadata?.avatar_url}
-                  alt={user?.user_metadata?.username ?? user?.email ?? ''}
-                  size="sm"
-                />
+                <div className="relative">
+                  <Avatar
+                    src={user?.user_metadata?.avatar_url}
+                    alt={user?.user_metadata?.username ?? user?.email ?? ''}
+                    size="sm"
+                  />
+                  {isVip && (
+                    <span
+                      className="absolute -top-1 -right-1 flex size-4 items-center justify-center rounded-full"
+                      style={{ background: '#f59e0b' }}
+                    >
+                      <Crown size={9} className="text-white" />
+                    </span>
+                  )}
+                </div>
               </button>
 
               {menuOpen && (
                 <UserMenu
                   username={user?.user_metadata?.username ?? 'User'}
+                  isVip={isVip}
+                  isAdmin={user?.user_metadata?.role === 'ADMIN'}
                   onSignOut={async () => { setMenuOpen(false); await signOut(); }}
                   onClose={() => setMenuOpen(false)}
                 />
@@ -181,10 +193,14 @@ export function Header() {
 
 function UserMenu({
   username,
+  isVip,
+  isAdmin,
   onSignOut,
   onClose,
 }: {
   username: string;
+  isVip: boolean;
+  isAdmin?: boolean;
   onSignOut: () => void;
   onClose: () => void;
 }) {
@@ -206,8 +222,21 @@ function UserMenu({
     >
       <div className="border-b px-3 py-2" style={{ borderColor: 'var(--border-light)' }}>
         <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>@{username}</p>
+        <div className="flex items-center gap-1.5 mt-1">
+          {isVip && (
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: '#f59e0b' }}>
+              <Crown size={9} />VIP
+            </span>
+          )}
+          {isAdmin && (
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: 'var(--color-primary)' }}>
+              ADMIN
+            </span>
+          )}
+        </div>
       </div>
       {[
+        ...(isAdmin ? [{ href: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard }] : []),
         { href: '/profile',   label: 'Profile',   icon: UserIcon },
         { href: '/bookmarks', label: 'Bookmarks', icon: Bookmark },
       ].map(({ href, label, icon: Icon }) => (
