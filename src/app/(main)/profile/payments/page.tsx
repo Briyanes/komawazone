@@ -74,17 +74,17 @@ export default async function PaymentHistoryPage() {
 
   // Fetch user payments with subscription details
   const { data: payments } = await supabase
-    .from('payments' as any)
+    .from('payments')
     .select(`
       *,
-      subscription (
+      subscription!inner (
         id,
         plan_duration
       )
     `)
     .eq('user_id', user.id)
     .order('created_at', { ascending: false })
-    .limit(50);
+    .limit(50) as unknown as { data: Payment[] };
 
   if (!payments || payments.length === 0) {
     return (
