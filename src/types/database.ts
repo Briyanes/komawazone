@@ -389,6 +389,7 @@ export interface Database {
           metadata?: Json | null;
         };
         Update: {
+          payment_channel?: string | null;
           payment_status?: 'pending' | 'paid' | 'failed' | 'expired' | 'cancelled' | 'refunded';
           tripay_transaction_id?: string | null;
           tripay_payment_url?: string | null;
