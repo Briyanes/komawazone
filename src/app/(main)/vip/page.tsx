@@ -1,13 +1,14 @@
 import Link from 'next/link';
 import { Crown, Check, Zap, Lock } from 'lucide-react';
 import type { Metadata } from 'next';
+import { VIPClientWrapper } from '@/components/payment/VIPClientWrapper';
 
 export const metadata: Metadata = { title: 'VIP — OLLUQ' };
 
 const PLANS = [
-  { label: '1 Bulan', price: 'Rp 15.000', value: '15rb' },
-  { label: '3 Bulan', price: 'Rp 40.000', value: '40rb', badge: 'Hemat 11%' },
-  { label: '6 Bulan', price: 'Rp 75.000', value: '75rb', badge: 'Hemat 17%' },
+  { label: '1 Bulan', price: 'Rp 15.000', value: '15rb', code: '1-month' },
+  { label: '3 Bulan', price: 'Rp 40.000', value: '40rb', badge: 'Hemat 11%', code: '3-month' },
+  { label: '6 Bulan', price: 'Rp 75.000', value: '75rb', badge: 'Hemat 17%', code: '6-month' },
 ];
 
 const BENEFITS = [
@@ -56,6 +57,7 @@ export default async function VIPPage({ searchParams }: Props) {
           </div>
         </div>
       )}
+
       {/* Hero */}
       <div className="text-center space-y-3">
         <div
@@ -89,37 +91,18 @@ export default async function VIPPage({ searchParams }: Props) {
         ))}
       </div>
 
-      {/* Pricing */}
+      {/* Payment Method Selection */}
       <div>
-        <h2 className="text-base font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Pilih Paket</h2>
-        <div className="grid gap-3 sm:grid-cols-3">
-          {PLANS.map(plan => (
-            <div
-              key={plan.label}
-              className="relative rounded-xl border p-4 text-center space-y-1"
-              style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
-            >
-              {plan.badge && (
-                <span
-                  className="absolute -top-2.5 left-1/2 -translate-x-1/2 rounded-full px-2 py-0.5 text-[10px] font-bold"
-                  style={{ background: 'var(--color-primary)', color: 'white' }}
-                >
-                  {plan.badge}
-                </span>
-              )}
-              <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>{plan.label}</p>
-              <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{plan.price}</p>
-            </div>
-          ))}
-        </div>
+        <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Pilih Metode Pembayaran</h2>
+        <VIPClientWrapper plans={PLANS} />
       </div>
 
-      {/* How to subscribe */}
+      {/* Manual Payment Info */}
       <div
         className="rounded-2xl border p-6 space-y-3"
         style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
       >
-        <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Cara Berlangganan</h2>
+        <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Pembayaran Manual (Backup)</h2>
         <ol className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
           <li className="flex gap-2"><span className="font-bold text-amber-500">1.</span> Transfer sesuai paket yang dipilih ke rekening admin.</li>
           <li className="flex gap-2"><span className="font-bold text-amber-500">2.</span> Kirim bukti transfer beserta username/email ke admin via WhatsApp atau Discord.</li>
@@ -148,3 +131,4 @@ export default async function VIPPage({ searchParams }: Props) {
     </div>
   );
 }
+

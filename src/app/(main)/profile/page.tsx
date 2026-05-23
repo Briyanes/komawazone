@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
-import { User, Edit3, Save, X, LogOut, BookOpen, Bookmark, Heart, Crown } from 'lucide-react';
+import { User, Edit3, Save, X, LogOut, BookOpen, Bookmark, Heart, Crown, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
@@ -266,6 +266,15 @@ export default function ProfilePage() {
           </h2>
         </div>
         <div className="divide-y" style={{ '--tw-divide-opacity': 1 } as React.CSSProperties}>
+          <a href="/profile/payments" className="flex items-center justify-between px-4 py-3 hover:opacity-80 transition-opacity">
+            <div className="flex items-center gap-3">
+              <CreditCard size={16} style={{ color: 'var(--color-primary)' }} />
+              <span className="text-sm" style={{ color: 'var(--text-primary)' }}>Payment History</span>
+            </div>
+            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              View all →
+            </span>
+          </a>
           <div className="flex items-center justify-between px-4 py-3">
             <div className="flex items-center gap-3">
               <User size={16} style={{ color: 'var(--color-primary)' }} />
