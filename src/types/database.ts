@@ -22,6 +22,7 @@ export interface Database {
           role: 'USER' | 'ADMIN';
           bio: string | null;
           theme_preference: 'light' | 'dark';
+          vip_expires_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -33,12 +34,14 @@ export interface Database {
           role?: 'USER' | 'ADMIN';
           bio?: string | null;
           theme_preference?: 'light' | 'dark';
+          vip_expires_at?: string | null;
         };
         Update: {
           username?: string | null;
           avatar_url?: string | null;
           bio?: string | null;
           theme_preference?: 'light' | 'dark';
+          vip_expires_at?: string | null;
         };
         Relationships: [];
       };
@@ -61,6 +64,7 @@ export interface Database {
           rating_count: number;
           views: number;
           is_featured: boolean;
+          content_rating: 'general' | 'mature';
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -80,6 +84,7 @@ export interface Database {
           release_year?: number | null;
           rating?: number;
           is_featured?: boolean;
+          content_rating?: 'general' | 'mature';
         };
         Update: {
           title?: string;
@@ -95,6 +100,7 @@ export interface Database {
           release_year?: number | null;
           rating?: number;
           is_featured?: boolean;
+          content_rating?: 'general' | 'mature';
           deleted_at?: string | null;
         };
         Relationships: [];
@@ -301,14 +307,48 @@ export interface Database {
           name: string;
           slug: string;
           description: string | null;
+          is_mature: boolean;
         };
         Insert: {
           name: string;
           slug: string;
           description?: string | null;
+          is_mature?: boolean;
         };
         Update: {
+          name?: string;
+          slug?: string;
           description?: string | null;
+          is_mature?: boolean;
+        };
+        Relationships: [];
+      };
+      subscriptions: {
+        Row: {
+          id: string;
+          user_id: string;
+          plan: string;
+          amount: number;
+          started_at: string;
+          expires_at: string;
+          status: 'active' | 'expired' | 'cancelled';
+          payment_method: string | null;
+          notes: string | null;
+          created_at: string;
+        };
+        Insert: {
+          user_id: string;
+          plan?: string;
+          amount?: number;
+          started_at?: string;
+          expires_at: string;
+          status?: 'active' | 'expired' | 'cancelled';
+          payment_method?: string | null;
+          notes?: string | null;
+        };
+        Update: {
+          status?: 'active' | 'expired' | 'cancelled';
+          notes?: string | null;
         };
         Relationships: [];
       };

@@ -1,5 +1,5 @@
 {
-  "name": "komawa-zone",
+  "name": "olluq",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -14,15 +14,7 @@
     "db:studio": "prisma studio"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-avatar": "^1.1.11",
-    "@radix-ui/react-dialog": "^1.1.15",
-    "@radix-ui/react-dropdown-menu": "^2.1.16",
-    "@radix-ui/react-label": "^2.1.8",
-    "@radix-ui/react-select": "^2.2.6",
-    "@radix-ui/react-tabs": "^1.1.13",
-    "@radix-ui/react-toast": "^1.2.15",
-    "@radix-ui/react-toggle": "^1.1.10",
     "@sentry/nextjs": "^10.53.1",
     "@supabase/auth-helpers-nextjs": "^0.15.0",
     "@supabase/ssr": "^0.10.3",
@@ -37,7 +29,6 @@
     "react": "19.2.4",
     "react-dom": "19.2.4",
     "react-hook-form": "^7.75.0",
-    "sharp": "^0.34.5",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.4.3"
   },

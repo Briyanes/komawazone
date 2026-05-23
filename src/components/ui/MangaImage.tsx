@@ -28,8 +28,7 @@ export default function MangaImage(props: ImageProps) {
     <NextImage
       {...props}
       unoptimized={bypass || props.unoptimized}
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      referrerPolicy={bypass ? 'no-referrer' : (props as any).referrerPolicy}
+      referrerPolicy={bypass ? 'no-referrer' : (props.referrerPolicy ?? 'no-referrer-when-downgrade')}
     />
   );
 }

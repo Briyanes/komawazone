@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Star } from 'lucide-react';
 import Image from 'next/image';
 import { ReviewForm } from './ReviewForm';
+import { sanitizeText } from '@/lib/sanitize';
 
 interface Review {
   id: string;
@@ -128,9 +129,11 @@ export function ReviewsCarousel({ slug }: { slug: string }) {
               </div>
 
               {review.text && (
-                <p className="text-xs line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
-                  {review.text}
-                </p>
+                <p
+                  className="text-xs line-clamp-3"
+                  style={{ color: 'var(--text-secondary)' }}
+                  dangerouslySetInnerHTML={{ __html: sanitizeText(review.text) }}
+                />
               )}
             </div>
           ))}

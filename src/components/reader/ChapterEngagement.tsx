@@ -12,6 +12,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/cn';
+import { sanitizeText } from '@/lib/sanitize';
 
 interface CommentUser {
   id: string;
@@ -441,9 +442,11 @@ export function ChapterEngagement({ chapterId }: { chapterId: string }) {
                         {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: localeId })}
                       </span>
                     </div>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'rgba(255,255,255,0.75)' }}>
-                      {comment.content}
-                    </p>
+                    <p
+                      className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                      style={{ color: 'rgba(255,255,255,0.75)' }}
+                      dangerouslySetInnerHTML={{ __html: sanitizeText(comment.content) }}
+                    />
                     <div className="mt-1.5 flex items-center gap-3">
                       <button onClick={() => toggleCommentLike(comment.id)}
                         className={cn('flex items-center gap-1 text-xs transition-colors', liked ? 'font-semibold' : 'hover:opacity-70')}
@@ -499,9 +502,11 @@ export function ChapterEngagement({ chapterId }: { chapterId: string }) {
                                 {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true, locale: localeId })}
                               </span>
                             </div>
-                            <p className="text-xs leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                              {reply.content}
-                            </p>
+                            <p
+                              className="text-xs leading-relaxed whitespace-pre-wrap break-words"
+                              style={{ color: 'rgba(255,255,255,0.7)' }}
+                              dangerouslySetInnerHTML={{ __html: sanitizeText(reply.content) }}
+                            />
                             <div className="mt-1 flex items-center gap-3">
                               <button onClick={() => toggleCommentLike(reply.id)}
                                 className={cn('flex items-center gap-1 text-[11px]', replyLiked ? 'font-semibold' : 'hover:opacity-70')}

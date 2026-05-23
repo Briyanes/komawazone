@@ -16,7 +16,7 @@ export function ShareButtons({ title, slug }: ShareButtonsProps) {
     ? `${window.location.origin}/manga/${slug}`
     : `/manga/${slug}`;
 
-  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Reading "${title}" on Komawa Zone!`)}&url=${encodeURIComponent(url)}`;
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(`Reading "${title}" on OLLUQ!`)}&url=${encodeURIComponent(url)}`;
 
   const copyLink = async () => {
     try {

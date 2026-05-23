@@ -8,6 +8,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/cn';
+import { sanitizeText } from '@/lib/sanitize';
 
 interface CommentUser {
   id: string;
@@ -261,15 +262,15 @@ export function MangaCommentSection({ mangaSlug }: { mangaSlug: string }) {
           className="w-full resize-none bg-transparent px-4 pt-4 pb-2 text-sm outline-none"
           style={{ color: 'var(--text-primary)', minHeight: 80 }}
         />
-        <div className="flex items-center justify-between px-4 pb-3 pt-1" style={{ borderTop: '1px solid var(--border-light)' }}>
+        <div className="flex items-center justify-between gap-2 px-4 pb-3 pt-1 flex-wrap sm:flex-nowrap" style={{ borderTop: '1px solid var(--border-light)' }}>
           <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
             {content.length} / 2000 kata
           </span>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
             {!isAuthenticated && (
               <Link
                 href="/login"
-                className="rounded-lg border px-4 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+                className="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80 text-sm sm:text-xs"
                 style={{ borderColor: 'var(--border-medium)', color: 'var(--text-primary)' }}
               >
                 Login
@@ -279,7 +280,7 @@ export function MangaCommentSection({ mangaSlug }: { mangaSlug: string }) {
               onClick={submit}
               disabled={!isAuthenticated || !content.trim() || submitting}
               className={cn(
-                'flex items-center gap-1.5 rounded-lg px-4 py-1.5 text-xs font-bold text-white transition-opacity',
+                'flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-bold text-white transition-opacity flex-1 sm:flex-none justify-center',
                 (!isAuthenticated || !content.trim() || submitting) ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90'
               )}
               style={{ background: 'var(--color-primary)' }}
@@ -295,17 +296,17 @@ export function MangaCommentSection({ mangaSlug }: { mangaSlug: string }) {
       </div>
 
       {/* Sort + count */}
-      <div className="mb-4 flex items-center justify-between">
+      <div className="mb-4 flex items-center justify-between gap-2 flex-wrap">
         <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
           {total} Komentar
         </p>
-        <div className="flex gap-1.5">
+        <div className="flex gap-1 flex-wrap">
           {(['newest', 'oldest', 'popular'] as SortType[]).map(s => (
             <button
               key={s}
               onClick={() => setSort(s)}
               className={cn(
-                'rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors',
+                'rounded-lg px-2.5 py-1 text-[11px] sm:text-xs sm:px-3 sm:py-1.5 font-semibold transition-colors',
                 sort === s
                   ? 'text-white'
                   : 'hover:opacity-80'
@@ -362,9 +363,11 @@ export function MangaCommentSection({ mangaSlug }: { mangaSlug: string }) {
                       {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: localeId })}
                     </span>
                   </div>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--text-primary)' }}>
-                    {comment.content}
-                  </p>
+                  <p
+                    className="text-sm leading-relaxed whitespace-pre-wrap break-words"
+                    style={{ color: 'var(--text-primary)' }}
+                    dangerouslySetInnerHTML={{ __html: sanitizeText(comment.content) }}
+                  />
                   <div className="mt-1.5 flex items-center gap-3">
                     <button
                       onClick={() => toggleLike(comment.id)}
@@ -426,9 +429,11 @@ export function MangaCommentSection({ mangaSlug }: { mangaSlug: string }) {
                               {formatDistanceToNow(new Date(reply.created_at), { addSuffix: true, locale: localeId })}
                             </span>
                           </div>
-                          <p className="text-xs leading-relaxed whitespace-pre-wrap break-words" style={{ color: 'var(--text-primary)' }}>
-                            {reply.content}
-                          </p>
+                          <p
+                            className="text-xs leading-relaxed whitespace-pre-wrap break-words"
+                            style={{ color: 'var(--text-primary)' }}
+                            dangerouslySetInnerHTML={{ __html: sanitizeText(reply.content) }}
+                          />
                           <div className="mt-1 flex items-center gap-3">
                             <button onClick={() => toggleLike(reply.id)}
                               className={cn('flex items-center gap-1 text-[11px] transition-colors', replyLiked ? 'font-semibold' : 'hover:opacity-70')}
