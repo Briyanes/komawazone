@@ -1,8 +1,8 @@
 import { Megaphone } from 'lucide-react';
 
 export const metadata = {
-  title: 'Advertise With Us — Komawa Zone',
-  description: 'Pasang iklan di Komawa Zone dan jangkau ribuan pembaca manga aktif.',
+  title: 'Advertise With Us — OLLUQ',
+  description: 'Pasang iklan di OLLUQ dan jangkau ribuan pembaca manga aktif.',
 };
 
 export default function AdvertisePage() {
@@ -17,13 +17,13 @@ export default function AdvertisePage() {
 
       <div className="space-y-6 text-sm leading-relaxed" style={{ color: 'var(--text-secondary)' }}>
         <p>
-          Ingin menjangkau ribuan pembaca manga aktif setiap harinya? Komawa Zone membuka
+          Ingin menjangkau ribuan pembaca manga aktif setiap harinya? OLLUQ membuka
           kesempatan kerja sama iklan untuk brand dan bisnis yang ingin tampil di platform kami.
         </p>
 
         <div className="space-y-4 rounded-2xl p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
           <h2 className="text-base font-black" style={{ color: 'var(--text-primary)' }}>
-            Mengapa beriklan di Komawa Zone?
+            Mengapa beriklan di OLLUQ?
           </h2>
           <ul className="space-y-2">
             {[
@@ -41,8 +41,8 @@ export default function AdvertisePage() {
 
         <p>
           Kirimkan proposal atau pertanyaan ke{' '}
-          <a href="mailto:ads@komawazone.com" className="font-semibold hover:underline" style={{ color: '#FF6B35' }}>
-            ads@komawazone.com
+          <a href="mailto:ads@olluq.com" className="font-semibold hover:underline" style={{ color: '#FF6B35' }}>
+            ads@olluq.com
           </a>
           {' '}dan tim kami akan segera merespons.
         </p>

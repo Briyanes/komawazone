@@ -18,6 +18,7 @@ interface ListItem {
   manga: {
     id: string; slug: string; title: string;
     cover_url: string | null; status: MangaStatus; rating: number; views: number;
+    content_rating?: 'general' | 'mature';
   } | null;
 }
 
@@ -111,6 +112,7 @@ export default function ReadingListPage() {
               status={item.manga!.status}
               rating={item.manga!.rating}
               views={item.manga!.views}
+              contentRating={item.manga!.content_rating}
             />
           ))}
         </div>

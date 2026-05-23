@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: { default: 'Authentication', template: '%s | Komawa Zone' },
+  title: { default: 'Authentication', template: '%s | OLLUQ' },
   robots: { index: false },
 };
 
@@ -17,7 +17,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             className="text-3xl font-bold"
             style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-primary)' }}
           >
-            Komawa Zone
+            OLLUQ
           </span>
         </Link>
       </div>

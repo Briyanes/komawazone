@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
 
   let query = supabase
     .from('reading_list')
-    .select('id, status, updated_at, manga(id, slug, title, cover_url, status, rating, views)')
+    .select('id, status, updated_at, manga(id, slug, title, cover_url, status, rating, views, content_rating)')
     .eq('user_id', user.id)
     .order('updated_at', { ascending: false });
 

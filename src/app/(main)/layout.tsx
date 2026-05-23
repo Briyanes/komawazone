@@ -3,6 +3,7 @@ import { BottomNav } from '@/components/layout/BottomNav';
 import { Footer } from '@/components/layout/Footer';
 import { AnnouncementBanner } from '@/components/AnnouncementBanner';
 import { BackToTop } from '@/components/BackToTop';
+import { VIPPromoModal } from '@/components/VIPPromoModal';
 
 export default function MainLayout({ children }: { children: React.ReactNode }) {
   return (
@@ -15,6 +16,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
       <Footer />
       <BottomNav />
       <BackToTop />
+      <VIPPromoModal />
     </>
   );
 }

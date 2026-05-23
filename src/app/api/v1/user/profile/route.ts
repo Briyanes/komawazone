@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { rateLimit, RateLimits } from '@/lib/rate-limit';
 
 const updateProfileSchema = z.object({
   username: z.string().min(3).max(30).optional(),
@@ -18,7 +19,7 @@ export async function GET() {
 
     let { data, error } = await supabase
       .from('users')
-      .select('id, email, username, avatar_url, bio, role, created_at')
+      .select('id, email, username, avatar_url, bio, role, created_at, vip_expires_at')
       .eq('id', user.id)
       .single();
 
@@ -28,7 +29,7 @@ export async function GET() {
       const { data: newRow, error: insertErr } = await supabase
         .from('users')
         .upsert({ id: user.id, email: user.email!, username })
-        .select('id, email, username, avatar_url, bio, role, created_at')
+        .select('id, email, username, avatar_url, bio, role, created_at, vip_expires_at')
         .single();
       if (insertErr) throw insertErr;
       data = newRow;
@@ -44,6 +45,22 @@ export async function GET() {
 }
 
 export async function PATCH(request: NextRequest) {
+  // Rate limit: 20 profile updates per minute
+  const rateLimitResult = await rateLimit(request, RateLimits.userAction);
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { status: 'error', error: 'Too many requests. Please try again later.' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+        },
+      }
+    );
+  }
+
   try {
     const supabase = await createClient();
     const { data: { user }, error: authError } = await supabase.auth.getUser();

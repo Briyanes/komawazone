@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import { rateLimit, RateLimits } from '@/lib/rate-limit';
 
 interface RouteContext {
   params: Promise<{ slug: string }>;
@@ -84,6 +85,22 @@ export async function GET(req: NextRequest, { params }: RouteContext) {
 
 // POST /api/v1/manga/[slug]/comments
 export async function POST(req: NextRequest, { params }: RouteContext) {
+  // Rate limit: 10 comments per minute to prevent spam
+  const rateLimitResult = await rateLimit(req, { limit: 10, window: 60 * 1000 });
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many comments. Please wait before posting again.' },
+      {
+        status: 429,
+        headers: {
+          'X-RateLimit-Limit': String(rateLimitResult.limit),
+          'X-RateLimit-Remaining': String(rateLimitResult.remaining),
+          'X-RateLimit-Reset': rateLimitResult.resetAt.toISOString(),
+        },
+      }
+    );
+  }
+
   const { slug } = await params;
   const supabase = await createClient();
 
@@ -114,6 +131,14 @@ export async function POST(req: NextRequest, { params }: RouteContext) {
 
 // DELETE /api/v1/manga/[slug]/comments  body: { id }
 export async function DELETE(req: NextRequest) {
+  // Rate limit: 30 deletes per minute
+  const rateLimitResult = await rateLimit(req, RateLimits.userAction);
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Too many requests. Please try again later.' },
+      { status: 429 }
+    );
+  }
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

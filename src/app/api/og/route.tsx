@@ -6,7 +6,7 @@ export const runtime = 'edge';
 
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const title = searchParams.get('title') ?? 'Komawa Zone';
+  const title = searchParams.get('title') ?? 'OLLUQ';
   const cover = searchParams.get('cover') ?? '';
   const status = searchParams.get('status') ?? '';
   const rating = searchParams.get('rating') ?? '';
@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
               width: 'fit-content',
             }}
           >
-            <span style={{ color: '#FF6B35', fontSize: 14, fontWeight: 700 }}>📚 Komawa Zone</span>
+            <span style={{ color: '#FF6B35', fontSize: 14, fontWeight: 700 }}>📚 OLLUQ</span>
           </div>
 
           {/* Title */}
@@ -140,7 +140,7 @@ export async function GET(request: NextRequest) {
           </div>
 
           <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 15 }}>
-            Read free manga & manhwa on Komawa Zone
+            Read free manga & manhwa on OLLUQ
           </div>
         </div>
       </div>

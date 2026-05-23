@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
-import { User, Edit3, Save, X, LogOut, BookOpen, Bookmark, Heart } from 'lucide-react';
+import { User, Edit3, Save, X, LogOut, BookOpen, Bookmark, Heart, Crown } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
@@ -18,6 +18,7 @@ interface UserProfile {
   bio: string | null;
   role: string;
   created_at: string;
+  vip_expires_at: string | null;
 }
 
 interface Stats {
@@ -98,6 +99,8 @@ export default function ProfilePage() {
 
   const displayName = profile.username || profile.email.split('@')[0];
   const joinedYear = new Date(profile.created_at).getFullYear();
+  const isVip = !!profile.vip_expires_at && new Date(profile.vip_expires_at) > new Date();
+  const vipExpiry = profile.vip_expires_at ? new Date(profile.vip_expires_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : null;
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-6 space-y-6">
@@ -208,6 +211,48 @@ export default function ProfilePage() {
             </span>
           </div>
         ))}
+      </div>
+
+      {/* VIP Status */}
+      <div
+        className="rounded-2xl p-4 flex items-center gap-4"
+        style={{
+          background: isVip ? 'rgba(245,158,11,0.1)' : 'var(--bg-secondary)',
+          border: isVip ? '1px solid rgba(245,158,11,0.35)' : '1px solid var(--border-light)',
+        }}
+      >
+        <span
+          className="flex size-10 shrink-0 items-center justify-center rounded-full"
+          style={{ background: isVip ? '#f59e0b' : 'var(--bg-tertiary)' }}
+        >
+          <Crown size={20} className={isVip ? 'text-white' : ''} style={{ color: isVip ? undefined : 'var(--text-tertiary)' }} />
+        </span>
+        <div className="flex-1 min-w-0">
+          {isVip ? (
+            <>
+              <p className="text-sm font-bold" style={{ color: '#f59e0b' }}>VIP Aktif</p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Berlaku hingga {vipExpiry}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Upgrade ke VIP</p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Akses konten 18+, semua genre, tanpa batas
+              </p>
+            </>
+          )}
+        </div>
+        {!isVip && (
+          <a
+            href="/vip"
+            className="shrink-0 rounded-full px-3 py-1.5 text-xs font-bold text-white"
+            style={{ background: '#f59e0b' }}
+          >
+            Lihat VIP
+          </a>
+        )}
       </div>
 
       {/* Account info */}

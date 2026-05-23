@@ -2,9 +2,10 @@
 
 import { useState, useTransition, useEffect, useCallback } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Search, SlidersHorizontal, X, Star } from 'lucide-react';
+import { Search, SlidersHorizontal, X, Star, Lock, Crown } from 'lucide-react';
 import { MangaGrid } from '@/components/manga/MangaGrid';
 import { cn } from '@/lib/cn';
+import { createClient } from '@/lib/supabase/client';
 import type { MangaStatus, MangaFilters } from '@/types';
 
 const STATUS_OPTIONS: { value: MangaStatus; label: string }[] = [
@@ -24,7 +25,7 @@ const SORT_OPTIONS = [
 const TYPE_OPTIONS = ['Manga', 'Manhwa', 'Manhua', 'Webtoon'] as const;
 type MangaType = typeof TYPE_OPTIONS[number];
 
-interface Genre { id: string; name: string; slug: string }
+interface Genre { id: string; name: string; slug: string; is_mature?: boolean }
 
 interface SearchResult {
   id: string;
@@ -34,6 +35,7 @@ interface SearchResult {
   status: string;
   rating?: number;
   views?: number;
+  content_rating?: 'general' | 'mature';
 }
 
 export default function SearchContent() {
@@ -44,6 +46,7 @@ export default function SearchContent() {
   const [isLoading, startTransition] = useTransition();
   const [showFilters, setShowFilters] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
+  const [isVip, setIsVip] = useState(false);
 
   const query   = searchParams.get('q')      ?? '';
   const status  = (searchParams.get('status') ?? '') as MangaStatus | '';
@@ -60,6 +63,19 @@ export default function SearchContent() {
       .then(r => r.json())
       .then((d: { status: string; data: Genre[] }) => { if (d.status === 'success') setGenres(d.data); })
       .catch(() => {});
+
+    const supabase = createClient();
+    supabase.auth.getUser().then(async ({ data: { user } }) => {
+      if (!user) return;
+      const { data } = await supabase
+        .from('users')
+        .select('vip_expires_at')
+        .eq('id', user.id)
+        .single();
+      if (data?.vip_expires_at) {
+        setIsVip(new Date(data.vip_expires_at) > new Date());
+      }
+    });
   }, []);
 
   const fetchResults = useCallback(() => {
@@ -202,7 +218,7 @@ export default function SearchContent() {
             {/* Row 3: Rating */}
             <div>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Rating Minimum</p>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 {[0, 1, 2, 3, 4, 5].map(r => (
                   <button key={r} onClick={() => updateParam('min_rating', r === 0 ? '' : String(r))}
                     className={cn(
@@ -223,11 +239,21 @@ export default function SearchContent() {
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Genre</p>
                 <div className="flex flex-wrap gap-2">
                   <FilterChip active={!genre} onClick={() => updateParam('genre', '')}>Semua</FilterChip>
-                  {genres.map(g => (
-                    <FilterChip key={g.id} active={genre === g.name} onClick={() => updateParam('genre', genre === g.name ? '' : g.name)}>
-                      {g.name}
-                    </FilterChip>
-                  ))}
+                  {genres.map(g => {
+                    const locked = !!(g.is_mature && !isVip);
+                    return locked ? (
+                      <a key={g.id} href="/vip"
+                        className="inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-medium transition-colors"
+                        style={{ borderColor: 'rgba(245,158,11,0.4)', color: '#f59e0b', background: 'rgba(245,158,11,0.08)' }}
+                        title="Butuh VIP untuk akses genre ini">
+                        <Lock size={10} />{g.name}<Crown size={10} />
+                      </a>
+                    ) : (
+                      <FilterChip key={g.id} active={genre === g.name} onClick={() => updateParam('genre', genre === g.name ? '' : g.name)}>
+                        {g.name}
+                      </FilterChip>
+                    );
+                  })}
                 </div>
               </div>
             )}

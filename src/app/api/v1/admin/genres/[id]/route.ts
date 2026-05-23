@@ -14,6 +14,7 @@ const UpdateGenreSchema = z.object({
   name: z.string().min(1).max(50).optional(),
   slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/).optional(),
   description: z.string().max(200).optional().nullable(),
+  is_mature: z.boolean().optional(),
 });
 
 export async function PATCH(

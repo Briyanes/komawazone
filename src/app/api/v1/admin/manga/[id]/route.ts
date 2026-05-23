@@ -17,6 +17,7 @@ const MangaUpdateSchema = z.object({
   release_year: z.number().int().min(1900).max(2100).optional(),
   rating: z.number().min(0).max(10).optional(),
   is_featured: z.boolean().optional(),
+  content_rating: z.enum(['general', 'mature']).optional(),
 });
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -49,14 +50,27 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
     );
   }
 
-  const updates = { ...parsed.data } as Record<string, unknown>;
-  if ('cover_url' in updates && updates.cover_url === '') updates.cover_url = null;
-  if ('banner_url' in updates && updates.banner_url === '') updates.banner_url = null;
+  const updates = { ...parsed.data };
+  const updateData: Record<string, unknown> = {};
+  if (updates.title !== undefined) updateData.title = updates.title;
+  if (updates.alt_title !== undefined) updateData.alt_title = updates.alt_title;
+  if (updates.slug !== undefined) updateData.slug = updates.slug;
+  if (updates.description !== undefined) updateData.description = updates.description;
+  if (updates.author !== undefined) updateData.author = updates.author;
+  if (updates.artist !== undefined) updateData.artist = updates.artist;
+  if (updates.cover_url !== undefined) updateData.cover_url = updates.cover_url || null;
+  if (updates.banner_url !== undefined) updateData.banner_url = updates.banner_url || null;
+  if (updates.status !== undefined) updateData.status = updates.status;
+  if (updates.type !== undefined) updateData.type = updates.type;
+  if (updates.genres !== undefined) updateData.genres = updates.genres;
+  if (updates.release_year !== undefined) updateData.release_year = updates.release_year;
+  if (updates.rating !== undefined) updateData.rating = updates.rating;
+  if (updates.is_featured !== undefined) updateData.is_featured = updates.is_featured;
+  if (updates.content_rating !== undefined) updateData.content_rating = updates.content_rating;
 
   const { data, error } = await supabase
     .from('manga')
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    .update(updates as any)
+    .update(updateData as never)
     .eq('id', id)
     .select()
     .single();

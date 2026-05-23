@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { Tag } from 'lucide-react';
 
 export const metadata = {
-  title: 'Semua Genre — Komawa Zone',
+  title: 'Semua Genre — OLLUQ',
   description: 'Jelajahi manga, manhwa & manhua berdasarkan genre favorit kamu.',
 };
 

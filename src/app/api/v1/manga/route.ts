@@ -6,22 +6,23 @@ const PER_PAGE = 20;
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const q         = searchParams.get('q')          ?? '';
-    const status    = searchParams.get('status')     ?? '';
-    const genre     = searchParams.get('genre')      ?? '';
-    const sort      = searchParams.get('sort')       ?? 'latest';
-    const page      = Math.max(1, Number(searchParams.get('page')       ?? '1'));
-    const author    = searchParams.get('author')     ?? '';
-    const type      = searchParams.get('type')       ?? '';
-    const year      = searchParams.get('year')       ?? '';
-    const minRating = Number(searchParams.get('min_rating') ?? '0');
+    const params = await Promise.resolve(searchParams);
+    const q         = params.get('q')          ?? '';
+    const status    = params.get('status')     ?? '';
+    const genre     = params.get('genre')      ?? '';
+    const sort      = params.get('sort')       ?? 'latest';
+    const page      = Math.max(1, Number(params.get('page')       ?? '1'));
+    const author    = params.get('author')     ?? '';
+    const type      = params.get('type')       ?? '';
+    const year      = params.get('year')       ?? '';
+    const minRating = Number(params.get('min_rating') ?? '0');
     const from      = (page - 1) * PER_PAGE;
     const to        = from + PER_PAGE - 1;
 
     const supabase = await createClient();
     let query = supabase
       .from('manga')
-      .select('id, slug, title, cover_url, status, rating, views', { count: 'exact' })
+      .select('id, slug, title, cover_url, status, rating, views, content_rating', { count: 'exact' })
       .is('deleted_at', null)
       .range(from, to);
 

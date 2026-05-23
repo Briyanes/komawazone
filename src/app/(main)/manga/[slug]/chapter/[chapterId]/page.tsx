@@ -1,9 +1,10 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { getChapterWithImages, getAdjacentChapters, getMangaChapterList } from '@/lib/api/manga';
 import { ReaderClient } from '@/components/reader/ReaderClient';
 import { AdZone } from '@/components/ads/AdZone';
+import { createClient } from '@/lib/supabase/server';
 
 interface Props {
   params: Promise<{ slug: string; chapterId: string }>;
@@ -23,6 +24,25 @@ export default async function ChapterReaderPage({ params }: Props) {
   const { chapterId } = await params;
   const chapter = await getChapterWithImages(chapterId);
   if (!chapter) notFound();
+
+  // Gate mature chapters for non-VIP users
+  if (chapter.manga?.content_rating === 'mature') {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    let isVip = false;
+    if (user) {
+      const { data } = await supabase
+        .from('users')
+        .select('vip_expires_at')
+        .eq('id', user.id)
+        .single();
+      const exp = (data as { vip_expires_at?: string | null } | null)?.vip_expires_at;
+      isVip = !!exp && new Date(exp) > new Date();
+    }
+    if (!isVip) {
+      redirect(`/vip?reason=mature&manga=${encodeURIComponent(chapter.manga?.slug ?? '')}`);
+    }
+  }
 
   const [{ prev, next }, chapterList] = await Promise.all([
     getAdjacentChapters(chapter.manga_id, chapter.number),

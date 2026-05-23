@@ -15,7 +15,7 @@ export type ChapterDetail = {
   title: string | null;
   manga_id: string;
   chapter_images: ChapterImage[];
-  manga: { id: string; slug: string; title: string } | null;
+  manga: { id: string; slug: string; title: string; content_rating: 'general' | 'mature' } | null;
 };
 
 export type MangaListItem = {
@@ -27,6 +27,7 @@ export type MangaListItem = {
   type?: 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON';
   rating: number;
   views: number;
+  content_rating?: 'general' | 'mature';
   chapters?: Array<{ id: string; number: number; title: string | null; release_date: string }>;
 };
 
@@ -51,6 +52,7 @@ export type MangaWithChapters = {
   like_count: number;
   uploaded_by: string | null;
   uploader: { username: string | null; email: string } | null;
+  content_rating: 'general' | 'mature';
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
@@ -63,7 +65,7 @@ export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('manga')
-    .select('id, slug, title, cover_url, banner_url, status, rating, views, description, genres')
+    .select('id, slug, title, cover_url, banner_url, status, rating, views, description, genres, content_rating')
     .is('deleted_at', null)
     .eq('is_featured', true as never)
     .order('updated_at', { ascending: false })
@@ -78,7 +80,7 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
   const { data, error } = await supabase
     .from('manga')
     .select(`
-      id, slug, title, cover_url, status, rating, views,
+      id, slug, title, cover_url, status, rating, views, content_rating,
       chapters(id, number, title, release_date)
     `)
     .is('deleted_at', null)
@@ -93,7 +95,7 @@ export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('manga')
-    .select('id, slug, title, cover_url, status, rating, views')
+    .select('id, slug, title, cover_url, status, rating, views, content_rating')
     .is('deleted_at', null)
     .order('views', { ascending: false })
     .limit(limit);
@@ -107,7 +109,7 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
   const { data, error } = await supabase
     .from('manga')
-    .select(`id, slug, title, cover_url, status, rating, views, chapters(id, number, title, release_date)`)
+    .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .gte('updated_at', since)
     .order('views', { ascending: false })
@@ -124,7 +126,7 @@ export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('manga')
-    .select(`id, slug, title, cover_url, status, rating, views, chapters(id, number, title, release_date)`)
+    .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
@@ -137,7 +139,7 @@ export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('manga')
-    .select(`id, slug, title, cover_url, status, rating, views, chapters(id, number, title, release_date)`)
+    .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .eq('status', 'COMPLETED')
     .order('rating', { ascending: false })
@@ -152,7 +154,7 @@ export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   const { data, error } = await supabase
     .from('manga')
-    .select(`id, slug, title, cover_url, status, rating, views, chapters(id, number, title, release_date)`)
+    .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .gte('updated_at', since)
     .order('views', { ascending: false })
@@ -166,7 +168,7 @@ export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null,
   const supabase = await createClient();
   let query = supabase
     .from('manga')
-    .select(`id, slug, title, cover_url, status, type, rating, views, chapters(id, number, title, release_date)`)
+    .select(`id, slug, title, cover_url, status, type, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .order('rating', { ascending: false })
     .limit(limit);
@@ -211,7 +213,7 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
     .select(`
       id, number, title, manga_id,
       chapter_images(id, number, image_url, width, height),
-      manga(id, slug, title)
+      manga(id, slug, title, content_rating)
     `)
     .eq('id', chapterId)
     .single();
