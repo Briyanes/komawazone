@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { detectMangaSource, getSupportedDomains } from '@/lib/scrapers/detector';
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -73,9 +74,21 @@ export async function POST(request: NextRequest) {
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(url);
-    if (!parsedUrl.hostname.endsWith('manhwaland.land')) {
-      return NextResponse.json({ error: 'Hanya URL dari manhwaland.land yang didukung' }, { status: 400 });
+
+    // Detect source
+    const source = detectMangaSource(url);
+
+    if (!source) {
+      return NextResponse.json({
+        error: 'Domain tidak didukung',
+        message: 'Gunakan URL dari sumber yang didukung',
+        supported_domains: getSupportedDomains(),
+        hint: 'Contoh: manhwaland.land (Manhwa), flmtscan.com (Manga), manhuachill.com (Manhua)'
+      }, { status: 400 });
     }
+
+    console.log('Chapter source detected:', source.name, 'Type:', source.type, 'Country:', source.country);
+
   } catch {
     return NextResponse.json({ error: 'URL tidak valid' }, { status: 400 });
   }

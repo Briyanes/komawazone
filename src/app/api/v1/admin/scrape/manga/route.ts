@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { detectMangaSource, getSupportedDomains } from '@/lib/scrapers/detector';
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -110,9 +111,21 @@ export async function POST(request: NextRequest) {
   let parsedUrl: URL;
   try {
     parsedUrl = new URL(url);
-    if (!parsedUrl.hostname.endsWith('manhwaland.land')) {
-      return NextResponse.json({ error: 'Hanya URL dari manhwaland.land yang didukung' }, { status: 400 });
+
+    // Detect source
+    const source = detectMangaSource(url);
+
+    if (!source) {
+      return NextResponse.json({
+        error: 'Domain tidak didukung',
+        message: 'Gunakan URL dari sumber yang didukung',
+        supported_domains: getSupportedDomains(),
+        hint: 'Contoh: manhwaland.land (Manhwa), flmtscan.com (Manga), manhuachill.com (Manhua)'
+      }, { status: 400 });
     }
+
+    console.log('Detected source:', source.name, 'Type:', source.type, 'Country:', source.country);
+
   } catch {
     return NextResponse.json({ error: 'URL tidak valid' }, { status: 400 });
   }
@@ -137,12 +150,25 @@ export async function POST(request: NextRequest) {
 
     if (!scraped.title) {
       return NextResponse.json(
-        { error: 'Tidak dapat mengekstrak judul. Pastikan URL adalah halaman manga (contoh: https://04x.manhwaland.land/manga/prison-revenge/)' },
+        { error: 'Tidak dapat mengekstrak judul. Pastikan URL adalah halaman manga' },
         { status: 422 },
       );
     }
 
-    return NextResponse.json({ data: scraped });
+    // Override type with detected type from source
+    const source = detectMangaSource(url);
+    if (source && !scraped.type) {
+      scraped.type = source.type;
+    }
+
+    return NextResponse.json({
+      data: scraped,
+      source: {
+        type: source?.type,
+        country: source?.country,
+        name: source?.name
+      }
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Scrape gagal';
     return NextResponse.json({ error: message }, { status: 500 });
