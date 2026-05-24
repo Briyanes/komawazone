@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
     const offset = parseInt(searchParams.get('offset') || '0');
 
     let query = supabase
-      .from('import_jobs')
+      .from('import_jobs' as any)
       .select('*')
       .order('started_at', { ascending: false })
       .range(offset, offset + limit - 1);
@@ -110,7 +110,7 @@ export async function DELETE(req: NextRequest) {
 
     // Update job status to cancelled
     const { error } = await supabase
-      .from('import_jobs')
+      .from('import_jobs' as any)
       .update({
         status: 'cancelled',
         completed_at: new Date().toISOString(),

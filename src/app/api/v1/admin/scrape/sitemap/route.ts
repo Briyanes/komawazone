@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
 
     // Create import job
     const { data: job } = await supabase
-      .from('import_jobs')
+      .from('import_jobs' as any)
       .insert({
         job_type: 'sitemap_import',
         status: 'running',
@@ -133,7 +133,7 @@ async function processSitemapImport(
 
     // Update job with total items
     await supabase
-      .from('import_jobs')
+      .from('import_jobs' as any)
       .update({ total_items: parseResult.total })
       .eq('id', jobId);
 
@@ -252,7 +252,7 @@ async function processSitemapImport(
 
     // Mark job as failed
     await supabase
-      .from('import_jobs')
+      .from('import_jobs' as any)
       .update({
         status: 'failed',
         completed_at: new Date().toISOString(),
