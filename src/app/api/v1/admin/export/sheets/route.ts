@@ -38,13 +38,13 @@ export async function POST(req: NextRequest) {
     }
 
     // Get job details
-    const { data: job } = await supabase
+    const { data: job, error } = await supabase
       .from('import_jobs' as any)
       .select('*')
       .eq('id', body.jobId)
       .single();
 
-    if (!job || !job.started_at) {
+    if (error || !job || !job.started_at) {
       return NextResponse.json({
         error: 'Job not found or invalid'
       }, { status: 404 });
