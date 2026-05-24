@@ -1,20 +1,21 @@
 'use client';
 
 /**
- * MangaImage — drop-in replacement for next/image that handles external manga images
+ * MangaImage — Smart image component that handles external manga images
  *
- * Strategy:
- * 1. For all gmbr.pro and external CDN images → bypass optimization (unoptimized)
- * 2. For local/Supabase images → use normal Next.js optimization
+ * Strategy (matching admin dashboard approach):
+ * 1. For external manga CDN images → use regular <img> tag (no Next.js optimization)
+ * 2. For local/Supabase images → use Next.js Image (with optimization)
  *
- * External CDNs have hotlink protection that blocks server-side optimization,
- * so we bypass Next.js Image optimization and let the browser fetch directly.
+ * External CDNs have hotlink protection that blocks server-side optimization.
+ * Using regular <img> tags allows browser's native TLS fingerprint to work.
  */
 
 import NextImage, { type ImageProps } from 'next/image';
+import { forwardRef } from 'react';
 
-// All external manga image hosts (bypass optimization)
-const BYPASS_HOSTS = [
+// All external manga image hosts (use regular img tag)
+const EXTERNAL_HOSTS = [
   'img-uwak.gmbr.pro',
   'jablay.gmbr.pro',
   'api-l.gmbr.pro',
@@ -23,11 +24,11 @@ const BYPASS_HOSTS = [
   '*.manhwaland.land',
 ];
 
-function isBypassUrl(src: ImageProps['src']): boolean {
+function isExternalUrl(src: ImageProps['src']): boolean {
   if (typeof src !== 'string') return false;
   try {
     const url = new URL(src);
-    return BYPASS_HOSTS.some(host => {
+    return EXTERNAL_HOSTS.some(host => {
       if (host.startsWith('*.')) {
         return url.hostname.endsWith(host.slice(2));
       }
@@ -38,14 +39,34 @@ function isBypassUrl(src: ImageProps['src']): boolean {
   }
 }
 
-export default function MangaImage(props: ImageProps) {
-  const bypass = isBypassUrl(props.src);
+export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) => {
+  const isExternal = isExternalUrl(props.src);
 
-  return (
-    <NextImage
-      {...props}
-      unoptimized={bypass || props.unoptimized}
-      referrerPolicy={bypass ? 'no-referrer' : (props.referrerPolicy ?? 'no-referrer-when-downgrade')}
-    />
-  );
-}
+  // External CDN images → use regular <img> tag (like admin dashboard)
+  if (isExternal && typeof props.src === 'string') {
+    const { width, height, className, style, alt, src, ...rest } = props;
+
+    return (
+      // eslint-disable-next-line @next/next/no-img-element
+      <img
+        ref={ref}
+        src={src}
+        alt={alt || 'Manga cover'}
+        width={width}
+        height={height}
+        className={className}
+        style={style}
+        referrerPolicy="no-referrer"
+        loading="lazy"
+        {...rest}
+      />
+    );
+  }
+
+  // Local/Supabase images → use Next.js Image with optimization
+  return <NextImage ref={ref as any} {...props} />;
+});
+
+MangaImage.displayName = 'MangaImage';
+
+export default MangaImage;
