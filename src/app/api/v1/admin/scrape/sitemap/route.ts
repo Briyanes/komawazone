@@ -277,20 +277,11 @@ async function scrapeAndCreateManga(url: string, userId: string) {
   const supabase = await createClient();
 
   try {
-    // Scrape manga metadata
-    const scrapeResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/v1/admin/scrape/manga`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-    });
+    // Use shared scraping function directly (no HTTP call)
+    const { scrapeMangaFromUrl } = await import('@/lib/scrapers/manga-scraper');
+    const scraped = await scrapeMangaFromUrl(url);
 
-    if (!scrapeResponse.ok) {
-      throw new Error(`Scrape failed: ${scrapeResponse.statusText}`);
-    }
-
-    const scrapeData = await scrapeResponse.json();
-
-    if (!scrapeData.data || !scrapeData.data.title) {
+    if (!scraped.title) {
       throw new Error('Invalid scrape response');
     }
 
@@ -302,14 +293,14 @@ async function scrapeAndCreateManga(url: string, userId: string) {
       .from('manga')
       .insert({
         slug,
-        title: scrapeData.data.title,
-        description: scrapeData.data.description,
-        cover_url: scrapeData.data.cover_url,
-        type: scrapeData.data.type || 'MANHWA',
-        status: scrapeData.data.status || 'ONGOING',
-        author: scrapeData.data.author,
-        artist: scrapeData.data.artist,
-        genres: scrapeData.data.genres || [],
+        title: scraped.title,
+        description: scraped.description,
+        cover_url: scraped.cover_url,
+        type: scraped.type || 'MANHWA',
+        status: scraped.status || 'ONGOING',
+        author: scraped.author,
+        artist: scraped.artist,
+        genres: scraped.genres || [],
         uploaded_by: userId, // System import by admin user
       })
       .select()
@@ -333,20 +324,11 @@ async function scrapeAndUpdateManga(url: string, mangaId: string): Promise<{ ski
   const supabase = await createClient();
 
   try {
-    // Scrape updated metadata
-    const scrapeResponse = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL}/api/v1/admin/scrape/manga`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ url }),
-    });
+    // Use shared scraping function directly (no HTTP call)
+    const { scrapeMangaFromUrl } = await import('@/lib/scrapers/manga-scraper');
+    const scraped = await scrapeMangaFromUrl(url);
 
-    if (!scrapeResponse.ok) {
-      throw new Error(`Scrape failed: ${scrapeResponse.statusText}`);
-    }
-
-    const scrapeData = await scrapeResponse.json();
-
-    if (!scrapeData.data) {
+    if (!scraped) {
       throw new Error('Invalid scrape response');
     }
 
@@ -354,10 +336,10 @@ async function scrapeAndUpdateManga(url: string, mangaId: string): Promise<{ ski
     const { data: manga } = await supabase
       .from('manga')
       .update({
-        description: scrapeData.data.description,
-        cover_url: scrapeData.data.cover_url,
-        status: scrapeData.data.status,
-        genres: scrapeData.data.genres,
+        description: scraped.description,
+        cover_url: scraped.cover_url,
+        status: scraped.status,
+        genres: scraped.genres,
       })
       .eq('id', mangaId)
       .select()
