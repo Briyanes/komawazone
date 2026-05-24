@@ -1,17 +1,36 @@
 'use client';
 
 /**
- * MangaImage — drop-in replacement for next/image that bypasses Next.js
- * server-side image optimization for CDN URLs behind Cloudflare Bot Management.
+ * MangaImage — drop-in replacement for next/image that handles external manga images
  *
- * When `src` points to a known CDN host (jablay.gmbr.pro, api-l.gmbr.pro),
- * `unoptimized` is set automatically so the browser fetches the image directly
- * using its own TLS fingerprint (Chrome), which Cloudflare allows.
+ * Strategy:
+ * 1. For gmbr.pro images (hotlink protected) → use proxy API
+ * 2. For other external CDNs → bypass optimization with unoptimized mode
+ * 3. For local/Supabase images → use normal Next.js optimization
  */
 
 import NextImage, { type ImageProps } from 'next/image';
 
-const BYPASS_HOSTS = ['jablay.gmbr.pro', 'api-l.gmbr.pro'];
+// Hosts that need proxy (hotlink protection)
+const PROXY_HOSTS = ['img-uwak.gmbr.pro', '*.gmbr.pro'];
+
+// Hosts that bypass optimization (Cloudflare protection)
+const BYPASS_HOSTS = ['jablay.gmbr.pro', 'api-l.gmbr.pro', 'manhwaland.land'];
+
+function isProxyUrl(src: ImageProps['src']): boolean {
+  if (typeof src !== 'string') return false;
+  try {
+    const url = new URL(src);
+    return PROXY_HOSTS.some(host => {
+      if (host.startsWith('*.')) {
+        return url.hostname.endsWith(host.slice(2));
+      }
+      return url.hostname === host;
+    });
+  } catch {
+    return false;
+  }
+}
 
 function isBypassUrl(src: ImageProps['src']): boolean {
   if (typeof src !== 'string') return false;
@@ -22,11 +41,23 @@ function isBypassUrl(src: ImageProps['src']): boolean {
   }
 }
 
+function getProxyUrl(src: string): string {
+  return `/api/proxy/image?url=${encodeURIComponent(src)}`;
+}
+
 export default function MangaImage(props: ImageProps) {
+  const needsProxy = isProxyUrl(props.src);
   const bypass = isBypassUrl(props.src);
+
+  // Use proxy URL for hotlink-protected images
+  const src = needsProxy && typeof props.src === 'string'
+    ? getProxyUrl(props.src)
+    : props.src;
+
   return (
     <NextImage
       {...props}
+      src={src}
       unoptimized={bypass || props.unoptimized}
       referrerPolicy={bypass ? 'no-referrer' : (props.referrerPolicy ?? 'no-referrer-when-downgrade')}
     />
