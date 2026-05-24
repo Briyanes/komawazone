@@ -26,6 +26,12 @@ const nextConfig: NextConfig = {
       // api-l.gmbr.pro — manhwaland cover CDN
       { protocol: 'https', hostname: 'api-l.gmbr.pro' },
       { protocol: 'http', hostname: 'api-l.gmbr.pro' },
+      // img-uwak.gmbr.pro — manhwaland image CDN
+      { protocol: 'https', hostname: 'img-uwak.gmbr.pro' },
+      { protocol: 'http', hostname: 'img-uwak.gmbr.pro' },
+      // All gmbr.pro subdomains (wildcard for future CDNs)
+      { protocol: 'https', hostname: '**.gmbr.pro' },
+      { protocol: 'http', hostname: '**.gmbr.pro' },
       // Common manga image CDNs
       { protocol: 'https', hostname: 'i.imgur.com' },
       { protocol: 'https', hostname: 'cdn.discordapp.com' },
