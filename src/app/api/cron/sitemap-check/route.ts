@@ -106,21 +106,32 @@ export async function POST(req: NextRequest) {
 
     // Only send notification if there are changes
     if (newCount > 0 || updatedCount > 0) {
-      // Store notification in database
-      const { error: notificationError } = await supabase
-        .from('notifications')
-        .insert({
+      // Get admin users to notify
+      const { data: adminUsers } = await supabase
+        .from('users')
+        .select('id')
+        .eq('role', 'ADMIN');
+
+      if (adminUsers && adminUsers.length > 0) {
+        // Create notifications for all admin users
+        const notifications = adminUsers.map(admin => ({
+          user_id: admin.id,
           type: 'SITEMAP_CHECK',
           title: `Sitemap Check: ${newCount} New, ${updatedCount} Updated`,
           body: JSON.stringify(digest),
           read: false,
-        });
+        }));
 
-      if (notificationError) {
-        console.error('[Sitemap Check] Failed to create notification:', notificationError);
+        const { error: notificationError } = await supabase
+          .from('notifications')
+          .insert(notifications);
+
+        if (notificationError) {
+          console.error('[Sitemap Check] Failed to create notifications:', notificationError);
+        } else {
+          console.log(`[Sitemap Check] Notifications created for ${adminUsers.length} admins: ${newCount} new, ${updatedCount} updated`);
+        }
       }
-
-      console.log(`[Sitemap Check] Notification created: ${newCount} new, ${updatedCount} updated`);
     } else {
       console.log('[Sitemap Check] No changes detected, skipping notification');
     }
