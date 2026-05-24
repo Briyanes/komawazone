@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Upload, Play, XCircle, CheckCircle, Clock, ExternalLink } from 'lucide-react';
+import { Upload, Play, XCircle, CheckCircle, Clock, ExternalLink, Download } from 'lucide-react';
 
 const DEFAULT_SITEMAPS = [
   'https://04x.manhwaland.land/manga-sitemap.xml',
@@ -123,6 +123,37 @@ export function SitemapImportTool() {
       }
     } catch (err) {
       console.error('Error polling job status:', err);
+    }
+  };
+
+  // Export to Google Sheets
+  const exportToGoogleSheets = async () => {
+    if (!activeJob) return;
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch('/api/v1/admin/export/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jobId: activeJob.id,
+          tab: 'HISTORY',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Export failed');
+      }
+
+      alert('Exported to Google Sheets successfully!');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Export failed');
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -359,6 +390,19 @@ export function SitemapImportTool() {
               className="w-full px-4 py-3 text-sm font-semibold rounded-lg text-white bg-red-500 hover:bg-red-600 transition-colors"
             >
               Cancel Import
+            </button>
+          )}
+
+          {/* Export to Google Sheets (when completed) */}
+          {activeJob.status === 'completed' && (
+            <button
+              onClick={exportToGoogleSheets}
+              disabled={loading}
+              className="w-full px-4 py-3 text-sm font-semibold rounded-lg text-white transition-opacity hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+              style={{ background: '#0F9D58' }}
+            >
+              <Download size={16} />
+              {loading ? 'Exporting...' : 'Export to Google Sheets'}
             </button>
           )}
 
