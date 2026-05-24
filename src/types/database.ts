@@ -333,6 +333,8 @@ export interface Database {
           expires_at: string;
           status: 'active' | 'expired' | 'cancelled';
           payment_method: string | null;
+          payment_id: string | null;
+          auto_renew: boolean;
           notes: string | null;
           created_at: string;
         };
@@ -344,11 +346,14 @@ export interface Database {
           expires_at: string;
           status?: 'active' | 'expired' | 'cancelled';
           payment_method?: string | null;
+          payment_id?: string | null;
+          auto_renew?: boolean;
           notes?: string | null;
         };
         Update: {
           status?: 'active' | 'expired' | 'cancelled';
           notes?: string | null;
+          auto_renew?: boolean;
         };
         Relationships: [];
       };
