@@ -624,6 +624,45 @@ export interface Database {
         Returns: undefined;
       };
     };
+    import_jobs: {
+      Row: {
+        id: string;
+        job_type: string;
+        status: string;
+        total_items: number;
+        processed_items: number;
+        new_manga: number;
+        updated_manga: number;
+        skipped_items: number;
+        errors: Json | null;
+        config: Json | null;
+        started_at: string;
+        completed_at: string | null;
+        created_by: string | null;
+      };
+      Insert: {
+        job_type: string;
+        status?: string;
+        total_items: number;
+        processed_items?: number;
+        new_manga?: number;
+        updated_manga?: number;
+        skipped_items?: number;
+        errors?: Json | null;
+        config?: Json | null;
+        created_by?: string | null;
+      };
+      Update: {
+        status?: string;
+        processed_items?: number;
+        new_manga?: number;
+        updated_manga?: number;
+        skipped_items?: number;
+        errors?: Json | null;
+        completed_at?: string | null;
+      };
+      Relationships: [];
+    };
     Enums: {
       manga_status: 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';
       user_role: 'USER' | 'ADMIN';

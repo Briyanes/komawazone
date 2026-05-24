@@ -5,9 +5,10 @@ import { useRouter } from 'next/navigation';
 import {
   Link2, Search, Loader2, CheckCircle2, AlertCircle,
   BookOpen, FileText, ChevronRight, ChevronDown, X, Plus, Image as ImageIcon,
-  Download, ExternalLink, Upload,
+  Download, ExternalLink, Upload, Database,
 } from 'lucide-react';
 import { uploadImage } from '@/lib/supabase/storage';
+import { SitemapImportTool } from './SitemapImportTool';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -142,18 +143,20 @@ function Btn({
 
 // ── Tab indicator ─────────────────────────────────────────────────────────────
 
-function TabBar({ active, onChange }: { active: 'manga' | 'chapter'; onChange: (v: 'manga' | 'chapter') => void }) {
+function TabBar({ active, onChange }: { active: 'manga' | 'chapter' | 'sitemap'; onChange: (v: 'manga' | 'chapter' | 'sitemap') => void }) {
   return (
     <div className="flex gap-1 p-1 rounded-2xl w-fit" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-      {(['manga', 'chapter'] as const).map(tab => (
+      {(['manga', 'chapter', 'sitemap'] as const).map(tab => (
         <button
           key={tab}
           onClick={() => onChange(tab)}
           className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all"
           style={active === tab ? { background: 'var(--color-primary)', color: '#fff' } : { color: 'var(--text-secondary)' }}
         >
-          {tab === 'manga' ? <BookOpen size={15} /> : <FileText size={15} />}
-          {tab === 'manga' ? 'Import Manga' : 'Import Chapter'}
+          {tab === 'manga' && <BookOpen size={15} />}
+          {tab === 'chapter' && <FileText size={15} />}
+          {tab === 'sitemap' && <Database size={15} />}
+          {tab === 'manga' ? 'Import Manga' : tab === 'chapter' ? 'Import Chapter' : 'Sitemap Import'}
         </button>
       ))}
     </div>
@@ -647,7 +650,7 @@ function ChapterImportTab() {
 // ── Main Component ────────────────────────────────────────────────────────────
 
 export function ImportTool() {
-  const [tab, setTab] = useState<'manga' | 'chapter'>('manga');
+  const [tab, setTab] = useState<'manga' | 'chapter' | 'sitemap'>('manga');
 
   return (
     <div className="space-y-6">
@@ -699,6 +702,7 @@ export function ImportTool() {
 
       {tab === 'manga'   && <MangaImportTab />}
       {tab === 'chapter' && <ChapterImportTab />}
+      {tab === 'sitemap' && <SitemapImportTool />}
     </div>
   );
 }
