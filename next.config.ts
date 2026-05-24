@@ -3,12 +3,13 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   // Allow images from Supabase Storage and common CDNs
   images: {
+    // Local patterns for proxy API (supports query strings)
+    localPatterns: [
+      {
+        pathname: '/api/proxy/image/**',
+      },
+    ],
     remotePatterns: [
-      // Local proxy API (for hotlink-protected external images)
-      { protocol: 'https', hostname: 'localhost', pathname: '/api/proxy/image/**' },
-      { protocol: 'http', hostname: 'localhost', pathname: '/api/proxy/image/**' },
-      { protocol: 'https', hostname: '**.olluq.com', pathname: '/api/proxy/image/**' },
-      { protocol: 'https', hostname: '**.mangazone.app', pathname: '/api/proxy/image/**' },
       {
         protocol: 'https',
         hostname: '**.supabase.co',

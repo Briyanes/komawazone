@@ -54,11 +54,14 @@ export default function MangaImage(props: ImageProps) {
     ? getProxyUrl(props.src)
     : props.src;
 
+  // Bypass optimization for proxy URLs (already optimized by proxy) and other bypass hosts
+  const shouldBypass = needsProxy || bypass || props.unoptimized;
+
   return (
     <NextImage
       {...props}
       src={src}
-      unoptimized={bypass || props.unoptimized}
+      unoptimized={shouldBypass}
       referrerPolicy={bypass ? 'no-referrer' : (props.referrerPolicy ?? 'no-referrer-when-downgrade')}
     />
   );
