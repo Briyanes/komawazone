@@ -44,9 +44,9 @@ export async function POST(req: NextRequest) {
       .eq('id', body.jobId)
       .single();
 
-    if (!job) {
+    if (!job || !job.started_at) {
       return NextResponse.json({
-        error: 'Job not found'
+        error: 'Job not found or invalid'
       }, { status: 404 });
     }
 
@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const { data: manga } = await supabase
       .from('manga')
       .select('slug, title, type, created_at, updated_at')
-      .gte('created_at', job.started_at as string)
+      .gte('created_at', job.started_at)
       .order('created_at', { ascending: true });
 
     // Prepare data for export
