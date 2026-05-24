@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
     const { data: manga } = await supabase
       .from('manga')
       .select('slug, title, type, created_at, updated_at')
-      .gte('created_at', job.started_at)
+      .gte('created_at', job.started_at as string)
       .order('created_at', { ascending: true });
 
     // Prepare data for export
