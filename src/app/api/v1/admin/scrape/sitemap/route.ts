@@ -52,7 +52,7 @@ export async function POST(req: NextRequest) {
     } = options;
 
     // Create import job
-    const { data: job } = await supabase
+    const result = await supabase
       .from('import_jobs' as any)
       .insert({
         job_type: 'sitemap_import',
@@ -69,14 +69,22 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (!job) {
+    // Handle potential errors
+    if (!result) {
       return NextResponse.json({
         error: 'Failed to create import job'
       }, { status: 500 });
     }
 
+    const jobData = result.data as unknown as { id: string };
+    if (!jobData.id) {
+      return NextResponse.json({
+        error: 'Failed to create import job - no ID returned'
+      }, { status: 500 });
+    }
+
     // Start background processing (don't await)
-    processSitemapImport(job.id, sitemapUrls, {
+    processSitemapImport(jobData.id, sitemapUrls, {
       importNew,
       importUpdates,
       batchSize,
@@ -88,7 +96,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       status: 'success',
       data: {
-        jobId: job.id,
+        jobId: jobData.id,
         message: 'Import job started',
         status: 'running',
       },
@@ -166,7 +174,7 @@ async function processSitemapImport(
       for (let i = 0; i < newManga.length; i += options.batchSize) {
         const batch = newManga.slice(i, i + options.batchSize);
         const results = await Promise.allSettled(
-          batch.map(manga => scrapeAndCreateManga(manga.url))
+          batch.map(manga => scrapeAndCreateManga(manga.url, options.userId))
         );
 
         for (let j = 0; j < results.length; j++) {
@@ -265,7 +273,7 @@ async function processSitemapImport(
 /**
  * Scrape manga from URL and create in database
  */
-async function scrapeAndCreateManga(url: string) {
+async function scrapeAndCreateManga(url: string, userId: string) {
   const supabase = await createClient();
 
   try {
@@ -302,7 +310,7 @@ async function scrapeAndCreateManga(url: string) {
         author: scrapeData.data.author,
         artist: scrapeData.data.artist,
         genres: scrapeData.data.genres || [],
-        uploaded_by: null, // System import
+        uploaded_by: userId, // System import by admin user
       })
       .select()
       .single();
@@ -321,7 +329,7 @@ async function scrapeAndCreateManga(url: string) {
 /**
  * Scrape and update existing manga
  */
-async function scrapeAndUpdateManga(url: string, mangaId: string) {
+async function scrapeAndUpdateManga(url: string, mangaId: string): Promise<{ skipped?: boolean } | null> {
   const supabase = await createClient();
 
   try {
@@ -355,7 +363,7 @@ async function scrapeAndUpdateManga(url: string, mangaId: string) {
       .select()
       .single();
 
-    return manga;
+    return manga ? { skipped: false } : null;
   } catch (error) {
     console.error('Error updating manga:', url, error);
     throw error;
@@ -388,7 +396,7 @@ async function updateJobProgress(
   const supabase = await createClient();
 
   await supabase
-    .from('import_jobs')
+    .from('import_jobs' as any)
     .update({
       processed_items: processed,
       new_manga: newManga,
@@ -410,7 +418,7 @@ async function completeJob(
   const supabase = await createClient();
 
   await supabase
-    .from('import_jobs')
+    .from('import_jobs' as any)
     .update({
       status: 'completed',
       processed_items: newManga + updatedManga + skipped,

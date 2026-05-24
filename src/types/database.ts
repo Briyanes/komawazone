@@ -65,6 +65,7 @@ export interface Database {
           views: number;
           is_featured: boolean;
           content_rating: 'general' | 'mature';
+          uploaded_by: string | null;
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
@@ -85,6 +86,7 @@ export interface Database {
           rating?: number;
           is_featured?: boolean;
           content_rating?: 'general' | 'mature';
+          uploaded_by?: string | null;
         };
         Update: {
           title?: string;

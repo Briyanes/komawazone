@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
 
     // Get total count
     const { count } = await supabase
-      .from('import_jobs')
+      .from('import_jobs' as any)
       .select('*', { count: 'exact', head: true });
 
     return NextResponse.json({

@@ -38,16 +38,28 @@ export async function POST(req: NextRequest) {
     }
 
     // Get job details
-    const { data: job, error } = await supabase
+    const jobResult = await supabase
       .from('import_jobs' as any)
       .select('*')
       .eq('id', body.jobId)
       .single();
 
-    if (error || !job || !job.started_at) {
+    if (jobResult.error || !jobResult.data) {
       return NextResponse.json({
         error: 'Job not found or invalid'
       }, { status: 404 });
+    }
+
+    const job = jobResult.data as unknown as {
+      id: string;
+      started_at: string;
+      [key: string]: any;
+    };
+
+    if (!job.started_at) {
+      return NextResponse.json({
+        error: 'Job has no started_at date'
+      }, { status: 400 });
     }
 
     // Get imported manga data from job
@@ -62,8 +74,8 @@ export async function POST(req: NextRequest) {
       url: `https://04x.manhwaland.land/manga/${m.slug}/`,
       slug: m.slug,
       title: m.title,
-      type: m.type,
-      status: 'IMPORTED',
+      type: m.type as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
+      status: 'IMPORTED' as 'NEW' | 'UPDATED' | 'EXISTING',
       lastmod: m.updated_at,
       imported: true,
       notes: `Imported via job ${job.id}`,

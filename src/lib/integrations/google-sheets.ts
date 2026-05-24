@@ -88,7 +88,6 @@ export async function exportToGoogleSheet(
       // Create new sheet
       sheet = await doc.addSheet({
         title: tabName,
-        headers: Object.keys(data[0] || {}),
       });
     }
 
@@ -222,11 +221,11 @@ export async function syncImportResults(
 
     // Update imported status
     for (const row of rows.slice(1)) { // Skip header
-      const slug = row.Slug || row.slug;
+      const rowData = row.toObject();
+      const slug = rowData.Slug || rowData.slug;
 
-      if (importedSlugs.includes(slug)) {
-        row.Imported = 'Yes';
-        row.Notes = `Imported at ${new Date().toISOString()}`;
+      if (slug && importedSlugs.includes(slug)) {
+        row.assign({ Imported: 'Yes', Notes: `Imported at ${new Date().toISOString()}` });
         await row.save();
       }
     }
@@ -279,11 +278,12 @@ export async function moveSheetItems(
 
     // Find matching rows and move them
     for (const row of fromRows.slice(1)) { // Skip header
-      const slug = row.Slug || row.slug;
+      const rowData = row.toObject();
+      const slug = rowData.Slug || rowData.slug;
 
-      if (slugs.includes(slug)) {
+      if (slug && slugs.includes(slug)) {
         // Add to destination tab
-        await toSheet.addRow(row);
+        await toSheet.addRow(rowData);
         // Delete from source tab
         await row.delete();
       }
