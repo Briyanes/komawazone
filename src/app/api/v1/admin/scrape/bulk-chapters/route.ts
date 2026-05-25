@@ -32,38 +32,51 @@ export async function POST(req: NextRequest) {
   const metadataOnly = body?.metadataOnly ?? true;
 
   // Ambil manga dengan source_url
-  let query = supabase
-    .from('manga')
-    .select('id, slug, title, source_url')
-    .not('source_url', 'is', null)
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: true })
-    .limit(limit);
-
-  const { data: mangaList, error } = await query;
-
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  if (!mangaList || mangaList.length === 0) {
-    return NextResponse.json({ status: 'success', message: 'Tidak ada manga dengan source_url', queued: 0 });
-  }
-
+  // Jika onlyMissing: ambil manga yang BELUM punya chapter sama sekali (filter di DB level)
   type MangaItem = { id: string; slug: string; title: string; source_url: string };
-  let targets = mangaList as MangaItem[];
+  let targets: MangaItem[] = [];
 
   if (onlyMissing) {
-    // Saring hanya manga yang belum punya chapter sama sekali
-    const { data: withChapters } = await supabase
+    // Ambil semua manga_id yang sudah punya chapter (tidak batasi — perlu tahu semua)
+    const { data: withChaptersAll } = await supabase
       .from('chapters')
       .select('manga_id')
-      .in('manga_id', targets.map(m => m.id))
       .is('deleted_at', null);
 
-    const hasChapters = new Set((withChapters ?? []).map(c => c.manga_id));
-    targets = targets.filter(m => !hasChapters.has(m.id));
+    const hasChapters = new Set((withChaptersAll ?? []).map(c => c.manga_id as string));
+
+    // Ambil manga dengan source_url yang belum ada di hasChapters
+    const { data: allMangaWithSource, error } = await supabase
+      .from('manga')
+      .select('id, slug, title, source_url')
+      .not('source_url', 'is', null)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: true });
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+    targets = ((allMangaWithSource ?? []) as MangaItem[])
+      .filter(m => !hasChapters.has(m.id))
+      .slice(0, limit);
+  } else {
+    const { data: mangaList, error } = await supabase
+      .from('manga')
+      .select('id, slug, title, source_url')
+      .not('source_url', 'is', null)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: true })
+      .limit(limit);
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    targets = (mangaList ?? []) as MangaItem[];
   }
 
   if (targets.length === 0) {
-    return NextResponse.json({ status: 'success', message: 'Semua manga sudah punya chapters', queued: 0 });
+    return NextResponse.json({
+      status: 'success',
+      message: onlyMissing ? 'Semua manga (dengan source_url) sudah punya chapters' : 'Tidak ada manga dengan source_url',
+      queued: 0,
+    });
   }
 
   // Buat import job untuk tracking
