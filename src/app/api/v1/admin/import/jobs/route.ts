@@ -26,20 +26,24 @@ export async function GET(req: NextRequest) {
 
   try {
     const searchParams = req.nextUrl.searchParams;
+    const id = searchParams.get('id') || searchParams.get('job_id');
     const status = searchParams.get('status');
     const jobType = searchParams.get('job_type');
     const limit = parseInt(searchParams.get('limit') || '20');
     const offset = parseInt(searchParams.get('offset') || '0');
 
     let query = supabase
-      .from('import_jobs' as any)
+      .from('import_jobs')
       .select('*')
       .order('started_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
     // Apply filters
+    if (id) {
+      query = query.eq('id', id);
+    }
     if (status) {
-      query = query.eq('status', status);
+      query = query.eq('status', status as 'running' | 'completed' | 'failed' | 'cancelled');
     }
     if (jobType) {
       query = query.eq('job_type', jobType);
@@ -53,7 +57,7 @@ export async function GET(req: NextRequest) {
 
     // Get total count
     const { count } = await supabase
-      .from('import_jobs' as any)
+      .from('import_jobs')
       .select('*', { count: 'exact', head: true });
 
     return NextResponse.json({
@@ -110,7 +114,7 @@ export async function DELETE(req: NextRequest) {
 
     // Update job status to cancelled
     const { error } = await supabase
-      .from('import_jobs' as any)
+      .from('import_jobs')
       .update({
         status: 'cancelled',
         completed_at: new Date().toISOString(),

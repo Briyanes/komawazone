@@ -1,7 +1,10 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseAllSitemaps } from '@/lib/scrapers/sitemap-parser';
 import { detectMangaSource } from '@/lib/scrapers/detector';
+
+// Allow up to 300s on Vercel Pro; background work runs via after()
+export const maxDuration = 300;
 
 /**
  * POST /api/v1/admin/scrape/sitemap
@@ -53,7 +56,7 @@ export async function POST(req: NextRequest) {
 
     // Create import job
     const result = await supabase
-      .from('import_jobs' as any)
+      .from('import_jobs')
       .insert({
         job_type: 'sitemap_import',
         status: 'running',
@@ -83,15 +86,18 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // Start background processing (don't await)
-    processSitemapImport(jobData.id, sitemapUrls, {
-      importNew,
-      importUpdates,
-      batchSize,
-      userId: user.id,
-    }).catch(error => {
-      console.error('Sitemap import error:', error);
-    });
+    // Schedule background processing AFTER response is sent using next/server after()
+    // This prevents Vercel from killing the process when the response is returned
+    after(() =>
+      processSitemapImport(jobData.id, sitemapUrls, {
+        importNew,
+        importUpdates,
+        batchSize,
+        userId: user.id,
+      }).catch(error => {
+        console.error('Sitemap import error:', error);
+      })
+    );
 
     return NextResponse.json({
       status: 'success',
@@ -141,7 +147,7 @@ async function processSitemapImport(
 
     // Update job with total items
     await supabase
-      .from('import_jobs' as any)
+      .from('import_jobs')
       .update({ total_items: parseResult.total })
       .eq('id', jobId);
 
@@ -260,7 +266,7 @@ async function processSitemapImport(
 
     // Mark job as failed
     await supabase
-      .from('import_jobs' as any)
+      .from('import_jobs')
       .update({
         status: 'failed',
         completed_at: new Date().toISOString(),
@@ -378,7 +384,7 @@ async function updateJobProgress(
   const supabase = await createClient();
 
   await supabase
-    .from('import_jobs' as any)
+    .from('import_jobs')
     .update({
       processed_items: processed,
       new_manga: newManga,
@@ -400,7 +406,7 @@ async function completeJob(
   const supabase = await createClient();
 
   await supabase
-    .from('import_jobs' as any)
+    .from('import_jobs')
     .update({
       status: 'completed',
       processed_items: newManga + updatedManga + skipped,

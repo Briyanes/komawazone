@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
     // Get job details
     const jobResult = await supabase
-      .from('import_jobs' as any)
+      .from('import_jobs')
       .select('*')
       .eq('id', body.jobId)
       .single();

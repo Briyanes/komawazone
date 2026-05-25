@@ -195,13 +195,21 @@ export async function parseSitemapURL(
       lastModified: lastMods[index] ? new Date(lastMods[index]!) : null,
     }));
 
-    // Filter out non-manga URLs (chapters, tags, etc.)
-    const filteredMangas = mangas.filter(manga =>
-      manga.slug &&
-      !manga.slug.includes('chapter-') &&
-      !manga.url.includes('/chapter-') &&
-      manga.url.match(/\/manga-/i) // Most manga URLs have /manga-/ pattern
-    );
+    // Filter out non-manga URLs (chapters, tags, category, author, page URLs)
+    const filteredMangas = mangas.filter(manga => {
+      if (!manga.slug) return false;
+      if (manga.slug.includes('chapter-')) return false;
+      if (manga.url.includes('/chapter-')) return false;
+      if (manga.url.match(/\/(tag|tags|category|author|artist|page|search|genre)\//i)) return false;
+      // Accept URLs with /manga-/ pattern (manhwaland), or shallow paths like /slug or /type/slug
+      if (manga.url.match(/\/manga-/i)) return true;
+      try {
+        const parts = new URL(manga.url).pathname.replace(/\/$/, '').split('/').filter(Boolean);
+        return parts.length >= 1 && parts.length <= 2;
+      } catch {
+        return false;
+      }
+    });
 
     return {
       sitemaps: [],
