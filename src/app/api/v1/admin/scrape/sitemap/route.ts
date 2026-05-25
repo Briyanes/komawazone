@@ -296,21 +296,25 @@ async function scrapeAndCreateManga(url: string, userId: string) {
     // Generate slug from URL if not provided
     const slug = extractSlugFromUrl(url);
 
-    // Create manga in database
+    // Create manga in database — ON CONFLICT DO NOTHING prevents duplicate errors
+    // if the same slug was already inserted by a concurrent batch
     const { data: manga } = await supabase
       .from('manga')
-      .insert({
-        slug,
-        title: scraped.title,
-        description: scraped.description,
-        cover_url: scraped.cover_url,
-        type: scraped.type || 'MANHWA',
-        status: scraped.status || 'ONGOING',
-        author: scraped.author,
-        artist: scraped.artist,
-        genres: scraped.genres || [],
-        uploaded_by: userId, // System import by admin user
-      })
+      .upsert(
+        {
+          slug,
+          title: scraped.title,
+          description: scraped.description,
+          cover_url: scraped.cover_url,
+          type: scraped.type || 'MANHWA',
+          status: scraped.status || 'ONGOING',
+          author: scraped.author,
+          artist: scraped.artist,
+          genres: scraped.genres || [],
+          uploaded_by: userId,
+        },
+        { onConflict: 'slug', ignoreDuplicates: true }
+      )
       .select()
       .single();
 
@@ -361,14 +365,18 @@ async function scrapeAndUpdateManga(url: string, mangaId: string): Promise<{ ski
 }
 
 /**
- * Extract slug from manga URL
+ * Extract slug from manga URL — must match sitemap-parser extractSlug logic exactly
  */
 function extractSlugFromUrl(url: string): string {
   try {
     const urlObj = new URL(url);
     const pathname = urlObj.pathname;
     const parts = pathname.replace(/\/$/, '').split('/').filter(Boolean);
-    return parts[parts.length - 1].replace(/^manga-/, '');
+    const slug = parts[parts.length - 1];
+    return slug
+      .replace(/^manga-/, '')          // remove "manga-" prefix
+      .replace(/-chapter-\d+$/, '')    // remove chapter suffix
+      .replace(/_/g, '-');             // normalise underscores → hyphens
   } catch {
     return '';
   }
