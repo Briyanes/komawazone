@@ -51,8 +51,10 @@ export async function POST(req: NextRequest) {
     const {
       importNew = true,
       importUpdates = true,
-      batchSize = 3, // Conservative default: 3 concurrent to avoid rate-limiting
+      // Hard-cap at 5 regardless of client request to prevent CloudFlare rate-limiting
+      batchSize = 3,
     } = options;
+    const safeBatchSize = Math.min(batchSize, 5);
 
     // Create import job
     const result = await supabase
@@ -92,7 +94,7 @@ export async function POST(req: NextRequest) {
       processSitemapImport(jobData.id, sitemapUrls, {
         importNew,
         importUpdates,
-        batchSize,
+        batchSize: safeBatchSize,
         userId: user.id,
       }).catch(error => {
         console.error('Sitemap import error:', error);
@@ -156,20 +158,24 @@ async function processSitemapImport(
       return;
     }
 
-    // Check which manga already exist
+    // Check which manga already exist — by BOTH slug and source_url for accurate dedup
     const slugs = parseResult.mangas.map(m => m.slug);
-    const { data: existingManga } = await supabase
-      .from('manga')
-      .select('id, slug, updated_at')
-      .in('slug', slugs);
+    const urls = parseResult.mangas.map(m => m.url);
+    const [{ data: bySlug }, { data: bySourceUrl }] = await Promise.all([
+      supabase.from('manga').select('id, slug, updated_at, source_url').in('slug', slugs),
+      supabase.from('manga').select('id, slug, updated_at, source_url').in('source_url', urls),
+    ]);
 
-    const existingMap = new Map(
-      (existingManga || []).map(m => [m.slug, m])
-    );
+    // Merge: a manga is "existing" if found by slug OR by source_url
+    const existingMap = new Map<string, { id: string; slug: string; updated_at: string; source_url: string | null }>();
+    for (const m of [...(bySlug ?? []), ...(bySourceUrl ?? [])]) {
+      existingMap.set(m.slug, m);
+      if (m.source_url) existingMap.set(m.source_url, m);
+    }
 
     // Categorize manga
-    const newManga = parseResult.mangas.filter(m => !existingMap.has(m.slug));
-    const existingMangaList = parseResult.mangas.filter(m => existingMap.has(m.slug));
+    const newManga = parseResult.mangas.filter(m => !existingMap.has(m.slug) && !existingMap.has(m.url));
+    const existingMangaList = parseResult.mangas.filter(m => existingMap.has(m.slug) || existingMap.has(m.url));
 
     console.log(`[Job ${jobId}] New: ${newManga.length}, Existing: ${existingMangaList.length}`);
 
@@ -220,7 +226,8 @@ async function processSitemapImport(
         const batch = existingMangaList.slice(i, i + options.batchSize);
         const results = await Promise.allSettled(
           batch.map(async (manga) => {
-            const existing = existingMap.get(manga.slug)!;
+            const existing = existingMap.get(manga.slug) ?? existingMap.get(manga.url);
+            if (!existing) return { skipped: true };
 
             // Check if update is needed (compare lastmod)
             if (manga.lastModified && new Date(manga.lastModified) <= new Date(existing.updated_at)) {

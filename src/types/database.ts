@@ -628,6 +628,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      manga_sources: {
+        Row: {
+          id: string;
+          name: string;
+          base_url: string;
+          sitemap_urls: string[];
+          is_active: boolean;
+          type: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
+          notes: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          base_url: string;
+          sitemap_urls?: string[];
+          is_active?: boolean;
+          type?: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
+          notes?: string | null;
+        };
+        Update: {
+          name?: string;
+          sitemap_urls?: string[];
+          is_active?: boolean;
+          type?: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
+          notes?: string | null;
+        };
+        Relationships: [];
+      };
       manga_reviews: {
         Row: {
           id: string;

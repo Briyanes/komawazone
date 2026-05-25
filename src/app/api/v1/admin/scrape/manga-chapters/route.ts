@@ -86,7 +86,7 @@ export async function GET(req: NextRequest) {
 /**
  * Background: fetch chapter list from source, then scrape each chapter's images.
  */
-async function importAllChapters(mangaId: string, slug: string, sourceUrl: string) {
+export async function importAllChapters(mangaId: string, slug: string, sourceUrl: string) {
   const supabase = await createClient();
 
   console.log(`[ChapterImport] Starting for manga ${slug} from ${sourceUrl}`);
