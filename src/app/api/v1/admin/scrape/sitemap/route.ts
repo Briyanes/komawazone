@@ -189,6 +189,9 @@ async function processSitemapImport(
 
           if (result.status === 'fulfilled' && result.value) {
             newCount++;
+          } else if (result.status === 'fulfilled' && result.value === null) {
+            // null = already exists (ignoreDuplicates hit), count as skipped
+            skippedCount++;
           } else {
             errors.push({
               url: manga.url,
@@ -296,31 +299,48 @@ async function scrapeAndCreateManga(url: string, userId: string) {
     // Generate slug from URL if not provided
     const slug = extractSlugFromUrl(url);
 
-    // Create manga in database — ON CONFLICT DO NOTHING prevents duplicate errors
-    // if the same slug was already inserted by a concurrent batch
-    const { data: manga } = await supabase
+    // Build insert payload — source_url only if column exists (migration 021)
+    const basePayload = {
+      slug,
+      title: scraped.title,
+      description: scraped.description,
+      cover_url: scraped.cover_url,
+      type: (scraped.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
+      status: (scraped.status || 'ONGOING') as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED',
+      author: scraped.author,
+      artist: scraped.artist,
+      genres: scraped.genres || [],
+      uploaded_by: userId,
+    };
+
+    // Try inserting with source_url; fall back without it if column is missing
+    let manga: unknown = null;
+    const { data: mangaWithSrc, error: upsertErr } = await supabase
       .from('manga')
       .upsert(
-        {
-          slug,
-          title: scraped.title,
-          description: scraped.description,
-          cover_url: scraped.cover_url,
-          type: scraped.type || 'MANHWA',
-          status: scraped.status || 'ONGOING',
-          author: scraped.author,
-          artist: scraped.artist,
-          genres: scraped.genres || [],
-          source_url: url,         // store origin URL for chapter import later
-          uploaded_by: userId,
-        },
+        { ...basePayload, source_url: url },
         { onConflict: 'slug', ignoreDuplicates: true }
       )
       .select()
       .single();
 
+    if (upsertErr && upsertErr.message?.includes('source_url')) {
+      // Migration 021 not yet applied — retry without source_url
+      const { data: mangaWithout } = await supabase
+        .from('manga')
+        .upsert(basePayload, { onConflict: 'slug', ignoreDuplicates: true })
+        .select()
+        .single();
+      manga = mangaWithout;
+    } else if (upsertErr) {
+      throw new Error(upsertErr.message);
+    } else {
+      manga = mangaWithSrc;
+    }
+
+    // null means slug conflict + ignoreDuplicates → already exists, treat as skip
     if (!manga) {
-      throw new Error('Failed to create manga');
+      return null;
     }
 
     return manga;
