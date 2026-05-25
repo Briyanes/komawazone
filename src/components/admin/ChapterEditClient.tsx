@@ -113,7 +113,14 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
 
   const handleNewFiles = async (files: FileList | null) => {
     if (!files || files.length === 0) return;
-    const fileArr = Array.from(files);
+    const MAX_SIZE = 10 * 1024 * 1024; // 10 MB
+    const validFiles = Array.from(files).filter(f => {
+      if (!f.type.startsWith('image/')) { alert(`File "${f.name}" bukan gambar, dilewati.`); return false; }
+      if (f.size > MAX_SIZE) { alert(`File "${f.name}" terlalu besar (maks 10 MB), dilewati.`); return false; }
+      return true;
+    });
+    if (validFiles.length === 0) return;
+    const fileArr = validFiles;
     const startNum = images.length + 1;
     const placeholders: PageImage[] = fileArr.map((_, i) => ({
       id: `new-${Date.now()}-${i}`,

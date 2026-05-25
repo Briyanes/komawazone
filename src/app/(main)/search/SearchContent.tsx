@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect, useCallback } from 'react';
+import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, SlidersHorizontal, X, Star, Lock, Crown } from 'lucide-react';
 import { MangaGrid } from '@/components/manga/MangaGrid';
@@ -47,6 +47,7 @@ export default function SearchContent() {
   const [showFilters, setShowFilters] = useState(false);
   const [genres, setGenres] = useState<Genre[]>([]);
   const [isVip, setIsVip] = useState(false);
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const query   = searchParams.get('q')      ?? '';
   const status  = (searchParams.get('status') ?? '') as MangaStatus | '';
@@ -56,6 +57,8 @@ export default function SearchContent() {
   const author  = searchParams.get('author') ?? '';
   const type    = (searchParams.get('type')  ?? '') as MangaType | '';
   const year    = searchParams.get('year')   ?? '';
+
+  const [inputValue, setInputValue] = useState(query);
   const minRating = searchParams.get('min_rating') ?? '';
 
   useEffect(() => {
@@ -111,6 +114,15 @@ export default function SearchContent() {
     router.push(`/search?${p}`);
   };
 
+  const handleSearchInput = (value: string) => {
+    setInputValue(value);
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => updateParam('q', value), 400);
+  };
+
+  // Sync inputValue when URL param changes externally (e.g. back/forward)
+  useEffect(() => { setInputValue(query); }, [query]);
+
   const activeFilterCount = [status, genre, author, type, year, minRating].filter(Boolean).length;
 
   return (
@@ -123,13 +135,13 @@ export default function SearchContent() {
           <input
             type="search"
             placeholder="Cari manga, manhwa…"
-            defaultValue={query}
-            onChange={(e) => updateParam('q', e.target.value)}
+            value={inputValue}
+            onChange={(e) => handleSearchInput(e.target.value)}
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: 'var(--text-primary)' }}
           />
-          {query && (
-            <button onClick={() => updateParam('q', '')} aria-label="Hapus">
+          {inputValue && (
+            <button onClick={() => { setInputValue(''); updateParam('q', ''); }} aria-label="Hapus">
               <X size={16} style={{ color: 'var(--text-tertiary)' }} />
             </button>
           )}

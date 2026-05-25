@@ -70,13 +70,22 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
   };
 
   const handleBulkDelete = () => {
-    if (!confirm(`Delete ${selected.size} manga? This cannot be undone.`)) return;
+    if (!confirm(`Hapus ${selected.size} manga? Tindakan ini tidak dapat dibatalkan.`)) return;
     startTransition(async () => {
-      await Promise.all(
-        [...selected].map(id => fetch(`/api/v1/admin/manga/${id}`, { method: 'DELETE' }))
+      const results = await Promise.allSettled(
+        [...selected].map(id =>
+          fetch(`/api/v1/admin/manga/${id}`, { method: 'DELETE' }).then(r => ({ id, ok: r.ok }))
+        )
       );
-      setMangaList(prev => prev.filter(m => !selected.has(m.id)));
+      const deleted = new Set(
+        results
+          .filter((r): r is PromiseFulfilledResult<{ id: string; ok: boolean }> => r.status === 'fulfilled' && r.value.ok)
+          .map(r => r.value.id)
+      );
+      const failCount = selected.size - deleted.size;
+      setMangaList(prev => prev.filter(m => !deleted.has(m.id)));
       setSelected(new Set());
+      if (failCount > 0) alert(`${failCount} manga gagal dihapus.`);
     });
   };
 
