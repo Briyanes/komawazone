@@ -299,49 +299,32 @@ async function scrapeAndCreateManga(url: string, userId: string) {
     // Generate slug from URL if not provided
     const slug = extractSlugFromUrl(url);
 
-    // Build insert payload — source_url only if column exists (migration 021)
-    const basePayload = {
-      slug,
-      title: scraped.title,
-      description: scraped.description,
-      cover_url: scraped.cover_url,
-      type: (scraped.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
-      status: (scraped.status || 'ONGOING') as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED',
-      author: scraped.author,
-      artist: scraped.artist,
-      genres: scraped.genres || [],
-      uploaded_by: userId,
-    };
-
-    // Try inserting with source_url; fall back without it if column is missing
-    let manga: unknown = null;
-    const { data: mangaWithSrc, error: upsertErr } = await supabase
+    // Create manga in database — ON CONFLICT DO NOTHING prevents duplicate errors
+    const { data: manga, error: upsertErr } = await supabase
       .from('manga')
       .upsert(
-        { ...basePayload, source_url: url },
+        {
+          slug,
+          title: scraped.title,
+          description: scraped.description,
+          cover_url: scraped.cover_url,
+          type: (scraped.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
+          status: (scraped.status || 'ONGOING') as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED',
+          author: scraped.author,
+          artist: scraped.artist,
+          genres: scraped.genres || [],
+          source_url: url,
+          uploaded_by: userId,
+        },
         { onConflict: 'slug', ignoreDuplicates: true }
       )
       .select()
       .single();
 
-    if (upsertErr && upsertErr.message?.includes('source_url')) {
-      // Migration 021 not yet applied — retry without source_url
-      const { data: mangaWithout } = await supabase
-        .from('manga')
-        .upsert(basePayload, { onConflict: 'slug', ignoreDuplicates: true })
-        .select()
-        .single();
-      manga = mangaWithout;
-    } else if (upsertErr) {
-      throw new Error(upsertErr.message);
-    } else {
-      manga = mangaWithSrc;
-    }
+    if (upsertErr) throw new Error(upsertErr.message);
 
-    // null means slug conflict + ignoreDuplicates → already exists, treat as skip
-    if (!manga) {
-      return null;
-    }
+    // null = slug conflict + ignoreDuplicates → already exists, treat as skip
+    if (!manga) return null;
 
     return manga;
   } catch (error) {
