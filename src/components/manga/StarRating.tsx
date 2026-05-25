@@ -60,22 +60,39 @@ export function StarRating({ mangaId, currentRating, ratingCount }: StarRatingPr
         {/* Star display (always shows avg rating) */}
         <div className="flex items-center gap-0.5" title={`${localRating.toFixed(1)} / 5`}>
           {[1, 2, 3, 4, 5].map(n => (
-            <Star
-              key={n}
-              size={isAuthenticated ? 20 : 16}
-              fill={n <= Math.round(localRating) ? 'currentColor' : 'none'}
-              className={cn(
-                'transition-colors',
-                isAuthenticated && 'cursor-pointer hover:scale-110 active:scale-95',
-                n <= Math.round(displayStar ?? localRating)
-                  ? 'text-amber-400'
-                  : 'text-[var(--border-medium)]'
-              )}
-              onMouseEnter={() => isAuthenticated && setHoveredStar(n)}
-              onMouseLeave={() => setHoveredStar(null)}
-              onClick={() => handleRate(n)}
-              aria-disabled={isPending}
-            />
+            isAuthenticated ? (
+              <button
+                key={n}
+                type="button"
+                disabled={isPending}
+                onClick={() => handleRate(n)}
+                onMouseEnter={() => setHoveredStar(n)}
+                onMouseLeave={() => setHoveredStar(null)}
+                className="p-0 leading-none disabled:cursor-not-allowed disabled:opacity-70"
+                aria-label={`Beri rating ${n} bintang`}
+              >
+                <Star
+                  size={20}
+                  fill={n <= Math.round(displayStar ?? localRating) ? 'currentColor' : 'none'}
+                  className={cn(
+                    'transition-colors hover:scale-110 active:scale-95',
+                    n <= Math.round(displayStar ?? localRating)
+                      ? 'text-amber-400'
+                      : 'text-[var(--border-medium)]'
+                  )}
+                />
+              </button>
+            ) : (
+              <Star
+                key={n}
+                size={16}
+                fill={n <= Math.round(localRating) ? 'currentColor' : 'none'}
+                className={cn(
+                  'transition-colors',
+                  n <= Math.round(localRating) ? 'text-amber-400' : 'text-[var(--border-medium)]'
+                )}
+              />
+            )
           ))}
         </div>
         <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
