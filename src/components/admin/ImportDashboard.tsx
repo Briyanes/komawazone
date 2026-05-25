@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Download, RefreshCw, Play, CheckCircle, XCircle,
-  Clock, BookOpen, FileText, AlertTriangle, Zap,
+  Clock, BookOpen, FileText, AlertTriangle, Zap, StopCircle,
 } from 'lucide-react';
 
 interface ImportJob {
@@ -16,6 +16,7 @@ interface ImportJob {
   updated_manga: number;
   skipped_items: number;
   errors: Array<{ url?: string; error: string }> | null;
+  error_message: string | null;
   started_at: string;
   completed_at: string | null;
   created_by: string | null;
@@ -34,6 +35,7 @@ export function ImportDashboard() {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const fetchStats = useCallback(async () => {
@@ -81,6 +83,24 @@ export function ImportDashboard() {
       setMessage({ type: 'error', text: 'Network error' });
     } finally {
       setBulkLoading(false);
+    }
+  };
+
+  const cancelJob = async (jobId: string) => {
+    setCancellingId(jobId);
+    try {
+      const res = await fetch(`/api/v1/admin/import-jobs/${jobId}/cancel`, { method: 'POST' });
+      const json = await res.json() as { status?: string; message?: string; error?: string };
+      if (res.ok) {
+        setMessage({ type: 'success', text: json.message ?? 'Job dibatalkan' });
+        void fetchStats();
+      } else {
+        setMessage({ type: 'error', text: json.error ?? 'Gagal membatalkan job' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Network error' });
+    } finally {
+      setCancellingId(null);
     }
   };
 
@@ -223,6 +243,18 @@ export function ImportDashboard() {
                     {job.skipped_items > 0 && <span>⤻{job.skipped_items} skip</span>}
                   </div>
                 </div>
+                {job.status === 'running' && (
+                  <button
+                    onClick={() => void cancelJob(job.id)}
+                    disabled={cancellingId === job.id}
+                    title="Batalkan job ini"
+                    className="flex shrink-0 items-center gap-1 rounded-lg px-2 py-1 text-[10px] font-medium transition-opacity disabled:opacity-50"
+                    style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}
+                  >
+                    <StopCircle size={11} />
+                    {cancellingId === job.id ? '...' : 'Cancel'}
+                  </button>
+                )}
               </div>
             ))}
           </div>

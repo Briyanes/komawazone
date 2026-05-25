@@ -34,11 +34,34 @@ export async function GET() {
   ]);
 
   const mangaWithChaptersSet = new Set((chaptersGrouped ?? []).map(c => c.manga_id));
-  const { count: totalMangaAll } = await supabase
-    .from('manga').select('id', { count: 'exact', head: true }).is('deleted_at', null);
   const { data: allMangaIds } = await supabase
     .from('manga').select('id').is('deleted_at', null);
   const mangaWithoutChapters = (allMangaIds ?? []).filter(m => !mangaWithChaptersSet.has(m.id)).length;
+
+  // Auto-cancel zombie jobs: RUNNING jobs older than 15 minutes are considered timed out
+  const TIMEOUT_MS = 15 * 60 * 1000;
+  const zombieJobs = (recentJobs ?? []).filter(j => {
+    if (j.status !== 'running') return false;
+    const age = Date.now() - new Date(j.started_at as string).getTime();
+    return age > TIMEOUT_MS;
+  });
+  if (zombieJobs.length > 0) {
+    await Promise.all(
+      zombieJobs.map(j =>
+        supabase
+          .from('import_jobs')
+          .update({ status: 'failed', error_message: 'Timed out (auto-cancelled after 15 min)', completed_at: new Date().toISOString() })
+          .eq('id', j.id)
+      )
+    );
+    // Reflect updated status in the response
+    for (const job of recentJobs ?? []) {
+      if (zombieJobs.some(z => z.id === job.id)) {
+        (job as Record<string, unknown>).status = 'failed';
+        (job as Record<string, unknown>).error_message = 'Timed out (auto-cancelled after 15 min)';
+      }
+    }
+  }
 
   return NextResponse.json({
     status: 'success',
