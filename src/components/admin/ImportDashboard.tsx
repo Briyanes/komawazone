@@ -32,6 +32,7 @@ interface DashboardStats {
 export function ImportDashboard() {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
@@ -45,8 +46,14 @@ export function ImportDashboard() {
       // silent
     } finally {
       setLoading(false);
+      setIsRefreshing(false);
     }
   }, []);
+
+  const handleRefresh = useCallback(() => {
+    setIsRefreshing(true);
+    void fetchStats();
+  }, [fetchStats]);
 
   useEffect(() => {
     void fetchStats();
@@ -107,12 +114,12 @@ export function ImportDashboard() {
           </div>
         </div>
         <button
-          onClick={fetchStats}
-          disabled={loading}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-60"
           style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
         >
-          <RefreshCw size={13} className={loading ? 'animate-spin' : ''} />
+          <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
           Refresh
         </button>
       </div>
