@@ -311,6 +311,7 @@ async function scrapeAndCreateManga(url: string, userId: string) {
           author: scraped.author,
           artist: scraped.artist,
           genres: scraped.genres || [],
+          source_url: url,         // store origin URL for chapter import later
           uploaded_by: userId,
         },
         { onConflict: 'slug', ignoreDuplicates: true }

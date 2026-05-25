@@ -69,6 +69,7 @@ export interface Database {
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
+          source_url: string | null;
         };
         Insert: {
           slug: string;
@@ -78,7 +79,7 @@ export interface Database {
           cover_url?: string | null;
           banner_url?: string | null;
           status?: 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';
-          type?: 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON';
+          type?: 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON' | null;
           author?: string | null;
           artist?: string | null;
           genres?: string[];
@@ -87,6 +88,7 @@ export interface Database {
           is_featured?: boolean;
           content_rating?: 'general' | 'mature';
           uploaded_by?: string | null;
+          source_url?: string | null;
         };
         Update: {
           title?: string;
@@ -95,7 +97,7 @@ export interface Database {
           cover_url?: string | null;
           banner_url?: string | null;
           status?: 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';
-          type?: 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON';
+          type?: 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON' | null;
           author?: string | null;
           artist?: string | null;
           genres?: string[];
@@ -104,6 +106,7 @@ export interface Database {
           is_featured?: boolean;
           content_rating?: 'general' | 'mature';
           deleted_at?: string | null;
+          source_url?: string | null;
         };
         Relationships: [];
       };

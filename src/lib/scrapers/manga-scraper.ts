@@ -14,12 +14,105 @@ export interface ScrapedManga {
   status: MangaStatus;
 }
 
+export interface ChapterEntry {
+  number: number;
+  title: string;
+  url: string;
+  releasedAt: string | null;
+}
+
 /** Get meta tag content by property or name attribute */
 function getMeta(html: string, attr: string, val: string): string {
   const m = html.match(new RegExp(`<meta[^>]+${attr}=["']${val}["'][^>]+content=["']([^"']*)["']`, 'i'))
          ?? html.match(new RegExp(`<meta[^>]+content=["']([^"']*)["'][^>]+${attr}=["']${val}["']`, 'i'));
   return m ? m[1] : '';
 }
+
+/**
+ * Parse chapter list from manhwaland.land (Madara theme) HTML.
+ * Chapters are in <ul class="version-chap"> or <div class="eplister"> blocks.
+ */
+export function parseChapterListFromHtml(html: string): ChapterEntry[] {
+  const chapters: ChapterEntry[] = [];
+
+  // Match each <li class="wp-manga-chapter ..."> block
+  const liRe = /<li[^>]+class="[^"]*wp-manga-chapter[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
+  let liMatch: RegExpExecArray | null;
+
+  while ((liMatch = liRe.exec(html)) !== null) {
+    const block = liMatch[1];
+
+    // Extract URL and raw title from <a href="...">Title</a>
+    const aMatch = block.match(/<a[^>]+href=["']([^"']+)["'][^>]*>\s*([\s\S]*?)\s*<\/a>/i);
+    if (!aMatch) continue;
+
+    const url = aMatch[1].trim();
+    const rawTitle = aMatch[2].replace(/<[^>]+>/g, '').trim(); // strip inner HTML tags
+
+    // Extract chapter number from URL or title
+    const numFromUrl = url.match(/chapter[-_](\d+(?:\.\d+)?)/i);
+    const numFromTitle = rawTitle.match(/chapter\s*(\d+(?:\.\d+)?)/i)
+      ?? rawTitle.match(/^(\d+(?:\.\d+)?)/);
+    const numStr = numFromUrl?.[1] ?? numFromTitle?.[1];
+    const number = numStr ? parseFloat(numStr) : null;
+    if (number === null) continue;
+
+    // Extract release date from <i>date</i>
+    const dateMatch = block.match(/<i[^>]*>([^<]+)<\/i>/i);
+    const releasedAt = dateMatch ? new Date(dateMatch[1].trim()).toISOString() : null;
+
+    chapters.push({ number, title: rawTitle, url, releasedAt });
+  }
+
+  // Sort ascending (ch 1, 2, 3…)
+  return chapters.sort((a, b) => a.number - b.number);
+}
+
+/**
+ * Scrape chapter images from a chapter page URL (manhwaland / Madara theme).
+ * Reuses the same noscript/data-src extraction logic as the chapter API route.
+ */
+export async function scrapeChapterImages(chapterUrl: string): Promise<string[]> {
+  const res = await fetch(chapterUrl, {
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
+      'Referer': 'https://04x.manhwaland.land/',
+    },
+    signal: AbortSignal.timeout(20_000),
+  });
+
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const html = await res.text();
+
+  if (isBlockedPage(html)) throw new Error('Blocked by CloudFlare');
+
+  const urls: string[] = [];
+  const readerareaIdx = html.indexOf('id="readerarea"');
+  const section = readerareaIdx !== -1 ? html.slice(readerareaIdx, readerareaIdx + 80_000) : html;
+
+  // Primary: noscript lazy-load fallback
+  const noscriptRe = /<noscript>([\s\S]*?)<\/noscript>/g;
+  let m: RegExpExecArray | null;
+  while ((m = noscriptRe.exec(section)) !== null) {
+    const srcRe = /src=['"]([^'"]+)['"]/g;
+    let s: RegExpExecArray | null;
+    while ((s = srcRe.exec(m[1])) !== null) {
+      if (/^https?:\/\//i.test(s[1])) urls.push(s[1]);
+    }
+  }
+  // Fallback: data-src
+  if (urls.length === 0) {
+    const dataSrcRe = /data-src=['"]([^'"]+)['"]/g;
+    while ((m = dataSrcRe.exec(section)) !== null) {
+      if (/^https?:\/\//i.test(m[1])) urls.push(m[1]);
+    }
+  }
+
+  return urls;
+}
+
 
 /**
  * Read a value from manhwaland's `div.imptdt` blocks.

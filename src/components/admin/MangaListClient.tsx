@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition } from 'react';
 import Link from 'next/link';
-import { Plus, Edit, ExternalLink, Search, X, Star, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Edit, ExternalLink, Search, X, Star, Trash2, RefreshCw, BookOpen } from 'lucide-react';
 import { DeleteMangaButton } from '@/components/admin/DeleteMangaButton';
 import { SelectInput } from '@/components/ui/SelectInput';
 
@@ -29,6 +29,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState('ONGOING');
   const [isPending, startTransition] = useTransition();
+  const [importingChapters, setImportingChapters] = useState<Set<string>>(new Set());
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -77,6 +78,25 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
       setMangaList(prev => prev.filter(m => !selected.has(m.id)));
       setSelected(new Set());
     });
+  };
+
+  const handleImportChapters = async (id: string, title: string) => {
+    if (!confirm(`Import semua chapter untuk "${title}"?\n\nProses ini berjalan di background dan bisa memakan waktu lama.`)) return;
+    setImportingChapters(prev => new Set(prev).add(id));
+    try {
+      const res = await fetch('/api/v1/admin/scrape/manga-chapters', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ manga_id: id }),
+      });
+      const data = await res.json() as { message?: string; error?: string };
+      if (!res.ok) throw new Error(data.error ?? 'Gagal memulai import');
+      alert(data.message ?? 'Import chapter dimulai di background!');
+    } catch (err) {
+      alert(err instanceof Error ? err.message : 'Terjadi kesalahan');
+    } finally {
+      setImportingChapters(prev => { const s = new Set(prev); s.delete(id); return s; });
+    }
   };
 
   const handleBulkStatus = () => {
@@ -168,7 +188,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
       <div className="rounded-xl overflow-hidden border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
         <div
           className="grid items-center border-b px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider"
-          style={{ borderColor: 'var(--border-light)', color: 'var(--text-tertiary)', gridTemplateColumns: '28px 1fr 90px 70px 56px 110px' }}
+          style={{ borderColor: 'var(--border-light)', color: 'var(--text-tertiary)', gridTemplateColumns: '28px 1fr 90px 70px 56px 140px' }}
         >
           <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded accent-[var(--color-primary)]" />
           <span>Title</span>
@@ -196,7 +216,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
               <div
                 key={manga.id}
                 className="grid items-center px-4 py-2.5"
-                style={{ gridTemplateColumns: '28px 1fr 90px 70px 56px 110px' }}
+                style={{ gridTemplateColumns: '28px 1fr 90px 70px 56px 140px' }}
               >
                 <input
                   type="checkbox"
@@ -235,6 +255,15 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
                     style={{ color: manga.is_featured ? '#F59E0B' : 'var(--text-tertiary)' }}
                   >
                     <Star size={13} fill={manga.is_featured ? 'currentColor' : 'none'} />
+                  </button>
+                  <button
+                    onClick={() => handleImportChapters(manga.id, manga.title)}
+                    disabled={importingChapters.has(manga.id)}
+                    title="Import semua chapter dari sumber"
+                    className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)] disabled:opacity-40"
+                    style={{ color: 'var(--color-primary)' }}
+                  >
+                    <BookOpen size={13} />
                   </button>
                   <Link href={`/admin/manga/${manga.id}`}
                     className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)]"
