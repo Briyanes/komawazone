@@ -1,4 +1,5 @@
 import { detectMangaSource } from './detector';
+import { SCRAPER_HEADERS, parseChapterImages, validateScraperUrl } from './scraper-utils';
 
 type MangaType   = 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON';
 type MangaStatus = 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';
@@ -70,47 +71,18 @@ export function parseChapterListFromHtml(html: string): ChapterEntry[] {
 
 /**
  * Scrape chapter images from a chapter page URL (manhwaland / Madara theme).
- * Reuses the same noscript/data-src extraction logic as the chapter API route.
  */
 export async function scrapeChapterImages(chapterUrl: string): Promise<string[]> {
   const res = await fetch(chapterUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
-      'Referer': 'https://04x.manhwaland.land/',
-    },
+    headers: SCRAPER_HEADERS,
     signal: AbortSignal.timeout(20_000),
   });
 
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const html = await res.text();
-
   if (isBlockedPage(html)) throw new Error('Blocked by CloudFlare');
 
-  const urls: string[] = [];
-  const readerareaIdx = html.indexOf('id="readerarea"');
-  const section = readerareaIdx !== -1 ? html.slice(readerareaIdx, readerareaIdx + 80_000) : html;
-
-  // Primary: noscript lazy-load fallback
-  const noscriptRe = /<noscript>([\s\S]*?)<\/noscript>/g;
-  let m: RegExpExecArray | null;
-  while ((m = noscriptRe.exec(section)) !== null) {
-    const srcRe = /src=['"]([^'"]+)['"]/g;
-    let s: RegExpExecArray | null;
-    while ((s = srcRe.exec(m[1])) !== null) {
-      if (/^https?:\/\//i.test(s[1])) urls.push(s[1]);
-    }
-  }
-  // Fallback: data-src
-  if (urls.length === 0) {
-    const dataSrcRe = /data-src=['"]([^'"]+)['"]/g;
-    while ((m = dataSrcRe.exec(section)) !== null) {
-      if (/^https?:\/\//i.test(m[1])) urls.push(m[1]);
-    }
-  }
-
-  return urls;
+  return parseChapterImages(html);
 }
 
 
@@ -223,19 +195,7 @@ export async function scrapeMangaFromUrl(url: string, retries = 3): Promise<Scra
     try {
       // Fetch with browser-like headers to avoid blocking
       const res = await fetch(parsedUrl.toString(), {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
-          'Accept-Encoding': 'gzip, deflate, br',
-          'Connection': 'keep-alive',
-          'Upgrade-Insecure-Requests': '1',
-          'Sec-Fetch-Dest': 'document',
-          'Sec-Fetch-Mode': 'navigate',
-          'Sec-Fetch-Site': 'none',
-          'Cache-Control': 'no-cache',
-          'Referer': 'https://04x.manhwaland.land/',
-        },
+        headers: SCRAPER_HEADERS,
         signal: AbortSignal.timeout(20_000),
       });
 

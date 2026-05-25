@@ -30,7 +30,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ status: 'error', error: 'Cannot demote yourself' }, { status: 400 });
 
   const { data, error } = await supabase
-    .from('users').update({ role: parsed.data.role } as never).eq('id', id).select('id, role').single();
+    .from('users').update({ role: parsed.data.role }).eq('id', id).select('id, role').single();
   if (error) return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
   return NextResponse.json({ status: 'success', data });
 }

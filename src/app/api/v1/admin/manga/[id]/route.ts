@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import type { Database } from '@/types/database';
+
+type MangaUpdate = Database['public']['Tables']['manga']['Update'];
 
 const MangaUpdateSchema = z.object({
   title: z.string().min(1).optional(),
@@ -51,7 +54,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   const updates = { ...parsed.data };
-  const updateData: Record<string, unknown> = {};
+  const updateData: MangaUpdate = {};
   if (updates.title !== undefined) updateData.title = updates.title;
   if (updates.alt_title !== undefined) updateData.alt_title = updates.alt_title;
   if (updates.slug !== undefined) updateData.slug = updates.slug;
@@ -70,7 +73,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
 
   const { data, error } = await supabase
     .from('manga')
-    .update(updateData as never)
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();

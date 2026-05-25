@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import type { Database } from '@/types/database';
+
+type NotificationInsert = Database['public']['Tables']['notifications']['Insert'];
 
 const ChapterImageSchema = z.object({
   image_url: z.string().url(),
@@ -89,7 +92,7 @@ export async function POST(request: NextRequest) {
       title: title ?? null,
       thumbnail_url: thumbnail_url ?? null,
       release_date: release_date ?? new Date().toISOString(),
-    } as never)
+    })
     .select()
     .single();
 
@@ -137,7 +140,7 @@ export async function POST(request: NextRequest) {
       if (!allUsers.length) return;
 
       const chTitle = title ? `Ch. ${number}: ${title}` : `Chapter ${number}`;
-      const notifRows = allUsers.map(b => ({
+      const notifRows: NotificationInsert[] = allUsers.map(b => ({
         user_id:    b.user_id,
         type:       'new_chapter',
         title:      `Chapter baru: ${manga.title}`,
@@ -145,7 +148,7 @@ export async function POST(request: NextRequest) {
         manga_id,
         chapter_id: chapter.id,
       }));
-      await supabase.from('notifications').insert(notifRows as never);
+      await supabase.from('notifications').insert(notifRows);
     } catch {
       // Non-critical: notifications are best-effort
     }

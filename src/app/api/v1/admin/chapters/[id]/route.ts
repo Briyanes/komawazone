@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import type { Database } from '@/types/database';
+
+type ChapterUpdate = Database['public']['Tables']['chapters']['Update'];
 
 const ChapterUpdateSchema = z.object({
   number: z.number().min(0).optional(),
@@ -105,7 +108,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
       // Use raw SQL-style update via rpc or update each row — chapter_images.number field
       await Promise.all(
         p.data.order.map(({ id: imgId, number: num }) =>
-          supabase.from('chapter_images').update({ number: num } as never).eq('id', imgId)
+          supabase.from('chapter_images').update({ number: num }).eq('id', imgId)
         )
       );
       return NextResponse.json({ status: 'success' });
@@ -117,17 +120,17 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (!parsed.success)
     return NextResponse.json({ status: 'error', error: parsed.error.flatten() }, { status: 400 });
 
-  const updates: Record<string, unknown> = {};
+  const updates: ChapterUpdate = {};
   if (parsed.data.number !== undefined) updates.number = parsed.data.number;
   if (parsed.data.title !== undefined) updates.title = parsed.data.title;
   if (parsed.data.thumbnail_url !== undefined) updates.thumbnail_url = parsed.data.thumbnail_url;
-  if (parsed.data.release_date !== undefined) updates.release_date = parsed.data.release_date;
+  if (parsed.data.release_date !== undefined) updates.release_date = parsed.data.release_date ?? undefined;
 
   if (Object.keys(updates).length === 0)
     return NextResponse.json({ status: 'error', error: 'No fields to update' }, { status: 400 });
 
   const { data, error } = await supabase
-    .from('chapters').update(updates as never).eq('id', id).select().single();
+    .from('chapters').update(updates).eq('id', id).select().single();
   if (error) return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
   return NextResponse.json({ status: 'success', data });
 }

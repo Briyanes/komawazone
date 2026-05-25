@@ -322,25 +322,3 @@ export async function parseAllSitemaps(
     parseTime: 0, // Will be set by caller
   };
 }
-
-/**
- * Test sitemap parser with example URLs
- */
-export async function testSitemapParser(): Promise<void> {
-  const testUrls = [
-    'https://04x.manhwaland.land/manga-sitemap.xml',
-  ];
-
-  console.log('Testing sitemap parser...');
-  const result = await parseAllSitemaps(testUrls, {
-    timeout: 15000,
-    includeLastmod: true,
-  });
-
-  console.log('Parse result:', {
-    totalMangas: result.total,
-    totalSitemaps: result.sitemaps.length,
-    parseTime: result.parseTime,
-    sampleMangas: result.mangas.slice(0, 5),
-  });
-}

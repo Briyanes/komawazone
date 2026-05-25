@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
   const { error } = await supabase
     .from('user_ratings')
     .upsert(
-      { user_id: user.id, manga_id, rating, updated_at: new Date().toISOString() } as never,
+      { user_id: user.id, manga_id, rating, updated_at: new Date().toISOString() },
       { onConflict: 'user_id,manga_id' }
     );
 

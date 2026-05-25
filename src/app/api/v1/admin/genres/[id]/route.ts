@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import type { Database } from '@/types/database';
+
+type GenreUpdate = Database['public']['Tables']['genres']['Update'];
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -33,7 +36,7 @@ export async function PATCH(
   }
   const { data, error } = await supabase
     .from('genres')
-    .update(parsed.data as never)
+    .update(parsed.data as GenreUpdate)
     .eq('id', id)
     .select()
     .single();

@@ -75,10 +75,3 @@ export function getMangaType(url: string, fallback: 'MANGA' | 'MANHWA' | 'MANHUA
 export function getSupportedDomains(): string[] {
   return MANGA_SOURCES.flatMap(source => source.domains);
 }
-
-/**
- * Check if URL is from supported source
- */
-export function isSupportedSource(url: string): boolean {
-  return detectMangaSource(url) !== null;
-}

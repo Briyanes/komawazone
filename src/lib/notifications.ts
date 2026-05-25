@@ -90,7 +90,7 @@ export async function markNotificationRead(notificationId: string): Promise<void
   const supabase = await createClient();
   await supabase
     .from('notifications')
-    .update({ read: true } as never)
+    .update({ read: true })
     .eq('id', notificationId);
 }
 
@@ -101,7 +101,7 @@ export async function markAllNotificationsRead(userId: string): Promise<void> {
   const supabase = await createClient();
   await supabase
     .from('notifications')
-    .update({ read: true } as never)
+    .update({ read: true })
     .eq('user_id', userId)
     .eq('read', false);
 }

@@ -67,7 +67,7 @@ export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
     .from('manga')
     .select('id, slug, title, cover_url, banner_url, status, rating, views, description, genres, content_rating')
     .is('deleted_at', null)
-    .eq('is_featured', true as never)
+    .eq('is_featured', true)
     .order('updated_at', { ascending: false })
     .limit(limit);
 

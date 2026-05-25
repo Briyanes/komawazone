@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
+import type { Database } from '@/types/database';
+
+type AdProviderUpdate = Database['public']['Tables']['ad_providers']['Update'];
 
 const ProviderPatchSchema = z.object({
   name: z.string().min(1).optional(),
@@ -40,14 +43,14 @@ export async function PATCH(request: NextRequest, { params }: RouteParams) {
   }
 
   const updates = { ...parsed.data };
-  const updateData: Record<string, unknown> = {};
+  const updateData: AdProviderUpdate = {};
   if (updates.name !== undefined) updateData.name = updates.name;
   if (updates.pixel_code !== undefined) updateData.pixel_code = updates.pixel_code;
   if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
 
   const { data, error } = await supabase
     .from('ad_providers')
-    .update(updateData as never)
+    .update(updateData)
     .eq('id', id)
     .select()
     .single();

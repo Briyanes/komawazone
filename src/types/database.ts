@@ -42,6 +42,7 @@ export interface Database {
           bio?: string | null;
           theme_preference?: 'light' | 'dark';
           vip_expires_at?: string | null;
+          role?: 'USER' | 'ADMIN';
         };
         Relationships: [];
       };
@@ -91,6 +92,7 @@ export interface Database {
           source_url?: string | null;
         };
         Update: {
+          slug?: string;
           title?: string;
           alt_title?: string | null;
           description?: string | null;
@@ -107,6 +109,7 @@ export interface Database {
           content_rating?: 'general' | 'mature';
           deleted_at?: string | null;
           source_url?: string | null;
+          views?: number;
         };
         Relationships: [];
       };
@@ -130,8 +133,11 @@ export interface Database {
           thumbnail_url?: string | null;
         };
         Update: {
+          number?: number;
           title?: string | null;
+          release_date?: string | null;
           thumbnail_url?: string | null;
+          views?: number;
         };
         Relationships: [];
       };
@@ -154,6 +160,7 @@ export interface Database {
         };
         Update: {
           image_url?: string;
+          number?: number;
         };
         Relationships: [];
       };
@@ -617,6 +624,32 @@ export interface Database {
         };
         Update: {
           status?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      manga_reviews: {
+        Row: {
+          id: string;
+          manga_id: string;
+          user_id: string;
+          rating: number;
+          text: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          manga_id: string;
+          user_id: string;
+          rating: number;
+          text?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          rating?: number;
+          text?: string | null;
           updated_at?: string;
         };
         Relationships: [];

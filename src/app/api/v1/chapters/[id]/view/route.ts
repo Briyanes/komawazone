@@ -23,7 +23,7 @@ export async function POST(
     // Increment chapter views
     const { error: chErr } = await supabase
       .from('chapters')
-      .update({ views: (chapter.views ?? 0) + 1 } as never)
+      .update({ views: (chapter.views ?? 0) + 1 })
       .eq('id', id);
 
     // Increment manga views
@@ -36,7 +36,7 @@ export async function POST(
     if (manga) {
       await supabase
         .from('manga')
-        .update({ views: (manga.views ?? 0) + 1 } as never)
+        .update({ views: (manga.views ?? 0) + 1 })
         .eq('id', chapter.manga_id);
     }
 

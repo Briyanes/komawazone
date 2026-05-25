@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Upload, Play, XCircle, CheckCircle, Clock, ExternalLink, Download } from 'lucide-react';
 
 const DEFAULT_SITEMAPS = [
@@ -38,6 +38,13 @@ export function SitemapImportTool() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
+
+  // Cleanup polling interval on unmount to prevent memory leaks
+  useEffect(() => {
+    return () => {
+      if (pollInterval) clearInterval(pollInterval);
+    };
+  }, [pollInterval]);
 
   // Add new sitemap URL
   const addSitemap = () => {

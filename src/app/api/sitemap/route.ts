@@ -29,7 +29,7 @@ export async function GET() {
     supabase
       .from('chapters')
       .select('id, manga_id, manga:manga!inner(slug), created_at')
-      .is('manga.deleted_at', null as never)
+      .is('manga.deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(2000),
   ]);

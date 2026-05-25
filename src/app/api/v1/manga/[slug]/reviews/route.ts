@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import type { Database } from '@/types/database';
+
+type ReviewInsert = Database['public']['Tables']['manga_reviews']['Insert'];
+type ReviewUpdate = Database['public']['Tables']['manga_reviews']['Update'];
 
 export async function GET(
   request: NextRequest,
@@ -27,12 +31,12 @@ export async function GET(
 
     // Fetch reviews with user info
     const { data: reviews, error, count } = await supabase
-      .from('manga_reviews' as never)
+      .from('manga_reviews')
       .select(`
         id, rating, text, created_at,
         users(id, username, avatar_url)
       `, { count: 'exact' })
-      .eq('manga_id' as never, manga.id)
+      .eq('manga_id', manga.id)
       .order('created_at', { ascending: false })
       .range(offset, offset + limit - 1);
 
@@ -85,10 +89,10 @@ export async function POST(
 
     // Try to find existing review
     const { data: existingReview } = await supabase
-      .from('manga_reviews' as never)
+      .from('manga_reviews')
       .select('id')
-      .eq('manga_id' as never, manga.id)
-      .eq('user_id' as never, user.id)
+      .eq('manga_id', manga.id)
+      .eq('user_id', user.id)
       .single();
 
     let data, error;
@@ -96,9 +100,9 @@ export async function POST(
     if (existingReview && typeof existingReview === 'object' && 'id' in existingReview) {
       // Update existing review
       const result = await supabase
-        .from('manga_reviews' as never)
-        .update({ rating, text: text || null, updated_at: new Date().toISOString() } as never)
-        .eq('id' as never, (existingReview as { id: string }).id)
+        .from('manga_reviews')
+        .update({ rating, text: text || null, updated_at: new Date().toISOString() } as ReviewUpdate)
+        .eq('id', (existingReview as { id: string }).id)
         .select()
         .single();
       data = result.data;
@@ -106,8 +110,8 @@ export async function POST(
     } else {
       // Insert new review
       const result = await supabase
-        .from('manga_reviews' as never)
-        .insert([{ manga_id: manga.id, user_id: user.id, rating, text: text || null } as never])
+        .from('manga_reviews')
+        .insert([{ manga_id: manga.id, user_id: user.id, rating, text: text || null } as ReviewInsert])
         .select()
         .single();
       data = result.data;

@@ -36,13 +36,13 @@ export async function PATCH(request: NextRequest) {
   if (ids && ids.length > 0) {
     await supabase
       .from('notifications')
-      .update({ read: true } as never)
+      .update({ read: true })
       .in('id', ids)
       .eq('user_id', user.id);
   } else {
     await supabase
       .from('notifications')
-      .update({ read: true } as never)
+      .update({ read: true })
       .eq('user_id', user.id)
       .eq('read', false);
   }

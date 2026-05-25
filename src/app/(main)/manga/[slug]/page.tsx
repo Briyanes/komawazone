@@ -425,7 +425,7 @@ async function Recommendations({ genres, excludeId }: { genres: string[]; exclud
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, genres, content_rating')
     .is('deleted_at', null)
-    .overlaps('genres', genres as never)
+    .overlaps('genres', genres)
     .neq('id', excludeId)
     .order('rating', { ascending: false })
     .limit(8);

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseChapterListFromHtml, scrapeChapterImages } from '@/lib/scrapers/manga-scraper';
+import { SCRAPER_HEADERS, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
 
 export const maxDuration = 300;
 
@@ -42,6 +43,12 @@ export async function POST(req: NextRequest) {
 
   // Build source URL if not stored (reconstruct from slug for manhwaland)
   const sourceUrl = manga.source_url ?? `https://04x.manhwaland.land/manga-${manga.slug}/`;
+
+  // SSRF check on source URL
+  const ssrfError = validateScraperUrl(sourceUrl);
+  if (ssrfError) {
+    return NextResponse.json({ error: `source_url tidak valid: ${ssrfError}` }, { status: 400 });
+  }
   // Return immediately, process in background
   after(() => importAllChapters(manga.id, manga.slug, sourceUrl));
 
@@ -87,11 +94,7 @@ async function importAllChapters(mangaId: string, slug: string, sourceUrl: strin
   try {
     // 1. Fetch manga page to get chapter list
     const pageRes = await fetch(sourceUrl, {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-        'Referer': 'https://04x.manhwaland.land/',
-      },
+      headers: SCRAPER_HEADERS,
       signal: AbortSignal.timeout(20_000),
     });
 
@@ -140,7 +143,7 @@ async function importAllChapters(mangaId: string, slug: string, sourceUrl: strin
         }
 
         // Create chapter record
-        const { data: chapterRecord } = await supabase
+        const { data: chapterRecord, error: chapterErr } = await supabase
           .from('chapters')
           .insert({
             manga_id: mangaId,
@@ -152,7 +155,8 @@ async function importAllChapters(mangaId: string, slug: string, sourceUrl: strin
           .select('id')
           .single();
 
-        if (!chapterRecord) {
+        if (chapterErr || !chapterRecord) {
+          console.error(`[ChapterImport] Failed to insert chapter ${chapter.number}:`, chapterErr?.message);
           failed++;
           continue;
         }
