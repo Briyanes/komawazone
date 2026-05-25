@@ -56,7 +56,7 @@ export default function RootLayout({
       className={`${inter.variable} ${playfair.variable} h-full`}
       data-scroll-behavior="smooth"
     >
-      <body className="min-h-full flex flex-col bg-surface-primary text-body-primary antialiased">
+      <body className="min-h-full flex flex-col bg-surface-primary text-body-primary antialiased" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>

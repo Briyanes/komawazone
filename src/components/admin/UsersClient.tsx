@@ -91,7 +91,7 @@ export function UsersClient({ users: initial, meId }: { users: UserRow[]; meId: 
                   {u.role}
                 </span>
                 <span className="hidden text-xs sm:block" style={{ color: 'var(--text-tertiary)' }}>
-                  {new Date(u.created_at).toLocaleDateString()}
+                  {new Date(u.created_at).toLocaleDateString('id-ID')}
                 </span>
                 <div className="flex justify-end">
                   <ChangeRoleButton userId={u.id} currentRole={u.role} isSelf={u.id === meId} />

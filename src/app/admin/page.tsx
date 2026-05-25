@@ -211,7 +211,7 @@ export default async function AdminDashboard() {
                     {ch.release_date && (
                       <p className="flex items-center gap-1 text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
                         <Clock size={10} />
-                        {new Date(ch.release_date).toLocaleDateString()}
+                        {new Date(ch.release_date).toLocaleDateString('id-ID')}
                       </p>
                     )}
                   </div>

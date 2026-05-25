@@ -159,7 +159,7 @@ export function ChapterListClient({
                   </p>
                 </div>
                 <span className="hidden text-xs sm:block" style={{ color: 'var(--text-tertiary)' }}>
-                  {ch.release_date ? new Date(ch.release_date).toLocaleDateString() : '—'}
+                  {ch.release_date ? new Date(ch.release_date).toLocaleDateString('id-ID') : '—'}
                 </span>
                 <span className="hidden text-right text-xs sm:block" style={{ color: 'var(--text-secondary)' }}>
                   {(ch.views ?? 0).toLocaleString()}
