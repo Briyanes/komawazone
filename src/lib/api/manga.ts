@@ -15,7 +15,7 @@ export type ChapterDetail = {
   title: string | null;
   manga_id: string;
   chapter_images: ChapterImage[];
-  manga: { id: string; slug: string; title: string; content_rating: 'general' | 'mature' } | null;
+  manga: { id: string; slug: string; title: string; content_rating: 'general' | 'mature'; source_url: string | null } | null;
 };
 
 export type MangaListItem = {
@@ -213,13 +213,55 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
     .select(`
       id, number, title, manga_id,
       chapter_images(id, number, image_url, width, height),
-      manga(id, slug, title, content_rating)
+      manga(id, slug, title, content_rating, source_url)
     `)
     .eq('id', chapterId)
     .single();
 
   if (error) return null;
-  return data as unknown as ChapterDetail;
+
+  const chapter = data as unknown as ChapterDetail;
+
+  // Lazy-load images: if chapter was imported as metadata-only (no images yet),
+  // scrape and save them now on first read.
+  if (chapter.chapter_images.length === 0 && chapter.manga?.slug) {
+    try {
+      const { scrapeChapterImages } = await import('@/lib/scrapers/manga-scraper');
+      const mangaSlug = chapter.manga.slug;
+      const chapterNum = chapter.number;
+      // Chapter URL format: {origin}/{manga-slug}-chapter-{N}/
+      const origin = chapter.manga.source_url
+        ? new URL(chapter.manga.source_url).origin
+        : 'https://04x.manhwaland.land';
+      const chapterUrl = `${origin}/${mangaSlug}-chapter-${chapterNum}/`;
+
+      const imageUrls = await scrapeChapterImages(chapterUrl);
+      if (imageUrls.length > 0) {
+        const imageRows = imageUrls.map((url, i) => ({
+          chapter_id: chapter.id,
+          image_url: url,
+          number: i + 1,
+        }));
+        const { data: inserted } = await supabase
+          .from('chapter_images')
+          .insert(imageRows)
+          .select('id, number, image_url, width, height');
+
+        // Also update thumbnail if not set
+        await supabase
+          .from('chapters')
+          .update({ thumbnail_url: imageUrls[0] })
+          .eq('id', chapter.id)
+          .is('thumbnail_url', null);
+
+        chapter.chapter_images = (inserted ?? []) as ChapterImage[];
+      }
+    } catch (err) {
+      console.error('[LazyImages] Failed to scrape images for chapter', chapterId, err);
+    }
+  }
+
+  return chapter;
 }
 
 export async function getAdjacentChapters(mangaId: string, currentNumber: number): Promise<{

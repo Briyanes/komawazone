@@ -84,12 +84,16 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * Background: fetch chapter list from source, then scrape each chapter's images.
+ * Background: fetch chapter list from source, then optionally scrape each chapter's images.
+ *
+ * @param metadataOnly  When true, only insert chapter records (no image scraping).
+ *                      Much faster — use for bulk imports. Images are fetched lazily
+ *                      the first time a chapter is read.
  */
-export async function importAllChapters(mangaId: string, slug: string, sourceUrl: string) {
+export async function importAllChapters(mangaId: string, slug: string, sourceUrl: string, metadataOnly = false) {
   const supabase = await createClient();
 
-  console.log(`[ChapterImport] Starting for manga ${slug} from ${sourceUrl}`);
+  console.log(`[ChapterImport] Starting for manga ${slug} from ${sourceUrl} (metadataOnly=${metadataOnly})`);
 
   try {
     // 1. Fetch manga page to get chapter list
@@ -125,7 +129,27 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
 
     console.log(`[ChapterImport] ${toImport.length} new chapters to import (${existingNums.size} already exist)`);
 
-    // 3. Scrape each chapter with rate-limit friendly delays
+    if (toImport.length === 0) return;
+
+    // 3a. Metadata-only mode: insert chapter records without scraping images (fast)
+    if (metadataOnly) {
+      const rows = toImport.map(chapter => ({
+        manga_id: mangaId,
+        number: chapter.number,
+        title: chapter.title || `Chapter ${chapter.number}`,
+        ...(chapter.releasedAt ? { release_date: chapter.releasedAt } : {}),
+      }));
+
+      // Batch insert in groups of 50
+      for (let i = 0; i < rows.length; i += 50) {
+        await supabase.from('chapters').insert(rows.slice(i, i + 50));
+      }
+
+      console.log(`[ChapterImport] Metadata-only: inserted ${toImport.length} chapters for ${slug}`);
+      return;
+    }
+
+    // 3b. Full mode: scrape images for each chapter
     let imported = 0;
     let failed = 0;
 

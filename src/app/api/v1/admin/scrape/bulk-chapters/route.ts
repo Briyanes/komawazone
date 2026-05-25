@@ -24,9 +24,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
-  const body = await req.json() as { limit?: number; onlyMissing?: boolean } | null;
+  const body = await req.json() as { limit?: number; onlyMissing?: boolean; metadataOnly?: boolean } | null;
   const limit = Math.min(body?.limit ?? 50, 200);
   const onlyMissing = body?.onlyMissing ?? false;
+  // metadataOnly=true: hanya simpan daftar chapter, tanpa scrape gambar (jauh lebih cepat)
+  // Gambar di-fetch secara lazy saat chapter pertama kali dibuka
+  const metadataOnly = body?.metadataOnly ?? true;
 
   // Ambil manga dengan source_url
   let query = supabase
@@ -82,19 +85,21 @@ export async function POST(req: NextRequest) {
   const jobId = job?.id;
 
   // Jalankan di background
-  after(() => runBulkImport(targets, jobId ?? null));
+  after(() => runBulkImport(targets, jobId ?? null, metadataOnly));
 
   return NextResponse.json({
     status: 'success',
-    message: `Bulk import dimulai untuk ${targets.length} manga`,
+    message: `Bulk import dimulai untuk ${targets.length} manga (${metadataOnly ? 'metadata only' : 'full import'})`,
     queued: targets.length,
     jobId,
+    metadataOnly,
   });
 }
 
 async function runBulkImport(
   targets: Array<{ id: string; slug: string; title: string; source_url: string }>,
-  jobId: string | null
+  jobId: string | null,
+  metadataOnly = true
 ) {
   const supabase = await createClient();
   const { importAllChapters } = await import('@/app/api/v1/admin/scrape/manga-chapters/route');
@@ -105,7 +110,7 @@ async function runBulkImport(
   for (const manga of targets) {
     try {
       console.log(`[BulkImport] (${done + 1}/${targets.length}) ${manga.title}`);
-      await importAllChapters(manga.id, manga.slug, manga.source_url);
+      await importAllChapters(manga.id, manga.slug, manga.source_url, metadataOnly);
       done++;
     } catch (err) {
       console.error(`[BulkImport] Failed ${manga.slug}:`, err);
@@ -120,8 +125,9 @@ async function runBulkImport(
         .eq('id', jobId);
     }
 
-    // Delay antar manga
-    await new Promise(r => setTimeout(r, 2000 + Math.random() * 2000));
+    // Delay antar manga (lebih pendek di metadata-only mode karena tidak ada image scraping)
+    const delay = metadataOnly ? 500 + Math.random() * 500 : 2000 + Math.random() * 2000;
+    await new Promise(r => setTimeout(r, delay));
   }
 
   // Selesai
