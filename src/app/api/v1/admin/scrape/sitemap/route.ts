@@ -218,6 +218,23 @@ async function processSitemapImport(
       }
     }
 
+    // Backfill source_url for existing manga that don't have it (no scraping needed)
+    const needsSourceUrl = existingMangaList.filter(m => {
+      const existing = existingMap.get(m.slug) ?? existingMap.get(m.url);
+      return existing && !existing.source_url;
+    });
+    if (needsSourceUrl.length > 0) {
+      console.log(`[Job ${jobId}] Backfilling source_url for ${needsSourceUrl.length} existing manga...`);
+      const backfillUpdates = needsSourceUrl.map(m => {
+        const existing = existingMap.get(m.slug) ?? existingMap.get(m.url);
+        return supabase.from('manga').update({ source_url: m.url }).eq('id', existing!.id);
+      });
+      // Run in batches of 20 (no scraping, just DB update)
+      for (let i = 0; i < backfillUpdates.length; i += 20) {
+        await Promise.allSettled(backfillUpdates.slice(i, i + 20));
+      }
+    }
+
     // Process existing manga (if updates enabled)
     if (options.importUpdates && existingMangaList.length > 0) {
       console.log(`[Job ${jobId}] Checking ${existingMangaList.length} existing manga for updates...`);
@@ -363,6 +380,7 @@ async function scrapeAndUpdateManga(url: string, mangaId: string): Promise<{ ski
         cover_url: scraped.cover_url,
         status: scraped.status,
         genres: scraped.genres,
+        source_url: url,
       })
       .eq('id', mangaId)
       .select()
