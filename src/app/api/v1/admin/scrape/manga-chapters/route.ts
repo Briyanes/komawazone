@@ -125,7 +125,14 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
       .is('deleted_at', null);
 
     const existingNums = new Set((existing ?? []).map(c => c.number));
-    const toImport = chapters.filter(c => !existingNums.has(c.number));
+
+    // Deduplicate by chapter number (source may have duplicate data-num values)
+    const seen = new Set<number>();
+    const toImport = chapters.filter(c => {
+      if (existingNums.has(c.number) || seen.has(c.number)) return false;
+      seen.add(c.number);
+      return true;
+    });
 
     console.log(`[ChapterImport] ${toImport.length} new chapters to import (${existingNums.size} already exist)`);
 
@@ -140,12 +147,21 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         ...(chapter.releasedAt ? { release_date: chapter.releasedAt } : {}),
       }));
 
+      let insertedCount = 0;
       // Batch insert in groups of 50
       for (let i = 0; i < rows.length; i += 50) {
-        await supabase.from('chapters').insert(rows.slice(i, i + 50));
+        const { error: insertErr, data: insertData } = await supabase
+          .from('chapters')
+          .upsert(rows.slice(i, i + 50), { onConflict: 'manga_id,number', ignoreDuplicates: true })
+          .select('id');
+        if (insertErr) {
+          console.error(`[ChapterImport] Insert error batch ${i}-${i + 50} for ${slug}:`, insertErr.message, insertErr.code);
+        } else {
+          insertedCount += (insertData?.length ?? 0);
+        }
       }
 
-      console.log(`[ChapterImport] Metadata-only: inserted ${toImport.length} chapters for ${slug}`);
+      console.log(`[ChapterImport] Metadata-only: inserted ${insertedCount}/${toImport.length} chapters for ${slug}`);
       return;
     }
 
