@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
   }
 
   // Build source URL if not stored (reconstruct from slug for manhwaland)
-  const sourceUrl = manga.source_url ?? `https://04x.manhwaland.land/manga-${manga.slug}/`;
+  const sourceUrl = manga.source_url ?? `https://04x.manhwaland.land/manga/${manga.slug}/`;
 
   // SSRF check on source URL
   const ssrfError = validateScraperUrl(sourceUrl);

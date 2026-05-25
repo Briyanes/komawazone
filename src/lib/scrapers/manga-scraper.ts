@@ -30,42 +30,96 @@ function getMeta(html: string, attr: string, val: string): string {
 }
 
 /**
- * Parse chapter list from manhwaland.land (Madara theme) HTML.
- * Chapters are in <ul class="version-chap"> or <div class="eplister"> blocks.
+ * Convert Indonesian month name to English so Date() can parse it.
+ */
+function normalizeIndonesianDate(raw: string): string {
+  return raw
+    .replace(/Januari/i,   'January')
+    .replace(/Februari/i,  'February')
+    .replace(/Maret/i,     'March')
+    .replace(/Mei/i,       'May')
+    .replace(/Juni/i,      'June')
+    .replace(/Juli/i,      'July')
+    .replace(/Agustus/i,   'August')
+    .replace(/Oktober/i,   'October')
+    .replace(/Desember/i,  'December');
+}
+
+/**
+ * Parse chapter list from manhwaland.land HTML.
+ *
+ * Primary format (MangaReader / ts-reader theme):
+ *   <div class="eplister" id="chapterlist"><ul>
+ *     <a href="URL"><span class="chapternum">Chapter N</span>
+ *                   <span class="chapterdate">DATE</span></a>
+ *
+ * Fallback (Madara wp-manga-chapter):
+ *   <li class="wp-manga-chapter ..."><a href="URL">Title</a>...</li>
  */
 export function parseChapterListFromHtml(html: string): ChapterEntry[] {
   const chapters: ChapterEntry[] = [];
 
-  // Match each <li class="wp-manga-chapter ..."> block
+  // --- Primary: eplister / chapterlist format ---
+  // Structure: <div id="chapterlist"><ul><li data-num="N"><div class="chbox"><div class="eph-num">
+  //              <a href="URL"><span class="chapternum">Chapter N</span>
+  //                            <span class="chapterdate">DATE</span></a>
+  if (html.includes('id="chapterlist"') || html.includes('class="eplister"')) {
+    const liRe = /<li[^>]+data-num="(\d+(?:\.\d+)?)"[^>]*>([\s\S]*?)<\/li>/gi;
+    let liMatch: RegExpExecArray | null;
+    while ((liMatch = liRe.exec(html)) !== null) {
+      const dataNum  = parseFloat(liMatch[1]);
+      const block    = liMatch[2];
+
+      const aMatch   = block.match(/<a[^>]+href=["']([^"']+)["'][^>]*>/i);
+      if (!aMatch) continue;
+      const url      = aMatch[1].trim();
+
+      const numMatch = block.match(/<span[^>]+class="chapternum"[^>]*>\s*(?:Chapter\s*)?(\d+(?:\.\d+)?)/i);
+      const number   = numMatch ? parseFloat(numMatch[1]) : dataNum;
+
+      const titleMatch = block.match(/<span[^>]+class="chapternum"[^>]*>([^<]+)/i);
+      const title    = titleMatch ? titleMatch[1].trim() : `Chapter ${number}`;
+
+      const dateRaw  = block.match(/<span[^>]+class="chapterdate"[^>]*>([^<]+)/i)?.[1]?.trim() ?? null;
+      let releasedAt: string | null = null;
+      if (dateRaw) {
+        try { releasedAt = new Date(normalizeIndonesianDate(dateRaw)).toISOString(); } catch { /* ignore */ }
+      }
+
+      chapters.push({ number, title, url, releasedAt });
+    }
+    if (chapters.length > 0) return chapters.sort((a, b) => a.number - b.number);
+  }
+
+  // --- Fallback: Madara wp-manga-chapter format ---
   const liRe = /<li[^>]+class="[^"]*wp-manga-chapter[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
   let liMatch: RegExpExecArray | null;
 
   while ((liMatch = liRe.exec(html)) !== null) {
     const block = liMatch[1];
 
-    // Extract URL and raw title from <a href="...">Title</a>
     const aMatch = block.match(/<a[^>]+href=["']([^"']+)["'][^>]*>\s*([\s\S]*?)\s*<\/a>/i);
     if (!aMatch) continue;
 
     const url = aMatch[1].trim();
-    const rawTitle = aMatch[2].replace(/<[^>]+>/g, '').trim(); // strip inner HTML tags
+    const rawTitle = aMatch[2].replace(/<[^>]+>/g, '').trim();
 
-    // Extract chapter number from URL or title
-    const numFromUrl = url.match(/chapter[-_](\d+(?:\.\d+)?)/i);
+    const numFromUrl   = url.match(/chapter[-_](\d+(?:\.\d+)?)/i);
     const numFromTitle = rawTitle.match(/chapter\s*(\d+(?:\.\d+)?)/i)
-      ?? rawTitle.match(/^(\d+(?:\.\d+)?)/);
+                      ?? rawTitle.match(/^(\d+(?:\.\d+)?)/);
     const numStr = numFromUrl?.[1] ?? numFromTitle?.[1];
     const number = numStr ? parseFloat(numStr) : null;
     if (number === null) continue;
 
-    // Extract release date from <i>date</i>
-    const dateMatch = block.match(/<i[^>]*>([^<]+)<\/i>/i);
-    const releasedAt = dateMatch ? new Date(dateMatch[1].trim()).toISOString() : null;
+    const dateRaw = block.match(/<i[^>]*>([^<]+)<\/i>/i)?.[1]?.trim() ?? null;
+    let releasedAt: string | null = null;
+    if (dateRaw) {
+      try { releasedAt = new Date(normalizeIndonesianDate(dateRaw)).toISOString(); } catch { /* ignore */ }
+    }
 
     chapters.push({ number, title: rawTitle, url, releasedAt });
   }
 
-  // Sort ascending (ch 1, 2, 3…)
   return chapters.sort((a, b) => a.number - b.number);
 }
 
