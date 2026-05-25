@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useTransition, useEffect, useRef, useCallback } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
@@ -10,22 +10,56 @@ import { signIn, signInWithOAuth } from '@/lib/auth/actions';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
+/** Map Supabase English error messages → Bahasa Indonesia */
+function translateAuthError(msg: string): string {
+  const m = msg.toLowerCase();
+  if (m.includes('rate limit')) return 'Terlalu banyak percobaan login. Tunggu beberapa saat atau masuk dengan Google / Discord.';
+  if (m.includes('invalid login credentials') || m.includes('invalid credentials')) return 'Email atau password salah. Periksa kembali dan coba lagi.';
+  if (m.includes('email not confirmed')) return 'Email belum dikonfirmasi. Cek inbox kamu dan klik link verifikasi.';
+  if (m.includes('user not found')) return 'Akun tidak ditemukan. Silakan daftar terlebih dahulu.';
+  if (m.includes('too many requests')) return 'Terlalu banyak percobaan. Coba lagi nanti.';
+  if (m.includes('network')) return 'Masalah koneksi jaringan. Periksa internet kamu.';
+  return msg;
+}
+
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const isRateLimit = serverError?.includes('Terlalu banyak percobaan');
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<LoginInput>({ resolver: zodResolver(loginSchema) });
+
+  // Fix: browser autofill does not always fire React's onChange.
+  // After mount, read DOM values and push them into RHF state.
+  const passwordInputRef = useRef<HTMLInputElement | null>(null);
+  const { ref: passwordRegRef, ...passwordRegProps } = register('password');
+  const mergedPasswordRef = useCallback(
+    (node: HTMLInputElement | null) => {
+      passwordRegRef(node);
+      passwordInputRef.current = node;
+    },
+    [passwordRegRef]
+  );
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (passwordInputRef.current?.value) {
+        setValue('password', passwordInputRef.current.value, { shouldValidate: false });
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [setValue]);
 
   const onSubmit = (data: LoginInput) => {
     setServerError(null);
     startTransition(async () => {
       const result = await signIn(data);
-      if (result?.error) setServerError(result.error);
+      if (result?.error) setServerError(translateAuthError(result.error));
     });
   };
 
@@ -74,6 +108,11 @@ export function LoginForm() {
             }}
           >
             {serverError}
+            {isRateLimit && (
+              <p className="mt-1 text-xs opacity-80">
+                Gunakan tombol Google / Discord di atas untuk masuk tanpa batas percobaan.
+              </p>
+            )}
           </div>
         )}
 
@@ -100,7 +139,8 @@ export function LoginForm() {
             placeholder="••••••••"
             autoComplete="current-password"
             error={errors.password?.message}
-            {...register('password')}
+            ref={mergedPasswordRef}
+            {...passwordRegProps}
           />
           <button
             type="button"
@@ -124,9 +164,9 @@ export function LoginForm() {
           </Link>
         </div>
 
-        <Button type="submit" className="w-full" isLoading={isPending}>
+        <Button type="submit" className="w-full" isLoading={isPending} disabled={isPending || !!isRateLimit}>
           <Lock size={16} />
-          Sign In
+          Masuk
         </Button>
       </form>
 
