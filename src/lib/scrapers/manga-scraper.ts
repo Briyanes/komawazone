@@ -84,11 +84,30 @@ function parseManhwalandManga(html: string): ScrapedManga {
   return { title, description, cover_url, genres, author, artist, type, status };
 }
 
+/** Random delay helper */
+function sleep(ms: number) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/** Check if HTML is a CloudFlare/bot-detection block page */
+function isBlockedPage(html: string): boolean {
+  return (
+    html.includes('cf-browser-verification') ||
+    html.includes('cf_chl_opt') ||
+    html.includes('Just a moment') ||
+    html.includes('Enable JavaScript and cookies to continue') ||
+    html.includes('Checking if the site connection is secure') ||
+    html.includes('DDoS protection by') ||
+    html.includes('_cf_chl_tk') ||
+    html.length < 2000 // Suspiciously short page = likely block page
+  );
+}
+
 /**
- * Scrape manga metadata from URL
+ * Scrape manga metadata from URL with retry logic for rate-limit handling
  * Can be called directly from other functions without HTTP overhead
  */
-export async function scrapeMangaFromUrl(url: string): Promise<ScrapedManga> {
+export async function scrapeMangaFromUrl(url: string, retries = 3): Promise<ScrapedManga> {
   const parsedUrl = new URL(url);
 
   // Detect source
@@ -97,41 +116,76 @@ export async function scrapeMangaFromUrl(url: string): Promise<ScrapedManga> {
     throw new Error('Domain tidak didukung');
   }
 
-  console.log('Scraping:', url, 'Source:', source.name);
+  let lastError: Error | null = null;
 
-  // Fetch with browser-like headers to avoid blocking
-  const res = await fetch(parsedUrl.toString(), {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
-      'Accept-Encoding': 'gzip, deflate, br',
-      'Connection': 'keep-alive',
-      'Upgrade-Insecure-Requests': '1',
-      'Sec-Fetch-Dest': 'document',
-      'Sec-Fetch-Mode': 'navigate',
-      'Sec-Fetch-Site': 'none',
-      'Cache-Control': 'max-age=0',
-      'Referer': 'https://04x.manhwaland.land/',
-    },
-    signal: AbortSignal.timeout(15_000),
-  });
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    // Add jitter delay before each retry (not first attempt)
+    if (attempt > 1) {
+      const backoff = Math.min(2000 * Math.pow(2, attempt - 2), 10000); // 2s, 4s, 8s
+      const jitter = Math.random() * 1000;
+      console.log(`[Scraper] Retry ${attempt}/${retries} for ${url}, waiting ${backoff + jitter}ms`);
+      await sleep(backoff + jitter);
+    }
 
-  if (!res.ok) {
-    throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+    try {
+      // Fetch with browser-like headers to avoid blocking
+      const res = await fetch(parsedUrl.toString(), {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
+          'Accept-Encoding': 'gzip, deflate, br',
+          'Connection': 'keep-alive',
+          'Upgrade-Insecure-Requests': '1',
+          'Sec-Fetch-Dest': 'document',
+          'Sec-Fetch-Mode': 'navigate',
+          'Sec-Fetch-Site': 'none',
+          'Cache-Control': 'no-cache',
+          'Referer': 'https://04x.manhwaland.land/',
+        },
+        signal: AbortSignal.timeout(20_000),
+      });
+
+      // Rate-limited: wait and retry
+      if (res.status === 429 || res.status === 503) {
+        const retryAfter = parseInt(res.headers.get('retry-after') || '0', 10);
+        const wait = retryAfter > 0 ? retryAfter * 1000 : 5000;
+        lastError = new Error(`HTTP ${res.status}: rate limited`);
+        await sleep(wait);
+        continue;
+      }
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+
+      const html = await res.text();
+
+      // Detect CloudFlare/bot block page → retry
+      if (isBlockedPage(html)) {
+        lastError = new Error('Halaman diblokir (CloudFlare/bot protection)');
+        await sleep(3000 + Math.random() * 2000);
+        continue;
+      }
+
+      const scraped = parseManhwalandManga(html);
+
+      if (!scraped.title) {
+        throw new Error('Tidak dapat mengekstrak judul. Pastikan URL adalah halaman manga');
+      }
+
+      // Override type with detected type from source
+      if (source && !scraped.type) {
+        scraped.type = source.type;
+      }
+
+      return scraped;
+
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      if (attempt === retries) break;
+    }
   }
 
-  const html = await res.text();
-  const scraped = parseManhwalandManga(html);
-
-  if (!scraped.title) {
-    throw new Error('Tidak dapat mengekstrak judul. Pastikan URL adalah halaman manga');
-  }
-
-  // Override type with detected type from source
-  if (source && !scraped.type) {
-    scraped.type = source.type;
-  }
-
-  return scraped;
+  throw lastError ?? new Error('Gagal scrape setelah beberapa percobaan');
 }

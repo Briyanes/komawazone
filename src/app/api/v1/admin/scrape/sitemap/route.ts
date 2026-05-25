@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
     const {
       importNew = true,
       importUpdates = true,
-      batchSize = 15, // Default aggressive: 15 concurrent
+      batchSize = 3, // Conservative default: 3 concurrent to avoid rate-limiting
     } = options;
 
     // Create import job
@@ -203,8 +203,9 @@ async function processSitemapImport(
           await updateJobProgress(jobId, processed, newCount, updatedCount);
         }
 
-        // Small delay between batches to be respectful
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Random delay between batches (1.5–3.5s) to avoid rate-limiting
+        const delay = 1500 + Math.random() * 2000;
+        await new Promise(resolve => setTimeout(resolve, delay));
       }
     }
 
@@ -251,8 +252,9 @@ async function processSitemapImport(
           await updateJobProgress(jobId, processed, newCount, updatedCount);
         }
 
-        // Small delay between batches
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Random delay between batches (1.5–3.5s) to avoid rate-limiting
+        const delayMs = 1500 + Math.random() * 2000;
+        await new Promise(resolve => setTimeout(resolve, delayMs));
       }
     }
 

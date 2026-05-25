@@ -32,7 +32,7 @@ export function SitemapImportTool() {
   const [options, setOptions] = useState({
     importNew: true,
     importUpdates: true,
-    batchSize: 15, // Aggressive default
+    batchSize: 3, // Conservative default to avoid rate-limiting
   });
   const [activeJob, setActiveJob] = useState<ImportJob | null>(null);
   const [loading, setLoading] = useState(false);
