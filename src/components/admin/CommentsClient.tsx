@@ -3,7 +3,6 @@
 import { useState, useMemo } from 'react';
 import { Search, X, MessageCircle, Heart } from 'lucide-react';
 import { DeleteCommentButton } from '@/components/admin/DeleteCommentButton';
-import { sanitizeText } from '@/lib/sanitize';
 
 interface Comment {
   id: string;
@@ -124,11 +123,9 @@ export function CommentsClient({ comments: initial }: { comments: Comment[] }) {
                       </span>
                     )}
                   </div>
-                  <p
-                    className="text-sm line-clamp-3"
-                    style={{ color: 'var(--text-secondary)' }}
-                    dangerouslySetInnerHTML={{ __html: sanitizeText(c.content) }}
-                  />
+                  <p className="text-sm line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
+                    {c.content}
+                  </p>
                 </div>
                 <DeleteCommentButton id={c.id} onDelete={() => onDelete(c.id)} />
               </div>

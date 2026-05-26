@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Plus, Trash2, ToggleLeft, ToggleRight, Globe, RefreshCw, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Trash2, ToggleLeft, ToggleRight, Globe, RefreshCw, ChevronDown, ChevronUp, Pencil } from 'lucide-react';
 
 interface MangaSource {
   id: string;
@@ -32,8 +32,10 @@ export function SourcesManager() {
   const [sources, setSources] = useState<MangaSource[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     name: '',
@@ -58,6 +60,27 @@ export function SourcesManager() {
 
   useEffect(() => { void fetchSources(); }, [fetchSources]);
 
+  const resetForm = () => {
+    setForm({ name: '', base_url: '', sitemap_urls: '', is_active: true, type: 'MANHWA', notes: '' });
+    setEditingId(null);
+    setShowForm(false);
+    setError(null);
+  };
+
+  const startEdit = (source: MangaSource) => {
+    setForm({
+      name: source.name,
+      base_url: source.base_url,
+      sitemap_urls: source.sitemap_urls.join('\n'),
+      is_active: source.is_active,
+      type: source.type,
+      notes: source.notes ?? '',
+    });
+    setEditingId(source.id);
+    setShowForm(true);
+    setError(null);
+  };
+
   const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormLoading(true);
@@ -69,25 +92,48 @@ export function SourcesManager() {
       .filter(Boolean);
 
     try {
-      const res = await fetch('/api/v1/admin/sources', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name,
-          base_url: form.base_url,
-          sitemap_urls: sitemapUrls,
-          is_active: form.is_active,
-          type: form.type,
-          notes: form.notes || null,
-        }),
-      });
-      const json = await res.json() as { status?: string; error?: string };
-      if (res.ok) {
-        setShowForm(false);
-        setForm({ name: '', base_url: '', sitemap_urls: '', is_active: true, type: 'MANHWA', notes: '' });
-        void fetchSources();
+      if (editingId) {
+        // Mode EDIT — PATCH sumber yang ada
+        const res = await fetch(`/api/v1/admin/sources/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            base_url: form.base_url,
+            sitemap_urls: sitemapUrls,
+            is_active: form.is_active,
+            type: form.type,
+            notes: form.notes || null,
+          }),
+        });
+        const json = await res.json() as { status?: string; error?: string };
+        if (res.ok) {
+          resetForm();
+          void fetchSources();
+        } else {
+          setError(typeof json.error === 'string' ? json.error : 'Gagal menyimpan perubahan');
+        }
       } else {
-        setError(typeof json.error === 'string' ? json.error : 'Gagal menambahkan sumber');
+        // Mode TAMBAH — POST sumber baru
+        const res = await fetch('/api/v1/admin/sources', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: form.name,
+            base_url: form.base_url,
+            sitemap_urls: sitemapUrls,
+            is_active: form.is_active,
+            type: form.type,
+            notes: form.notes || null,
+          }),
+        });
+        const json = await res.json() as { status?: string; error?: string };
+        if (res.ok) {
+          resetForm();
+          void fetchSources();
+        } else {
+          setError(typeof json.error === 'string' ? json.error : 'Gagal menambahkan sumber');
+        }
       }
     } finally {
       setFormLoading(false);
@@ -95,34 +141,45 @@ export function SourcesManager() {
   };
 
   const toggleActive = async (source: MangaSource) => {
-    await fetch(`/api/v1/admin/sources/${source.id}`, {
+    const res = await fetch(`/api/v1/admin/sources/${source.id}`, {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_active: !source.is_active }),
     });
-    void fetchSources();
+    if (res.ok) void fetchSources();
+    else setError('Gagal mengubah status sumber.');
   };
 
   const handleDelete = async (id: string, name: string) => {
     if (!confirm(`Hapus sumber "${name}"? Ini tidak menghapus manga yang sudah diimport.`)) return;
-    await fetch(`/api/v1/admin/sources/${id}`, { method: 'DELETE' });
-    void fetchSources();
+    const res = await fetch(`/api/v1/admin/sources/${id}`, { method: 'DELETE' });
+    if (res.ok) void fetchSources();
+    else setError('Gagal menghapus sumber.');
   };
 
   const triggerImport = async (source: MangaSource) => {
-    const res = await fetch('/api/v1/admin/scrape/sitemap', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        sitemapUrls: source.sitemap_urls,
-        options: { importNew: true, importUpdates: false, batchSize: 3 },
-      }),
-    });
-    const json = await res.json() as { data?: { jobId?: string }; error?: string };
-    if (res.ok) {
-      alert(`Import dimulai! Job ID: ${json.data?.jobId ?? '-'}`);
-    } else {
-      alert(`Gagal: ${json.error ?? 'Unknown error'}`);
+    setError(null);
+    try {
+      const res = await fetch('/api/v1/admin/scrape/sitemap', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sitemapUrls: source.sitemap_urls,
+          sourceId: source.id,
+          options: { importNew: true, importUpdates: false, batchSize: 3 },
+        }),
+      });
+      const json = await res.json() as { data?: { jobId?: string }; error?: string };
+      if (res.ok) {
+        setError(null);
+        setSuccessMsg(`Import dimulai dari sumber "${source.name}".`);
+        setTimeout(() => setSuccessMsg(null), 5000);
+        void fetchSources();
+      } else {
+        setError(`Gagal memulai import: ${json.error ?? 'Unknown error'}`);
+      }
+    } catch {
+      setError('Gagal terhubung ke server.');
     }
   };
 
@@ -146,7 +203,10 @@ export function SourcesManager() {
             <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
           </button>
           <button
-            onClick={() => setShowForm(v => !v)}
+            onClick={() => {
+              if (showForm && editingId) { resetForm(); } // tutup edit form
+              else { resetForm(); setShowForm(v => !v); } // toggle tambah form
+            }}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium"
             style={{ background: 'var(--color-primary)', color: 'white' }}
           >
@@ -156,14 +216,28 @@ export function SourcesManager() {
         </div>
       </div>
 
-      {/* Form tambah */}
+      {/* Feedback messages */}
+      {successMsg && (
+        <div className="rounded-lg px-3 py-2 text-xs" style={{ background: 'rgba(34,197,94,0.08)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)' }}>
+          {successMsg}
+        </div>
+      )}
+      {error && !showForm && (
+        <div className="rounded-lg px-3 py-2 text-xs" style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
+          {error}
+        </div>
+      )}
+
+      {/* Form tambah / edit */}
       {showForm && (
         <form
           onSubmit={handleAdd}
           className="rounded-xl p-4 space-y-3"
-          style={{ background: 'var(--bg-card)', border: '1px solid var(--color-primary)' }}
+          style={{ background: 'var(--bg-card)', border: `1px solid ${editingId ? 'rgba(59,130,246,0.4)' : 'var(--color-primary)'}` }}
         >
-          <h3 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>Tambah Sumber Baru</h3>
+          <h3 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+            {editingId ? `Edit Sumber — ${form.name || '...'}` : 'Tambah Sumber Baru'}
+          </h3>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             <FormField label="Nama Sumber">
@@ -235,7 +309,7 @@ export function SourcesManager() {
           <div className="flex justify-end gap-2">
             <button
               type="button"
-              onClick={() => setShowForm(false)}
+              onClick={resetForm}
               className="rounded-lg px-3 py-1.5 text-xs"
               style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
             >
@@ -245,10 +319,10 @@ export function SourcesManager() {
               type="submit"
               disabled={formLoading}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium disabled:opacity-60"
-              style={{ background: 'var(--color-primary)', color: 'white' }}
+              style={{ background: editingId ? '#3b82f6' : 'var(--color-primary)', color: 'white' }}
             >
-              {formLoading ? <RefreshCw size={11} className="animate-spin" /> : <Plus size={11} />}
-              Simpan
+              {formLoading ? <RefreshCw size={11} className="animate-spin" /> : editingId ? <Pencil size={11} /> : <Plus size={11} />}
+              {editingId ? 'Simpan Perubahan' : 'Simpan'}
             </button>
           </div>
         </form>
@@ -327,6 +401,16 @@ export function SourcesManager() {
                       Import
                     </button>
                   )}
+
+                  {/* Edit */}
+                  <button
+                    onClick={() => startEdit(source)}
+                    title="Edit sumber"
+                    className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-blue-500/10"
+                    style={{ color: editingId === source.id ? '#3b82f6' : 'var(--text-tertiary)' }}
+                  >
+                    <Pencil size={13} />
+                  </button>
 
                   {/* Expand/collapse */}
                   <button

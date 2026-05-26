@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Upload, Play, XCircle, CheckCircle, Clock, ExternalLink, Download } from 'lucide-react';
 
 const DEFAULT_SITEMAPS = [
@@ -37,14 +37,14 @@ export function SitemapImportTool() {
   const [activeJob, setActiveJob] = useState<ImportJob | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [pollInterval, setPollInterval] = useState<NodeJS.Timeout | null>(null);
+  const pollIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Cleanup polling interval on unmount to prevent memory leaks
   useEffect(() => {
     return () => {
-      if (pollInterval) clearInterval(pollInterval);
+      if (pollIntervalRef.current) clearInterval(pollIntervalRef.current);
     };
-  }, [pollInterval]);
+  }, []);
 
   // Add new sitemap URL
   const addSitemap = () => {
@@ -100,8 +100,7 @@ export function SitemapImportTool() {
       });
 
       // Poll every 2 seconds
-      const interval = setInterval(() => pollJobStatus(data.data.jobId), 2000);
-      setPollInterval(interval);
+      pollIntervalRef.current = setInterval(() => pollJobStatus(data.data.jobId), 2000);
 
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Import failed');
@@ -121,15 +120,15 @@ export function SitemapImportTool() {
 
         // Stop polling if job is complete
         if (job.status !== 'running') {
-          if (pollInterval) {
-            clearInterval(pollInterval);
-            setPollInterval(null);
+          if (pollIntervalRef.current) {
+            clearInterval(pollIntervalRef.current);
+            pollIntervalRef.current = null;
           }
           setLoading(false);
         }
       }
-    } catch (err) {
-      console.error('Error polling job status:', err);
+    } catch {
+      // silent — polling will retry on next interval
     }
   };
 
@@ -175,9 +174,9 @@ export function SitemapImportTool() {
         body: JSON.stringify({ jobId: activeJob.id }),
       });
 
-      if (pollInterval) {
-        clearInterval(pollInterval);
-        setPollInterval(null);
+      if (pollIntervalRef.current) {
+        clearInterval(pollIntervalRef.current);
+        pollIntervalRef.current = null;
       }
 
       setActiveJob(null);

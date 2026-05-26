@@ -2,20 +2,36 @@
 
 import { useState, useTransition } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCheck } from 'lucide-react';
+import { CheckCheck, X } from 'lucide-react';
 
 export function DismissReportButton({ id, onDismiss }: { id: string; onDismiss?: () => void }) {
   const router = useRouter();
   const [pending, start] = useTransition();
   const [done, setDone] = useState(false);
+  const [error, setError] = useState(false);
 
   const dismiss = () => {
+    setError(false);
     start(async () => {
-      await fetch(`/api/v1/admin/reports/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/v1/admin/reports/${id}`, { method: 'DELETE' });
+      if (!res.ok) { setError(true); return; }
       setDone(true);
       if (onDismiss) onDismiss(); else router.refresh();
     });
   };
+
+  if (error) {
+    return (
+      <button
+        onClick={() => setError(false)}
+        className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold"
+        style={{ background: 'rgba(239,68,68,0.1)', color: '#f87171' }}
+        title="Gagal dismiss — klik untuk tutup"
+      >
+        <X size={13} /> Gagal
+      </button>
+    );
+  }
 
   return (
     <button

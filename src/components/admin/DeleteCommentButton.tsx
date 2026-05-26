@@ -8,14 +8,30 @@ export function DeleteCommentButton({ id, onDelete }: { id: string; onDelete?: (
   const router = useRouter();
   const [pending, start] = useTransition();
   const [confirm, setConfirm] = useState(false);
+  const [error, setError] = useState(false);
 
   const del = () => {
+    setError(false);
     start(async () => {
-      await fetch(`/api/v1/admin/comments/${id}`, { method: 'DELETE' });
+      const res = await fetch(`/api/v1/admin/comments/${id}`, { method: 'DELETE' });
+      if (!res.ok) { setError(true); setConfirm(false); return; }
       setConfirm(false);
       if (onDelete) onDelete(); else router.refresh();
     });
   };
+
+  if (error) {
+    return (
+      <button
+        onClick={() => setError(false)}
+        className="flex size-7 shrink-0 items-center justify-center rounded-md"
+        style={{ color: '#EF4444' }}
+        title="Gagal menghapus — klik untuk tutup"
+      >
+        <Trash2 size={13} />
+      </button>
+    );
+  }
 
   if (confirm) {
     return (

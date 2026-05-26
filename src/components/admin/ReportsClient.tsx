@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo } from 'react';
 import { Search, X, Flag, BookOpen, CheckCircle2, Clock } from 'lucide-react';
 import { DismissReportButton } from '@/components/admin/DismissReportButton';
 import { cn } from '@/lib/cn';
@@ -44,7 +44,7 @@ export function ReportsClient({
   const [chapterReports, setChapter]    = useState<ChapterReport[]>(initialChapter);
   const [mangaReports, setManga]        = useState<MangaReport[]>(initialManga);
   const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [isPending, startTransition]    = useTransition();
+  const [updatingId, setUpdatingId]     = useState<string | null>(null);
 
   const filteredManga = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -72,15 +72,17 @@ export function ReportsClient({
     });
   }, [chapterReports, search]);
 
-  const updateMangaReportStatus = (id: string, status: string) => {
-    startTransition(async () => {
-      await fetch(`/api/v1/admin/manga-reports/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status }),
-      });
-      setManga(prev => prev.map(r => r.id === id ? { ...r, status } : r));
+  const updateMangaReportStatus = async (id: string, status: string) => {
+    if (updatingId) return;
+    setUpdatingId(id);
+    const res = await fetch(`/api/v1/admin/manga-reports/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status }),
     });
+    setUpdatingId(null);
+    if (!res.ok) return;
+    setManga(prev => prev.map(r => r.id === id ? { ...r, status } : r));
   };
 
   const onDismissChapter = (id: string) => setChapter(prev => prev.filter(r => r.id !== id));
@@ -185,21 +187,21 @@ export function ReportsClient({
                   {/* Status actions */}
                   <div className="flex gap-1 shrink-0">
                     {r.status === 'pending' && (
-                      <button onClick={() => updateMangaReportStatus(r.id, 'reviewed')} disabled={isPending}
+                      <button onClick={() => updateMangaReportStatus(r.id, 'reviewed')} disabled={updatingId === r.id}
                         title="Tandai sudah ditinjau"
                         className={cn('flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors',
-                          isPending ? 'opacity-50' : 'hover:bg-[var(--bg-tertiary)]')}
+                          updatingId === r.id ? 'opacity-50' : 'hover:bg-[var(--bg-tertiary)]')}
                         style={{ color: '#60a5fa' }}>
-                        <Clock size={12} /> Reviewed
+                        <Clock size={12} /> {updatingId === r.id ? '…' : 'Reviewed'}
                       </button>
                     )}
                     {r.status !== 'resolved' && (
-                      <button onClick={() => updateMangaReportStatus(r.id, 'resolved')} disabled={isPending}
+                      <button onClick={() => updateMangaReportStatus(r.id, 'resolved')} disabled={updatingId === r.id}
                         title="Tandai selesai"
                         className={cn('flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition-colors',
-                          isPending ? 'opacity-50' : 'hover:bg-[var(--bg-tertiary)]')}
+                          updatingId === r.id ? 'opacity-50' : 'hover:bg-[var(--bg-tertiary)]')}
                         style={{ color: '#4ade80' }}>
-                        <CheckCircle2 size={12} /> Resolved
+                        <CheckCircle2 size={12} /> {updatingId === r.id ? '…' : 'Resolved'}
                       </button>
                     )}
                   </div>

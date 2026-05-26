@@ -7,6 +7,7 @@ type SourceUpdate = Database['public']['Tables']['manga_sources']['Update'];
 
 const PatchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
+  base_url: z.string().url().optional(),
   sitemap_urls: z.array(z.string().url()).min(1).optional(),
   is_active: z.boolean().optional(),
   type: z.enum(['MANHWA', 'MANGA', 'MANHUA', 'MIXED']).optional(),
@@ -37,6 +38,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
 
   const update: SourceUpdate = {};
   if (parsed.data.name !== undefined) update.name = parsed.data.name;
+  if (parsed.data.base_url !== undefined) update.base_url = parsed.data.base_url;
   if (parsed.data.sitemap_urls !== undefined) update.sitemap_urls = parsed.data.sitemap_urls;
   if (parsed.data.is_active !== undefined) update.is_active = parsed.data.is_active;
   if (parsed.data.type !== undefined) update.type = parsed.data.type;

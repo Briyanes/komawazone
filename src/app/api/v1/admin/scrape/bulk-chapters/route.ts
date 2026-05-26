@@ -31,10 +31,24 @@ export async function POST(req: NextRequest) {
   // Gambar di-fetch secara lazy saat chapter pertama kali dibuka
   const metadataOnly = body?.metadataOnly ?? true;
 
+  // Ambil source yang aktif untuk filtering
+  // Manga dengan source_id NULL (ditambah manual) tetap diproses
+  // Manga dengan source_id yang nonaktif akan dilewati
+  const { data: activeSources } = await supabase
+    .from('manga_sources')
+    .select('id')
+    .eq('is_active', true);
+  const activeSourceIds = (activeSources ?? []).map(s => s.id as string);
+
   // Ambil manga dengan source_url
   // Jika onlyMissing: ambil manga yang BELUM punya chapter sama sekali (filter di DB level)
   type MangaItem = { id: string; slug: string; title: string; source_url: string };
   let targets: MangaItem[] = [];
+
+  // Filter sumber aktif: source_id IS NULL (manual) ATAU source_id ada di daftar aktif
+  const sourceFilter = activeSourceIds.length > 0
+    ? `source_id.is.null,source_id.in.(${activeSourceIds.join(',')})`
+    : 'source_id.is.null'; // tidak ada sumber aktif → hanya manga manual
 
   if (onlyMissing) {
     // Ambil semua manga_id yang sudah punya chapter (tidak batasi — perlu tahu semua)
@@ -45,12 +59,13 @@ export async function POST(req: NextRequest) {
 
     const hasChapters = new Set((withChaptersAll ?? []).map(c => c.manga_id as string));
 
-    // Ambil manga dengan source_url yang belum ada di hasChapters
+    // Ambil manga dengan source_url dari sumber aktif yang belum ada di hasChapters
     const { data: allMangaWithSource, error } = await supabase
       .from('manga')
       .select('id, slug, title, source_url')
       .not('source_url', 'is', null)
       .is('deleted_at', null)
+      .or(sourceFilter)
       .order('updated_at', { ascending: true });
 
     if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -64,6 +79,7 @@ export async function POST(req: NextRequest) {
       .select('id, slug, title, source_url')
       .not('source_url', 'is', null)
       .is('deleted_at', null)
+      .or(sourceFilter)
       .order('updated_at', { ascending: true })
       .limit(limit);
 
@@ -102,10 +118,11 @@ export async function POST(req: NextRequest) {
 
   return NextResponse.json({
     status: 'success',
-    message: `Bulk import dimulai untuk ${targets.length} manga (${metadataOnly ? 'metadata only' : 'full import'})`,
+    message: `Bulk import dimulai untuk ${targets.length} manga dari ${activeSourceIds.length} sumber aktif (${metadataOnly ? 'metadata only' : 'full import'})`,
     queued: targets.length,
     jobId,
     metadataOnly,
+    activeSources: activeSourceIds.length,
   });
 }
 

@@ -4,7 +4,7 @@ import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Link2, Search, Loader2, CheckCircle2, AlertCircle,
-  BookOpen, FileText, ChevronRight, ChevronDown, X, Plus, Image as ImageIcon,
+  BookOpen, FileText, ChevronDown, X, Plus, Image as ImageIcon,
   Download, ExternalLink, Upload, Database,
 } from 'lucide-react';
 import { uploadImage } from '@/lib/supabase/storage';
@@ -150,7 +150,7 @@ function TabBar({ active, onChange }: { active: 'manga' | 'chapter' | 'sitemap';
         <button
           key={tab}
           onClick={() => onChange(tab)}
-          className="flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold transition-all"
+          className="flex items-center gap-1.5 rounded-xl px-4 py-2 text-sm font-semibold whitespace-nowrap transition-all"
           style={active === tab ? { background: 'var(--color-primary)', color: '#fff' } : { color: 'var(--text-secondary)' }}
         >
           {tab === 'manga' && <BookOpen size={15} />}
@@ -212,10 +212,10 @@ const TYPE_OPTS = [
   { value: 'WEBTOON', label: 'Webtoon' },
 ];
 const STATUS_OPTS = [
-  { value: 'ONGOING',   label: 'Ongoing' },
-  { value: 'COMPLETED', label: 'Completed' },
+  { value: 'ONGOING',   label: 'Sedang Berjalan' },
+  { value: 'COMPLETED', label: 'Selesai' },
   { value: 'HIATUS',    label: 'Hiatus' },
-  { value: 'DROPPED',   label: 'Dropped' },
+  { value: 'DROPPED',   label: 'Dibatalkan' },
 ];
 
 // ── MANGA IMPORT TAB ──────────────────────────────────────────────────────────
@@ -246,8 +246,8 @@ function MangaImportTab() {
   const handleCoverUpload = async (file: File) => {
     setUploading(true);
     try {
-      const url = await uploadImage(file, 'covers');
-      setCover(url);
+      const imageUrl = await uploadImage(file, 'covers');
+      setCover(imageUrl);
       setCoverImgOk(true);
     } catch (e) {
       setSaveErr(e instanceof Error ? e.message : 'Upload cover gagal');
@@ -302,6 +302,7 @@ function MangaImportTab() {
           description: desc, cover_url: cover, banner_url: '',
           author, artist, status, type: type || 'MANGA',
           genres, release_year: new Date().getFullYear(),
+          source_url: url.trim() || undefined,
         }),
       });
       const json = await res.json() as { data?: { id: string }; error?: string; status?: string };
@@ -347,9 +348,8 @@ function MangaImportTab() {
         )}
       </CardBox>
 
-      {/* Form (shown after scrape OR always) */}
-      {(scraped || true) && (
-        <CardBox>
+      {/* Form (shown after scrape OR always for manual entry) */}
+      <CardBox>
           <SectionTitle icon={BookOpen} label="Detail Manga" />
           <div className="grid gap-4 sm:grid-cols-2">
             {/* Cover preview */}
@@ -371,7 +371,7 @@ function MangaImportTab() {
                   <div className="flex h-28 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl text-center"
                     style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)' }}>
                     <ImageIcon size={18} style={{ color: 'var(--text-tertiary)' }} />
-                    <span className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>No preview</span>
+                    <span className="text-[9px] leading-tight" style={{ color: 'var(--text-tertiary)' }}>Tidak ada preview</span>
                   </div>
                 )}
                 <div className="flex-1 space-y-2">
@@ -456,7 +456,6 @@ function MangaImportTab() {
             </Btn>
           </div>
         </CardBox>
-      )}
     </div>
   );
 }
@@ -667,22 +666,10 @@ export function ImportTool() {
       {/* How it works */}
       <div className="grid gap-3 sm:grid-cols-2">
         {[
-          {
-            step: '1', title: 'Salin URL', desc: 'Copy URL manga atau chapter dari manhwaland.land',
-            icon: Link2,
-          },
-          {
-            step: '2', title: 'Scrape', desc: 'Klik Scrape — sistem otomatis ambil semua data',
-            icon: Search,
-          },
-          {
-            step: '3', title: 'Review & Edit', desc: 'Periksa data yang di-scrape, edit jika perlu',
-            icon: CheckCircle2,
-          },
-          {
-            step: '4', title: 'Simpan', desc: 'Klik Simpan — manga/chapter langsung masuk database',
-            icon: ChevronRight,
-          },
+          { step: '1', title: 'Salin URL', desc: 'Copy URL manga atau chapter dari manhwaland.land' },
+          { step: '2', title: 'Scrape', desc: 'Klik Scrape — sistem otomatis ambil semua data' },
+          { step: '3', title: 'Review & Edit', desc: 'Periksa data yang di-scrape, edit jika perlu' },
+          { step: '4', title: 'Simpan', desc: 'Klik Simpan — manga/chapter langsung masuk database' },
         ].map(({ step, title, desc }) => (
           <div key={step} className="flex items-start gap-3 rounded-xl p-4"
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
@@ -698,7 +685,9 @@ export function ImportTool() {
         ))}
       </div>
 
-      <TabBar active={tab} onChange={setTab} />
+      <div className="overflow-x-auto">
+        <TabBar active={tab} onChange={setTab} />
+      </div>
 
       {tab === 'manga'   && <MangaImportTab />}
       {tab === 'chapter' && <ChapterImportTab />}

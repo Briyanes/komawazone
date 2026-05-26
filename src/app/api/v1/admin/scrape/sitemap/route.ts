@@ -32,6 +32,7 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as {
       sitemapUrls?: string[];
+      sourceId?: string;  // ID dari manga_sources — untuk link manga baru ke sumbernya
       options?: {
         importNew?: boolean;
         importUpdates?: boolean;
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
       };
     };
 
-    const { sitemapUrls, options = {} } = body;
+    const { sitemapUrls, sourceId, options = {} } = body;
 
     // Validate input
     if (!sitemapUrls || !Array.isArray(sitemapUrls) || sitemapUrls.length === 0) {
@@ -96,6 +97,7 @@ export async function POST(req: NextRequest) {
         importUpdates,
         batchSize: safeBatchSize,
         userId: user.id,
+        sourceId: sourceId ?? null,
       }).catch(error => {
         console.error('Sitemap import error:', error);
       })
@@ -129,6 +131,7 @@ async function processSitemapImport(
     importUpdates: boolean;
     batchSize: number;
     userId: string;
+    sourceId: string | null;
   }
 ) {
   const supabase = await createClient();
@@ -186,7 +189,7 @@ async function processSitemapImport(
       for (let i = 0; i < newManga.length; i += options.batchSize) {
         const batch = newManga.slice(i, i + options.batchSize);
         const results = await Promise.allSettled(
-          batch.map(manga => scrapeAndCreateManga(manga.url, options.userId))
+          batch.map(manga => scrapeAndCreateManga(manga.url, options.userId, options.sourceId))
         );
 
         for (let j = 0; j < results.length; j++) {
@@ -218,16 +221,19 @@ async function processSitemapImport(
       }
     }
 
-    // Backfill source_url for existing manga that don't have it (no scraping needed)
-    const needsSourceUrl = existingMangaList.filter(m => {
+    // Backfill source_url (dan source_id) untuk manga yang sudah ada tapi belum punya
+    const needsBackfill = existingMangaList.filter(m => {
       const existing = existingMap.get(m.slug) ?? existingMap.get(m.url);
-      return existing && !existing.source_url;
+      return existing && (!existing.source_url);
     });
-    if (needsSourceUrl.length > 0) {
-      console.log(`[Job ${jobId}] Backfilling source_url for ${needsSourceUrl.length} existing manga...`);
-      const backfillUpdates = needsSourceUrl.map(m => {
+    if (needsBackfill.length > 0) {
+      console.log(`[Job ${jobId}] Backfilling source_url/source_id for ${needsBackfill.length} existing manga...`);
+      const backfillUpdates = needsBackfill.map(m => {
         const existing = existingMap.get(m.slug) ?? existingMap.get(m.url);
-        return supabase.from('manga').update({ source_url: m.url }).eq('id', existing!.id);
+        return supabase.from('manga').update({
+          source_url: m.url,
+          ...(options.sourceId ? { source_id: options.sourceId } : {}),
+        }).eq('id', existing!.id);
       });
       // Run in batches of 20 (no scraping, just DB update)
       for (let i = 0; i < backfillUpdates.length; i += 20) {
@@ -308,7 +314,7 @@ async function processSitemapImport(
 /**
  * Scrape manga from URL and create in database
  */
-async function scrapeAndCreateManga(url: string, userId: string) {
+async function scrapeAndCreateManga(url: string, userId: string, sourceId: string | null = null) {
   const supabase = await createClient();
 
   try {
@@ -338,6 +344,7 @@ async function scrapeAndCreateManga(url: string, userId: string) {
           artist: scraped.artist,
           genres: scraped.genres || [],
           source_url: url,
+          source_id: sourceId ?? null,
           uploaded_by: userId,
         },
         { onConflict: 'slug', ignoreDuplicates: true }
