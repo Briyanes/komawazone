@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
@@ -72,7 +72,7 @@ interface ReplyBoxProps {
 
 function ReplyBox({ chapterId, parentId, onSubmitted, onCancel }: ReplyBoxProps) {
   const { user } = useAuth();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
   const [content, setContent] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const ref = useRef<HTMLTextAreaElement>(null);
@@ -122,7 +122,7 @@ function ReplyBox({ chapterId, parentId, onSubmitted, onCancel }: ReplyBoxProps)
 
 export function ChapterEngagement({ chapterId }: { chapterId: string }) {
   const { isAuthenticated, user } = useAuth();
-  const supabase = createClient();
+  const supabase = useMemo(() => createClient(), []);
 
   // Like
   const [likeCount, setLikeCount]   = useState(0);
@@ -372,7 +372,7 @@ export function ChapterEngagement({ chapterId }: { chapterId: string }) {
               {!isAuthenticated && (
                 <Link href="/login" className="rounded-lg border px-4 py-1.5 text-xs font-semibold hover:opacity-80"
                   style={{ borderColor: 'rgba(255,255,255,0.12)', color: 'rgba(255,255,255,0.7)' }}>
-                  Login
+                  Masuk
                 </Link>
               )}
               <button

@@ -3,7 +3,7 @@ import MangaImage from '@/components/ui/MangaImage';
 import { Star, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { QuickAddButton } from '@/components/manga/QuickAddButton';
-import { cn } from '@/lib/cn';
+import { cn, decodeHtml } from '@/lib/cn';
 import type { MangaStatus } from '@/types';
 
 interface MangaCardProps {
@@ -28,10 +28,10 @@ const statusVariantMap: Record<MangaStatus, 'ongoing' | 'completed' | 'hiatus' |
 };
 
 const statusLabelMap: Record<MangaStatus, string> = {
-  ONGOING: 'Ongoing',
-  COMPLETED: 'Completed',
+  ONGOING: 'Terbit',
+  COMPLETED: 'Tamat',
   HIATUS: 'Hiatus',
-  DROPPED: 'Dropped',
+  DROPPED: 'Berhenti',
 };
 
 function timeAgo(dateStr: string): string {
@@ -117,8 +117,8 @@ export function MangaCard({
           </div>
         )}
 
-        {/* UP dot — updated < 3h ago */}
-        {isHot && (
+        {/* UP dot — updated < 3h ago (hidden if 18+ badge is already occupying that corner) */}
+        {isHot && contentRating !== 'mature' && (
           <span
             className="absolute top-1.5 right-1.5 size-2.5 rounded-full ring-2 ring-black/30"
             style={{ background: '#FF6B35' }}
@@ -161,7 +161,7 @@ export function MangaCard({
             textOverflow: 'ellipsis',
           }}
         >
-          {title}
+          {decodeHtml(title)}
         </h3>
 
         {(rating !== undefined && rating > 0) || (views !== undefined && views > 0) ? (

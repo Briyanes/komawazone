@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { BookMarked, BookOpen, Clock, CheckCircle2, PauseCircle, XCircle } from 'lucide-react';
 import { MangaCard } from '@/components/manga/MangaCard';
 import { MangaCardSkeleton } from '@/components/ui/Skeleton';
 import { useAuth } from '@/hooks/useAuth';
-import { redirect } from 'next/navigation';
 import type { MangaStatus } from '@/types';
 
 type ReadingStatus = 'reading' | 'plan_to_read' | 'completed' | 'on_hold' | 'dropped';
@@ -32,26 +32,33 @@ const TABS: { key: ReadingStatus | 'all'; label: string; icon: React.ReactNode }
 ];
 
 export default function ReadingListPage() {
+  const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const [items, setItems] = useState<ListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<ReadingStatus | 'all'>('all');
 
   useEffect(() => {
-    if (!isLoading && !isAuthenticated) redirect('/login');
-  }, [isLoading, isAuthenticated]);
+    if (!isLoading && !isAuthenticated) router.replace('/login');
+  }, [isLoading, isAuthenticated, router]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
     void (async () => {
       setLoading(true);
-      const url = activeTab === 'all'
-        ? '/api/v1/user/reading-list'
-        : `/api/v1/user/reading-list?status=${activeTab}`;
-      const res = await fetch(url);
-      const data = await res.json() as { status: string; data: ListItem[] };
-      if (data.status === 'success') setItems(data.data);
-      setLoading(false);
+      try {
+        const url = activeTab === 'all'
+          ? '/api/v1/user/reading-list'
+          : `/api/v1/user/reading-list?status=${activeTab}`;
+        const res = await fetch(url);
+        const data = await res.json() as { status: string; data: ListItem[] };
+        if (data.status === 'success') setItems(data.data);
+        else setItems([]);
+      } catch {
+        setItems([]);
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [isAuthenticated, activeTab]);
 

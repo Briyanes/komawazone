@@ -22,10 +22,10 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
           className="text-2xl font-bold"
           style={{ color: 'var(--text-primary)' }}
         >
-          Something went wrong
+          Terjadi Kesalahan
         </h1>
         <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-          {error.digest ? `Error ID: ${error.digest}` : 'An unexpected error occurred.'}
+          {error.digest ? `ID Error: ${error.digest}` : 'Terjadi kesalahan yang tidak terduga.'}
         </p>
       </div>
       <div className="flex gap-3">
@@ -34,14 +34,14 @@ export default function GlobalError({ error, reset }: ErrorPageProps) {
           className="rounded-xl px-5 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           style={{ background: 'var(--color-primary)' }}
         >
-          Try again
+          Coba lagi
         </button>
         <Link
           href="/"
           className="rounded-xl border px-5 py-2 text-sm font-semibold transition-colors hover:bg-[var(--bg-secondary)]"
           style={{ borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
         >
-          Go home
+          Ke Beranda
         </Link>
       </div>
     </div>

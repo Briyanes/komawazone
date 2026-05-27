@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data: { user } } = await supabase.auth.getUser();
@@ -44,7 +45,8 @@ export async function POST(
     .limit(1);
 
   if (!otherActive || otherActive.length === 0) {
-    await supabase.from('users').update({ vip_expires_at: null }).eq('id', sub.user_id);
+    // Use admin client to bypass RLS — admin needs to update another user's row
+    await createAdminClient().from('users').update({ vip_expires_at: null }).eq('id', sub.user_id);
   }
 
   return NextResponse.json({ status: 'success' });

@@ -30,7 +30,7 @@ export async function GET() {
     supabase.from('chapters').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     // Manga yang punya chapters → hitung yang belum punya
     supabase.from('chapters').select('manga_id').is('deleted_at', null),
-    supabase.from('import_jobs').select('*').order('started_at', { ascending: false }).limit(20),
+    supabase.from('import_jobs').select('*').order('started_at', { ascending: false }).limit(50),
   ]);
 
   const mangaWithChaptersSet = new Set((chaptersGrouped ?? []).map(c => c.manga_id));

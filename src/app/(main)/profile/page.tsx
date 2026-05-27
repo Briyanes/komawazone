@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useTransition } from 'react';
 import Image from 'next/image';
-import { User, Edit3, Save, X, LogOut, BookOpen, Bookmark, Heart, Crown, CreditCard } from 'lucide-react';
+import { User, Edit3, Save, X, LogOut, BookOpen, Bookmark, Crown, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
@@ -24,14 +24,13 @@ interface UserProfile {
 interface Stats {
   bookmarks: number;
   reading: number;
-  likes: number;
 }
 
 export default function ProfilePage() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [stats, setStats] = useState<Stats>({ bookmarks: 0, reading: 0, likes: 0 });
+  const [stats, setStats] = useState<Stats>({ bookmarks: 0, reading: 0 });
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState('');
   const [bio, setBio] = useState('');
@@ -47,25 +46,26 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!user) return;
     void (async () => {
-      const [profileRes, bmRes, progressRes] = await Promise.all([
-        fetch('/api/v1/user/profile'),
-        fetch('/api/v1/user/bookmarks'),
-        fetch('/api/v1/user/progress'),
-      ]);
-      const profileData = await profileRes.json() as { status: string; data: UserProfile };
-      const bmData = await bmRes.json() as { status: string; data: unknown[] };
-      const progressData = await progressRes.json() as { status: string; data: unknown[] };
+      try {
+        const [profileRes, bmRes, progressRes] = await Promise.all([
+          fetch('/api/v1/user/profile'),
+          fetch('/api/v1/user/reading-list'),
+          fetch('/api/v1/user/progress'),
+        ]);
+        const profileData = await profileRes.json() as { status: string; data: UserProfile };
+        const bmData = await bmRes.json() as { status: string; data: unknown[] };
+        const progressData = await progressRes.json() as { status: string; data: unknown[] };
 
-      if (profileData.status === 'success') {
-        setProfile(profileData.data);
-        setUsername(profileData.data.username ?? '');
-        setBio(profileData.data.bio ?? '');
-      }
-      setStats({
-        bookmarks: bmData.data?.length ?? 0,
-        reading: progressData.data?.length ?? 0,
-        likes: 0,
-      });
+        if (profileData.status === 'success') {
+          setProfile(profileData.data);
+          setUsername(profileData.data.username ?? '');
+          setBio(profileData.data.bio ?? '');
+        }
+        setStats({
+          bookmarks: bmData.data?.length ?? 0,
+          reading: progressData.data?.length ?? 0,
+        });
+      } catch { /* ignore — partial data already set */ }
     })();
   }, [user]);
 
@@ -82,7 +82,7 @@ export default function ProfilePage() {
         setProfile(prev => prev ? { ...prev, username, bio } : prev);
         setIsEditing(false);
       } else {
-        setSaveError(typeof data.error === 'string' ? data.error : 'Save failed');
+        setSaveError(typeof data.error === 'string' ? data.error : 'Gagal menyimpan');
       }
     });
   };
@@ -158,10 +158,10 @@ export default function ProfilePage() {
             )}
             <div className="flex gap-2">
               <Button onClick={handleSave} isLoading={isPending} size="sm" className="flex-1">
-                <Save size={14} /> Save
+                <Save size={14} /> Simpan
               </Button>
               <Button variant="ghost" size="sm" onClick={() => setIsEditing(false)}>
-                <X size={14} /> Cancel
+                <X size={14} /> Batal
               </Button>
             </div>
           </div>
@@ -181,7 +181,7 @@ export default function ProfilePage() {
               </p>
             )}
             <Button variant="secondary" size="sm" onClick={() => setIsEditing(true)}>
-              <Edit3 size={14} /> Edit Profile
+              <Edit3 size={14} /> Edit Profil
             </Button>
           </>
         )}
@@ -189,18 +189,17 @@ export default function ProfilePage() {
 
       {/* Stats row */}
       <div
-        className="grid grid-cols-3 rounded-2xl overflow-hidden"
+        className="grid grid-cols-2 rounded-2xl overflow-hidden"
         style={{ background: 'var(--bg-secondary)' }}
       >
         {[
-          { icon: <Bookmark size={18} />, label: 'Bookmarks', value: stats.bookmarks },
-          { icon: <BookOpen size={18} />, label: 'Reading', value: stats.reading },
-          { icon: <Heart size={18} />, label: 'Likes', value: stats.likes },
+          { icon: <Bookmark size={18} />, label: 'Daftar Baca', value: stats.bookmarks },
+          { icon: <BookOpen size={18} />, label: 'Progress',    value: stats.reading },
         ].map((stat, i) => (
           <div
             key={stat.label}
             className="flex flex-col items-center gap-1 py-4"
-            style={{ borderRight: i < 2 ? '1px solid var(--border-light)' : 'none' }}
+            style={{ borderRight: i < 1 ? '1px solid var(--border-light)' : 'none' }}
           >
             <span style={{ color: 'var(--color-primary)' }}>{stat.icon}</span>
             <span className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
@@ -296,7 +295,7 @@ export default function ProfilePage() {
       {/* Sign out */}
       <form action={signOut}>
         <Button variant="ghost" type="submit" className="w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
-          <LogOut size={16} /> Sign Out
+          <LogOut size={16} /> Keluar
         </Button>
       </form>
     </div>

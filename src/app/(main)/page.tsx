@@ -1,7 +1,7 @@
 export const revalidate = 300; // 5 minutes ISR
 
 import Link from 'next/link';
-import { Suspense } from 'react';
+import { Suspense, cache } from 'react';
 import { TrendingUp, Clock, ChevronRight, Flame, Sparkles, CheckCircle2 } from 'lucide-react';
 import { getLatestManga, getPopularManga, getFeaturedManga, getTopThisWeek, getTopToday, getNewTitles, getCompletedManga, getRekomByType } from '@/lib/api/manga';
 import { MangaGrid } from '@/components/manga/MangaGrid';
@@ -13,6 +13,9 @@ import { ContinueReading } from '@/components/ContinueReading';
 import { FeaturedHero } from '@/components/FeaturedHero';
 import { HeroBannerCarousel } from '@/components/HeroBannerCarousel';
 import { GenreBar } from '@/components/GenreBar';
+
+// Deduplicate the DB call between HeroSection and LatestMangaSection
+const getLatestCached = cache(getLatestManga);
 
 export default function HomePage() {
   return (
@@ -89,7 +92,7 @@ export default function HomePage() {
 }
 
 async function LatestMangaSection() {
-  const items = await getLatestManga(12).catch(() => []);
+  const items = await getLatestCached(12).catch(() => []);
   return <MangaGrid items={items as Parameters<typeof MangaGrid>[0]['items']} />;
 }
 
@@ -125,7 +128,7 @@ async function CompletedSection() {
 async function HeroSection() {
   const [featured, latest] = await Promise.all([
     getFeaturedManga(5).catch(() => []),
-    getLatestManga(10).catch(() => []),
+    getLatestCached(12).catch(() => []),
   ]);
 
   const carouselItems = latest.map((m: { id: string; slug: string; title: string; cover_url?: string | null }) => ({

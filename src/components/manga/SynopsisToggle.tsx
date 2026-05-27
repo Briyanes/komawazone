@@ -10,7 +10,7 @@ export function SynopsisToggle({ text }: { text: string }) {
   return (
     <section>
       <h2 className="mb-2 text-xs font-bold uppercase tracking-widest" style={{ color: 'var(--text-tertiary)' }}>
-        Synopsis
+        Sinopsis
       </h2>
       <div className="relative">
         <p

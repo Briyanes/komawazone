@@ -1,9 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { decodeHtml } from '@/lib/cn';
 
 interface MangaItem {
   id: string;
@@ -12,13 +13,20 @@ interface MangaItem {
   cover_url: string | null;
 }
 
+const AUTO_ADVANCE_MS = 4000;
+
 export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; compact?: boolean }) {
   const [active, setActive] = useState(0);
+  const [paused, setPaused] = useState(false);
 
-  if (!items || items.length === 0) return null;
+  const next = useCallback(() => setActive(p => (p + 1) % items.length), [items.length]);
+  const prev = useCallback(() => setActive(p => (p - 1 + items.length) % items.length), [items.length]);
 
-  const prev = () => setActive(p => (p - 1 + items.length) % items.length);
-  const next = () => setActive(p => (p + 1) % items.length);
+  useEffect(() => {
+    if (paused || items.length <= 1) return;
+    const t = setTimeout(next, AUTO_ADVANCE_MS);
+    return () => clearTimeout(t);
+  }, [active, paused, next, items.length]);
 
   // Show 3 items at a time (prev, current, next)
   const getIndices = () => {
@@ -31,13 +39,21 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
 
   const indices = getIndices();
 
+  if (!items || items.length === 0) return null;
+
   return (
-    <div className={`relative w-full${compact ? ' overflow-hidden' : ''}`}>
+    <div
+      className={`relative w-full${compact ? ' overflow-hidden' : ''}`}
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onTouchStart={() => setPaused(true)}
+      onTouchEnd={() => setPaused(false)}
+    >
       {/* Carousel container */}
       <div className="relative flex items-center justify-center">
         {/* Left arrow — overlaid on the left side */}
         <button
-          onClick={prev}
+          onClick={() => { setPaused(false); prev(); }}
           className="absolute left-0 z-10 flex size-12 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
           style={{
             background: 'rgba(0,0,0,0.7)',
@@ -99,7 +115,7 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
                     }}
                   >
                     <p className={`font-bold text-white line-clamp-2 leading-tight ${isCurrent ? 'text-sm' : 'text-xs opacity-80'}`}>
-                      {item.title}
+                      {decodeHtml(item.title)}
                     </p>
                   </div>
                 </div>
@@ -110,7 +126,7 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
 
         {/* Right arrow — overlaid on the right side */}
         <button
-          onClick={next}
+          onClick={() => { setPaused(false); next(); }}
           className="absolute right-0 z-10 flex size-12 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
           style={{
             background: 'rgba(0,0,0,0.7)',

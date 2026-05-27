@@ -65,7 +65,7 @@ export function Footer() {
             </p>
             {/* Socials */}
             <div>
-              <p className="mb-2.5 text-[10px] font-black uppercase tracking-widest" style={{ color: '#FF6B35' }}>Follow Us</p>
+              <p className="mb-2.5 text-[10px] font-black uppercase tracking-widest" style={{ color: '#FF6B35' }}>Ikuti Kami</p>
               <div className="flex flex-wrap gap-2">
                 {SOCIALS.map(s => (
                   <a
@@ -93,7 +93,7 @@ export function Footer() {
               onClick={() => setOpenNav(v => !v)}
             >
               <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
-                Navigate
+                Navigasi
               </p>
               <svg
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
@@ -137,7 +137,7 @@ export function Footer() {
               onClick={() => setOpenQuick(v => !v)}
             >
               <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
-                Quick Link
+                Tautan Cepat
               </p>
               <svg
                 viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
@@ -149,10 +149,10 @@ export function Footer() {
             </button>
             <ul className={`${openQuick ? 'block' : 'hidden'} md:block space-y-2.5 mt-3 md:mt-4`}>
               {[
-                { label: 'About Us',                   href: '/about'     },
-                { label: 'Advertice With Us',          href: '/advertise' },
-                { label: 'Contact Us',                 href: '/contact'   },
-                { label: 'Terms of Service & Privacy', href: '/terms'     },
+                { label: 'Tentang Kami',              href: '/about'     },
+                { label: 'Iklan Bersama Kami',         href: '/advertise' },
+                { label: 'Hubungi Kami',               href: '/contact'   },
+                { label: 'Syarat & Ketentuan',         href: '/terms'     },
               ].map(l => (
                 <li key={l.label}>
                   <Link

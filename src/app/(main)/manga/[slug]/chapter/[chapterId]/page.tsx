@@ -1,10 +1,14 @@
 import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
+import { cache } from 'react';
 import { getChapterWithImages, getAdjacentChapters, getMangaChapterList } from '@/lib/api/manga';
 import { ReaderClient } from '@/components/reader/ReaderClient';
 import { AdZone } from '@/components/ads/AdZone';
 import { createClient } from '@/lib/supabase/server';
+
+// Deduplicate: generateMetadata and the page both call this — use React cache
+const getChapter = cache((id: string) => getChapterWithImages(id));
 
 interface Props {
   params: Promise<{ slug: string; chapterId: string }>;
@@ -12,7 +16,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { chapterId } = await params;
-  const chapter = await getChapterWithImages(chapterId);
+  const chapter = await getChapter(chapterId);
   if (!chapter) return { title: 'Chapter Not Found' };
   return {
     title: `Chapter ${chapter.number}${chapter.title ? ` — ${chapter.title}` : ''} | ${chapter.manga?.title ?? ''}`,
@@ -22,7 +26,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ChapterReaderPage({ params }: Props) {
   const { chapterId } = await params;
-  const chapter = await getChapterWithImages(chapterId);
+  const chapter = await getChapter(chapterId);
   if (!chapter) notFound();
 
   // Gate mature chapters for non-VIP users
@@ -63,6 +67,7 @@ export default async function ChapterReaderPage({ params }: Props) {
         mangaId={chapter.manga_id}
         mangaSlug={chapter.manga?.slug ?? ''}
         mangaTitle={chapter.manga?.title ?? ''}
+        mangaCover={chapter.manga?.cover_url ?? null}
         prevChapterId={prev?.id}
         nextChapterId={next?.id}
         chapterList={chapterList}

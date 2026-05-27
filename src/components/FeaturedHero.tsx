@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { BookOpen, ChevronLeft, ChevronRight, Star, Eye } from 'lucide-react';
+import { decodeHtml } from '@/lib/cn';
 
 interface FeaturedItem {
   id: string;
@@ -144,7 +145,7 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
             className="text-2xl font-black text-white leading-[1.15] md:text-[clamp(1.75rem,3vw,2.5rem)] line-clamp-2"
             style={{ fontFamily: 'var(--font-playfair, serif)', textShadow: '0 2px 24px rgba(0,0,0,0.6)' }}
           >
-            {manga.title}
+            {decodeHtml(manga.title)}
           </h2>
 
           {/* Description */}
@@ -184,13 +185,6 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
               style={{ background: 'var(--color-primary)', boxShadow: '0 8px 28px rgba(255,107,53,0.45)' }}
             >
               <BookOpen size={15} /> Baca Sekarang
-            </Link>
-            <Link
-              href={`/manga/${manga.slug}`}
-              className="flex items-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white/80 transition-all hover:bg-white/15 active:scale-95"
-              style={{ background: 'rgba(255,255,255,0.1)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.18)' }}
-            >
-              Detail
             </Link>
           </div>
         </div>

@@ -5,6 +5,7 @@ import Link from 'next/link';
 import MangaImage from '@/components/ui/MangaImage';
 import { History, Trash2, BookOpen } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { id as idLocale } from 'date-fns/locale';
 
 interface HistoryEntry {
   mangaSlug: string;
@@ -120,7 +121,7 @@ export default function HistoryPage() {
                 Chapter {entry.chapterNumber % 1 === 0 ? entry.chapterNumber : entry.chapterNumber.toFixed(1)}
               </p>
               <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-                {formatDistanceToNow(new Date(entry.readAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(entry.readAt), { addSuffix: true, locale: idLocale })}
               </p>
             </div>
 
