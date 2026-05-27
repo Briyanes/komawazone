@@ -44,18 +44,6 @@
     {
       "path": "/api/cron/revalidate",
       "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/expire-subscriptions",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/sitemap-check",
-      "schedule": "0 */6 * * *"
-    },
-    {
-      "path": "/api/cron/check-new-chapters",
-      "schedule": "0 */6 * * *"
     }
   ]
 }
