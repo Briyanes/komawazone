@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useMemo, useTransition } from 'react';
+import { useState, useMemo, useTransition, useEffect } from 'react';
 import Link from 'next/link';
 import { Plus, Edit, ExternalLink, Search, X, Star, Trash2, RefreshCw, BookOpen } from 'lucide-react';
 import { DeleteMangaButton } from '@/components/admin/DeleteMangaButton';
 import { SelectInput } from '@/components/ui/SelectInput';
+import { decodeHtml } from '@/lib/cn';
 
 interface Manga {
   id: string;
   slug: string;
   title: string;
   status: string;
+  content_rating: 'general' | 'mature';
   views: number;
   rating: number;
   is_featured: boolean;
@@ -21,24 +23,42 @@ const statusColor: Record<string, string> = {
   ONGOING: '#10B981', COMPLETED: '#3B82F6', HIATUS: '#F59E0B', DROPPED: '#EF4444',
 };
 const ALL_STATUSES = ['ONGOING', 'COMPLETED', 'HIATUS', 'DROPPED'];
+const CONTENT_RATINGS: { value: 'general' | 'mature'; label: string; color: string }[] = [
+  { value: 'general', label: '✅ General (SFW)', color: '#10B981' },
+  { value: 'mature',  label: '🔞 Mature',        color: '#EF4444' },
+];
+const PAGE_SIZE = 20;
 
 export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[] }) {
   const [mangaList, setMangaList] = useState<Manga[]>(initialList);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
+  const [ratingFilter, setRatingFilter] = useState('ALL');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkStatus, setBulkStatus] = useState('ONGOING');
+  const [bulkRating, setBulkRating] = useState<'general' | 'mature'>('general');
   const [isPending, startTransition] = useTransition();
   const [importingChapters, setImportingChapters] = useState<Set<string>>(new Set());
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
     return mangaList.filter(m => {
       const matchSearch = !q || m.title.toLowerCase().includes(q) || m.slug.includes(q);
       const matchStatus = statusFilter === 'ALL' || m.status === statusFilter;
-      return matchSearch && matchStatus;
+      const matchRating = ratingFilter === 'ALL' || m.content_rating === ratingFilter;
+      return matchSearch && matchStatus && matchRating;
     });
-  }, [mangaList, search, statusFilter]);
+  }, [mangaList, search, statusFilter, ratingFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const paginated = useMemo(
+    () => filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE),
+    [filtered, page]
+  );
+
+  // Reset ke halaman 1 saat filter berubah
+  useEffect(() => { setPage(1); }, [search, statusFilter, ratingFilter]);
 
   const allSelected = filtered.length > 0 && filtered.every(m => selected.has(m.id));
 
@@ -110,15 +130,39 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
 
   const handleBulkStatus = () => {
     startTransition(async () => {
-      await Promise.all(
-        [...selected].map(id => fetch(`/api/v1/admin/manga/${id}`, {
-          method: 'PATCH',
+      const ids = [...selected];
+      try {
+        const res = await fetch('/api/v1/admin/manga/bulk-update', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: bulkStatus }),
-        }))
-      );
-      setMangaList(prev => prev.map(m => selected.has(m.id) ? { ...m, status: bulkStatus } : m));
-      setSelected(new Set());
+          body: JSON.stringify({ ids, updates: { status: bulkStatus } }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setMangaList(prev => prev.map(m => ids.includes(m.id) ? { ...m, status: bulkStatus } : m));
+      } catch {
+        alert(`Gagal mengupdate ${ids.length} manga.`);
+      } finally {
+        setSelected(new Set());
+      }
+    });
+  };
+
+  const handleBulkRating = () => {
+    startTransition(async () => {
+      const ids = [...selected];
+      try {
+        const res = await fetch('/api/v1/admin/manga/bulk-update', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ids, updates: { content_rating: bulkRating } }),
+        });
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        setMangaList(prev => prev.map(m => ids.includes(m.id) ? { ...m, content_rating: bulkRating } : m));
+      } catch {
+        alert(`Gagal mengupdate ${ids.length} manga.`);
+      } finally {
+        setSelected(new Set());
+      }
     });
   };
 
@@ -131,7 +175,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search title or slug…"
+            placeholder="Cari judul atau slug…"
             className="w-full rounded-lg pl-8 pr-8 py-2 text-sm outline-none"
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
           />
@@ -143,18 +187,24 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
         </div>
 
         <SelectInput value={statusFilter} onChange={e => setStatusFilter(e.target.value)}>
-          <option value="ALL">All Status</option>
+          <option value="ALL">Semua Status</option>
           {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
         </SelectInput>
 
+        <SelectInput value={ratingFilter} onChange={e => setRatingFilter(e.target.value)}>
+          <option value="ALL">Semua Rating</option>
+          <option value="general">✅ General</option>
+          <option value="mature">🔞 Mature</option>
+        </SelectInput>
+
         <span className="text-sm shrink-0" style={{ color: 'var(--text-tertiary)' }}>
-          {filtered.length} / {mangaList.length} titles
+          {filtered.length} / {mangaList.length} judul
         </span>
         <div className="flex-1" />
         <Link href="/admin/manga/new"
           className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white shrink-0"
           style={{ background: 'var(--color-primary)' }}>
-          <Plus size={15} /> Add Manga
+          <Plus size={15} /> Tambah Manga
         </Link>
       </div>
 
@@ -165,30 +215,44 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
           style={{ background: 'var(--bg-secondary)', borderColor: 'var(--color-primary)', borderWidth: 1 }}
         >
           <span className="text-sm font-semibold" style={{ color: 'var(--color-primary)' }}>
-            {selected.size} selected
+            {selected.size} terpilih
           </span>
           <div className="flex-1" />
-          <SelectInput value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="max-w-[130px]">
-            {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-          </SelectInput>
-          <button
-            onClick={handleBulkStatus}
-            disabled={isPending}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
-            style={{ background: '#3B82F6' }}
-          >
-            <RefreshCw size={12} /> Set Status
-          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <SelectInput value={bulkStatus} onChange={e => setBulkStatus(e.target.value)} className="max-w-[130px]">
+              {ALL_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+            </SelectInput>
+            <button
+              onClick={handleBulkStatus}
+              disabled={isPending}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+              style={{ background: '#3B82F6' }}
+            >
+              <RefreshCw size={12} /> Atur Status
+            </button>
+            <span className="text-xs" style={{ color: 'var(--border-light)' }}>|</span>
+            <SelectInput value={bulkRating} onChange={e => setBulkRating(e.target.value as 'general' | 'mature')} className="max-w-[160px]">
+              {CONTENT_RATINGS.map(r => <option key={r.value} value={r.value}>{r.label}</option>)}
+            </SelectInput>
+            <button
+              onClick={handleBulkRating}
+              disabled={isPending}
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white disabled:opacity-50"
+              style={{ background: bulkRating === 'mature' ? '#EF4444' : '#10B981' }}
+            >
+              <RefreshCw size={12} /> Atur Rating
+            </button>
+          </div>
           <button
             onClick={handleBulkDelete}
             disabled={isPending}
             className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold disabled:opacity-50"
             style={{ background: '#EF444420', color: '#EF4444' }}
           >
-            <Trash2 size={12} /> Delete All
+            <Trash2 size={12} /> Hapus Semua
           </button>
           <button onClick={() => setSelected(new Set())} className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            Clear
+            Batal Pilih
           </button>
         </div>
       )}
@@ -197,9 +261,9 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
       <div className="rounded-xl overflow-hidden border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
         <div
           className="grid items-center border-b px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider"
-          style={{ borderColor: 'var(--border-light)', color: 'var(--text-tertiary)', gridTemplateColumns: '28px 1fr 90px 70px 56px 140px' }}
+          style={{ borderColor: 'var(--border-light)', color: 'var(--text-tertiary)', gridTemplateColumns: '28px 1fr 110px 70px 56px 140px' }}
         >
-          <input type="checkbox" checked={allSelected} onChange={toggleAll} className="rounded accent-[var(--color-primary)]" />
+          <input type="checkbox" checked={allSelected} onChange={toggleAll} className="size-4 rounded accent-[var(--color-primary)]" />
           <span>Title</span>
           <span>Status</span>
           <span className="hidden sm:block text-right">Views</span>
@@ -211,21 +275,21 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
           <div className="flex flex-col items-center gap-2 py-12">
             <span className="text-3xl opacity-20">🔍</span>
             <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-              {mangaList.length === 0 ? 'No manga yet' : 'No results found'}
+              {mangaList.length === 0 ? 'Belum ada manga' : 'Tidak ada hasil ditemukan'}
             </p>
             {mangaList.length === 0 && (
               <Link href="/admin/manga/new" className="text-sm font-medium" style={{ color: 'var(--color-primary)' }}>
-                Add your first manga →
+                Tambah manga pertama →
               </Link>
             )}
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
-            {filtered.map(manga => (
+            {paginated.map(manga => (
               <div
                 key={manga.id}
                 className="grid items-center px-4 py-2.5"
-                style={{ gridTemplateColumns: '28px 1fr 90px 70px 56px 140px' }}
+                style={{ gridTemplateColumns: '28px 1fr 110px 70px 56px 140px' }}
               >
                 <input
                   type="checkbox"
@@ -239,17 +303,28 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
                   )}
                   <div className="min-w-0">
                     <p className="truncate text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
-                      {manga.title}
+                      {decodeHtml(manga.title)}
                     </p>
                     <p className="text-xs truncate" style={{ color: 'var(--text-tertiary)' }}>/{manga.slug}</p>
                   </div>
                 </div>
-                <span
-                  className="w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
-                  style={{ background: `${statusColor[manga.status] ?? '#999'}18`, color: statusColor[manga.status] ?? '#999' }}
-                >
-                  {manga.status}
-                </span>
+                <div className="flex flex-col gap-1">
+                  <span
+                    className="w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase"
+                    style={{ background: `${statusColor[manga.status] ?? '#999'}18`, color: statusColor[manga.status] ?? '#999' }}
+                  >
+                    {manga.status}
+                  </span>
+                  <span
+                    className="w-fit rounded-full px-2 py-0.5 text-[10px] font-semibold"
+                    style={{
+                      background: `${manga.content_rating === 'mature' ? '#EF4444' : '#10B981'}18`,
+                      color: manga.content_rating === 'mature' ? '#EF4444' : '#10B981',
+                    }}
+                  >
+                    {manga.content_rating === 'mature' ? 'Mature' : 'General'}
+                  </span>
+                </div>
                 <span className="hidden text-right text-xs sm:block" style={{ color: 'var(--text-secondary)' }}>
                   {(manga.views ?? 0).toLocaleString()}
                 </span>
@@ -259,7 +334,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
                 <div className="flex items-center justify-end gap-1">
                   <button
                     onClick={() => handleFeatureToggle(manga.id, manga.is_featured)}
-                    title={manga.is_featured ? 'Unpin from homepage' : 'Pin to homepage'}
+                    title={manga.is_featured ? 'Lepas dari beranda' : 'Tampilkan di beranda'}
                     className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)]"
                     style={{ color: manga.is_featured ? '#F59E0B' : 'var(--text-tertiary)' }}
                   >
@@ -281,7 +356,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
                   </Link>
                   <Link href={`/manga/${manga.slug}`} target="_blank"
                     className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)]"
-                    style={{ color: 'var(--text-secondary)' }} title="View on site">
+                    style={{ color: 'var(--text-secondary)' }} title="Lihat di situs">
                     <ExternalLink size={13} />
                   </Link>
                   <DeleteMangaButton id={manga.id} title={manga.title} />
@@ -291,6 +366,70 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
           </div>
         )}
       </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-between px-1">
+          <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            Halaman {page} dari {totalPages} &middot; {filtered.length} manga
+          </span>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => setPage(1)}
+              disabled={page === 1}
+              className="flex size-7 items-center justify-center rounded-lg text-sm font-medium transition-colors disabled:opacity-30 hover:bg-[var(--bg-tertiary)]"
+              style={{ color: 'var(--text-secondary)' }}
+              title="Halaman pertama"
+            >
+              «
+            </button>
+            <button
+              onClick={() => setPage(p => p - 1)}
+              disabled={page === 1}
+              className="flex size-7 items-center justify-center rounded-lg text-sm font-medium transition-colors disabled:opacity-30 hover:bg-[var(--bg-tertiary)]"
+              style={{ color: 'var(--text-secondary)' }}
+              title="Sebelumnya"
+            >
+              ‹
+            </button>
+            {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+              const start = Math.max(1, Math.min(page - 2, totalPages - 4));
+              const p = start + i;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className="flex size-7 items-center justify-center rounded-lg text-xs font-semibold transition-colors"
+                  style={{
+                    background: p === page ? 'var(--color-primary)' : 'transparent',
+                    color: p === page ? '#fff' : 'var(--text-secondary)',
+                  }}
+                >
+                  {p}
+                </button>
+              );
+            })}
+            <button
+              onClick={() => setPage(p => p + 1)}
+              disabled={page === totalPages}
+              className="flex size-7 items-center justify-center rounded-lg text-sm font-medium transition-colors disabled:opacity-30 hover:bg-[var(--bg-tertiary)]"
+              style={{ color: 'var(--text-secondary)' }}
+              title="Berikutnya"
+            >
+              ›
+            </button>
+            <button
+              onClick={() => setPage(totalPages)}
+              disabled={page === totalPages}
+              className="flex size-7 items-center justify-center rounded-lg text-sm font-medium transition-colors disabled:opacity-30 hover:bg-[var(--bg-tertiary)]"
+              style={{ color: 'var(--text-secondary)' }}
+              title="Halaman terakhir"
+            >
+              »
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

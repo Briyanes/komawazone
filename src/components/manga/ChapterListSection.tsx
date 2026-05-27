@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, X, ArrowUp, ArrowDown, ArrowUpDown, BookOpen, Eye, EyeOff, ChevronDown } from 'lucide-react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { Search, X, ArrowUpDown, BookOpen, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ChapterItem } from './ChapterItem';
 
 interface Chapter {
@@ -20,7 +20,7 @@ interface ChapterProgress {
   totalPages?: number;
 }
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 10;
 
 export function ChapterListSection({
   chapters: all,
@@ -32,7 +32,7 @@ export function ChapterListSection({
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
-  const [shown, setShown] = useState(PAGE_SIZE);
+  const [page, setPage] = useState(0);
   const [readChapters, setReadChapters] = useState<Set<string>>(new Set());
   const [chapterProgress, setChapterProgress] = useState<ChapterProgress | null>(null);
   const listTopRef = useRef<HTMLDivElement | null>(null);
@@ -80,15 +80,13 @@ export function ChapterListSection({
     return all.filter(ch => ch.number > chapterProgress.chapterNumber && !readChapters.has(ch.id)).length;
   }, [all, chapterProgress, readChapters]);
 
-  const visible = filtered.slice(0, shown);
-  const hasMore = shown < filtered.length;
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const safePage = Math.min(page, Math.max(0, totalPages - 1));
+  const visible = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE);
 
-  const scrollToTop = () => {
+  const goToPage = (p: number) => {
+    setPage(p);
     listTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const scrollToBottom = () => {
-    listBottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
   };
 
   return (
@@ -122,7 +120,7 @@ export function ChapterListSection({
                 onClick={() => {
                   setReadFilter('unread');
                   setSortOrder('newest');
-                  setShown(PAGE_SIZE);
+                  setPage(0);
                 }}
                 className="w-full flex items-center gap-2 rounded-xl px-3 py-2.5 text-xs font-semibold text-left transition-opacity hover:opacity-80"
                 style={{ background: 'rgba(255,107,53,0.1)', border: '1px solid rgba(255,107,53,0.25)', color: 'var(--color-primary)' }}
@@ -138,13 +136,13 @@ export function ChapterListSection({
               <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-tertiary)' }} />
               <input
                 value={query}
-                onChange={e => { setQuery(e.target.value); setShown(PAGE_SIZE); }}
+                onChange={e => { setQuery(e.target.value); setPage(0); }}
                 placeholder="Cari chapter, contoh: 69 atau 76"
                 className="w-full rounded-lg pl-7 pr-7 py-2 text-xs outline-none"
                 style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
               />
               {query && (
-                <button onClick={() => { setQuery(''); setShown(PAGE_SIZE); }} className="absolute right-2 top-1/2 -translate-y-1/2">
+                <button onClick={() => { setQuery(''); setPage(0); }} className="absolute right-2 top-1/2 -translate-y-1/2">
                   <X size={11} style={{ color: 'var(--text-tertiary)' }} />
                 </button>
               )}
@@ -153,7 +151,7 @@ export function ChapterListSection({
             <button
               onClick={() => {
                 setSortOrder(prev => (prev === 'newest' ? 'oldest' : 'newest'));
-                setShown(PAGE_SIZE);
+                setPage(0);
               }}
               className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-opacity hover:opacity-80"
               style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
@@ -167,7 +165,7 @@ export function ChapterListSection({
             <button
               onClick={() => {
                 setReadFilter(prev => prev === 'all' ? 'unread' : prev === 'unread' ? 'read' : 'all');
-                setShown(PAGE_SIZE);
+                setPage(0);
               }}
               className="flex shrink-0 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-opacity hover:opacity-80"
               style={{
@@ -211,15 +209,67 @@ export function ChapterListSection({
               </div>
             ))}
 
-            {hasMore && (
-              <button
-                onClick={() => setShown(s => s + PAGE_SIZE)}
-                className="flex w-full items-center justify-center gap-2 py-3 text-sm font-semibold transition-opacity hover:opacity-80"
-                style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', borderTop: '1px solid var(--border-light)' }}
+            {totalPages > 1 && (
+              <div
+                className="flex items-center justify-center gap-1 px-3 py-3"
+                style={{ borderTop: '1px solid var(--border-light)', background: 'var(--bg-tertiary)' }}
               >
-                <ChevronDown size={15} />
-                Show more ({filtered.length - shown} remaining)
-              </button>
+                <button
+                  onClick={() => goToPage(safePage - 1)}
+                  disabled={safePage === 0}
+                  className="flex h-8 items-center gap-1 rounded-lg px-3 text-xs font-medium transition-opacity disabled:opacity-30"
+                  style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+                  aria-label="Halaman sebelumnya"
+                >
+                  <ChevronLeft size={13} /> Prev
+                </button>
+
+                {(() => {
+                  // Always show: first 2, last 2, and current ± 1 — fill gaps with "..."
+                  const fixed = new Set([0, 1, totalPages - 2, totalPages - 1]);
+                  const win = new Set(
+                    [safePage - 1, safePage, safePage + 1].filter(p => p >= 0 && p < totalPages)
+                  );
+                  const indices = Array.from(new Set([...fixed, ...win])).sort((a, b) => a - b);
+                  return indices.reduce<React.ReactNode[]>((acc, idx, k) => {
+                    const prev = k > 0 ? indices[k - 1] : -1;
+                    if (prev !== -1 && idx - prev > 1) {
+                      acc.push(
+                        <span key={`dots-${idx}`} className="w-6 text-center text-xs" style={{ color: 'var(--text-tertiary)' }}>…</span>
+                      );
+                    }
+                    acc.push(
+                      <button
+                        key={idx}
+                        onClick={() => goToPage(idx)}
+                        className="flex h-8 min-w-[2rem] items-center justify-center rounded-lg px-1.5 text-xs font-semibold transition-all"
+                        style={{
+                          background: idx === safePage ? 'var(--color-primary)' : 'var(--bg-secondary)',
+                          color: idx === safePage ? '#fff' : 'var(--text-secondary)',
+                          border: '1px solid var(--border-light)',
+                        }}
+                      >
+                        {idx + 1}
+                      </button>
+                    );
+                    return acc;
+                  }, []);
+                })()}
+
+                <button
+                  onClick={() => goToPage(safePage + 1)}
+                  disabled={safePage >= totalPages - 1}
+                  className="flex h-8 items-center gap-1 rounded-lg px-3 text-xs font-bold transition-opacity disabled:opacity-30"
+                  style={{
+                    background: safePage >= totalPages - 1 ? 'var(--bg-secondary)' : 'var(--color-primary)',
+                    color: safePage >= totalPages - 1 ? 'var(--text-secondary)' : '#fff',
+                    border: '1px solid var(--border-light)',
+                  }}
+                  aria-label="Halaman berikutnya"
+                >
+                  Next <ChevronRight size={13} />
+                </button>
+              </div>
             )}
 
             <div ref={listBottomRef} />
@@ -227,30 +277,6 @@ export function ChapterListSection({
         )}
       </div>
 
-      {filtered.length > 8 && (
-        <div className="sticky bottom-4 mt-3 flex justify-end pr-1 pointer-events-none">
-          <div className="pointer-events-auto flex flex-col gap-2 rounded-xl p-1.5" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-            <button
-              onClick={scrollToTop}
-              className="flex h-9 w-9 items-center justify-center rounded-lg transition-opacity hover:opacity-80"
-              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
-              aria-label="Ke chapter paling atas"
-              title="Ke chapter paling atas"
-            >
-              <ArrowUp size={15} />
-            </button>
-            <button
-              onClick={scrollToBottom}
-              className="flex h-9 w-9 items-center justify-center rounded-lg transition-opacity hover:opacity-80"
-              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
-              aria-label="Ke chapter paling bawah"
-              title="Ke chapter paling bawah"
-            >
-              <ArrowDown size={15} />
-            </button>
-          </div>
-        </div>
-      )}
     </section>
   );
 }

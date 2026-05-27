@@ -20,11 +20,32 @@ export async function GET(request: NextRequest) {
     const to        = from + PER_PAGE - 1;
 
     const supabase = await createClient();
+
+    // Only VIP users (and admins) may see mature content
+    const { data: { user } } = await supabase.auth.getUser();
+    let canSeeMature = false;
+    if (user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('vip_expires_at, role')
+        .eq('id', user.id)
+        .single();
+      const row = userData as { vip_expires_at?: string | null; role?: string | null } | null;
+      if (row?.role === 'ADMIN') {
+        canSeeMature = true;
+      } else {
+        const exp = row?.vip_expires_at;
+        canSeeMature = !!exp && new Date(exp) > new Date();
+      }
+    }
+
     let query = supabase
       .from('manga')
       .select('id, slug, title, cover_url, status, rating, views, content_rating', { count: 'exact' })
       .is('deleted_at', null)
       .range(from, to);
+
+    if (!canSeeMature) query = query.eq('content_rating', 'general');
 
     if (q)              query = query.ilike('title', `%${q}%`);
     if (status)         query = query.eq('status', status as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED');

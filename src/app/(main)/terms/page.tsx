@@ -11,7 +11,7 @@ export default function TermsPage() {
       <div className="mb-8 flex items-center gap-3">
         <ScrollText className="size-6" style={{ color: '#FF6B35' }} />
         <h1 className="text-2xl font-black" style={{ color: 'var(--text-primary)' }}>
-          Terms of Service &amp; Privacy Policy
+          Syarat &amp; Kebijakan Privasi
         </h1>
       </div>
 

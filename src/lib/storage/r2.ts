@@ -1,0 +1,138 @@
+import { DeleteObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+
+interface R2Config {
+  accountId: string;
+  accessKeyId: string;
+  secretAccessKey: string;
+  bucket: string;
+  publicBaseUrl?: string;
+}
+
+const MIME_EXTENSIONS: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+  'image/avif': 'avif',
+};
+
+function getR2Config(): R2Config {
+  const accountId = process.env.R2_ACCOUNT_ID;
+  const accessKeyId = process.env.R2_ACCESS_KEY_ID;
+  const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
+  const bucket = process.env.R2_BUCKET;
+  const publicBaseUrl = process.env.R2_PUBLIC_BASE_URL;
+
+  const missing = [
+    !accountId && 'R2_ACCOUNT_ID',
+    !accessKeyId && 'R2_ACCESS_KEY_ID',
+    !secretAccessKey && 'R2_SECRET_ACCESS_KEY',
+    !bucket && 'R2_BUCKET',
+  ].filter(Boolean);
+
+  if (missing.length > 0) {
+    throw new Error(`R2 config incomplete: missing ${missing.join(', ')}`);
+  }
+
+  return {
+    accountId: accountId!,
+    accessKeyId: accessKeyId!,
+    secretAccessKey: secretAccessKey!,
+    bucket: bucket!,
+    publicBaseUrl: publicBaseUrl?.trim() || undefined,
+  };
+}
+
+function createR2Client(config: R2Config): S3Client {
+  return new S3Client({
+    region: 'auto',
+    endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
+    credentials: {
+      accessKeyId: config.accessKeyId,
+      secretAccessKey: config.secretAccessKey,
+    },
+  });
+}
+
+function sanitizeFolder(folder: string): string {
+  const normalized = folder.trim().replace(/\\/g, '/').replace(/^\/+|\/+$/g, '');
+  if (!normalized) return 'uploads';
+  if (!/^[a-zA-Z0-9/_-]+$/.test(normalized)) {
+    throw new Error('Invalid folder format');
+  }
+  return normalized;
+}
+
+function inferExtension(fileName: string, contentType: string): string {
+  const fromName = fileName.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (fromName) return fromName;
+  return MIME_EXTENSIONS[contentType] ?? 'bin';
+}
+
+export function buildR2PublicUrl(key: string): string {
+  const config = getR2Config();
+  if (config.publicBaseUrl) {
+    return `${config.publicBaseUrl.replace(/\/$/, '')}/${key}`;
+  }
+  return `https://${config.bucket}.${config.accountId}.r2.cloudflarestorage.com/${key}`;
+}
+
+export async function uploadBufferToR2(input: {
+  buffer: Buffer;
+  contentType: string;
+  fileName: string;
+  folder: string;
+}): Promise<{ key: string; url: string }> {
+  const config = getR2Config();
+  const client = createR2Client(config);
+
+  const folder = sanitizeFolder(input.folder);
+  const extension = inferExtension(input.fileName, input.contentType);
+  const key = `${folder}/${Date.now()}-${crypto.randomUUID()}.${extension}`;
+
+  await client.send(new PutObjectCommand({
+    Bucket: config.bucket,
+    Key: key,
+    Body: input.buffer,
+    ContentType: input.contentType,
+    CacheControl: 'public, max-age=31536000, immutable',
+  }));
+
+  return { key, url: buildR2PublicUrl(key) };
+}
+
+export async function deleteObjectFromR2(key: string): Promise<void> {
+  const config = getR2Config();
+  const client = createR2Client(config);
+
+  await client.send(new DeleteObjectCommand({
+    Bucket: config.bucket,
+    Key: key,
+  }));
+}
+
+export function extractR2ObjectKey(url: string): string | null {
+  const config = getR2Config();
+
+  if (config.publicBaseUrl) {
+    const base = config.publicBaseUrl.replace(/\/$/, '');
+    if (url.startsWith(`${base}/`)) {
+      return url.slice(base.length + 1);
+    }
+  }
+
+  try {
+    const parsed = new URL(url);
+    const path = parsed.pathname.replace(/^\//, '');
+    if (!path) return null;
+
+    // For endpoint style URLs: /bucket/key
+    if (path.startsWith(`${config.bucket}/`)) {
+      return path.slice(config.bucket.length + 1);
+    }
+
+    return path;
+  } catch {
+    return null;
+  }
+}

@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import Link from 'next/link';
 import { BookOpen, Users, FileText, TrendingUp, Plus, Megaphone, ArrowRight, Clock } from 'lucide-react';
 import { AdminAnalyticsChart } from '@/components/admin/AdminAnalyticsChart';
+import { decodeHtml } from '@/lib/cn';
 
 async function getStats() {
   const supabase = await createClient();
@@ -65,12 +66,12 @@ export default async function AdminDashboard() {
       bg: 'rgba(59,130,246,0.1)',
     },
     {
-      icon: Users, label: 'Users', value: stats.users,
+      icon: Users, label: 'Pengguna', value: stats.users,
       href: '/admin/users', color: '#10B981',
       bg: 'rgba(16,185,129,0.1)',
     },
     {
-      icon: TrendingUp, label: 'Views', value: stats.views,
+      icon: TrendingUp, label: 'Tayangan', value: stats.views,
       href: '/admin/stats', color: '#8B5CF6',
       bg: 'rgba(139,92,246,0.1)',
     },
@@ -135,18 +136,18 @@ export default async function AdminDashboard() {
         <div className="lg:col-span-3 rounded-xl overflow-hidden border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
           <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: 'var(--border-light)' }}>
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Recent Manga
+              Manga Terbaru
             </h2>
             <Link href="/admin/manga" className="flex items-center gap-1 text-xs font-medium" style={{ color: 'var(--color-primary)' }}>
-              View all <ArrowRight size={12} />
+              Lihat semua <ArrowRight size={12} />
             </Link>
           </div>
           {recentManga.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10">
               <BookOpen size={28} style={{ opacity: 0.2 }} />
-              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>No manga yet</p>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Belum ada manga</p>
               <Link href="/admin/manga/new" className="text-xs font-medium" style={{ color: 'var(--color-primary)' }}>
-                Add one →
+                Tambah →
               </Link>
             </div>
           ) : (
@@ -163,10 +164,10 @@ export default async function AdminDashboard() {
                       className="block truncate text-sm font-medium hover:underline"
                       style={{ color: 'var(--text-primary)' }}
                     >
-                      {m.title}
+                      {decodeHtml(m.title)}
                     </Link>
                     <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      {(m.views ?? 0).toLocaleString()} views
+                      {(m.views ?? 0).toLocaleString()} tayangan
                     </p>
                   </div>
                   <span
@@ -185,16 +186,16 @@ export default async function AdminDashboard() {
         <div className="lg:col-span-2 rounded-xl overflow-hidden border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
           <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: 'var(--border-light)' }}>
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Recent Chapters
+              Chapter Terbaru
             </h2>
             <Link href="/admin/chapters" className="flex items-center gap-1 text-xs font-medium" style={{ color: 'var(--color-primary)' }}>
-              View all <ArrowRight size={12} />
+              Lihat semua <ArrowRight size={12} />
             </Link>
           </div>
           {recentChapters.length === 0 ? (
             <div className="flex flex-col items-center gap-2 py-10">
               <FileText size={28} style={{ opacity: 0.2 }} />
-              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>No chapters yet</p>
+              <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>Belum ada chapter</p>
             </div>
           ) : (
             <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>

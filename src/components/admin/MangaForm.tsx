@@ -104,7 +104,7 @@ function GenrePicker({
           value={input}
           onChange={e => setInput(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Type genre and press Enter..."
+          placeholder="Ketik genre dan tekan Enter..."
           className="flex-1 rounded-xl border px-3 py-2 text-sm outline-none transition-colors focus:border-[var(--color-primary)]"
           style={{
             background: 'var(--bg-primary)',
@@ -119,7 +119,7 @@ function GenrePicker({
           disabled={!input.trim()}
         >
           <Plus size={14} />
-          Add
+          Tambah
         </Button>
       </div>
 
@@ -378,7 +378,7 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
                   disabled={isUploading.cover}
                 >
                   <Upload size={14} />
-                  Change
+                  Ganti
                 </Button>
                 <Button
                   type="button"
@@ -388,7 +388,7 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
                   disabled={isUploading.cover}
                 >
                   <Trash2 size={14} />
-                  Remove
+                  Hapus
                 </Button>
               </div>
             </div>
@@ -400,10 +400,10 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
             >
               <Upload size={32} style={{ color: 'var(--text-tertiary)' }} />
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Click to upload cover image
+                Klik untuk upload gambar cover
               </p>
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                PNG, JPG up to 5MB
+                PNG, JPG maksimal 5MB
               </p>
             </div>
           )}
@@ -418,14 +418,14 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
           
           {isUploading.cover && (
             <p className="text-xs" style={{ color: 'var(--color-primary)' }}>
-              Uploading cover image...
+              Mengupload gambar cover...
             </p>
           )}
 
           {/* Optional: URL input as alternative */}
           <details className="text-xs">
             <summary className="cursor-pointer" style={{ color: 'var(--text-tertiary)' }}>
-              Or paste image URL
+              Atau tempel URL gambar
             </summary>
             <Input 
               value={form.cover_url} 
@@ -460,7 +460,7 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
                   disabled={isUploading.banner}
                 >
                   <Upload size={14} />
-                  Change
+                  Ganti
                 </Button>
                 <Button
                   type="button"
@@ -470,7 +470,7 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
                   disabled={isUploading.banner}
                 >
                   <Trash2 size={14} />
-                  Remove
+                  Hapus
                 </Button>
               </div>
             </div>
@@ -482,10 +482,10 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
             >
               <Upload size={28} style={{ color: 'var(--text-tertiary)' }} />
               <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-                Click to upload banner image
+                Klik untuk upload gambar banner
               </p>
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                PNG, JPG up to 5MB
+                PNG, JPG maksimal 5MB
               </p>
             </div>
           )}
@@ -500,14 +500,14 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
           
           {isUploading.banner && (
             <p className="text-xs" style={{ color: 'var(--color-primary)' }}>
-              Uploading banner image...
+              Mengupload gambar banner...
             </p>
           )}
 
           {/* Optional: URL input as alternative */}
           <details className="text-xs">
             <summary className="cursor-pointer" style={{ color: 'var(--text-tertiary)' }}>
-              Or paste image URL
+              Atau tempel URL gambar
             </summary>
             <Input 
               value={form.banner_url} 
@@ -527,13 +527,13 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
 
       {/* Synopsis */}
       <section className="space-y-3 rounded-xl border p-4" style={{ borderColor: 'var(--border-light)' }}>
-        <SectionHead icon={AlignLeft} title="Synopsis" />
+        <SectionHead icon={AlignLeft} title="Sinopsis" />
         <div className="space-y-1">
           <textarea
             value={form.description}
             onChange={set('description')}
             rows={6}
-            placeholder="Write manga synopsis here..."
+            placeholder="Tulis sinopsis manga di sini..."
             className="w-full resize-none rounded-xl border px-3 py-2.5 text-sm outline-none transition-colors focus:border-[var(--color-primary)]"
             style={{
               background: 'var(--bg-primary)',
@@ -543,7 +543,7 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
             }}
           />
           <p className="text-right text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            {form.description.length} chars
+            {form.description.length} karakter
           </p>
         </div>
       </section>
@@ -557,10 +557,10 @@ export function MangaForm({ initial, mode }: MangaFormProps) {
       <div className="flex gap-3">
         <Button type="submit" isLoading={isPending}>
           <Save size={16} />
-          {mode === 'create' ? 'Create Manga' : 'Save Changes'}
+          {mode === 'create' ? 'Buat Manga' : 'Simpan Perubahan'}
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.push('/admin/manga')}>
-          Cancel
+          Batal
         </Button>
       </div>
     </form>

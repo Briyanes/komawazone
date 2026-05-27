@@ -113,7 +113,7 @@ export function NotificationBell() {
             {notifications.length === 0 ? (
               <div className="flex flex-col items-center gap-2 py-10">
                 <Bell size={24} style={{ color: 'var(--text-tertiary)', opacity: 0.4 }} />
-                <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>No notifications yet</p>
+                <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Belum ada notifikasi</p>
               </div>
             ) : (
               notifications.map(n => (

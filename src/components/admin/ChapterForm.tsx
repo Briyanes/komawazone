@@ -142,7 +142,7 @@ export function ChapterForm({ mangaId }: { mangaId?: string }) {
         router.push('/admin/chapters');
         router.refresh();
       } else {
-        setError(typeof data.error === 'string' ? data.error : 'Save failed');
+        setError(typeof data.error === 'string' ? data.error : 'Gagal menyimpan');
       }
     });
   };
@@ -192,7 +192,7 @@ export function ChapterForm({ mangaId }: { mangaId?: string }) {
       {/* Chapter number + title */}
       <div className="grid grid-cols-2 gap-4">
         <Input
-          label="Chapter Number"
+          label="Nomor Chapter"
           type="number"
           step="0.1"
           min="0"
@@ -202,19 +202,19 @@ export function ChapterForm({ mangaId }: { mangaId?: string }) {
           required
         />
         <Input
-          label="Chapter Title (optional)"
+          label="Judul Chapter (opsional)"
           value={title}
           onChange={e => setTitle(e.target.value)}
-          placeholder="e.g. The Beginning"
+          placeholder="mis. Awal Mula"
         />
       </div>
 
       {/* Release / Schedule date */}
       <div className="space-y-1.5">
         <label className="block text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
-          Release Date{' '}
+          Tanggal Rilis{' '}
           <span className="font-normal" style={{ color: 'var(--text-tertiary)' }}>
-            (leave empty to publish immediately)
+            (biarkan kosong untuk langsung terbit)
           </span>
         </label>
         <input
@@ -231,7 +231,7 @@ export function ChapterForm({ mangaId }: { mangaId?: string }) {
         {releaseDate && new Date(releaseDate) > new Date() && (
           <p className="flex items-center gap-1.5 text-xs" style={{ color: '#F59E0B' }}>
             <span>⏰</span>
-            Scheduled — chapter will not be visible until this date
+            Terjadwal — chapter belum dapat dibaca sebelum tanggal ini
           </p>
         )}
       </div>
@@ -454,10 +454,10 @@ export function ChapterForm({ mangaId }: { mangaId?: string }) {
 
       <div className="flex gap-3">
         <Button type="submit" isLoading={isPending || isUploadingAny}>
-          <Save size={16} /> Save Chapter
+          <Save size={16} /> Simpan Chapter
         </Button>
         <Button type="button" variant="ghost" onClick={() => router.push('/admin/chapters')}>
-          Cancel
+          Batal
         </Button>
       </div>
     </form>

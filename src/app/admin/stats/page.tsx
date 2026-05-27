@@ -43,11 +43,15 @@ export default async function AdminStatsPage() {
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - 30);
 
-  const [statsRes, { data: readActivity }, { data: commentActivity }] = await Promise.all([
-    fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/api/v1/admin/stats`,
-      { cache: 'no-store' }
-    ),
+  const [
+    { data: readActivity },
+    { data: commentActivity },
+    { count: manga_count },
+    { count: chapter_count },
+    { count: user_count },
+    { data: top_manga },
+    { count: active_ad_providers },
+  ] = await Promise.all([
     supabase
       .from('reading_progress')
       .select('last_read_at')
@@ -56,36 +60,20 @@ export default async function AdminStatsPage() {
       .from('comments')
       .select('created_at')
       .gte('created_at', cutoff.toISOString()),
+    supabase.from('manga').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+    supabase.from('chapters').select('*', { count: 'exact', head: true }).is('deleted_at', null),
+    supabase.from('users').select('*', { count: 'exact', head: true }),
+    supabase.from('manga').select('id, title, cover_url, views').order('views', { ascending: false }).limit(5),
+    supabase.from('ad_providers').select('*', { count: 'exact', head: true }).eq('is_active', true),
   ]);
 
-  let stats: StatsData | null = null;
-  if (statsRes.ok) {
-    const json = await statsRes.json() as { status: string; data?: StatsData };
-    stats = json.data ?? null;
-  }
-
-  if (!stats) {
-    const [
-      { count: manga_count },
-      { count: chapter_count },
-      { count: user_count },
-      { data: top_manga },
-      { count: active_ad_providers },
-    ] = await Promise.all([
-      supabase.from('manga').select('*', { count: 'exact', head: true }).is('deleted_at', null),
-      supabase.from('chapters').select('*', { count: 'exact', head: true }).is('deleted_at', null),
-      supabase.from('users').select('*', { count: 'exact', head: true }),
-      supabase.from('manga').select('id, title, cover_url, views').order('views', { ascending: false }).limit(5),
-      supabase.from('ad_providers').select('*', { count: 'exact', head: true }).eq('is_active', true),
-    ]);
-    stats = {
-      manga_count: manga_count ?? 0,
-      chapter_count: chapter_count ?? 0,
-      user_count: user_count ?? 0,
-      active_ad_providers: active_ad_providers ?? 0,
-      top_manga: (top_manga ?? []) as StatsData['top_manga'],
-    };
-  }
+  const stats: StatsData = {
+    manga_count: manga_count ?? 0,
+    chapter_count: chapter_count ?? 0,
+    user_count: user_count ?? 0,
+    active_ad_providers: active_ad_providers ?? 0,
+    top_manga: (top_manga ?? []) as StatsData['top_manga'],
+  };
 
   const dailyReads = buildDailyBuckets(
     (readActivity ?? []).map(r => ({ last_read_at: r.last_read_at })),
@@ -102,16 +90,16 @@ export default async function AdminStatsPage() {
   const topMax = Math.max(...stats.top_manga.map(m => m.views), 1);
 
   const cards = [
-    { label: 'Total Manga', value: stats.manga_count },
-    { label: 'Total Chapters', value: stats.chapter_count },
-    { label: 'Total Users', value: stats.user_count },
-    { label: 'Active Ad Providers', value: stats.active_ad_providers },
+    { label: 'Total Manga',           value: stats.manga_count },
+    { label: 'Total Chapter',          value: stats.chapter_count },
+    { label: 'Total Pengguna',         value: stats.user_count },
+    { label: 'Provider Iklan Aktif',   value: stats.active_ad_providers },
   ];
 
   return (
     <div className="space-y-6">
       <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-        Site Statistics
+        Statistik Situs
       </h1>
 
       {/* KPI Cards */}
@@ -138,7 +126,7 @@ export default async function AdminStatsPage() {
         <div className="rounded-2xl p-5" style={{ background: 'var(--bg-secondary)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Daily Reads (last 30 days)
+              Baca Harian (30 hari terakhir)
             </h2>
             <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--color-primary)' }}>
               {totalReads30.toLocaleString()} total
@@ -151,7 +139,7 @@ export default async function AdminStatsPage() {
         <div className="rounded-2xl p-5" style={{ background: 'var(--bg-secondary)' }}>
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-              Daily Comments (last 30 days)
+              Komentar Harian (30 hari terakhir)
             </h2>
             <span className="text-xs font-semibold tabular-nums" style={{ color: 'var(--color-primary)' }}>
               {totalComments30.toLocaleString()} total
@@ -165,12 +153,12 @@ export default async function AdminStatsPage() {
       <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
         <div className="px-5 py-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Top Manga by Views
+            Top Manga berdasarkan Views
           </h2>
         </div>
         {stats.top_manga.length === 0 ? (
           <div className="py-8 text-center text-sm" style={{ color: 'var(--text-tertiary)' }}>
-            No data yet
+            Belum ada data
           </div>
         ) : (
           <div className="px-5 py-3 divide-y" style={{ borderColor: 'var(--border-light)' }}>
