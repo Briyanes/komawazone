@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { deleteObjectFromR2, extractR2ObjectKey, uploadBufferToR2 } from '@/lib/storage/r2';
 
 export const runtime = 'nodejs';
@@ -18,11 +19,13 @@ async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
-  if (!await assertAdmin(supabase)) {
+  const adminUser = await assertAdmin(supabase);
+  if (!adminUser) {
     return NextResponse.json({ status: 'error', error: 'Forbidden' }, { status: 403 });
   }
 
   try {
+    const adminSupabase = createAdminClient();
     const formData = await request.formData();
     const folder = String(formData.get('folder') ?? 'uploads');
     const file = formData.get('file');
@@ -51,6 +54,28 @@ export async function POST(request: NextRequest) {
       folder,
     });
 
+    const { error: metadataError } = await adminSupabase
+      .from('file_assets')
+      .insert({
+        provider: 'cloudflare_r2',
+        bucket: process.env.R2_BUCKET!,
+        object_key: key,
+        public_url: url,
+        folder,
+        file_name: file.name,
+        content_type: file.type || 'application/octet-stream',
+        size_bytes: file.size,
+        uploaded_by: adminUser.id,
+        metadata: {
+          original_last_modified: file.lastModified,
+        },
+      });
+
+    if (metadataError) {
+      await deleteObjectFromR2(key);
+      throw new Error(`Failed to store file metadata: ${metadataError.message}`);
+    }
+
     return NextResponse.json({ status: 'success', data: { key, url } });
   } catch (error) {
     return NextResponse.json(
@@ -74,6 +99,7 @@ export async function DELETE(request: NextRequest) {
   }
 
   try {
+    const adminSupabase = createAdminClient();
     const body = await request.json() as unknown;
     const parsed = DeleteSchema.safeParse(body);
     if (!parsed.success) {
@@ -86,6 +112,13 @@ export async function DELETE(request: NextRequest) {
     }
 
     await deleteObjectFromR2(resolvedKey);
+
+    await adminSupabase
+      .from('file_assets')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('object_key', resolvedKey)
+      .is('deleted_at', null);
+
     return NextResponse.json({ status: 'success' });
   } catch (error) {
     return NextResponse.json(

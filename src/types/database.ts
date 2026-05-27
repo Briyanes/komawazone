@@ -684,6 +684,52 @@ export interface Database {
         };
         Relationships: [];
       };
+      file_assets: {
+        Row: {
+          id: string;
+          provider: string;
+          bucket: string;
+          object_key: string;
+          public_url: string;
+          folder: string;
+          file_name: string;
+          content_type: string;
+          size_bytes: number;
+          metadata: Json | null;
+          uploaded_by: string | null;
+          created_at: string;
+          deleted_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          provider?: string;
+          bucket: string;
+          object_key: string;
+          public_url: string;
+          folder: string;
+          file_name: string;
+          content_type: string;
+          size_bytes: number;
+          metadata?: Json | null;
+          uploaded_by?: string | null;
+          created_at?: string;
+          deleted_at?: string | null;
+        };
+        Update: {
+          provider?: string;
+          bucket?: string;
+          object_key?: string;
+          public_url?: string;
+          folder?: string;
+          file_name?: string;
+          content_type?: string;
+          size_bytes?: number;
+          metadata?: Json | null;
+          uploaded_by?: string | null;
+          deleted_at?: string | null;
+        };
+        Relationships: [];
+      };
       import_jobs: {
         Row: {
           id: string;
