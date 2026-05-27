@@ -1,34 +1,30 @@
-import { createClient } from './client';
-
 export async function uploadImage(file: File, path: string): Promise<string> {
-  const supabase = createClient();
-  const fileExt = file.name.split('.').pop();
-  const fileName = `${path}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+  const body = new FormData();
+  body.append('file', file);
+  body.append('folder', path);
 
-  const { data, error } = await supabase.storage
-    .from('manga-images')
-    .upload(fileName, file, { cacheControl: '3600', upsert: false });
+  const res = await fetch('/api/v1/admin/storage/upload', {
+    method: 'POST',
+    body,
+  });
 
-  if (error) throw new Error(`Upload failed: ${error.message}`);
-  if (!data) throw new Error('Upload failed: No data returned');
+  const data = await res.json() as {
+    status: string;
+    error?: string;
+    data?: { url?: string };
+  };
 
-  const { data: { publicUrl } } = supabase.storage
-    .from('manga-images')
-    .getPublicUrl(data.path);
+  if (!res.ok || data.status !== 'success' || !data.data?.url) {
+    throw new Error(data.error ?? 'Upload failed');
+  }
 
-  return publicUrl;
+  return data.data.url;
 }
 
 export async function deleteImage(url: string): Promise<void> {
-  const supabase = createClient();
-  
-  // Extract path from URL
-  const urlParts = url.split('/manga-images/');
-  if (urlParts.length < 2) return;
-  
-  const path = urlParts[1];
-  
-  await supabase.storage
-    .from('manga-images')
-    .remove([path]);
+  await fetch('/api/v1/admin/storage/upload', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ url }),
+  });
 }

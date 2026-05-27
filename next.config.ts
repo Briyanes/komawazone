@@ -23,9 +23,11 @@ const nextConfig: NextConfig = {
       // Shinigami Asia CDN
       { protocol: 'https', hostname: '**.shinigami.asia' },
       { protocol: 'https', hostname: 'shinigami.asia' },
-      // ManhwaLand CDN
+      // ManhwaLand CDN — semua subdomain .manhwaland.*
       { protocol: 'https', hostname: '**.manhwaland.land' },
       { protocol: 'https', hostname: 'manhwaland.land' },
+      { protocol: 'https', hostname: '**.manhwaland.in' },
+      { protocol: 'https', hostname: 'manhwaland.in' },
       // jablay.gmbr.pro — manhwaland image CDN
       { protocol: 'https', hostname: 'jablay.gmbr.pro' },
       { protocol: 'http', hostname: 'jablay.gmbr.pro' },
@@ -35,13 +37,25 @@ const nextConfig: NextConfig = {
       // img-uwak.gmbr.pro — manhwaland image CDN
       { protocol: 'https', hostname: 'img-uwak.gmbr.pro' },
       { protocol: 'http', hostname: 'img-uwak.gmbr.pro' },
+      // jablay.gmbar.xyz — manhwaland image CDN
+      { protocol: 'https', hostname: 'jablay.gmbar.xyz' },
+      { protocol: 'http', hostname: 'jablay.gmbar.xyz' },
+      // All gmbar.xyz subdomains (wildcard)
+      { protocol: 'https', hostname: '**.gmbar.xyz' },
+      { protocol: 'http', hostname: '**.gmbar.xyz' },
       // All gmbr.pro subdomains (wildcard for future CDNs)
       { protocol: 'https', hostname: '**.gmbr.pro' },
       { protocol: 'http', hostname: '**.gmbr.pro' },
+      // kambingjantan.cc — manhwaland image CDN
+      { protocol: 'https', hostname: '**.kambingjantan.cc' },
+      { protocol: 'https', hostname: 'kambingjantan.cc' },
       // Common manga image CDNs
       { protocol: 'https', hostname: 'i.imgur.com' },
       { protocol: 'https', hostname: 'cdn.discordapp.com' },
       { protocol: 'https', hostname: 'i.ibb.co' },
+      // Cloudflare R2
+      { protocol: 'https', hostname: '**.r2.dev' },
+      { protocol: 'https', hostname: '**.r2.cloudflarestorage.com' },
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [390, 640, 750, 828, 1080, 1200],
