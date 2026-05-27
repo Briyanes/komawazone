@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
-import type { Database } from '@/types/database';
-
-type SourceUpdate = Database['public']['Tables']['manga_sources']['Update'];
 
 const PatchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -36,7 +33,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
-  const update: SourceUpdate = {};
+  const update: Record<string, unknown> = {};
   if (parsed.data.name !== undefined) update.name = parsed.data.name;
   if (parsed.data.base_url !== undefined) update.base_url = parsed.data.base_url;
   if (parsed.data.sitemap_urls !== undefined) update.sitemap_urls = parsed.data.sitemap_urls;
@@ -44,12 +41,18 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (parsed.data.type !== undefined) update.type = parsed.data.type;
   if (parsed.data.notes !== undefined) update.notes = parsed.data.notes;
 
-  const { data, error } = await supabase
-    .from('manga_sources')
+  const { data, error } = await (supabase
+    .from('manga_sources') as unknown as {
+      update: (values: Record<string, unknown>) => {
+        eq: (column: string, value: string) => {
+          select: () => { single: () => Promise<{ data: unknown; error: { message: string } | null }> };
+        };
+      };
+    })
     .update(update)
     .eq('id', id)
     .select()
-    .single();
+    .single() as unknown as { data: unknown; error: { message: string } | null };
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ status: 'success', data });

@@ -41,8 +41,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Manga tidak ditemukan' }, { status: 404 });
   }
 
-  // Build source URL if not stored (reconstruct from slug for manhwaland)
-  const sourceUrl = manga.source_url ?? `https://04x.manhwaland.land/manga/${manga.slug}/`;
+  // Build source URL — use stored value or look up from active sources
+  let sourceUrl = manga.source_url;
+  if (!sourceUrl) {
+    const { data: firstSource } = await supabase
+      .from('manga_sources')
+      .select('base_url')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single() as unknown as { data: { base_url: string } | null };
+    const baseUrl = firstSource?.base_url?.replace(/\/$/, '') ?? 'https://04x.manhwaland.land';
+    sourceUrl = `${baseUrl}/manga/${manga.slug}/`;
+  }
 
   // SSRF check on source URL
   const ssrfError = validateScraperUrl(sourceUrl);
@@ -117,14 +128,15 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
 
     console.log(`[ChapterImport] Found ${chapters.length} chapters for ${slug}`);
 
-    // 2. Get existing chapter numbers to skip already-imported ones
+    // 2. Get existing chapters (id + number) to check images
     const { data: existing } = await supabase
       .from('chapters')
-      .select('number')
+      .select('id, number')
       .eq('manga_id', mangaId)
       .is('deleted_at', null);
 
-    const existingNums = new Set((existing ?? []).map(c => c.number));
+    const existingMap = new Map((existing ?? []).map(c => [c.number as number, c.id as string]));
+    const existingNums = new Set(existingMap.keys());
 
     // Deduplicate by chapter number (source may have duplicate data-num values)
     const seen = new Set<number>();
@@ -136,10 +148,10 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
 
     console.log(`[ChapterImport] ${toImport.length} new chapters to import (${existingNums.size} already exist)`);
 
-    if (toImport.length === 0) return;
-
     // 3a. Metadata-only mode: insert chapter records without scraping images (fast)
     if (metadataOnly) {
+      if (toImport.length === 0) return;
+
       const rows = toImport.map(chapter => ({
         manga_id: mangaId,
         number: chapter.number,
@@ -165,24 +177,60 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
       return;
     }
 
-    // 3b. Full mode: scrape images for each chapter
+    // 3b. Full mode: scrape images for new chapters + backfill existing without images
+
+    // Find existing chapters that have no images yet
+    const existingIds = [...existingMap.values()];
+    const chaptersWithImagesSet = new Set<string>();
+    if (existingIds.length > 0) {
+      const { data: withImgs } = await supabase
+        .from('chapter_images')
+        .select('chapter_id')
+        .in('chapter_id', existingIds);
+      for (const row of withImgs ?? []) chaptersWithImagesSet.add(row.chapter_id as string);
+    }
+
+    // Build source URL map: chapter number → source URL (for backfill)
+    const sourceUrlMap = new Map(chapters.map(c => [c.number, c.url]));
+
+    // Chapters that exist in DB but have no images — limit backfill to 100 per run
+    const toBackfill: Array<{ id: string; number: number; url: string }> = [];
+    for (const [num, id] of existingMap.entries()) {
+      if (!chaptersWithImagesSet.has(id)) {
+        const url = sourceUrlMap.get(num);
+        if (url) toBackfill.push({ id, number: num, url });
+      }
+    }
+    const backfillBatch = toBackfill.sort((a, b) => b.number - a.number).slice(0, 100);
+
+    console.log(`[ChapterImport] Full mode: ${toImport.length} new + ${backfillBatch.length}/${toBackfill.length} existing without images`);
+
+    if (toImport.length === 0 && backfillBatch.length === 0) return;
+
     let imported = 0;
+    let backfilled = 0;
     let failed = 0;
 
+    // Process new chapters: scrape images → insert chapter → insert images
     for (const chapter of toImport) {
       try {
-        // Random delay between requests (1–3s)
         await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
 
         const images = await scrapeChapterImages(chapter.url);
 
         if (images.length === 0) {
-          console.warn(`[ChapterImport] No images for chapter ${chapter.number}`);
+          console.warn(`[ChapterImport] No images for new chapter ${chapter.number}`);
+          // Insert chapter record anyway (images fetched lazily later)
+          await supabase.from('chapters').insert({
+            manga_id: mangaId,
+            number: chapter.number,
+            title: chapter.title || `Chapter ${chapter.number}`,
+            ...(chapter.releasedAt ? { release_date: chapter.releasedAt } : {}),
+          });
           failed++;
           continue;
         }
 
-        // Create chapter record
         const { data: chapterRecord, error: chapterErr } = await supabase
           .from('chapters')
           .insert({
@@ -201,17 +249,12 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           continue;
         }
 
-        // Insert chapter images
-        const imageRows = images.map((url, i) => ({
-          chapter_id: chapterRecord.id,
-          image_url: url,
-          number: i + 1,
-        }));
-
-        await supabase.from('chapter_images').insert(imageRows);
+        await supabase.from('chapter_images').insert(
+          images.map((url, i) => ({ chapter_id: chapterRecord.id, image_url: url, number: i + 1 }))
+        );
 
         imported++;
-        console.log(`[ChapterImport] ✓ Chapter ${chapter.number} (${images.length} pages)`);
+        console.log(`[ChapterImport] ✓ New ch.${chapter.number} (${images.length} pages)`);
 
       } catch (err) {
         console.error(`[ChapterImport] ✗ Chapter ${chapter.number}:`, err);
@@ -219,7 +262,39 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
       }
     }
 
-    console.log(`[ChapterImport] Done for ${slug}: ${imported} imported, ${failed} failed`);
+    // Process backfill: scrape images → insert into existing chapter records
+    for (const ch of backfillBatch) {
+      try {
+        await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
+
+        const images = await scrapeChapterImages(ch.url);
+
+        if (images.length === 0) {
+          console.warn(`[ChapterImport] No images for backfill ch.${ch.number}`);
+          failed++;
+          continue;
+        }
+
+        await supabase.from('chapter_images').insert(
+          images.map((url, i) => ({ chapter_id: ch.id, image_url: url, number: i + 1 }))
+        );
+
+        // Update thumbnail_url on chapter record if not set
+        await supabase.from('chapters')
+          .update({ thumbnail_url: images[0] })
+          .eq('id', ch.id)
+          .is('thumbnail_url', null);
+
+        backfilled++;
+        console.log(`[ChapterImport] ✓ Backfill ch.${ch.number} (${images.length} pages)`);
+
+      } catch (err) {
+        console.error(`[ChapterImport] ✗ Backfill ch.${ch.number}:`, err);
+        failed++;
+      }
+    }
+
+    console.log(`[ChapterImport] Done for ${slug}: ${imported} new, ${backfilled} backfilled, ${failed} failed`);
 
   } catch (err) {
     console.error(`[ChapterImport] Fatal error for ${slug}:`, err);

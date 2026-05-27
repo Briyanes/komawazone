@@ -230,10 +230,13 @@ async function processSitemapImport(
       console.log(`[Job ${jobId}] Backfilling source_url/source_id for ${needsBackfill.length} existing manga...`);
       const backfillUpdates = needsBackfill.map(m => {
         const existing = existingMap.get(m.slug) ?? existingMap.get(m.url);
-        return supabase.from('manga').update({
+        const updatePayload: Record<string, unknown> = {
           source_url: m.url,
           ...(options.sourceId ? { source_id: options.sourceId } : {}),
-        }).eq('id', existing!.id);
+        };
+        return (supabase.from('manga') as unknown as {
+          update: (values: Record<string, unknown>) => { eq: (column: string, value: string) => Promise<unknown> };
+        }).update(updatePayload).eq('id', existing!.id);
       });
       // Run in batches of 20 (no scraping, just DB update)
       for (let i = 0; i < backfillUpdates.length; i += 20) {
@@ -330,25 +333,28 @@ async function scrapeAndCreateManga(url: string, userId: string, sourceId: strin
     const slug = extractSlugFromUrl(url);
 
     // Create manga in database — ON CONFLICT DO NOTHING prevents duplicate errors
-    const { data: manga, error: upsertErr } = await supabase
-      .from('manga')
-      .upsert(
-        {
-          slug,
-          title: scraped.title,
-          description: scraped.description,
-          cover_url: scraped.cover_url,
-          type: (scraped.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
-          status: (scraped.status || 'ONGOING') as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED',
-          author: scraped.author,
-          artist: scraped.artist,
-          genres: scraped.genres || [],
-          source_url: url,
-          source_id: sourceId ?? null,
-          uploaded_by: userId,
-        },
-        { onConflict: 'slug', ignoreDuplicates: true }
-      )
+    const upsertPayload: Record<string, unknown> = {
+      slug,
+      title: scraped.title,
+      description: scraped.description,
+      cover_url: scraped.cover_url,
+      type: (scraped.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
+      status: (scraped.status || 'ONGOING') as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED',
+      author: scraped.author,
+      artist: scraped.artist,
+      genres: scraped.genres || [],
+      source_url: url,
+      source_id: sourceId ?? null,
+      uploaded_by: userId,
+    };
+
+    const { data: manga, error: upsertErr } = await (supabase
+      .from('manga') as unknown as {
+        upsert: (values: Record<string, unknown>, options: { onConflict: string; ignoreDuplicates: boolean }) => {
+          select: () => { single: () => Promise<{ data: Record<string, unknown> | null; error: { message: string } | null }> };
+        };
+      })
+      .upsert(upsertPayload, { onConflict: 'slug', ignoreDuplicates: true })
       .select()
       .single();
 

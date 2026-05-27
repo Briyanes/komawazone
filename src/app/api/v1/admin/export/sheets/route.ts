@@ -62,16 +62,26 @@ export async function POST(req: NextRequest) {
       }, { status: 400 });
     }
 
-    // Get imported manga data from job
+    // Get imported manga data from job — also fetch source_url
     const { data: manga } = await supabase
       .from('manga')
-      .select('slug, title, type, created_at, updated_at')
+      .select('slug, title, type, source_url, created_at, updated_at')
       .gte('created_at', job.started_at)
       .order('created_at', { ascending: true });
 
+    // Fetch first active source as fallback base_url
+    const { data: firstSource } = await supabase
+      .from('manga_sources')
+      .select('base_url')
+      .eq('is_active', true)
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .single() as unknown as { data: { base_url: string } | null };
+    const fallbackBase = firstSource?.base_url?.replace(/\/$/, '') ?? 'https://04x.manhwaland.land';
+
     // Prepare data for export
     const exportData = (manga || []).map(m => ({
-      url: `https://04x.manhwaland.land/manga/${m.slug}/`,
+      url: m.source_url ?? `${fallbackBase}/manga/${m.slug}/`,
       slug: m.slug,
       title: m.title,
       type: m.type as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',

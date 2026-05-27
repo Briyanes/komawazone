@@ -23,16 +23,25 @@ export async function POST(req: NextRequest) {
   try {
     console.log('[Sitemap Check] Starting scheduled check...');
 
-    // Parse sitemaps
-    const sitemapUrls = [
-      'https://04x.manhwaland.land/manga-sitemap.xml',
-      'https://04x.manhwaland.land/manga-sitemap2.xml',
-      'https://04x.manhwaland.land/manga-sitemap3.xml',
-      'https://04x.manhwaland.land/manga-sitemap4.xml',
-      'https://04x.manhwaland.land/manga-sitemap5.xml',
-      'https://04x.manhwaland.land/manga-sitemap6.xml',
-      'https://04x.manhwaland.land/manga-sitemap7.xml',
-    ];
+    // Fetch sitemap URLs from manga_sources table
+    const { data: sourcesData, error: sourcesError } = await supabase
+      .from('manga_sources')
+      .select('name, type, sitemap_urls')
+      .eq('is_active', true);
+
+    if (sourcesError) {
+      throw new Error(`Failed to fetch sources: ${sourcesError.message}`);
+    }
+
+    const sitemapUrls: string[] = (sourcesData ?? []).flatMap(
+      (s: { sitemap_urls: string[] }) => s.sitemap_urls ?? []
+    );
+
+    if (sitemapUrls.length === 0) {
+      return NextResponse.json({ success: true, message: 'No active sources configured' });
+    }
+
+    console.log(`[Sitemap Check] Checking ${sitemapUrls.length} sitemaps from ${(sourcesData ?? []).length} sources`);
 
     const parseResult = await parseAllSitemaps(sitemapUrls, {
       timeout: 15000,

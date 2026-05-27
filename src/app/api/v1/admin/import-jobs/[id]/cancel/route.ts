@@ -32,7 +32,7 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
 
   const { error } = await supabase
     .from('import_jobs')
-    .update({ status: 'cancelled', error_message: 'Dibatalkan oleh admin' })
+    .update({ status: 'cancelled' })
     .eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
