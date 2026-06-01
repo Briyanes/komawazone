@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseAllSitemaps } from '@/lib/scrapers/sitemap-parser';
 import { detectMangaSource } from '@/lib/scrapers/detector';
+import { downloadAndUploadToR2, isR2Url } from '@/lib/storage/r2';
 
 // Allow up to 300s on Vercel Pro; background work runs via after()
 export const maxDuration = 300;
@@ -329,6 +330,19 @@ async function scrapeAndCreateManga(url: string, userId: string, sourceId: strin
       throw new Error('Invalid scrape response');
     }
 
+    // Download and upload cover to R2
+    let finalCoverUrl = scraped.cover_url;
+    if (scraped.cover_url && !isR2Url(scraped.cover_url)) {
+      console.log(`[R2] Downloading cover for ${scraped.title}...`);
+      const r2Result = await downloadAndUploadToR2(scraped.cover_url, 'covers', scraped.title);
+      if (r2Result.key) {
+        finalCoverUrl = r2Result.url;
+        console.log(`[R2] Cover uploaded to R2: ${r2Result.key}`);
+      } else {
+        console.log(`[R2] Cover download failed, using original URL`);
+      }
+    }
+
     // Generate slug from URL if not provided
     const slug = extractSlugFromUrl(url);
 
@@ -337,7 +351,7 @@ async function scrapeAndCreateManga(url: string, userId: string, sourceId: strin
       slug,
       title: scraped.title,
       description: scraped.description,
-      cover_url: scraped.cover_url,
+      cover_url: finalCoverUrl,
       type: (scraped.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
       status: (scraped.status || 'ONGOING') as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED',
       author: scraped.author,
@@ -385,12 +399,23 @@ async function scrapeAndUpdateManga(url: string, mangaId: string): Promise<{ ski
       throw new Error('Invalid scrape response');
     }
 
+    // Download and upload cover to R2 if not already R2
+    let finalCoverUrl = scraped.cover_url;
+    if (scraped.cover_url && !isR2Url(scraped.cover_url)) {
+      console.log(`[R2] Downloading cover for update ${scraped.title}...`);
+      const r2Result = await downloadAndUploadToR2(scraped.cover_url, 'covers', scraped.title);
+      if (r2Result.key) {
+        finalCoverUrl = r2Result.url;
+        console.log(`[R2] Cover uploaded to R2: ${r2Result.key}`);
+      }
+    }
+
     // Update manga
     const { data: manga } = await supabase
       .from('manga')
       .update({
         description: scraped.description,
-        cover_url: scraped.cover_url,
+        cover_url: finalCoverUrl,
         status: scraped.status,
         genres: scraped.genres,
         source_url: url,

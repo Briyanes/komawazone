@@ -44,18 +44,18 @@ export function ReviewsCarousel({ slug }: { slug: string }) {
       <section className="rounded-2xl p-4 md:p-5" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
-            <Star size={14} /> User Reviews
+            <Star size={14} /> Ulasan Pengguna
           </h2>
           <button
             onClick={() => setShowForm(true)}
             className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
             style={{ background: 'var(--color-primary)', color: 'white' }}
           >
-            Write Review
+            Tulis Ulasan
           </button>
         </div>
         <p className="text-xs text-center py-4" style={{ color: 'var(--text-tertiary)' }}>
-          No reviews yet. Be the first to review!
+          Belum ada ulasan. Jadilah yang pertama!
         </p>
         {showForm && <ReviewForm slug={slug} onClose={() => setShowForm(false)} onSuccess={fetchReviews} />}
       </section>
@@ -78,14 +78,14 @@ export function ReviewsCarousel({ slug }: { slug: string }) {
       <section className="rounded-2xl p-4 md:p-5" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xs font-bold uppercase tracking-widest flex items-center gap-2" style={{ color: 'var(--text-tertiary)' }}>
-            <Star size={14} /> User Reviews
+            <Star size={14} /> Ulasan Pengguna
           </h2>
           <button
             onClick={() => setShowForm(true)}
             className="text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity hover:opacity-80"
             style={{ background: 'var(--color-primary)', color: 'white' }}
           >
-            Write Review
+            Tulis Ulasan
           </button>
         </div>
 

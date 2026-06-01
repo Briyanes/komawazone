@@ -5,6 +5,7 @@ import Link from 'next/link';
 import MangaImage from '@/components/ui/MangaImage';
 import { BookOpen, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
+import { decodeHtml } from '@/lib/cn';
 
 interface ProgressItem {
   manga_id: string;
@@ -75,7 +76,7 @@ export function ContinueReading() {
             className="flex items-center gap-1 text-sm font-medium transition-colors hover:opacity-80"
             style={{ color: 'var(--color-primary)' }}
           >
-            My Library <ChevronRight size={14} />
+            Perpustakaan <ChevronRight size={14} />
           </Link>
         )}
       </div>
@@ -104,7 +105,7 @@ export function ContinueReading() {
                   <div className="h-full" style={{ width: `${Math.max(5, item.read_percentage)}%`, background: 'var(--color-primary)' }} />
                 </div>
               </div>
-              <p className="text-xs font-medium leading-tight line-clamp-2" style={{ color: 'var(--text-primary)' }}>{manga.title}</p>
+              <p className="text-xs font-medium leading-tight line-clamp-2" style={{ color: 'var(--text-primary)' }}>{decodeHtml(manga.title)}</p>
               <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
                 {item.read_percentage < 100 ? `${Math.round(item.read_percentage)}%` : '✓ Selesai'}
               </p>

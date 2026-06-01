@@ -7,11 +7,11 @@ import { cn } from '@/lib/cn';
 import { useAuth } from '@/hooks/useAuth';
 
 const navItems = [
-  { href: '/',           icon: Home,     label: 'Home'      },
-  { href: '/search',     icon: Search,   label: 'Browse'    },
-  { href: '/history',    icon: History,  label: 'History'   },
-  { href: '/bookmarks',  icon: Bookmark, label: 'Bookmark'  },
-  { href: '/profile',    icon: User,     label: 'Profile'   },
+  { href: '/',           icon: Home,     label: 'Beranda'  },
+  { href: '/search',     icon: Search,   label: 'Jelajah'  },
+  { href: '/history',    icon: History,  label: 'Riwayat'  },
+  { href: '/bookmarks',  icon: Bookmark, label: 'Daftar'   },
+  { href: '/profile',    icon: User,     label: 'Profil'   },
 ];
 
 export function BottomNav() {
@@ -42,7 +42,7 @@ export function BottomNav() {
           const resolvedHref = isProfile && !isAuthenticated ? '/login' : href;
           const isActive = href === '/' ? pathname === '/' : pathname.startsWith(href);
           const ActiveIcon = isProfile && !isAuthenticated ? LogIn : Icon;
-          const displayLabel = isProfile && !isAuthenticated ? 'Login' : label;
+          const displayLabel = isProfile && !isAuthenticated ? 'Masuk' : label;
 
           return (
             <Link

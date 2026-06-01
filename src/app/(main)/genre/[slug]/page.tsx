@@ -72,7 +72,7 @@ export default async function GenrePage({ params }: Props) {
             </p>
           )}
           <p className="mt-1 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            {items.length} title{items.length !== 1 ? 's' : ''}
+            {items.length} judul
           </p>
         </div>
       </div>
@@ -82,7 +82,7 @@ export default async function GenrePage({ params }: Props) {
           className="rounded-2xl border py-16 text-center"
           style={{ borderColor: 'var(--border-light)', color: 'var(--text-tertiary)' }}
         >
-          No manga in this genre yet.
+          Belum ada manga dalam genre ini.
         </div>
       ) : (
         <GenreGrid items={items} />

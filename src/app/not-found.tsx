@@ -13,10 +13,10 @@ export default function NotFound() {
           404
         </h1>
         <p className="text-lg font-medium" style={{ color: 'var(--text-secondary)' }}>
-          Page not found
+          Halaman tidak ditemukan
         </p>
         <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>
-          The page you&apos;re looking for doesn&apos;t exist or was moved.
+          Halaman yang kamu cari tidak ada atau sudah dipindahkan.
         </p>
       </div>
       <Link
@@ -24,7 +24,7 @@ export default function NotFound() {
         className="rounded-xl px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
         style={{ background: 'var(--color-primary)' }}
       >
-        Back to Home
+        Ke Beranda
       </Link>
     </div>
   );

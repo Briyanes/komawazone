@@ -44,10 +44,13 @@ export default function AdminSubscriptionsPage() {
 
   async function loadSubscriptions() {
     setLoading(true);
-    const res = await fetch('/api/v1/admin/subscriptions');
-    const data = await res.json() as { status: string; data: Subscription[] };
-    if (data.status === 'success') setSubscriptions(data.data);
-    setLoading(false);
+    try {
+      const res = await fetch('/api/v1/admin/subscriptions');
+      const data = await res.json() as { status: string; data: Subscription[] };
+      if (data.status === 'success') setSubscriptions(data.data);
+    } catch { /* network error — keep existing list */ } finally {
+      setLoading(false);
+    }
   }
 
   const handleSearch = () => {
@@ -95,7 +98,11 @@ export default function AdminSubscriptionsPage() {
   const handleRevoke = (subId: string, email: string) => {
     if (!confirm(`Cabut VIP dari ${email}?`)) return;
     startTransition(async () => {
-      await fetch(`/api/v1/admin/subscriptions/${subId}/revoke`, { method: 'POST' });
+      const res = await fetch(`/api/v1/admin/subscriptions/${subId}/revoke`, { method: 'POST' });
+      if (!res.ok) {
+        setError('Gagal mencabut VIP. Coba lagi.');
+        return;
+      }
       await loadSubscriptions();
     });
   };

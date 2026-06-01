@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ChevronLeft, ChevronRight, List, Home, ChevronDown,
   Settings, LayoutList, BookOpen, AlignJustify, Maximize2, AlignCenter,
-  ArrowLeftRight, X, Sun, Contrast, Expand, Shrink, Search, ArrowUp, ArrowDown, ImageOff,
+  ArrowLeftRight, X, Sun, Contrast, Expand, Shrink, Search, ImageOff,
   Check, Moon,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
@@ -36,6 +36,7 @@ interface ReaderClientProps {
   mangaId: string;
   mangaSlug: string;
   mangaTitle: string;
+  mangaCover?: string | null;
   prevChapterId?: string;
   nextChapterId?: string;
   chapterList?: ChapterListItem[];
@@ -61,10 +62,12 @@ function loadPrefs() {
 export function ReaderClient({
   chapterId,
   chapterNumber,
+  chapterTitle,
   images,
   mangaId,
   mangaSlug,
   mangaTitle,
+  mangaCover,
   prevChapterId,
   nextChapterId,
   chapterList = [],
@@ -83,8 +86,7 @@ export function ReaderClient({
   const [autoAdvance, setAutoAdvance]       = useState<number | null>(null);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const chapterListTopRef = useRef<HTMLDivElement | null>(null);
-  const chapterListBottomRef = useRef<HTMLDivElement | null>(null);
+
 
   // Touch swipe tracking
   const touchStartX = useRef<number | null>(null);
@@ -139,7 +141,7 @@ export function ReaderClient({
       type HistoryEntry = { mangaSlug: string; mangaTitle: string; mangaCover: string | null; chapterId: string; chapterNumber: number; readAt: number };
       const hist: HistoryEntry[] = JSON.parse(localStorage.getItem(HISTORY_KEY) ?? '[]') as HistoryEntry[];
       const filtered = hist.filter(h => h.mangaSlug !== mangaSlug);
-      filtered.unshift({ mangaSlug, mangaTitle, mangaCover: null, chapterId, chapterNumber, readAt: Date.now() });
+      filtered.unshift({ mangaSlug, mangaTitle, mangaCover: mangaCover ?? null, chapterId, chapterNumber, readAt: Date.now() });
       localStorage.setItem(HISTORY_KEY, JSON.stringify(filtered.slice(0, 100))); // cap at 100 entries
     } catch { /* ignore */ }
 
@@ -316,14 +318,6 @@ export function ReaderClient({
     });
   }, [chapterList, chapterQuery, chapterSort]);
 
-  const jumpToChapterTop = () => {
-    chapterListTopRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
-
-  const jumpToChapterBottom = () => {
-    chapterListBottomRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  };
-
   const goNext = useCallback(() => {
     if (currentPage <= images.length) setCurrentPage(p => p + 1);
     else if (nextChapterId) router.push(`/manga/${mangaSlug}/chapter/${nextChapterId}`);
@@ -410,7 +404,7 @@ export function ReaderClient({
               className="flex items-center gap-1 rounded-lg px-2.5 py-2 text-xs font-bold hover:bg-white/10 max-w-full"
               style={{ background: 'rgba(255,107,53,0.2)', color: 'var(--color-primary)' }}
             >
-              <span className="truncate">Ch {chapterNumber % 1 === 0 ? chapterNumber : chapterNumber.toFixed(1)}</span>
+              <span className="truncate">Ch {chapterNumber % 1 === 0 ? chapterNumber : chapterNumber.toFixed(1)}{chapterTitle ? ` — ${chapterTitle}` : ''}</span>
               <ChevronDown size={12} className="shrink-0" />
             </button>
 
@@ -430,7 +424,7 @@ export function ReaderClient({
                   zIndex: 100,
                 }}
               >
-                <div ref={chapterListTopRef} className="sticky top-0 z-10 space-y-2 border-b p-2" style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,.1)' }}>
+                <div className="sticky top-0 z-10 space-y-2 border-b p-2" style={{ background: '#1a1a1a', borderColor: 'rgba(255,255,255,.1)' }}>
                   <div className="relative">
                     <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-white/45" />
                     <input
@@ -462,27 +456,7 @@ export function ReaderClient({
                       <option value="oldest">Upload pertama</option>
                     </select>
 
-                    <button
-                      onClick={() => setChapterSort((prev) => (prev === 'newest' ? 'oldest' : 'newest'))}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10"
-                      aria-label="Toggle urutan chapter"
-                    >
-                      {chapterSort === 'newest' ? <ChevronDown size={14} /> : <ArrowUp size={14} />}
-                    </button>
-                    <button
-                      onClick={jumpToChapterTop}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10"
-                      aria-label="Lompat ke chapter teratas"
-                    >
-                      <ArrowUp size={14} />
-                    </button>
-                    <button
-                      onClick={jumpToChapterBottom}
-                      className="rounded-lg p-1.5 text-white/80 hover:bg-white/10"
-                      aria-label="Lompat ke chapter terbawah"
-                    >
-                      <ArrowDown size={14} />
-                    </button>
+
                   </div>
                 </div>
 
@@ -513,7 +487,6 @@ export function ReaderClient({
                   <div className="px-3 py-5 text-center text-xs text-white/55">Chapter tidak ditemukan</div>
                 )}
 
-                <div ref={chapterListBottomRef} />
               </div>
             )}
           </div>
@@ -547,29 +520,29 @@ export function ReaderClient({
 
                   {/* Read mode */}
                   <div>
-                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Reading Mode</p>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Mode Baca</p>
                     <div className="flex gap-2">
                       <ModeBtn active={readMode === 'webtoon'} onClick={() => setMode('webtoon')} icon={<LayoutList size={14} />} label="Webtoon" />
-                      <ModeBtn active={readMode === 'paged'}   onClick={() => setMode('paged')}   icon={<BookOpen size={14} />}   label="Paged" />
+                      <ModeBtn active={readMode === 'paged'}   onClick={() => setMode('paged')}   icon={<BookOpen size={14} />}   label="Per Halaman" />
                     </div>
                   </div>
 
                   {/* Fit mode */}
                   <div>
-                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Page Width</p>
+                    <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Lebar Halaman</p>
                     <div className="flex gap-2">
-                      <ModeBtn active={fitMode === 'full'}     onClick={() => setFit('full')}     icon={<Maximize2 size={14} />}    label="Full" />
-                      <ModeBtn active={fitMode === 'centered'} onClick={() => setFit('centered')} icon={<AlignJustify size={14} />} label="Centered" />
+                      <ModeBtn active={fitMode === 'full'}     onClick={() => setFit('full')}     icon={<Maximize2 size={14} />}    label="Penuh" />
+                      <ModeBtn active={fitMode === 'centered'} onClick={() => setFit('centered')} icon={<AlignJustify size={14} />} label="Tengah" />
                     </div>
                   </div>
 
                   {/* Direction (paged only) */}
                   {readMode === 'paged' && (
                     <div>
-                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Direction</p>
+                      <p className="mb-2 text-[10px] font-semibold uppercase tracking-wider text-white/40">Arah Baca</p>
                       <div className="flex gap-2">
-                        <ModeBtn active={direction === 'ltr'} onClick={() => setDir('ltr')} icon={<AlignCenter size={14} />} label="Left to Right" />
-                        <ModeBtn active={direction === 'rtl'} onClick={() => setDir('rtl')} icon={<ArrowLeftRight size={14} />} label="Right to Left" />
+                        <ModeBtn active={direction === 'ltr'} onClick={() => setDir('ltr')} icon={<AlignCenter size={14} />} label="Kiri ke Kanan" />
+                        <ModeBtn active={direction === 'rtl'} onClick={() => setDir('rtl')} icon={<ArrowLeftRight size={14} />} label="Kanan ke Kiri" />
                       </div>
                     </div>
                   )}
@@ -578,7 +551,7 @@ export function ReaderClient({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40 flex items-center gap-1.5">
-                        <Sun size={11} /> Brightness
+                        <Sun size={11} /> Kecerahan
                       </p>
                       <span className="text-[10px] text-white/40">{brightness}%</span>
                     </div>
@@ -593,7 +566,7 @@ export function ReaderClient({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40 flex items-center gap-1.5">
-                        <Contrast size={11} /> Contrast
+                        <Contrast size={11} /> Kontras
                       </p>
                       <span className="text-[10px] text-white/40">{contrast}%</span>
                     </div>
@@ -608,7 +581,7 @@ export function ReaderClient({
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[10px] font-semibold uppercase tracking-wider text-white/40 flex items-center gap-1.5">
-                        <Moon size={10} /> Dark Overlay
+                        <Moon size={10} /> Overlay Gelap
                       </p>
                       <span className="text-[10px] text-white/40">{darkOverlay}%</span>
                     </div>
@@ -686,26 +659,26 @@ export function ReaderClient({
           {/* End of chapter */}
           <div className="flex w-full max-w-lg flex-col items-center gap-4 px-6 py-14 text-center">
             <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
- End of Chapter {chapterNumber}               
+ Akhir Chapter {chapterNumber}               
             </p>
-            <div className="flex gap-3">
+            <div className="flex w-full gap-2">
               {prevChapterId && (
                 <Link href={`/manga/${mangaSlug}/chapter/${prevChapterId}`}
-                  className="flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white hover:opacity-80"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
                   style={{ background: 'rgba(255,255,255,.1)' }}>
-                  <ChevronLeft size={16} /> Prev
+                  <ChevronLeft size={16} /><span className="whitespace-nowrap">Sebelumnya</span>
                 </Link>
               )}
               <Link href={`/manga/${mangaSlug}`}
-                className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-80"
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
                 style={{ background: 'rgba(255,255,255,.07)' }}>
-                <List size={16} /> Chapters
+                <List size={16} /><span className="whitespace-nowrap">Daftar Chapter</span>
               </Link>
               {nextChapterId && (
                 <Link href={`/manga/${mangaSlug}/chapter/${nextChapterId}`}
-                  className="flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white hover:opacity-80"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-bold text-white hover:opacity-80"
                   style={{ background: 'var(--color-primary)' }}>
-                  Next <ChevronRight size={16} />
+                  <span className="whitespace-nowrap">Berikutnya</span><ChevronRight size={16} />
                 </Link>
               )}
             </div>
@@ -736,30 +709,30 @@ export function ReaderClient({
                   Chapter {chapterNumber} sudah habis dibaca.
                 </p>
               </div>
-              <div className="flex gap-3">
+              <div className="flex w-full gap-2">
                 {prevChapterId && (
                   <Link
                     href={`/manga/${mangaSlug}/chapter/${prevChapterId}`}
-                    className="flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white hover:opacity-80"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
                     style={{ background: 'rgba(255,255,255,.1)' }}
                   >
-                    <ChevronLeft size={16} /> Prev
+                    <ChevronLeft size={16} /><span className="whitespace-nowrap">Sebelumnya</span>
                   </Link>
                 )}
                 <Link
                   href={`/manga/${mangaSlug}`}
-                  className="flex items-center gap-2 rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-80"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
                   style={{ background: 'rgba(255,255,255,.07)' }}
                 >
-                  <List size={16} /> Chapters
+                  <List size={16} /><span className="whitespace-nowrap">Daftar Chapter</span>
                 </Link>
                 {nextChapterId && (
                   <Link
                     href={`/manga/${mangaSlug}/chapter/${nextChapterId}`}
-                    className="flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white hover:opacity-80"
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-bold text-white hover:opacity-80"
                     style={{ background: 'var(--color-primary)' }}
                   >
-                    Next <ChevronRight size={16} />
+                    <span className="whitespace-nowrap">Berikutnya</span><ChevronRight size={16} />
                   </Link>
                 )}
               </div>
@@ -832,12 +805,12 @@ export function ReaderClient({
         {readMode === 'paged' ? (
           <>
             <button
-              onClick={() => { goPrev(); resetTimer(); }}
-              disabled={currentPage === 1 && !prevChapterId}
+              onClick={() => { (direction === 'rtl' ? goNext : goPrev)(); resetTimer(); }}
+              disabled={direction === 'rtl' ? (currentPage > images.length && !nextChapterId) : (currentPage === 1 && !prevChapterId)}
               className="flex items-center gap-1.5 rounded-xl px-4 py-3 text-sm font-semibold text-white disabled:opacity-30 hover:opacity-80"
               style={{ background: 'rgba(255,255,255,.12)' }}
             >
-              <ChevronLeft size={16} /> {direction === 'rtl' ? 'Next' : 'Prev'}
+              <ChevronLeft size={16} /> {direction === 'rtl' ? 'Berikutnya' : 'Sebelumnya'}
             </button>
 
             {/* Page slider */}
@@ -850,12 +823,12 @@ export function ReaderClient({
             />
 
             <button
-              onClick={() => { goNext(); resetTimer(); }}
-              disabled={currentPage > images.length && !nextChapterId}
+              onClick={() => { (direction === 'rtl' ? goPrev : goNext)(); resetTimer(); }}
+              disabled={direction === 'rtl' ? (currentPage === 1 && !prevChapterId) : (currentPage > images.length && !nextChapterId)}
               className="flex items-center gap-1.5 rounded-xl px-4 py-3 text-sm font-bold text-white disabled:opacity-30 hover:opacity-80"
               style={{ background: 'var(--color-primary)' }}
             >
-              {direction === 'rtl' ? 'Prev' : 'Next'} <ChevronRight size={16} />
+              {direction === 'rtl' ? 'Sebelumnya' : 'Berikutnya'} <ChevronRight size={16} />
             </button>
           </>
         ) : (
@@ -864,7 +837,7 @@ export function ReaderClient({
               <Link href={`/manga/${mangaSlug}/chapter/${prevChapterId}`}
                 className="flex items-center gap-1.5 rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-80"
                 style={{ background: 'rgba(255,255,255,.12)' }}>
-                <ChevronLeft size={16} /> Prev
+                <ChevronLeft size={16} /> Sebelumnya
               </Link>
             ) : <div />}
             <div className="flex-1" />
@@ -872,13 +845,13 @@ export function ReaderClient({
               <Link href={`/manga/${mangaSlug}/chapter/${nextChapterId}`}
                 className="flex items-center gap-1.5 rounded-xl px-4 py-3 text-sm font-bold text-white hover:opacity-80"
                 style={{ background: 'var(--color-primary)' }}>
-                Next <ChevronRight size={16} />
+                Berikutnya <ChevronRight size={16} />
               </Link>
             ) : (
               <Link href={`/manga/${mangaSlug}`}
                 className="flex items-center gap-1.5 rounded-xl px-4 py-3 text-sm font-semibold text-white hover:opacity-80"
                 style={{ background: 'rgba(255,255,255,.12)' }}>
-                <List size={16} /> Chapters
+                <List size={16} /> Daftar Chapter
               </Link>
             )}
           </>

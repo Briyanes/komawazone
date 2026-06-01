@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseChapterListFromHtml, scrapeChapterImages } from '@/lib/scrapers/manga-scraper';
 import { SCRAPER_HEADERS, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
+import { downloadAndUploadToR2, batchDownloadAndUploadToR2 } from '@/lib/storage/r2';
 
 export const maxDuration = 300;
 
@@ -211,14 +212,14 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
     let backfilled = 0;
     let failed = 0;
 
-    // Process new chapters: scrape images → insert chapter → insert images
+    // Process new chapters: scrape images → download to R2 → insert chapter → insert images
     for (const chapter of toImport) {
       try {
         await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
 
-        const images = await scrapeChapterImages(chapter.url);
+        const sourceImages = await scrapeChapterImages(chapter.url);
 
-        if (images.length === 0) {
+        if (sourceImages.length === 0) {
           console.warn(`[ChapterImport] No images for new chapter ${chapter.number}`);
           // Insert chapter record anyway (images fetched lazily later)
           await supabase.from('chapters').insert({
@@ -231,6 +232,21 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           continue;
         }
 
+        // Download and upload images to R2
+        console.log(`[ChapterImport] Downloading ${sourceImages.length} images for ch.${chapter.number} to R2...`);
+        const r2Results = await batchDownloadAndUploadToR2(sourceImages, 'pages', `${slug}-ch${chapter.number}`);
+
+        // Filter successful uploads
+        const successfulUploads = r2Results.filter(r => r.key !== null);
+        const failedUploads = r2Results.filter(r => r.key === null);
+
+        if (failedUploads.length > 0) {
+          console.warn(`[ChapterImport] ${failedUploads.length}/${sourceImages.length} images failed to upload to R2, using original URLs`);
+        }
+
+        const finalImages = successfulUploads.map(r => r.url);
+        const thumbnailUrl = finalImages[0] ?? r2Results[0].url;
+
         const { data: chapterRecord, error: chapterErr } = await supabase
           .from('chapters')
           .insert({
@@ -238,7 +254,7 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
             number: chapter.number,
             title: chapter.title || `Chapter ${chapter.number}`,
             ...(chapter.releasedAt ? { release_date: chapter.releasedAt } : {}),
-            thumbnail_url: images[0] ?? null,
+            thumbnail_url: thumbnailUrl,
           })
           .select('id')
           .single();
@@ -250,11 +266,11 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         }
 
         await supabase.from('chapter_images').insert(
-          images.map((url, i) => ({ chapter_id: chapterRecord.id, image_url: url, number: i + 1 }))
+          finalImages.map((url, i) => ({ chapter_id: chapterRecord.id, image_url: url, number: i + 1 }))
         );
 
         imported++;
-        console.log(`[ChapterImport] ✓ New ch.${chapter.number} (${images.length} pages)`);
+        console.log(`[ChapterImport] ✓ New ch.${chapter.number} (${finalImages.length} pages, ${successfulUploads.length} to R2)`);
 
       } catch (err) {
         console.error(`[ChapterImport] ✗ Chapter ${chapter.number}:`, err);
@@ -262,31 +278,45 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
       }
     }
 
-    // Process backfill: scrape images → insert into existing chapter records
+    // Process backfill: scrape images → download to R2 → insert into existing chapter records
     for (const ch of backfillBatch) {
       try {
         await new Promise(r => setTimeout(r, 1000 + Math.random() * 2000));
 
-        const images = await scrapeChapterImages(ch.url);
+        const sourceImages = await scrapeChapterImages(ch.url);
 
-        if (images.length === 0) {
+        if (sourceImages.length === 0) {
           console.warn(`[ChapterImport] No images for backfill ch.${ch.number}`);
           failed++;
           continue;
         }
 
+        // Download and upload images to R2
+        console.log(`[ChapterImport] Backfill: downloading ${sourceImages.length} images for ch.${ch.number} to R2...`);
+        const r2Results = await batchDownloadAndUploadToR2(sourceImages, 'pages', `${slug}-ch${ch.number}`);
+
+        // Filter successful uploads
+        const successfulUploads = r2Results.filter(r => r.key !== null);
+        const failedUploads = r2Results.filter(r => r.key === null);
+
+        if (failedUploads.length > 0) {
+          console.warn(`[ChapterImport] Backfill: ${failedUploads.length}/${sourceImages.length} images failed to upload to R2, using original URLs`);
+        }
+
+        const finalImages = successfulUploads.map(r => r.url);
+
         await supabase.from('chapter_images').insert(
-          images.map((url, i) => ({ chapter_id: ch.id, image_url: url, number: i + 1 }))
+          finalImages.map((url, i) => ({ chapter_id: ch.id, image_url: url, number: i + 1 }))
         );
 
         // Update thumbnail_url on chapter record if not set
         await supabase.from('chapters')
-          .update({ thumbnail_url: images[0] })
+          .update({ thumbnail_url: finalImages[0] ?? r2Results[0].url })
           .eq('id', ch.id)
           .is('thumbnail_url', null);
 
         backfilled++;
-        console.log(`[ChapterImport] ✓ Backfill ch.${ch.number} (${images.length} pages)`);
+        console.log(`[ChapterImport] ✓ Backfill ch.${ch.number} (${finalImages.length} pages, ${successfulUploads.length} to R2)`);
 
       } catch (err) {
         console.error(`[ChapterImport] ✗ Backfill ch.${ch.number}:`, err);

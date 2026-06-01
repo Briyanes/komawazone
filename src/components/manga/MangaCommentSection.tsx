@@ -273,7 +273,7 @@ export function MangaCommentSection({ mangaSlug }: { mangaSlug: string }) {
                 className="rounded-lg border px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80 text-sm sm:text-xs"
                 style={{ borderColor: 'var(--border-medium)', color: 'var(--text-primary)' }}
               >
-                Login
+                Masuk
               </Link>
             )}
             <button
@@ -373,7 +373,7 @@ export function MangaCommentSection({ mangaSlug }: { mangaSlug: string }) {
                       onClick={() => toggleLike(comment.id)}
                       className={cn('flex items-center gap-1 text-xs transition-colors', liked ? 'font-semibold' : 'hover:opacity-70', !isAuthenticated && 'cursor-default')}
                       style={{ color: liked ? '#ef4444' : 'var(--text-tertiary)' }}
-                      title={isAuthenticated ? (liked ? 'Unlike' : 'Like') : 'Login untuk like'}
+                      title={isAuthenticated ? (liked ? 'Batal Suka' : 'Suka') : 'Masuk untuk suka'}
                     >
                       <Heart size={13} fill={liked ? '#ef4444' : 'none'} />
                       {comment.likes_count > 0 && comment.likes_count}

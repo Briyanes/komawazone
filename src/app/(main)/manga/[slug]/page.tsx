@@ -51,6 +51,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const statusVariantMap: Record<MangaStatus, 'ongoing' | 'completed' | 'hiatus' | 'dropped'> = {
   ONGOING: 'ongoing', COMPLETED: 'completed', HIATUS: 'hiatus', DROPPED: 'dropped',
 };
+const statusLabelMap: Record<string, string> = {
+  ONGOING: 'Terbit', COMPLETED: 'Tamat', HIATUS: 'Hiatus', DROPPED: 'Berhenti',
+};
 
 export default async function MangaDetailPage({ params }: Props) {
   const { slug } = await params;
@@ -206,7 +209,7 @@ export default async function MangaDetailPage({ params }: Props) {
                   <div className="flex flex-col gap-0.5 px-3 py-2.5">
                     <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Status</span>
                     <span className={`text-[11px] font-bold ${manga.status === 'ONGOING' ? 'text-green-400' : manga.status === 'COMPLETED' ? 'text-blue-400' : 'text-yellow-400'}`}>
-                      {manga.status}
+                      {statusLabelMap[manga.status] ?? manga.status}
                     </span>
                   </div>
                 )}
@@ -225,13 +228,13 @@ export default async function MangaDetailPage({ params }: Props) {
                 {/* Row 2: Author, Artist, Chapters */}
                 {manga.author && (
                   <div className="flex flex-col gap-0.5 px-3 py-2.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Author</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Penulis</span>
                     <span className="text-[11px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{manga.author}</span>
                   </div>
                 )}
                 {manga.artist && (
                   <div className="flex flex-col gap-0.5 px-3 py-2.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Artist</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Ilustrator</span>
                     <span className="text-[11px] font-semibold truncate" style={{ color: 'var(--text-primary)' }}>{manga.artist}</span>
                   </div>
                 )}
@@ -249,13 +252,13 @@ export default async function MangaDetailPage({ params }: Props) {
                   </div>
                 )}
                 <div className="flex flex-col gap-0.5 px-3 py-2.5">
-                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Posted On</span>
+                  <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Ditambahkan</span>
                   <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>
                     {new Date(manga.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
                 <div className="flex flex-col gap-0.5 px-3 py-2.5">
-                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Update</span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Diperbarui</span>
                   <span className="text-[11px] font-semibold" style={{ color: 'var(--text-primary)' }}>
                     {new Date(manga.updated_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
@@ -290,7 +293,7 @@ export default async function MangaDetailPage({ params }: Props) {
             </Suspense>
 
             {/* Chapter list */}
-            {isVip ? (
+            {manga.content_rating !== 'mature' || isVip ? (
               <ChapterListSection chapters={chapters} mangaSlug={slug} />
             ) : (
               <div
@@ -362,7 +365,7 @@ export default async function MangaDetailPage({ params }: Props) {
                     manga.type && { label: 'Tipe', value: manga.type, icon: null },
                     manga.release_year && { label: 'Terbit', value: String(manga.release_year), icon: <Calendar size={12} /> },
                     manga.author && { label: 'Penulis', value: manga.author, icon: <User size={12} /> },
-                    manga.artist && manga.artist !== manga.author && { label: 'Artist', value: manga.artist, icon: <Pen size={12} /> },
+                    manga.artist && manga.artist !== manga.author && { label: 'Ilustrator', value: manga.artist, icon: <Pen size={12} /> },
                     { label: 'Chapter', value: String(chapters.length), icon: <BookOpen size={12} /> },
                     manga.uploader && { label: 'Diposting', value: manga.uploader.username ?? manga.uploader.email, icon: <User size={12} /> },
                     { label: 'Tgl Upload', value: new Date(manga.created_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }), icon: null },
@@ -373,7 +376,7 @@ export default async function MangaDetailPage({ params }: Props) {
                       <div key={r.label} className="flex items-center justify-between px-4 py-2.5">
                         <span className="text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>{r.label}</span>
                         {r.isBadge ? (
-                          <Badge variant={statusVariantMap[r.value as MangaStatus]}>{r.value}</Badge>
+                          <Badge variant={statusVariantMap[r.value as MangaStatus]}>{statusLabelMap[r.value] ?? r.value}</Badge>
                         ) : (
                           <span className="flex items-center gap-1 text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
                             {r.icon}{r.value}

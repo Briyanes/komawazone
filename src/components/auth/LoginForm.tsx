@@ -74,24 +74,24 @@ export function LoginForm() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Welcome back
+          Selamat datang
         </h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Sign in to continue reading — Beyond Every Story
+          Masuk untuk lanjut membaca
         </p>
       </div>
 
       {/* OAuth buttons */}
       <div className="space-y-2">
-        <OAuthButton provider="google"  label="Continue with Google"  onClick={() => handleOAuth('google')} />
-        <OAuthButton provider="discord" label="Continue with Discord" onClick={() => handleOAuth('discord')} />
-        <OAuthButton provider="twitter" label="Continue with X (Twitter)" onClick={() => handleOAuth('twitter')} />
+        <OAuthButton provider="google"  label="Lanjutkan dengan Google"   onClick={() => handleOAuth('google')} />
+        <OAuthButton provider="discord" label="Lanjutkan dengan Discord"  onClick={() => handleOAuth('discord')} />
+        <OAuthButton provider="twitter" label="Lanjutkan dengan X (Twitter)" onClick={() => handleOAuth('twitter')} />
       </div>
 
       {/* Divider */}
       <div className="flex items-center gap-3">
         <hr className="flex-1" style={{ borderColor: 'var(--border-light)' }} />
-        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>or</span>
+        <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>atau</span>
         <hr className="flex-1" style={{ borderColor: 'var(--border-light)' }} />
       </div>
 
@@ -160,7 +160,7 @@ export function LoginForm() {
             className="text-xs"
             style={{ color: 'var(--color-primary)' }}
           >
-            Forgot password?
+            Lupa kata sandi?
           </Link>
         </div>
 
@@ -171,9 +171,9 @@ export function LoginForm() {
       </form>
 
       <p className="text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
-        Don&apos;t have an account?{' '}
+        Belum punya akun?{' '}
         <Link href="/register" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-          Sign up
+          Daftar
         </Link>
       </p>
     </div>

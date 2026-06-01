@@ -60,10 +60,10 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
       });
       const json = await res.json() as { status: string; error?: string };
       if (json.status === 'success') {
-        setSuccess('Chapter saved!');
+        setSuccess('Chapter berhasil disimpan!');
         router.refresh();
       } else {
-        setError(json.error ?? 'Failed to save');
+        setError(json.error ?? 'Gagal menyimpan');
       }
     });
   };
@@ -85,7 +85,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
   };
 
   const handleDeleteChapter = () => {
-    if (!confirm('Delete this chapter and all its images? This cannot be undone.')) return;
+    if (!confirm('Hapus chapter ini dan semua halamannya? Tindakan ini tidak dapat dibatalkan.')) return;
     startDelete(async () => {
       const res = await fetch(`/api/v1/admin/chapters/${chapterId}`, { method: 'DELETE' });
       const json = await res.json() as { status: string };
@@ -171,10 +171,10 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
         className="rounded-2xl p-5 space-y-4"
         style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
       >
-        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Chapter Info</h3>
+        <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Info Chapter</h3>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1">
-            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Number</label>
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Nomor</label>
             <Input
               type="number"
               value={number}
@@ -184,17 +184,17 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
             />
           </div>
           <div className="space-y-1">
-            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Title (optional)</label>
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>Judul (opsional)</label>
             <Input
               value={title}
               onChange={e => setTitle(e.target.value)}
-              placeholder="e.g. The Beginning"
+              placeholder="mis. Awal Mula"
             />
           </div>
         </div>
         <div className="space-y-1">
           <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
-            Release Date <span style={{ color: 'var(--text-tertiary)' }}>(optional — leave blank to publish immediately)</span>
+            Tanggal Rilis <span style={{ color: 'var(--text-tertiary)' }}>(opsional — biarkan kosong untuk langsung terbit)</span>
           </label>
           <Input
             type="datetime-local"
@@ -203,7 +203,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
           />
           {releaseDate && new Date(releaseDate) > new Date() && (
             <p className="text-xs" style={{ color: 'var(--color-warning, #F59E0B)' }}>
-              ⏰ Scheduled — will be visible after {new Date(releaseDate).toLocaleString()}
+              ⏰ Terjadwal — akan terlihat setelah {new Date(releaseDate).toLocaleString('id-ID')}
             </p>
           )}
         </div>
@@ -252,7 +252,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
         {success && <p className="text-sm text-green-400">{success}</p>}
         <div className="flex items-center gap-3 pt-1">
           <Button onClick={handleSaveMeta} isLoading={savePending} className="flex items-center gap-1.5">
-            <Save size={14} /> Save Info
+            <Save size={14} /> Simpan Info
           </Button>
           <a
             href={`/manga/${mangaSlug}/chapter/${chapterId}`}
@@ -261,7 +261,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
             className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm transition-colors hover:bg-[var(--bg-tertiary)]"
             style={{ color: 'var(--text-secondary)' }}
           >
-            <ExternalLink size={14} /> Preview
+            <ExternalLink size={14} /> Pratinjau
           </a>
           <div className="flex-1" />
           <Button
@@ -270,7 +270,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
             isLoading={deletePending}
             className="flex items-center gap-1.5 !text-red-400 hover:!bg-red-500/10"
           >
-            <Trash2 size={14} /> Delete Chapter
+            <Trash2 size={14} /> Hapus Chapter
           </Button>
         </div>
       </div>
@@ -285,7 +285,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
           style={{ borderColor: 'var(--border-light)' }}
         >
           <h3 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Pages ({images.length})
+            Halaman ({images.length})
           </h3>
           <div className="flex items-center gap-2">
             {uploadingAny && <Loader2 size={14} className="animate-spin text-white/40" />}
@@ -294,7 +294,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-80"
               style={{ background: 'var(--color-primary)' }}
             >
-              <ImagePlus size={13} /> Add Pages
+              <ImagePlus size={13} /> Tambah Halaman
             </button>
             <input
               ref={fileInputRef}
@@ -313,7 +313,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
             onClick={() => fileInputRef.current?.click()}
           >
             <ImagePlus size={28} className="opacity-20" />
-            <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Click to add pages</p>
+            <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Klik untuk menambah halaman</p>
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
@@ -359,7 +359,7 @@ export function ChapterEditClient({ chapterId, mangaSlug, initialNumber, initial
                   disabled={img.uploading}
                   className="flex size-7 shrink-0 items-center justify-center rounded-md transition-colors hover:bg-red-500/10 disabled:opacity-30"
                   style={{ color: 'var(--text-tertiary)' }}
-                  title="Delete page"
+                  title="Hapus halaman"
                 >
                   <Trash2 size={13} />
                 </button>

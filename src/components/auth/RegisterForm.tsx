@@ -42,13 +42,13 @@ export function RegisterForm() {
           <MailOpen size={48} style={{ color: 'var(--color-primary)' }} />
         </div>
         <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Check your email
+          Cek email Anda
         </h2>
         <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
           {success}
         </p>
         <Link href="/login" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-          Back to Sign In
+          Kembali ke Masuk
         </Link>
       </div>
     );
@@ -58,10 +58,10 @@ export function RegisterForm() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Create account
+          Buat akun
         </h1>
         <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Join OLLUQ — Beyond Every Story
+          Bergabung dengan OLLUQ — Beyond Every Story
         </p>
       </div>
 
@@ -81,7 +81,7 @@ export function RegisterForm() {
           placeholder="mangafan99"
           autoComplete="username"
           error={errors.username?.message}
-          hint="3–20 characters. Letters, numbers, underscores only."
+          hint="3–20 karakter. Huruf, angka, dan garis bawah."
           {...register('username')}
         />
 
@@ -98,10 +98,10 @@ export function RegisterForm() {
           <Input
             label="Password"
             type={showPassword ? 'text' : 'password'}
-            placeholder="Min. 8 characters"
+            placeholder="Min. 8 karakter"
             autoComplete="new-password"
             error={errors.password?.message}
-            hint="Must include uppercase letter and number."
+            hint="Harus mengandung huruf kapital dan angka."
             {...register('password')}
           />
           <button
@@ -127,14 +127,14 @@ export function RegisterForm() {
 
         <Button type="submit" className="w-full" isLoading={isPending}>
           <UserPlus size={16} />
-          Create Account
+          Buat Akun
         </Button>
       </form>
 
       <p className="text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
-        Already have an account?{' '}
+        Sudah punya akun?{' '}
         <Link href="/login" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-          Sign in
+          Masuk
         </Link>
       </p>
     </div>

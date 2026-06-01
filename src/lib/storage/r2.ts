@@ -136,3 +136,80 @@ export function extractR2ObjectKey(url: string): string | null {
     return null;
   }
 }
+
+/**
+ * Check if a URL is an R2 URL (vs external source URL)
+ */
+export function isR2Url(url: string): boolean {
+  const config = getR2Config();
+  if (config.publicBaseUrl && url.startsWith(config.publicBaseUrl)) {
+    return true;
+  }
+  return url.includes('.r2.cloudflarestorage.com');
+}
+
+/**
+ * Download image from URL and upload to R2
+ * Falls back to original URL if download/upload fails
+ */
+export async function downloadAndUploadToR2(
+  imageUrl: string,
+  folder: 'covers' | 'banners' | 'pages' | 'thumbnails',
+  fileNameHint?: string
+): Promise<{ key: string | null; url: string }> {
+  try {
+    const { downloadImageWithRetry } = await import('./image-downloader');
+    const { buffer, contentType } = await downloadImageWithRetry(imageUrl);
+
+    const { key, url } = await uploadBufferToR2({
+      buffer,
+      contentType,
+      fileName: fileNameHint || 'image',
+      folder,
+    });
+
+    return { key, url };
+  } catch (error) {
+    console.warn(`[R2] Failed to download/upload ${imageUrl}, using original URL:`, error instanceof Error ? error.message : error);
+    return { key: null, url: imageUrl };
+  }
+}
+
+/**
+ * Batch download and upload images to R2
+ * Returns array of { originalUrl, key, url } with null values for failures
+ */
+export async function batchDownloadAndUploadToR2(
+  imageUrls: string[],
+  folder: 'pages' | 'thumbnails',
+  fileNameHint?: string
+): Promise<Array<{ originalUrl: string; key: string | null; url: string }>> {
+  const { downloadImagesInParallel } = await import('./image-downloader');
+
+  const downloadResults = await downloadImagesInParallel(imageUrls, { concurrency: 3 });
+
+  const results = await Promise.all(
+    downloadResults.map(async ({ url, result, error }) => {
+      if (!result) {
+        console.warn(`[R2] Failed to download ${url}: ${error}`);
+        return { originalUrl: url, key: null, url };
+      }
+
+      try {
+        const { buffer, contentType } = result;
+        const { key, url: r2Url } = await uploadBufferToR2({
+          buffer,
+          contentType,
+          fileName: fileNameHint || 'image',
+          folder,
+        });
+        return { originalUrl: url, key, url: r2Url };
+      } catch (error) {
+        console.warn(`[R2] Failed to upload ${url}:`, error instanceof Error ? error.message : error);
+        return { originalUrl: url, key: null, url };
+      }
+    })
+  );
+
+  return results;
+}

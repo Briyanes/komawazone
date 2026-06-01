@@ -15,6 +15,7 @@ $$ LANGUAGE sql STABLE;
 DROP POLICY IF EXISTS "Public can read manga" ON public.manga;
 
 -- ── 3. New policy: Guest + Non-VIP see general only, VIP + Admin see all ──
+DROP POLICY IF EXISTS "Users can read manga based on VIP status" ON public.manga;
 CREATE POLICY "Users can read manga based on VIP status"
   ON public.manga FOR SELECT
   USING (
@@ -53,6 +54,7 @@ CREATE POLICY "Admins can manage manga"
 -- ── 5. Similar policy for chapters ───────────────────────────────────────
 -- Chapters should also respect content_rating of their parent manga
 DROP POLICY IF EXISTS "Public can read chapters" ON public.chapters;
+DROP POLICY IF EXISTS "Users can read chapters based on manga VIP status" ON public.chapters;
 CREATE POLICY "Users can read chapters based on manga VIP status"
   ON public.chapters FOR SELECT
   USING (

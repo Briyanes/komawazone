@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import type { MangaFilters } from '@/types';
 
 export type ChapterImage = {
@@ -15,7 +16,7 @@ export type ChapterDetail = {
   title: string | null;
   manga_id: string;
   chapter_images: ChapterImage[];
-  manga: { id: string; slug: string; title: string; content_rating: 'general' | 'mature'; source_url: string | null } | null;
+  manga: { id: string; slug: string; title: string; content_rating: 'general' | 'mature'; source_url: string | null; cover_url: string | null } | null;
 };
 
 export type MangaListItem = {
@@ -61,23 +62,46 @@ export type MangaWithChapters = {
 
 const ITEMS_PER_PAGE = 20;
 
+type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
+
+/**
+ * Returns true if the current request's user may see mature (18+) content.
+ * Admins always can; VIP users can; guests and non-VIP users cannot.
+ */
+async function isMatureAllowed(supabase: SupabaseServerClient): Promise<boolean> {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  const { data } = await supabase
+    .from('users')
+    .select('vip_expires_at, role')
+    .eq('id', user.id)
+    .single();
+  const row = data as { vip_expires_at?: string | null; role?: string | null } | null;
+  if (row?.role === 'ADMIN') return true;
+  const exp = row?.vip_expires_at;
+  return !!exp && new Date(exp) > new Date();
+}
+
 export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const canSeeMature = await isMatureAllowed(supabase);
+  let q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, banner_url, status, rating, views, description, genres, content_rating')
     .is('deleted_at', null)
     .eq('is_featured', true)
     .order('updated_at', { ascending: false })
     .limit(limit);
-
+  if (!canSeeMature) q = q.eq('content_rating', 'general');
+  const { data, error } = await q;
   if (error) return [];
   return (data ?? []) as unknown as MangaListItem[];
 }
 
 export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const canSeeMature = await isMatureAllowed(supabase);
+  let q = supabase
     .from('manga')
     .select(`
       id, slug, title, cover_url, status, rating, views, content_rating,
@@ -86,35 +110,40 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
     .is('deleted_at', null)
     .order('updated_at', { ascending: false })
     .limit(limit);
-
+  if (!canSeeMature) q = q.eq('content_rating', 'general');
+  const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
 }
 
 export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const canSeeMature = await isMatureAllowed(supabase);
+  let q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating')
     .is('deleted_at', null)
     .order('views', { ascending: false })
     .limit(limit);
-
+  if (!canSeeMature) q = q.eq('content_rating', 'general');
+  const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
 }
 
 export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
+  const canSeeMature = await isMatureAllowed(supabase);
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  const { data, error } = await supabase
+  let q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .gte('updated_at', since)
     .order('views', { ascending: false })
     .limit(limit);
-
+  if (!canSeeMature) q = q.eq('content_rating', 'general');
+  const { data, error } = await q;
   if (error || !data || data.length === 0) {
     // Fallback: just return popular if no recent updates
     return getPopularManga(limit);
@@ -124,57 +153,63 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
 
 export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const canSeeMature = await isMatureAllowed(supabase);
+  let q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
-
+  if (!canSeeMature) q = q.eq('content_rating', 'general');
+  const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
 }
 
 export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const { data, error } = await supabase
+  const canSeeMature = await isMatureAllowed(supabase);
+  let q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .eq('status', 'COMPLETED')
     .order('rating', { ascending: false })
     .limit(limit);
-
+  if (!canSeeMature) q = q.eq('content_rating', 'general');
+  const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
 }
 
 export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
+  const canSeeMature = await isMatureAllowed(supabase);
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  const { data, error } = await supabase
+  let q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .gte('updated_at', since)
     .order('views', { ascending: false })
     .limit(limit);
-
+  if (!canSeeMature) q = q.eq('content_rating', 'general');
+  const { data, error } = await q;
   if (error || !data || data.length === 0) return getPopularManga(limit);
   return (data ?? []) as unknown as MangaListItem[];
 }
 
 export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null, limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
+  const canSeeMature = await isMatureAllowed(supabase);
   let query = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, type, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .order('rating', { ascending: false })
     .limit(limit);
-
   if (type) query = query.eq('type', type);
-
+  if (!canSeeMature) query = query.eq('content_rating', 'general');
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -207,13 +242,14 @@ export async function getMangaBySlug(slug: string): Promise<MangaWithChapters | 
 }
 
 export async function getChapterWithImages(chapterId: string): Promise<ChapterDetail | null> {
-  const supabase = await createClient();
-  const { data, error } = await supabase
+  // Use admin client so RLS doesn't hide chapter_images rows from guest users
+  const adminClient = createAdminClient();
+  const { data, error } = await adminClient
     .from('chapters')
     .select(`
       id, number, title, manga_id,
       chapter_images(id, number, image_url, width, height),
-      manga(id, slug, title, content_rating, source_url)
+      manga(id, slug, title, content_rating, source_url, cover_url)
     `)
     .eq('id', chapterId)
     .single();
@@ -242,13 +278,19 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
           image_url: url,
           number: i + 1,
         }));
-        const { data: inserted } = await supabase
+        // Use admin client to bypass RLS — lazy loading runs for any user (guest/logged-in)
+        // upsert with ignoreDuplicates prevents race-condition duplicate-key errors
+        const { data: inserted, error: insertErr } = await adminClient
           .from('chapter_images')
-          .insert(imageRows)
+          .upsert(imageRows, { onConflict: 'chapter_id,number', ignoreDuplicates: true })
           .select('id, number, image_url, width, height');
 
+        if (insertErr) {
+          console.error('[LazyImages] Insert failed for chapter', chapterId, insertErr.message);
+        }
+
         // Also update thumbnail if not set
-        await supabase
+        await adminClient
           .from('chapters')
           .update({ thumbnail_url: imageUrls[0] })
           .eq('id', chapter.id)

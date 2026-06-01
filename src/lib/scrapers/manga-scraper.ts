@@ -29,6 +29,19 @@ function getMeta(html: string, attr: string, val: string): string {
   return m ? m[1] : '';
 }
 
+/** Decode HTML entities from scraped text (e.g. &#8217; -> right-quote, &amp; -> &) */
+function decodeHtmlEntities(text: string): string {
+  return text
+    .replace(/&#x([0-9a-fA-F]+);/g, (_, hex) => String.fromCharCode(parseInt(hex, 16)))
+    .replace(/&#(\d+);/g, (_, dec) => String.fromCharCode(Number(dec)))
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+}
+
 /**
  * Convert Indonesian month name to English so Date() can parse it.
  */
@@ -158,10 +171,10 @@ function imptdt(html: string, label: string): string {
 function parseManhwalandManga(html: string): ScrapedManga {
   // Title: prefer H1, fallback to <title> tag stripped of site name
   const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
-  let title = h1Match ? h1Match[1].trim() : '';
+  let title = h1Match ? decodeHtmlEntities(h1Match[1].trim()) : '';
   if (!title) {
     const titleMatch = html.match(/<title>([^<]+)<\/title>/);
-    title = titleMatch ? titleMatch[1].replace(/\s*[-|]\s*ManhwaLand.*/i, '').trim() : '';
+    title = titleMatch ? decodeHtmlEntities(titleMatch[1].replace(/\s*[-|]\s*ManhwaLand.*/i, '').trim()) : '';
   }
 
   // Description from og:description meta

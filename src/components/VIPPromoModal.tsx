@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { X, Crown, Check, Zap } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const STORAGE_KEY = 'vip_promo_v1';
 
@@ -13,13 +14,15 @@ const BENEFITS = [
 ];
 
 export function VIPPromoModal() {
+  const { isVip } = useAuth();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
+    if (isVip) return; // already VIP — don't show
     if (localStorage.getItem(STORAGE_KEY)) return;
     const timer = setTimeout(() => setVisible(true), 1800);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isVip]);
 
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, '1');

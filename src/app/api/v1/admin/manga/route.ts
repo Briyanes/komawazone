@@ -17,6 +17,7 @@ const MangaCreateSchema = z.object({
   release_year: z.number().int().min(1900).max(2100).optional(),
   rating:       z.number().min(0).max(10).optional(),
   content_rating: z.enum(['general', 'mature']).default('general'),
+  source_url:   z.string().url().optional().or(z.literal('')),
 });
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {

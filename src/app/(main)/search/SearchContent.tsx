@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect, useCallback, useRef } from 'react';
+import { useState, useTransition, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Search, SlidersHorizontal, X, Star, Lock, Crown } from 'lucide-react';
 import { MangaGrid } from '@/components/manga/MangaGrid';
@@ -9,10 +9,10 @@ import { createClient } from '@/lib/supabase/client';
 import type { MangaStatus, MangaFilters } from '@/types';
 
 const STATUS_OPTIONS: { value: MangaStatus; label: string }[] = [
-  { value: 'ONGOING',   label: 'Ongoing'   },
+  { value: 'ONGOING',   label: 'Terbit'    },
   { value: 'COMPLETED', label: 'Tamat'     },
   { value: 'HIATUS',    label: 'Hiatus'    },
-  { value: 'DROPPED',   label: 'Dropped'   },
+  { value: 'DROPPED',   label: 'Berhenti'  },
 ];
 
 const SORT_OPTIONS = [
@@ -48,18 +48,24 @@ export default function SearchContent() {
   const [genres, setGenres] = useState<Genre[]>([]);
   const [isVip, setIsVip] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const authorDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const yearDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const query   = searchParams.get('q')      ?? '';
   const status  = (searchParams.get('status') ?? '') as MangaStatus | '';
   const genre   = searchParams.get('genre')  ?? '';
   const sort    = (searchParams.get('sort')  ?? 'latest') as MangaFilters['sortBy'];
-  const page    = Number(searchParams.get('page') ?? '1');
+  const page    = Math.max(1, Number(searchParams.get('page') ?? '1') || 1);
   const author  = searchParams.get('author') ?? '';
   const type    = (searchParams.get('type')  ?? '') as MangaType | '';
   const year    = searchParams.get('year')   ?? '';
 
   const [inputValue, setInputValue] = useState(query);
+  const [inputAuthor, setInputAuthor] = useState(author);
+  const [inputYear, setInputYear] = useState(year);
   const minRating = searchParams.get('min_rating') ?? '';
+
+  const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
     fetch('/api/v1/admin/genres')
@@ -67,7 +73,6 @@ export default function SearchContent() {
       .then((d: { status: string; data: Genre[] }) => { if (d.status === 'success') setGenres(d.data); })
       .catch(() => {});
 
-    const supabase = createClient();
     supabase.auth.getUser().then(async ({ data: { user } }) => {
       if (!user) return;
       const { data } = await supabase
@@ -79,7 +84,7 @@ export default function SearchContent() {
         setIsVip(new Date(data.vip_expires_at) > new Date());
       }
     });
-  }, []);
+  }, [supabase]);
 
   const fetchResults = useCallback(() => {
     startTransition(async () => {
@@ -100,6 +105,8 @@ export default function SearchContent() {
           const data = await res.json();
           setResults(data.data ?? []);
           setTotal(data.meta?.total ?? 0);
+        } else {
+          setResults([]);
         }
       } catch { /* noop */ }
     });
@@ -110,7 +117,8 @@ export default function SearchContent() {
   const updateParam = (key: string, value: string) => {
     const p = new URLSearchParams(searchParams.toString());
     if (value) p.set(key, value); else p.delete(key);
-    p.delete('page');
+    if (key !== 'page') p.delete('page'); // reset ke halaman 1 saat filter berubah, bukan saat pindah halaman
+    if (key === 'page') window.scrollTo({ top: 0, behavior: 'smooth' });
     router.push(`/search?${p}`);
   };
 
@@ -120,8 +128,31 @@ export default function SearchContent() {
     debounceRef.current = setTimeout(() => updateParam('q', value), 400);
   };
 
-  // Sync inputValue when URL param changes externally (e.g. back/forward)
+  const handleAuthorInput = (value: string) => {
+    setInputAuthor(value);
+    if (authorDebounceRef.current) clearTimeout(authorDebounceRef.current);
+    authorDebounceRef.current = setTimeout(() => updateParam('author', value), 400);
+  };
+
+  const handleYearInput = (value: string) => {
+    setInputYear(value);
+    if (yearDebounceRef.current) clearTimeout(yearDebounceRef.current);
+    yearDebounceRef.current = setTimeout(() => updateParam('year', value), 400);
+  };
+
+  // Cleanup debounces on unmount
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      if (authorDebounceRef.current) clearTimeout(authorDebounceRef.current);
+      if (yearDebounceRef.current) clearTimeout(yearDebounceRef.current);
+    };
+  }, []);
+
+  // Sync local input states when URL params change (e.g. back/forward)
   useEffect(() => { setInputValue(query); }, [query]);
+  useEffect(() => { setInputAuthor(author); }, [author]);
+  useEffect(() => { setInputYear(year); }, [year]);
 
   const activeFilterCount = [status, genre, author, type, year, minRating].filter(Boolean).length;
 
@@ -133,7 +164,7 @@ export default function SearchContent() {
           style={{ borderColor: 'var(--border-medium)', background: 'var(--bg-secondary)' }}>
           <Search size={18} style={{ color: 'var(--text-tertiary)', flexShrink: 0 }} />
           <input
-            type="search"
+            type="text"
             placeholder="Cari manga, manhwa…"
             value={inputValue}
             onChange={(e) => handleSearchInput(e.target.value)}
@@ -211,16 +242,16 @@ export default function SearchContent() {
                 <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Tahun</p>
                 <input
                   type="number" min="1900" max={new Date().getFullYear()} placeholder="cth. 2023"
-                  value={year} onChange={e => updateParam('year', e.target.value)}
-                  className="w-full rounded-lg px-3 py-2 text-sm outline-none"
+                  value={inputYear} onChange={e => handleYearInput(e.target.value)}
+                  className="w-full rounded-lg px-3 py-2 text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
                 />
               </div>
               <div>
-                <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Author</p>
+                <p className="mb-2 text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--text-tertiary)' }}>Penulis</p>
                 <input
-                  type="text" placeholder="Nama author…"
-                  value={author} onChange={e => updateParam('author', e.target.value)}
+                  type="text" placeholder="Nama penulis…"
+                  value={inputAuthor} onChange={e => handleAuthorInput(e.target.value)}
                   className="w-full rounded-lg px-3 py-2 text-sm outline-none"
                   style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
                 />
@@ -295,7 +326,7 @@ export default function SearchContent() {
       <MangaGrid items={results} isLoading={isLoading} skeletonCount={20} />
 
       {/* Pagination */}
-      {!isLoading && total > 20 && (() => {
+      {total > 20 && (() => {
         const totalPages = Math.ceil(total / 20);
         const delta = 2;
         const pages: (number | '...')[] = [];
@@ -307,7 +338,7 @@ export default function SearchContent() {
           }
         }
         return (
-          <div className="mt-8 flex flex-wrap justify-center items-center gap-1.5">
+          <div className={cn("mt-8 flex flex-wrap justify-center items-center gap-1.5", isLoading && "pointer-events-none opacity-50")}>
             <button
               onClick={() => updateParam('page', String(page - 1))}
               disabled={page <= 1}

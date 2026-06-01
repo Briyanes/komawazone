@@ -258,7 +258,7 @@ function UserMenu({
         style={{ color: 'var(--color-error)' }}
       >
         <LogOut size={14} />
-        Sign Out
+        Keluar
       </button>
     </div>
   );

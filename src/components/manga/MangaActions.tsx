@@ -212,7 +212,7 @@ export function MangaActions({ mangaId, mangaSlug, firstChapterId }: MangaAction
         <Link href="/login"
           className={cn(btnBase, 'shrink-0 h-11 px-3 text-sm bg-[var(--bg-secondary)] border border-[var(--border-light)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)]')}>
           <Plus size={16} />
-          <span className="hidden sm:inline">Login</span>
+          <span className="hidden sm:inline">Masuk</span>
         </Link>
       )}
     </div>

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -62,7 +63,10 @@ export async function POST(request: NextRequest) {
 
   const { user_id, duration_days, payment_method, notes } = parsed.data;
 
-  const { data: user, error: userError } = await supabase
+  // Use admin client to bypass RLS — admin needs to read/update other users' rows
+  const adminClient = createAdminClient();
+
+  const { data: user, error: userError } = await adminClient
     .from('users')
     .select('id, vip_expires_at')
     .eq('id', user_id)
@@ -79,7 +83,7 @@ export async function POST(request: NextRequest) {
   const expiresAt = new Date(base);
   expiresAt.setDate(expiresAt.getDate() + duration_days);
 
-  await supabase
+  await adminClient
     .from('users')
     .update({ vip_expires_at: expiresAt.toISOString() })
     .eq('id', user_id);

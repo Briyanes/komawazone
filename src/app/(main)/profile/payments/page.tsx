@@ -1,4 +1,5 @@
-import { Crown, ExternalLink, Download, CheckCircle, Clock, XCircle } from 'lucide-react';
+import { redirect } from 'next/navigation';
+import { Crown, ExternalLink, CheckCircle, Clock, XCircle } from 'lucide-react';
 import { createClient } from '@/lib/supabase/server';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
@@ -18,30 +19,22 @@ const STATUS_CONFIG = {
   pending: {
     icon: Clock,
     label: 'Menunggu Pembayaran',
-    color: 'text-amber-500',
-    bg: 'bg-amber-500/10',
-    border: 'border-amber-500/20',
+    className: 'bg-amber-500/10 text-amber-500 border border-amber-500/20',
   },
   paid: {
     icon: CheckCircle,
     label: 'Pembayaran Berhasil',
-    color: 'text-emerald-500',
-    bg: 'bg-emerald-500/10',
-    border: 'border-emerald-500/20',
+    className: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20',
   },
   failed: {
     icon: XCircle,
     label: 'Pembayaran Gagal',
-    color: 'text-red-500',
-    bg: 'bg-red-500/10',
-    border: 'border-red-500/20',
+    className: 'bg-red-500/10 text-red-500 border border-red-500/20',
   },
   expired: {
     icon: XCircle,
     label: 'Kadaluarsa',
-    color: 'text-gray-500',
-    bg: 'bg-gray-500/10',
-    border: 'border-gray-500/20',
+    className: 'bg-gray-500/10 text-gray-500 border border-gray-500/20',
   },
 };
 
@@ -56,13 +49,7 @@ export default async function PaymentHistoryPage() {
 
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) {
-    return (
-      <div className="mx-auto max-w-4xl px-4 py-12 text-center">
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          Silakan login untuk melihat riwayat pembayaran.
-        </p>
-      </div>
-    );
+    redirect('/login');
   }
 
   // Fetch user payments with subscription details
@@ -142,12 +129,7 @@ export default async function PaymentHistoryPage() {
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <span
-                      className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold"
-                      style={{
-                        background: status.bg,
-                        color: status.color,
-                        border: `1px solid ${status.border}`,
-                      }}
+                      className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ${status.className}`}
                     >
                       <StatusIcon size={12} />
                       {status.label}
@@ -206,9 +188,10 @@ export default async function PaymentHistoryPage() {
               </div>
 
               {/* Actions */}
-              {payment.payment_status === 'paid' && (
+              {payment.payment_status === 'paid' && payment.subscription?.id && (
                 <div className="flex gap-2 pt-2">
-                  <button
+                  <a
+                    href="/profile"
                     className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:scale-105"
                     style={{
                       background: 'var(--bg-tertiary)',
@@ -216,23 +199,9 @@ export default async function PaymentHistoryPage() {
                       border: '1px solid var(--border-light)',
                     }}
                   >
-                    <Download size={14} />
-                    Download Invoice
-                  </button>
-                  {payment.subscription?.id && (
-                    <a
-                      href="/profile"
-                      className="inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold transition-all hover:scale-105"
-                      style={{
-                        background: 'var(--bg-tertiary)',
-                        color: 'var(--text-primary)',
-                        border: '1px solid var(--border-light)',
-                      }}
-                    >
-                      <ExternalLink size={14} />
-                      Lihat Subscription
-                    </a>
-                  )}
+                    <ExternalLink size={14} />
+                    Lihat Subscription
+                  </a>
                 </div>
               )}
             </div>
