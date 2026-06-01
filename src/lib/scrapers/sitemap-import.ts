@@ -140,7 +140,7 @@ export async function processImportChunk(
 
 async function scrapeAndProcessItem(
   url: string,
-  lastModified: string | null,
+  lastModified: Date | null,
   options: ImportChunkOptions,
 ): Promise<'new' | 'updated' | 'skipped'> {
   const supabase = createAdminClient();
@@ -160,7 +160,7 @@ async function scrapeAndProcessItem(
     return result ? 'new' : 'skipped';
   } else {
     if (!options.importUpdates) return 'skipped';
-    if (lastModified && new Date(lastModified) <= new Date(existing.updated_at as string)) {
+    if (lastModified && lastModified <= new Date(existing.updated_at as string)) {
       return 'skipped';
     }
     const result = await updateManga(url, existing.id as string);
