@@ -49,6 +49,9 @@ const nextConfig: NextConfig = {
       // kambingjantan.cc — manhwaland image CDN
       { protocol: 'https', hostname: '**.kambingjantan.cc' },
       { protocol: 'https', hostname: 'kambingjantan.cc' },
+      // uwakjawa.xyz — manga image CDN
+      { protocol: 'https', hostname: '**.uwakjawa.xyz' },
+      { protocol: 'https', hostname: 'uwakjawa.xyz' },
       // Common manga image CDNs
       { protocol: 'https', hostname: 'i.imgur.com' },
       { protocol: 'https', hostname: 'cdn.discordapp.com' },
