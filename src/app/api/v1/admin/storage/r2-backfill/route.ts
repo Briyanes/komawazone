@@ -144,30 +144,31 @@ async function runBackfill(jobId: string | null, type: string, limitOverride: nu
       totalItems += toMigrate.length;
       if (jobId) await supabase.from('import_jobs').update({ total_items: totalItems }).eq('id', jobId);
 
-      console.log(`[R2Backfill] Covers to migrate: ${toMigrate.length}`);
-
+      let coversSucceeded = 0;
       for (const row of toMigrate) {
         const sourceUrl = row.cover_url as string;
         try {
-          const referer = (() => { try { return new URL(sourceUrl).origin + '/'; } catch { return undefined; } })();
-          const r2Url = await mirrorImageToR2(sourceUrl, 'covers', referer);
+          const r2Url = await mirrorImageToR2(sourceUrl, 'covers');
 
           if (r2Url) {
             await supabase.from('manga').update({ cover_url: r2Url }).eq('id', row.id);
+            coversSucceeded++;
           }
           coversProcessed++;
         } catch {
-          // skip individual failures
+          coversProcessed++;
         }
 
         if (jobId && coversProcessed % 10 === 0) {
           await supabase.from('import_jobs')
-            .update({ processed_items: coversProcessed + chaptersProcessed, updated_manga: coversProcessed })
+            .update({ processed_items: coversProcessed + chaptersProcessed, updated_manga: coversSucceeded })
             .eq('id', jobId);
         }
 
         await new Promise(r => setTimeout(r, 300 + Math.random() * 200));
       }
+
+      console.log(`[R2Backfill] Done: ${coversSucceeded}/${coversProcessed} covers uploaded to R2`);
     }
 
     // ── 2. Backfill chapter images ────────────────────────────────────────

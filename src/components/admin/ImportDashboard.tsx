@@ -256,6 +256,9 @@ export function ImportDashboard() {
             <Cloud size={10} className="inline mr-1" />
             Migrasi gambar lama ke Cloudflare R2 (hanya yang belum di-upload)
           </p>
+          <p className="mb-2 text-[11px] rounded px-2 py-1" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
+            ⚠️ Catatan: ~1830 cover dari CDN gmbr.pro tidak bisa dimigrasikan secara otomatis (CDN mereka memblokir download server-side). Gambar masih tampil di browser seperti biasa. Migrasi hanya berhasil untuk cover dari CDN lain (uwakjawa.xyz, ibb.co, dll).
+          </p>
           <div className="flex flex-wrap gap-2">
             <ActionButton
               icon={<Cloud size={14} />}

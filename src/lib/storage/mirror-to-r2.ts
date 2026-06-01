@@ -48,7 +48,6 @@ export async function mirrorImageToR2(
 
     return url;
   } catch {
-    // R2 not configured, network error, or upload failure — graceful degradation
     return null;
   }
 }
