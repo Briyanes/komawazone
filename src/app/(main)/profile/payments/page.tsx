@@ -4,14 +4,14 @@ import { createClient } from '@/lib/supabase/server';
 import { format } from 'date-fns';
 import { id } from 'date-fns/locale';
 import type { Metadata } from 'next';
-import type { Database } from '@/lib/database.types';
+import type { Database } from '@/types/database';
 
 export const metadata: Metadata = { title: 'Riwayat Pembayaran — OLLUQ' };
 
 type Payment = Database['public']['Tables']['payments']['Row'] & {
   subscription: {
     id: string;
-    plan_duration: number;
+    plan: string;
   } | null;
 };
 
@@ -38,10 +38,11 @@ const STATUS_CONFIG = {
   },
 };
 
-const PLAN_LABELS = {
-  1: '1 Bulan',
-  3: '3 Bulan',
-  6: '6 Bulan',
+const PLAN_LABELS: Record<string, string> = {
+  '1-month': '1 Bulan',
+  '3-month': '3 Bulan',
+  '6-month': '6 Bulan',
+  'vip': 'VIP',
 };
 
 export default async function PaymentHistoryPage() {
@@ -59,7 +60,7 @@ export default async function PaymentHistoryPage() {
       *,
       subscription (
         id,
-        plan_duration
+        plan
       )
     `)
     .eq('user_id', user.id)
@@ -115,8 +116,9 @@ export default async function PaymentHistoryPage() {
         {payments.map((payment: Payment) => {
           const status = STATUS_CONFIG[payment.payment_status as keyof typeof STATUS_CONFIG] || STATUS_CONFIG.pending;
           const StatusIcon = status.icon;
-          const planDuration = payment.subscription?.plan_duration;
-          const planLabel = planDuration ? PLAN_LABELS[planDuration as keyof typeof PLAN_LABELS] : 'Custom';
+          const planLabel = payment.subscription?.plan
+            ? (PLAN_LABELS[payment.subscription.plan] ?? payment.subscription.plan)
+            : 'Custom';
 
           return (
             <div

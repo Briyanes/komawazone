@@ -15,8 +15,7 @@ interface ImportJob {
   new_manga: number;
   updated_manga: number;
   skipped_items: number;
-  errors: Array<{ url?: string; error: string }> | null;
-  error_message: string | null;
+  errors: Array<{ url?: string; error: string; message?: string }> | null;
   started_at: string;
   completed_at: string | null;
   created_by: string | null;

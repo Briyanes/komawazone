@@ -1,7 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
-const ALLOWED_HOSTS = ['jablay.gmbr.pro', 'api-l.gmbr.pro'];
+const ALLOWED_HOSTS = [
+  'img-uwak.gmbr.pro',
+  'api-l.gmbr.pro',
+  'jablay.gmbr.pro',
+  'manhwaland.land',
+];
+
+function isHostAllowed(hostname: string): boolean {
+  return ALLOWED_HOSTS.some(host =>
+    hostname === host || hostname.endsWith('.' + host.replace(/^\*\./, ''))
+  ) || hostname.endsWith('.gmbr.pro') || hostname.endsWith('.manhwaland.land');
+}
 
 export async function GET(request: NextRequest) {
   // Must be admin
@@ -21,7 +32,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
   }
 
-  if (!ALLOWED_HOSTS.includes(parsed.hostname)) {
+  if (!isHostAllowed(parsed.hostname)) {
     return NextResponse.json({ error: 'Host not allowed' }, { status: 400 });
   }
 

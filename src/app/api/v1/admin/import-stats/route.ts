@@ -58,7 +58,7 @@ export async function GET() {
     for (const job of recentJobs ?? []) {
       if (zombieJobs.some(z => z.id === job.id)) {
         (job as Record<string, unknown>).status = 'failed';
-        (job as Record<string, unknown>).error_message = 'Timed out (auto-cancelled after 15 min)';
+        (job as Record<string, unknown>).errors = [{ error: 'Timed out (auto-cancelled after 15 min)' }];
       }
     }
   }
