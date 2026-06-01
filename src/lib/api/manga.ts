@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import type { MangaFilters } from '@/types';
@@ -62,13 +63,13 @@ export type MangaWithChapters = {
 
 const ITEMS_PER_PAGE = 20;
 
-type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 /**
- * Returns true if the current request's user may see mature (18+) content.
- * Admins always can; VIP users can; guests and non-VIP users cannot.
+ * Cached per-request: resolve VIP/admin status only ONCE per render tree,
+ * no matter how many manga list functions call it on the same page.
  */
-async function isMatureAllowed(supabase: SupabaseServerClient): Promise<boolean> {
+const getMaturePermission = cache(async (): Promise<boolean> => {
+  const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return false;
   const { data } = await supabase
@@ -80,11 +81,11 @@ async function isMatureAllowed(supabase: SupabaseServerClient): Promise<boolean>
   if (row?.role === 'ADMIN') return true;
   const exp = row?.vip_expires_at;
   return !!exp && new Date(exp) > new Date();
-}
+});
 
 export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
+  const canSeeMature = await getMaturePermission();
   let q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, banner_url, status, rating, views, description, genres, content_rating')
@@ -100,7 +101,7 @@ export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
 
 export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
+  const canSeeMature = await getMaturePermission();
   let q = supabase
     .from('manga')
     .select(`
@@ -118,7 +119,7 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
 
 export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
+  const canSeeMature = await getMaturePermission();
   let q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating')
@@ -133,7 +134,7 @@ export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
 
 export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
+  const canSeeMature = await getMaturePermission();
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
   let q = supabase
     .from('manga')
@@ -153,7 +154,7 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
 
 export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
+  const canSeeMature = await getMaturePermission();
   let q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
@@ -168,7 +169,7 @@ export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
 
 export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
+  const canSeeMature = await getMaturePermission();
   let q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
@@ -184,7 +185,7 @@ export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
 
 export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
+  const canSeeMature = await getMaturePermission();
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   let q = supabase
     .from('manga')
@@ -201,7 +202,7 @@ export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
 
 export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null, limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
+  const canSeeMature = await getMaturePermission();
   let query = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, type, rating, views, content_rating, chapters(id, number, title, release_date)`)
