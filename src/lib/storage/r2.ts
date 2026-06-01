@@ -64,8 +64,11 @@ function sanitizeFolder(folder: string): string {
 }
 
 function inferExtension(fileName: string, contentType: string): string {
-  const fromName = fileName.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '');
-  if (fromName) return fromName;
+  if (fileName.includes('.')) {
+    const ext = fileName.split('.').pop()?.toLowerCase().replace(/[^a-z0-9]/g, '');
+    // Only use if it looks like a real extension (1–5 chars)
+    if (ext && ext.length >= 1 && ext.length <= 5) return ext;
+  }
   return MIME_EXTENSIONS[contentType] ?? 'bin';
 }
 
