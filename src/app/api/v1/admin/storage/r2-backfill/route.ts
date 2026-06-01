@@ -16,6 +16,42 @@ function isR2Url(url: string): boolean {
   return false;
 }
 
+
+/**
+ * GET /api/v1/admin/storage/r2-backfill
+ * Returns counts of non-R2 covers and chapter images remaining.
+ */
+export async function GET(req: NextRequest) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
+  if (profile?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+
+  const r2Base = process.env.R2_PUBLIC_BASE_URL?.replace(/\/$/, '') ?? '';
+  const r2Pattern = r2Base ? r2Base.replace('https://', '') : 'r2.dev';
+
+  const [{ count: coversTotal }, { count: coversNonR2 }, { count: chaptersNonR2 }] = await Promise.all([
+    supabase.from('manga').select('id', { count: 'exact', head: true }).not('cover_url', 'is', null).is('deleted_at', null),
+    supabase.from('manga').select('id', { count: 'exact', head: true })
+      .not('cover_url', 'is', null).is('deleted_at', null)
+      .not('cover_url', 'ilike', '%r2.cloudflarestorage.com%')
+      .not('cover_url', 'ilike', `%${r2Pattern}%`),
+    supabase.from('chapter_images').select('id', { count: 'exact', head: true })
+      .not('image_url', 'is', null)
+      .not('image_url', 'ilike', '%r2.cloudflarestorage.com%')
+      .not('image_url', 'ilike', `%${r2Pattern}%`),
+  ]);
+
+  return NextResponse.json({
+    status: 'success',
+    data: {
+      covers: { total: coversTotal ?? 0, nonR2: coversNonR2 ?? 0, migrated: (coversTotal ?? 0) - (coversNonR2 ?? 0) },
+      chapters: { nonR2: chaptersNonR2 ?? 0 },
+    },
+  });
+}
+
 /**
  * POST /api/v1/admin/storage/r2-backfill
  * Migrate existing covers/chapter images that are still on source CDN to R2.
@@ -89,16 +125,21 @@ async function runBackfill(jobId: string | null, type: string, limitOverride: nu
     if (type === 'covers' || type === 'all') {
       const coverLimit = limitOverride ?? 200;
 
+      // Filter non-R2 URLs directly at DB level so we never re-scan already-migrated rows.
+      // A cover is considered "in R2" if it contains "r2.cloudflarestorage.com" or
+      // the configured public base URL.
+      const r2Base = process.env.R2_PUBLIC_BASE_URL?.replace(/\/$/, '') ?? '';
       const { data: mangaRows } = await supabase
         .from('manga')
         .select('id, cover_url')
         .not('cover_url', 'is', null)
         .is('deleted_at', null)
-        .limit(coverLimit * 3); // fetch more to filter client-side
+        .not('cover_url', 'ilike', '%r2.cloudflarestorage.com%')
+        .not('cover_url', 'ilike', `%${r2Base ? r2Base.replace('https://', '') : 'r2.dev'}%`)
+        .order('id')
+        .limit(coverLimit);
 
-      const toMigrate = (mangaRows ?? []).filter(
-        m => m.cover_url && !isR2Url(m.cover_url as string)
-      ).slice(0, coverLimit);
+      const toMigrate = mangaRows ?? [];
 
       totalItems += toMigrate.length;
       if (jobId) await supabase.from('import_jobs').update({ total_items: totalItems }).eq('id', jobId);
@@ -133,14 +174,17 @@ async function runBackfill(jobId: string | null, type: string, limitOverride: nu
     if (type === 'chapters' || type === 'all') {
       const chapterLimit = limitOverride ?? 500;
 
+      const r2Base = process.env.R2_PUBLIC_BASE_URL?.replace(/\/$/, '') ?? '';
       const { data: imageRows } = await supabase
         .from('chapter_images')
         .select('id, image_url, chapter_id')
-        .limit(chapterLimit * 3);
+        .not('image_url', 'is', null)
+        .not('image_url', 'ilike', '%r2.cloudflarestorage.com%')
+        .not('image_url', 'ilike', `%${r2Base ? r2Base.replace('https://', '') : 'r2.dev'}%`)
+        .order('id')
+        .limit(chapterLimit);
 
-      const toMigrate = (imageRows ?? []).filter(
-        r => r.image_url && !isR2Url(r.image_url as string)
-      ).slice(0, chapterLimit);
+      const toMigrate = imageRows ?? [];
 
       totalItems += toMigrate.length;
       if (jobId) await supabase.from('import_jobs').update({ total_items: totalItems }).eq('id', jobId);
