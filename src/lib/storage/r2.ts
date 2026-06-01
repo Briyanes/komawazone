@@ -155,11 +155,12 @@ export function isR2Url(url: string): boolean {
 export async function downloadAndUploadToR2(
   imageUrl: string,
   folder: 'covers' | 'banners' | 'pages' | 'thumbnails',
-  fileNameHint?: string
+  fileNameHint?: string,
+  downloadOptions?: { maxRetries?: number; timeout?: number }
 ): Promise<{ key: string | null; url: string }> {
   try {
     const { downloadImageWithRetry } = await import('./image-downloader');
-    const { buffer, contentType } = await downloadImageWithRetry(imageUrl);
+    const { buffer, contentType } = await downloadImageWithRetry(imageUrl, downloadOptions);
 
     const { key, url } = await uploadBufferToR2({
       buffer,

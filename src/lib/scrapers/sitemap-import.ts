@@ -11,7 +11,7 @@ import { parseAllSitemaps, type SitemapManga } from '@/lib/scrapers/sitemap-pars
 import { downloadAndUploadToR2, isR2Url } from '@/lib/storage/r2';
 
 /** Jumlah manga per chunk — aman untuk batas 5 menit Vercel */
-export const IMPORT_CHUNK_SIZE = 20;
+export const IMPORT_CHUNK_SIZE = 10;
 
 export interface ImportChunkOptions {
   importNew: boolean;
@@ -207,7 +207,7 @@ async function createManga(url: string, options: ImportChunkOptions): Promise<bo
 
     let finalCoverUrl = scraped.cover_url;
     if (scraped.cover_url && !isR2Url(scraped.cover_url)) {
-      const r2 = await downloadAndUploadToR2(scraped.cover_url, 'covers', scraped.title);
+      const r2 = await downloadAndUploadToR2(scraped.cover_url, 'covers', scraped.title, { maxRetries: 1, timeout: 12_000 });
       if (r2.key) finalCoverUrl = r2.url;
     }
 
@@ -248,7 +248,7 @@ async function updateManga(url: string, mangaId: string): Promise<boolean> {
 
     let finalCoverUrl = scraped.cover_url;
     if (scraped.cover_url && !isR2Url(scraped.cover_url)) {
-      const r2 = await downloadAndUploadToR2(scraped.cover_url, 'covers', scraped.title);
+      const r2 = await downloadAndUploadToR2(scraped.cover_url, 'covers', scraped.title, { maxRetries: 1, timeout: 12_000 });
       if (r2.key) finalCoverUrl = r2.url;
     }
 
