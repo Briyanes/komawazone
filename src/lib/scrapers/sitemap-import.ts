@@ -146,10 +146,10 @@ async function scrapeAndProcessItem(
   const supabase = createAdminClient();
   const slug = extractSlugFromUrl(url);
 
-  // Cek apakah manga sudah ada
+  // Cek apakah manga sudah ada (match by slug atau source_url)
   const { data: existing } = await supabase
     .from('manga')
-    .select('id, updated_at')
+    .select('id, updated_at, cover_url')
     .or(`slug.eq.${slug},source_url.eq.${url}`)
     .is('deleted_at', null)
     .maybeSingle();
@@ -160,9 +160,13 @@ async function scrapeAndProcessItem(
     return result ? 'new' : 'skipped';
   } else {
     if (!options.importUpdates) return 'skipped';
-    if (lastModified && lastModified <= new Date(existing.updated_at as string)) {
+
+    // Paksa update jika cover null atau bukan R2 URL (cover mati / belum di-upload)
+    const coverNeedsfix = !existing.cover_url || !isR2Url(existing.cover_url as string);
+    if (!coverNeedsfix && lastModified && lastModified <= new Date(existing.updated_at as string)) {
       return 'skipped';
     }
+
     const result = await updateManga(url, existing.id as string);
     return result ? 'updated' : 'skipped';
   }
