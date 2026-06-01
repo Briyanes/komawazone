@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseChapterListFromHtml, scrapeChapterImages } from '@/lib/scrapers/manga-scraper';
 import { SCRAPER_HEADERS, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
+import { mirrorImagesToR2 } from '@/lib/storage/mirror-to-r2';
 
 export const maxDuration = 300;
 
@@ -231,6 +232,10 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           continue;
         }
 
+        // Mirror images to R2 (5 concurrent); falls back to source URLs on failure
+        const referer = (() => { try { return new URL(chapter.url).origin + '/'; } catch { return undefined; } })();
+        const r2Images = await mirrorImagesToR2(images, 'chapters', referer, 5);
+
         const { data: chapterRecord, error: chapterErr } = await supabase
           .from('chapters')
           .insert({
@@ -238,7 +243,7 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
             number: chapter.number,
             title: chapter.title || `Chapter ${chapter.number}`,
             ...(chapter.releasedAt ? { release_date: chapter.releasedAt } : {}),
-            thumbnail_url: images[0] ?? null,
+            thumbnail_url: r2Images[0] ?? null,
           })
           .select('id')
           .single();
@@ -250,7 +255,7 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         }
 
         await supabase.from('chapter_images').insert(
-          images.map((url, i) => ({ chapter_id: chapterRecord.id, image_url: url, number: i + 1 }))
+          r2Images.map((url, i) => ({ chapter_id: chapterRecord.id, image_url: url, number: i + 1 }))
         );
 
         imported++;
@@ -275,13 +280,17 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           continue;
         }
 
+        // Mirror images to R2 (5 concurrent); falls back to source URLs on failure
+        const referer = (() => { try { return new URL(ch.url).origin + '/'; } catch { return undefined; } })();
+        const r2Images = await mirrorImagesToR2(images, 'chapters', referer, 5);
+
         await supabase.from('chapter_images').insert(
-          images.map((url, i) => ({ chapter_id: ch.id, image_url: url, number: i + 1 }))
+          r2Images.map((url, i) => ({ chapter_id: ch.id, image_url: url, number: i + 1 }))
         );
 
         // Update thumbnail_url on chapter record if not set
         await supabase.from('chapters')
-          .update({ thumbnail_url: images[0] })
+          .update({ thumbnail_url: r2Images[0] })
           .eq('id', ch.id)
           .is('thumbnail_url', null);
 

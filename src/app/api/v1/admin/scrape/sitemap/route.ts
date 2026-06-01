@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseAllSitemaps } from '@/lib/scrapers/sitemap-parser';
 import { detectMangaSource } from '@/lib/scrapers/detector';
+import { mirrorImageToR2 } from '@/lib/storage/mirror-to-r2';
 
 // Allow up to 300s on Vercel Pro; background work runs via after()
 export const maxDuration = 300;
@@ -328,6 +329,12 @@ async function scrapeAndCreateManga(url: string, userId: string, sourceId: strin
     // Generate slug from URL if not provided
     const slug = extractSlugFromUrl(url);
 
+    // Mirror cover image to R2; fall back to source URL if R2 unavailable
+    const referer = (() => { try { return new URL(url).origin + '/'; } catch { return undefined; } })();
+    const coverUrl = scraped.cover_url
+      ? (await mirrorImageToR2(scraped.cover_url, 'covers', referer)) ?? scraped.cover_url
+      : scraped.cover_url;
+
     // Create manga in database — ON CONFLICT DO NOTHING prevents duplicate errors
     const { data: manga, error: upsertErr } = await supabase
       .from('manga')
@@ -336,7 +343,7 @@ async function scrapeAndCreateManga(url: string, userId: string, sourceId: strin
           slug,
           title: scraped.title,
           description: scraped.description,
-          cover_url: scraped.cover_url,
+          cover_url: coverUrl,
           type: (scraped.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
           status: (scraped.status || 'ONGOING') as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED',
           author: scraped.author,
@@ -377,12 +384,18 @@ async function scrapeAndUpdateManga(url: string, mangaId: string): Promise<{ ski
       throw new Error('Invalid scrape response');
     }
 
+    // Mirror cover image to R2; fall back to source URL if R2 unavailable
+    const referer = (() => { try { return new URL(url).origin + '/'; } catch { return undefined; } })();
+    const coverUrl = scraped.cover_url
+      ? (await mirrorImageToR2(scraped.cover_url, 'covers', referer)) ?? scraped.cover_url
+      : scraped.cover_url;
+
     // Update manga
     const { data: manga } = await supabase
       .from('manga')
       .update({
         description: scraped.description,
-        cover_url: scraped.cover_url,
+        cover_url: coverUrl,
         status: scraped.status,
         genres: scraped.genres,
         source_url: url,
