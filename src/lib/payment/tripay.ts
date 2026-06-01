@@ -4,6 +4,8 @@
  * Docs: https://tripay.co.id/developer
  */
 
+import { createHmac } from 'crypto';
+
 interface TripayConfig {
   mode: 'production' | 'sandbox';
   apiKey: string;
@@ -12,14 +14,17 @@ interface TripayConfig {
   baseUrl: string;
 }
 
+const isSandbox = process.env.TRIPAY_MODE !== 'production';
+
 const config: TripayConfig = {
-  mode: process.env.NODE_ENV === 'production' ? 'production' : 'sandbox',
+  mode: isSandbox ? 'sandbox' : 'production',
   apiKey: process.env.TRIPAY_API_KEY || '',
   privateKey: process.env.TRIPAY_PRIVATE_KEY || '',
   merchantCode: process.env.TRIPAY_MERCHANT_CODE || '',
-  baseUrl: process.env.TRIPAY_MODE === 'production'
-    ? 'https://tripay.co.id'
-    : 'https://tripay.co.id',
+  // Sandbox uses /api-sandbox/, production uses /api/
+  baseUrl: isSandbox
+    ? 'https://tripay.co.id/api-sandbox'
+    : 'https://tripay.co.id/api',
 };
 
 interface TransactionRequest {
@@ -30,28 +35,14 @@ interface TransactionRequest {
   userName?: string;
 }
 
-interface Transaction {
-  order_id: string;
-  amount: number;
-  user_id: string;
-  plan: string;
-  created_at: string;
-}
-
 /**
- * Create signature for Tripay API requests
- * Signature format: md5(apiKey + privatekey + orderId + amount)
+ * Create HMAC-SHA256 signature for Tripay API transaction requests.
+ * Format: HMAC-SHA256(merchantCode + merchantRef + amount, privateKey)
  */
-function createSignature(orderId: string, amount: number): string {
-  const data = config.apiKey + config.privateKey + orderId + amount;
-  // Simple hash implementation (consider using crypto module in production)
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    const char = data.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash; // Convert to 32bit integer
-  }
-  return Math.abs(hash).toString(16);
+function createSignature(merchantRef: string, amount: number): string {
+  return createHmac('sha256', config.privateKey)
+    .update(config.merchantCode + merchantRef + amount)
+    .digest('hex');
 }
 
 /**
@@ -61,6 +52,7 @@ export async function createQRISPayment(params: TransactionRequest): Promise<{
   success: boolean;
   data?: {
     orderId: string;
+    tripayReference: string;
     paymentUrl: string;
     qrString: string;
     expiresAt: string;
@@ -68,22 +60,10 @@ export async function createQRISPayment(params: TransactionRequest): Promise<{
   error?: string;
 }> {
   try {
-    // Generate order ID
     const orderId = `OLLUQ-VIP-${params.userId}-${Date.now()}`;
-
-    // Calculate expiry (24 hours from now)
     const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    const expiredTime = Math.floor(Date.now() / 1000) + 86400;
 
-    // Prepare transaction data for Tripay
-    const transaction: Transaction = {
-      order_id: orderId,
-      amount: params.amount,
-      user_id: params.userId,
-      plan: params.plan,
-      created_at: new Date().toISOString(),
-    };
-
-    // Create Tripay transaction request
     const tripayPayload = {
       method: 'QRIS',
       merchant_ref: orderId,
@@ -99,11 +79,10 @@ export async function createQRISPayment(params: TransactionRequest): Promise<{
         },
       ],
       signature: createSignature(orderId, params.amount),
-      expiry_time: Math.floor(Date.now() / 1000) + 86400, // 24 hours in seconds
+      expired_time: expiredTime,
     };
 
-    // Call Tripay API (using fetch instead of axios for lighter weight)
-    const response = await fetch(`${config.baseUrl}/api/v2/transaction/create`, {
+    const response = await fetch(`${config.baseUrl}/transaction/create`, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${config.apiKey}`,
@@ -115,30 +94,37 @@ export async function createQRISPayment(params: TransactionRequest): Promise<{
     if (!response.ok) {
       const errorText = await response.text();
       console.error('Tripay API error:', errorText);
-      return {
-        success: false,
-        error: 'Failed to create payment transaction',
-      };
+      return { success: false, error: 'Failed to create payment transaction' };
     }
 
-    const tripayResponse = await response.json();
+    const tripayResponse = await response.json() as {
+      success: boolean;
+      message?: string;
+      data?: {
+        reference: string;
+        checkout_url?: string;
+        payment_url?: string;
+        qr_string?: string;
+        qr_url?: string;
+      };
+    };
 
-    if (tripayResponse.status === false) {
+    if (!tripayResponse.success) {
       return {
         success: false,
         error: tripayResponse.message || 'Payment creation failed',
       };
     }
 
-    // Extract payment URL and QR string from Tripay response
-    const paymentData = tripayResponse.data;
+    const paymentData = tripayResponse.data!;
 
     return {
       success: true,
       data: {
         orderId,
-        paymentUrl: paymentData.payment_url || paymentData.checkout_url,
-        qrString: paymentData.qr_string || paymentData.qr_string,
+        tripayReference: paymentData.reference,
+        paymentUrl: paymentData.checkout_url || paymentData.payment_url || '',
+        qrString: paymentData.qr_string || paymentData.qr_url || '',
         expiresAt,
       },
     };
@@ -152,9 +138,9 @@ export async function createQRISPayment(params: TransactionRequest): Promise<{
 }
 
 /**
- * Get payment status from Tripay
+ * Get payment status from Tripay using Tripay's transaction reference
  */
-export async function getPaymentStatus(orderId: string): Promise<{
+export async function getPaymentStatus(tripayReference: string): Promise<{
   success: boolean;
   data?: {
     status: string;
@@ -164,37 +150,48 @@ export async function getPaymentStatus(orderId: string): Promise<{
   error?: string;
 }> {
   try {
-    const response = await fetch(`${config.baseUrl}/api/v2/transaction/detail?order_id=${orderId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': `Bearer ${config.apiKey}`,
-      },
-    });
+    const response = await fetch(
+      `${config.baseUrl}/transaction/detail?reference=${encodeURIComponent(tripayReference)}`,
+      {
+        method: 'GET',
+        headers: { 'Authorization': `Bearer ${config.apiKey}` },
+      }
+    );
 
     if (!response.ok) {
-      return {
-        success: false,
-        error: 'Failed to get payment status',
-      };
+      return { success: false, error: 'Failed to get payment status' };
     }
 
-    const tripayResponse = await response.json();
+    const tripayResponse = await response.json() as {
+      success: boolean;
+      message?: string;
+      data?: {
+        status: string;
+        payment_method?: string;
+        paid_at?: number | string | null;
+      };
+    };
 
-    if (tripayResponse.status === false) {
+    if (!tripayResponse.success) {
       return {
         success: false,
         error: tripayResponse.message || 'Failed to get status',
       };
     }
 
-    const transaction = tripayResponse.data;
+    const transaction = tripayResponse.data!;
+    const paidAt = transaction.paid_at
+      ? typeof transaction.paid_at === 'number'
+        ? new Date(transaction.paid_at * 1000).toISOString()
+        : String(transaction.paid_at)
+      : undefined;
 
     return {
       success: true,
       data: {
-        status: transaction.status, // paid, unpaid, expired
-        paymentChannel: transaction.payment_channel,
-        paidAt: transaction.paid_at,
+        status: transaction.status,
+        paymentChannel: transaction.payment_method,
+        paidAt,
       },
     };
   } catch (error) {
@@ -207,29 +204,15 @@ export async function getPaymentStatus(orderId: string): Promise<{
 }
 
 /**
- * Verify Tripay webhook signature
- * Signature format: md5(orderId + statusCode + grossAmount + signatureKey)
+ * Verify Tripay webhook callback signature.
+ * Tripay sends the signature in the X-Callback-Signature HTTP header.
+ * Verification: HMAC-SHA256(rawBody, privateKey) must match the header value.
  */
-export function verifyWebhookSignature(
-  orderId: string,
-  statusCode: string,
-  grossAmount: string,
-  signature: string
-): boolean {
-  const data = orderId + statusCode + grossAmount + config.privateKey;
-
-  // Simple hash implementation (match signature creation)
-  let hash = 0;
-  for (let i = 0; i < data.length; i++) {
-    const char = data.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash = hash & hash;
-  }
-
-  const calculatedSignature = Math.abs(hash).toString(16);
-
-  // Safe comparison to prevent timing attacks
-  return calculatedSignature.toLowerCase() === signature.toLowerCase();
+export function verifyWebhookSignature(rawBody: string, signature: string): boolean {
+  const calculated = createHmac('sha256', config.privateKey)
+    .update(rawBody)
+    .digest('hex');
+  return calculated.toLowerCase() === signature.toLowerCase();
 }
 
 /**

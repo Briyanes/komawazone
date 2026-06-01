@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch first active source as fallback base_url
     const { data: firstSource } = await supabase
-      .from('sources')
+      .from('manga_sources')
       .select('base_url')
       .eq('is_active', true)
       .order('created_at', { ascending: true })

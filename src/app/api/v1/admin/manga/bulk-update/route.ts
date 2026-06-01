@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     .from('manga')
     .update(updates)
     .in('id', ids)
-    .select('id', { count: 'exact', head: true });
+    .select('id');
 
   if (error) {
     return NextResponse.json(

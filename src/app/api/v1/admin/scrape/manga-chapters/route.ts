@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
   let sourceUrl = manga.source_url;
   if (!sourceUrl) {
     const { data: firstSource } = await supabase
-      .from('sources')
+      .from('manga_sources')
       .select('base_url')
       .eq('is_active', true)
       .order('created_at', { ascending: true })

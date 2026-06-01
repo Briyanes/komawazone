@@ -50,7 +50,7 @@ export async function GET() {
       zombieJobs.map(j =>
         supabase
           .from('import_jobs')
-          .update({ status: 'failed', error_message: 'Timed out (auto-cancelled after 15 min)', completed_at: new Date().toISOString() })
+          .update({ status: 'failed', errors: [{ message: 'Timed out (auto-cancelled after 15 min)' }], completed_at: new Date().toISOString() })
           .eq('id', j.id)
       )
     );

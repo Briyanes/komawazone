@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
 
     // Fetch sitemap URLs from sources table
     const { data: sourcesData, error: sourcesError } = await supabase
-      .from('sources')
+      .from('manga_sources')
       .select('name, type, sitemap_urls')
       .eq('is_active', true);
 

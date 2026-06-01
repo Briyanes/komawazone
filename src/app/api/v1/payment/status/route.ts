@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getPaymentStatus } from '@/lib/payment/tripay';
+import { getPaymentStatus, calculateVIPExpiry } from '@/lib/payment/tripay';
 
 /**
  * GET /api/v1/payment/status
@@ -81,8 +81,15 @@ export async function GET(req: NextRequest) {
       const tripayStatus = await getPaymentStatus(tripayOrderId);
 
       if (tripayStatus.success && tripayStatus.data) {
-        // Update payment status if changed
-        if (tripayStatus.data.status === 'paid' && paymentData.payment_status === 'pending') {
+        const normalizedStatus = tripayStatus.data.status.toUpperCase();
+
+        // Payment is PAID on Tripay but webhook hasn't fired yet — activate VIP now
+        if (normalizedStatus === 'PAID' && paymentData.payment_status === 'pending') {
+          const metadata = paymentData.metadata as { plan?: string } | null;
+          const plan = metadata?.plan || '1-month';
+          const expiresAt = calculateVIPExpiry(plan);
+
+          // Update payment record
           const { data: updatedPayment } = await supabase
             .from('payments')
             .update({
@@ -96,6 +103,32 @@ export async function GET(req: NextRequest) {
             .single();
 
           if (updatedPayment) {
+            // Create subscription if it doesn't exist yet
+            const { data: existingSub } = await supabase
+              .from('subscriptions')
+              .select('id')
+              .eq('payment_id', paymentData.id)
+              .maybeSingle();
+
+            if (!existingSub) {
+              await supabase.from('subscriptions').insert({
+                user_id: paymentData.user_id,
+                plan: 'vip',
+                amount: paymentData.amount,
+                started_at: new Date().toISOString(),
+                expires_at: expiresAt.toISOString(),
+                status: 'active',
+                payment_method: tripayStatus.data.paymentChannel,
+                payment_id: paymentData.id,
+              });
+            }
+
+            // Update user VIP status
+            await supabase
+              .from('users')
+              .update({ vip_expires_at: expiresAt.toISOString() })
+              .eq('id', paymentData.user_id);
+
             paymentData = updatedPayment;
           }
         }
@@ -103,7 +136,10 @@ export async function GET(req: NextRequest) {
         return NextResponse.json({
           status: 'success',
           data: {
-            payment_status: tripayStatus.data.status,
+            payment_status: normalizedStatus === 'PAID' ? 'paid'
+              : normalizedStatus === 'FAILED' ? 'failed'
+              : normalizedStatus === 'EXPIRED' ? 'expired'
+              : tripayStatus.data.status.toLowerCase(),
             payment_channel: tripayStatus.data.paymentChannel,
             paid_at: tripayStatus.data.paidAt,
             subscription_id: paymentData?.subscription_id,

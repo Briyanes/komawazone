@@ -66,18 +66,19 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Save payment to database
+    // Save payment to database — store Tripay's reference (not our merchant_ref)
+    // so webhook lookups match correctly
     const { data: paymentData, error: dbError } = await supabase
       .from('payments')
       .insert({
         user_id: user.id,
         amount,
         payment_method: 'qris',
-        tripay_transaction_id: payment.data.orderId,
+        tripay_transaction_id: payment.data.tripayReference,
         tripay_payment_url: payment.data.paymentUrl,
         tripay_qr_string: payment.data.qrString,
         expired_at: payment.data.expiresAt,
-        metadata: { plan: planCode },
+        metadata: { plan: planCode, merchant_ref: payment.data.orderId },
       })
       .select()
       .single();

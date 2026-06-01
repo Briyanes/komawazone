@@ -511,9 +511,16 @@ export interface Database {
           target_desktop?: boolean;
         };
         Update: {
+          name?: string;
           is_active?: boolean;
           html_content?: string | null;
+          image_url?: string | null;
+          link_url?: string | null;
           priority?: number;
+          start_date?: string | null;
+          end_date?: string | null;
+          target_mobile?: boolean;
+          target_desktop?: boolean;
         };
         Relationships: [];
       };
@@ -651,6 +658,7 @@ export interface Database {
         };
         Update: {
           name?: string;
+          base_url?: string;
           sitemap_urls?: string[];
           is_active?: boolean;
           type?: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';

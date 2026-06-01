@@ -227,12 +227,11 @@ async function processSitemapImport(
       return existing && (!existing.source_url);
     });
     if (needsBackfill.length > 0) {
-      console.log(`[Job ${jobId}] Backfilling source_url/source_id for ${needsBackfill.length} existing manga...`);
+      console.log(`[Job ${jobId}] Backfilling source_url for ${needsBackfill.length} existing manga...`);
       const backfillUpdates = needsBackfill.map(m => {
         const existing = existingMap.get(m.slug) ?? existingMap.get(m.url);
         return supabase.from('manga').update({
           source_url: m.url,
-          ...(options.sourceId ? { source_id: options.sourceId } : {}),
         }).eq('id', existing!.id);
       });
       // Run in batches of 20 (no scraping, just DB update)
@@ -344,7 +343,6 @@ async function scrapeAndCreateManga(url: string, userId: string, sourceId: strin
           artist: scraped.artist,
           genres: scraped.genres || [],
           source_url: url,
-          source_id: sourceId ?? null,
           uploaded_by: userId,
         },
         { onConflict: 'slug', ignoreDuplicates: true }
