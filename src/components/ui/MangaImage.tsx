@@ -4,37 +4,35 @@
  * MangaImage — Smart image component that handles external manga images with fallback
  *
  * Strategy:
- * 1. For external manga CDN images → use regular <img> tag with onError fallback
- * 2. For local/Supabase images → use Next.js Image (with optimization)
- * 3. If external image fails → show placeholder emoji
- *
- * External CDNs have aggressive hotlink protection that may block requests.
- * We provide graceful fallback to placeholder images when loading fails.
+ * 1. For any third-party URL (not R2, not Supabase, not relative) → use plain <img>
+ *    with referrerPolicy="no-referrer" and onError fallback.
+ *    Reason: external CDNs have hotlink protection that blocks Next.js image optimizer
+ *    (which fetches server-side without a browser referer), causing broken images.
+ * 2. For R2 / Supabase / relative URLs → use Next.js Image (with optimization)
+ * 3. If external image fails to load → show 📖 placeholder
  */
 
 import NextImage, { type ImageProps } from 'next/image';
 import { forwardRef, useState } from 'react';
 
-// All external manga image hosts (use regular img tag)
-const EXTERNAL_HOSTS = [
-  'img-uwak.gmbr.pro',
-  'jablay.gmbr.pro',
-  'api-l.gmbr.pro',
-  '*.gmbr.pro',
-  'manhwaland.land',
-  '*.manhwaland.land',
+// Hostnames that are safe to route through Next.js Image optimisation.
+// Everything else is treated as a third-party CDN and served via plain <img>.
+const NEXTIMAGE_SAFE = [
+  '.r2.dev',
+  '.r2.cloudflarestorage.com',
+  '.supabase.co',
+  '.supabase.in',
 ];
 
 function isExternalUrl(src: ImageProps['src']): boolean {
   if (typeof src !== 'string') return false;
+  if (!src.startsWith('http')) return false; // relative URLs → NextImage
   try {
-    const url = new URL(src);
-    return EXTERNAL_HOSTS.some(host => {
-      if (host.startsWith('*.')) {
-        return url.hostname.endsWith(host.slice(2));
-      }
-      return url.hostname === host;
-    });
+    const { hostname } = new URL(src);
+    // Keep R2 / Supabase through NextImage optimizer
+    if (NEXTIMAGE_SAFE.some(suffix => hostname.endsWith(suffix))) return false;
+    // Everything else → plain <img>
+    return true;
   } catch {
     return false;
   }
