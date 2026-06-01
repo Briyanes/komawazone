@@ -7,7 +7,7 @@
  */
 
 import { createAdminClient } from '@/lib/supabase/admin';
-import { parseAllSitemaps } from '@/lib/scrapers/sitemap-parser';
+import { parseAllSitemaps, type SitemapManga } from '@/lib/scrapers/sitemap-parser';
 import { downloadAndUploadToR2, isR2Url } from '@/lib/storage/r2';
 
 /** Jumlah manga per chunk — aman untuk batas 5 menit Vercel */
@@ -29,16 +29,16 @@ export interface ImportChunkOptions {
  */
 export async function processImportChunk(
   jobId: string,
-  sitemapUrls: string[],
+  sitemapUrls: string[],  // Hanya digunakan saat offset=0 untuk parse pertama kali
   options: ImportChunkOptions,
   offset: number,
 ): Promise<void> {
   const supabase = createAdminClient();
 
-  // Cek apakah job sudah dibatalkan
+  // Cek status job + ambil config (termasuk cached manga URLs)
   const { data: job } = await supabase
     .from('import_jobs')
-    .select('status, new_manga, updated_manga, skipped_items')
+    .select('status, new_manga, updated_manga, skipped_items, config')
     .eq('id', jobId)
     .single();
 
@@ -54,17 +54,42 @@ export async function processImportChunk(
   const errors: Array<{ url: string; error: string }> = [];
 
   try {
-    console.log(`[Job ${jobId}] Chunk offset=${offset}, parsing ${sitemapUrls.length} sitemaps...`);
-    const parseResult = await parseAllSitemaps(sitemapUrls, {
-      timeout: 15_000,
-      includeLastmod: true,
-    });
+    let allManga: SitemapManga[];
 
-    const allManga = parseResult.mangas;
+    // Cek apakah sudah ada daftar URL yang di-cache dari parse pertama
+    const jobConfig = job.config as Record<string, unknown> | null;
+    const cachedUrls = jobConfig?.parsedMangaUrls as Array<{ url: string; lastModified: string | null }> | undefined;
+
+    if (cachedUrls && cachedUrls.length > 0) {
+      // Gunakan URL yang sudah di-parse sebelumnya — tidak perlu fetch 86+ sitemap lagi
+      console.log(`[Job ${jobId}] Menggunakan ${cachedUrls.length} URL dari cache DB (offset=${offset})`);
+      allManga = cachedUrls.map(item => ({
+        url: item.url,
+        slug: extractSlugFromUrl(item.url),
+        lastModified: item.lastModified ? new Date(item.lastModified) : null,
+      }));
+    } else {
+      // Pertama kali: parse semua sitemap, lalu simpan hasilnya ke DB
+      console.log(`[Job ${jobId}] Parsing ${sitemapUrls.length} sitemaps (pertama kali)...`);
+      const parseResult = await parseAllSitemaps(sitemapUrls, {
+        timeout: 15_000,
+        includeLastmod: true,
+      });
+      allManga = parseResult.mangas;
+
+      // Cache hasil parse ke DB agar chunk berikutnya langsung pakai ini
+      const urlsToCache = allManga.map(m => ({
+        url: m.url,
+        lastModified: m.lastModified?.toISOString() ?? null,
+      }));
+      await supabase.from('import_jobs').update({
+        total_items: allManga.length,
+        config: { ...(jobConfig ?? {}), parsedMangaUrls: urlsToCache },
+      }).eq('id', jobId);
+      console.log(`[Job ${jobId}] Parsed ${allManga.length} manga URLs, cache disimpan ke DB`);
+    }
+
     const total = allManga.length;
-
-    // Update total_items (idempotent — boleh diset berkali-kali dengan nilai sama)
-    await supabase.from('import_jobs').update({ total_items: total }).eq('id', jobId);
 
     // Slice chunk
     const chunk = allManga.slice(offset, offset + IMPORT_CHUNK_SIZE);
@@ -89,7 +114,7 @@ export async function processImportChunk(
 
       const batch = chunk.slice(i, i + options.batchSize);
       const results = await Promise.allSettled(
-        batch.map(manga => scrapeAndProcessItem(manga.url, manga.lastModified ?? null, options)),
+        batch.map(manga => scrapeAndProcessItem(manga.url, manga.lastModified, options)),
       );
 
       for (const r of results) {
@@ -120,7 +145,7 @@ export async function processImportChunk(
     // Cek apakah masih ada chunk berikutnya
     const nextOffset = offset + IMPORT_CHUNK_SIZE;
     if (nextOffset < total) {
-      await triggerResume(jobId, sitemapUrls, options, nextOffset);
+      await triggerResume(jobId, options, nextOffset);
     } else {
       await completeJob(jobId, newCount, updatedCount, skippedCount, errors);
       console.log(`[Job ${jobId}] Selesai: ${newCount} baru, ${updatedCount} diupdate, ${skippedCount} dilewati`);
@@ -246,7 +271,6 @@ async function updateManga(url: string, mangaId: string): Promise<boolean> {
 
 async function triggerResume(
   jobId: string,
-  sitemapUrls: string[],
   options: ImportChunkOptions,
   nextOffset: number,
 ): Promise<void> {
@@ -272,7 +296,7 @@ async function triggerResume(
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${cronSecret}`,
       },
-      body: JSON.stringify({ jobId, sitemapUrls, options, offset: nextOffset }),
+      body: JSON.stringify({ jobId, options, offset: nextOffset }),
     });
     if (!res.ok) {
       const text = await res.text();

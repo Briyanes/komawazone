@@ -24,9 +24,9 @@ export async function POST(req: NextRequest) {
 
   let body: {
     jobId: string;
-    sitemapUrls: string[];
     options: ImportChunkOptions;
     offset: number;
+    sitemapUrls?: string[];  // opsional, tidak dipakai lagi (URL di-cache di DB)
   };
 
   try {
@@ -35,15 +35,15 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const { jobId, sitemapUrls, options, offset } = body;
+  const { jobId, options, offset } = body;
 
-  if (!jobId || !sitemapUrls?.length || offset == null) {
-    return NextResponse.json({ error: 'jobId, sitemapUrls, dan offset diperlukan' }, { status: 400 });
+  if (!jobId || offset == null) {
+    return NextResponse.json({ error: 'jobId dan offset diperlukan' }, { status: 400 });
   }
 
   // Jalankan chunk berikutnya di background setelah response dikembalikan
   after(() =>
-    processImportChunk(jobId, sitemapUrls, options, offset).catch(err =>
+    processImportChunk(jobId, [], options, offset).catch(err =>
       console.error(`[Resume Job ${jobId}] Unhandled error:`, err),
     ),
   );
