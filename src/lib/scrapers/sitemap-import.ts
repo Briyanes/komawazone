@@ -11,7 +11,7 @@ import { parseAllSitemaps, type SitemapManga } from '@/lib/scrapers/sitemap-pars
 import { downloadAndUploadToR2, isR2Url } from '@/lib/storage/r2';
 
 /** Jumlah manga per chunk — aman untuk batas 5 menit Vercel */
-export const IMPORT_CHUNK_SIZE = 40;
+export const IMPORT_CHUNK_SIZE = 20;
 
 export interface ImportChunkOptions {
   importNew: boolean;
@@ -138,7 +138,7 @@ export async function processImportChunk(
 
       // Delay antar batch (hindari rate-limit CDN/scrape target)
       if (i + options.batchSize < chunk.length) {
-        await delay(1500 + Math.random() * 2000);
+        await delay(500 + Math.random() * 1000);
       }
     }
 
