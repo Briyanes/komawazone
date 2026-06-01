@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
   Download, RefreshCw, Play, CheckCircle, XCircle,
-  Clock, BookOpen, FileText, AlertTriangle, Zap, StopCircle,
+  Clock, BookOpen, FileText, AlertTriangle, Zap, StopCircle, Cloud,
 } from 'lucide-react';
 
 interface ImportJob {
@@ -36,6 +36,7 @@ export function ImportDashboard() {
   const [loading, setLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [r2BackfillLoading, setR2BackfillLoading] = useState(false);
   const [cancellingId, setCancellingId] = useState<string | null>(null);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [jobPage, setJobPage] = useState(1);
@@ -108,6 +109,29 @@ export function ImportDashboard() {
     }
   };
 
+  const triggerR2Backfill = async (type: 'covers' | 'chapters' | 'all') => {
+    setR2BackfillLoading(true);
+    setMessage(null);
+    try {
+      const res = await fetch('/api/v1/admin/storage/r2-backfill', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type }),
+      });
+      const json = await res.json() as { status?: string; message?: string; jobId?: string; error?: string };
+      if (res.ok && json.status === 'success') {
+        setMessage({ type: 'success', text: `${json.message} (job: ${json.jobId?.slice(0, 8)}...)` });
+        setTimeout(fetchStats, 2000);
+      } else {
+        setMessage({ type: 'error', text: json.error ?? 'Gagal memulai R2 backfill' });
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Network error' });
+    } finally {
+      setR2BackfillLoading(false);
+    }
+  };
+
   const statusIcon = (status: ImportJob['status']) => {
     if (status === 'running') return <RefreshCw size={14} className="animate-spin text-blue-400" />;
     if (status === 'completed') return <CheckCircle size={14} className="text-green-400" />;
@@ -129,6 +153,7 @@ export function ImportDashboard() {
     sitemap_import: 'Import Sitemap',
     bulk_chapters:  'Import Chapter Massal',
     chapter_import: 'Import Chapter',
+    r2_backfill:    'Migrasi Gambar ke R2',
   }[t] ?? t);
 
   return (
@@ -223,6 +248,40 @@ export function ImportDashboard() {
             loading={bulkLoading}
             onClick={() => triggerBulkImport(true)}
           />
+        </div>
+
+        {/* R2 Backfill section */}
+        <div className="mt-3 border-t pt-3" style={{ borderColor: 'var(--border-light)' }}>
+          <p className="mb-2 text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+            <Cloud size={10} className="inline mr-1" />
+            Migrasi gambar lama ke Cloudflare R2 (hanya yang belum di-upload)
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <ActionButton
+              icon={<Cloud size={14} />}
+              label="Migrasi Cover ke R2"
+              description="Upload cover manga yang masih di CDN sumber (~200 item/run)"
+              color="secondary"
+              loading={r2BackfillLoading}
+              onClick={() => triggerR2Backfill('covers')}
+            />
+            <ActionButton
+              icon={<Cloud size={14} />}
+              label="Migrasi Chapter Images ke R2"
+              description="Upload gambar chapter yang masih di CDN sumber (~500 item/run)"
+              color="secondary"
+              loading={r2BackfillLoading}
+              onClick={() => triggerR2Backfill('chapters')}
+            />
+            <ActionButton
+              icon={<Cloud size={14} />}
+              label="Migrasi Semua ke R2"
+              description="Cover + chapter images sekaligus"
+              color="secondary"
+              loading={r2BackfillLoading}
+              onClick={() => triggerR2Backfill('all')}
+            />
+          </div>
         </div>
 
         {message && (
