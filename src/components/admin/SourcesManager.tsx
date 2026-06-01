@@ -46,6 +46,7 @@ export function SourcesManager() {
     notes: '',
   });
   const [formLoading, setFormLoading] = useState(false);
+  const [fixCovers, setFixCovers] = useState(true);
 
   const fetchSources = useCallback(async () => {
     setLoading(true);
@@ -166,7 +167,7 @@ export function SourcesManager() {
         body: JSON.stringify({
           sitemapUrls: source.sitemap_urls,
           sourceId: source.id,
-          options: { importNew: true, importUpdates: false, batchSize: 3 },
+          options: { importNew: true, importUpdates: fixCovers, batchSize: 3 },
         }),
       });
       const json = await res.json() as { data?: { jobId?: string }; error?: string };
@@ -391,15 +392,26 @@ export function SourcesManager() {
 
                   {/* Import sekarang */}
                   {source.is_active && (
-                    <button
-                      onClick={() => triggerImport(source)}
-                      title="Import manga dari sumber ini sekarang"
-                      className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium transition-colors hover:opacity-80"
-                      style={{ background: 'rgba(255,107,53,0.1)', color: 'var(--color-primary)' }}
-                    >
-                      <Plus size={11} />
-                      Import
-                    </button>
+                    <div className="flex items-center gap-1.5">
+                      <label className="flex items-center gap-1 cursor-pointer" title="Perbaiki cover yang mati/null">
+                        <input
+                          type="checkbox"
+                          checked={fixCovers}
+                          onChange={e => setFixCovers(e.target.checked)}
+                          className="w-3 h-3 accent-orange-500"
+                        />
+                        <span className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Fix cover</span>
+                      </label>
+                      <button
+                        onClick={() => triggerImport(source)}
+                        title="Import manga dari sumber ini sekarang"
+                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium transition-colors hover:opacity-80"
+                        style={{ background: 'rgba(255,107,53,0.1)', color: 'var(--color-primary)' }}
+                      >
+                        <Plus size={11} />
+                        Import
+                      </button>
+                    </div>
                   )}
 
                   {/* Edit */}
