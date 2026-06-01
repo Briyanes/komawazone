@@ -256,8 +256,10 @@ export function ImportDashboard() {
             <Cloud size={10} className="inline mr-1" />
             Migrasi gambar lama ke Cloudflare R2 (hanya yang belum di-upload)
           </p>
-          <p className="mb-2 text-[11px] rounded px-2 py-1" style={{ color: '#f59e0b', background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)' }}>
-            ⚠️ Catatan: ~1830 cover dari CDN gmbr.pro tidak bisa dimigrasikan secara otomatis (CDN mereka memblokir download server-side). Gambar masih tampil di browser seperti biasa. Migrasi hanya berhasil untuk cover dari CDN lain (uwakjawa.xyz, ibb.co, dll).
+          <p className="mb-2 text-[11px] rounded px-2 py-1" style={{ color: '#22c55e', background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+            💡 Untuk migrasi penuh ke R2, gunakan script lokal yang bisa bypass Cloudflare CDN:
+            <br /><code className="mt-1 block font-mono" style={{ background: 'rgba(0,0,0,0.3)', padding: '4px 8px', borderRadius: 4, fontSize: 10 }}>npm run migrate:covers</code>
+            Script ini memproses ~1460+ cover dari api-l.gmbr.pro. Tombol di bawah hanya untuk cover dari CDN tanpa proteksi.
           </p>
           <div className="flex flex-wrap gap-2">
             <ActionButton
