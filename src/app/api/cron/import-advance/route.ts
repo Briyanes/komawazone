@@ -11,17 +11,17 @@ import { processImportChunk, type ImportChunkOptions } from '@/lib/scrapers/site
  *
  * Auth: Authorization: Bearer CRON_SECRET
  *
- * Per invokasi: proses hingga 50 chunk × IMPORT_CHUNK_SIZE item,
- * atau hingga 220 detik, mana yang lebih dulu.
+ * Per invokasi: proses hingga 10 chunk × IMPORT_CHUNK_SIZE item,
+ * atau hingga 45 detik, mana yang lebih dulu.
  */
 
-// Budget per invokasi: 300 detik (Vercel maxDuration)
-export const maxDuration = 300;
+// Vercel Hobby: max 60 detik per function invocation
+export const maxDuration = 60;
 
-// Hentikan loop sebelum mencapai maxDuration agar ada buffer
-const MAX_INVOCATION_MS = 220_000;
+// Hentikan loop sebelum Vercel memaksa berhenti (gunakan 45s dari 60s budget)
+const MAX_INVOCATION_MS = 45_000;
 // Safety cap: jangan proses lebih dari N chunk dalam satu cron run
-const MAX_ITERATIONS = 50;
+const MAX_ITERATIONS = 10;
 
 const DEFAULT_OPTIONS: ImportChunkOptions = {
   importNew: true,
