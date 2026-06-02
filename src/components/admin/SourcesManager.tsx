@@ -10,6 +10,7 @@ interface MangaSource {
   sitemap_urls: string[];
   is_active: boolean;
   type: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
+  content_rating: 'general' | 'mature';
   notes: string | null;
   created_at: string;
 }
@@ -43,6 +44,7 @@ export function SourcesManager() {
     sitemap_urls: '',
     is_active: true,
     type: 'MANHWA' as MangaSource['type'],
+    content_rating: 'general' as MangaSource['content_rating'],
     notes: '',
   });
   const [formLoading, setFormLoading] = useState(false);
@@ -62,7 +64,7 @@ export function SourcesManager() {
   useEffect(() => { void fetchSources(); }, [fetchSources]);
 
   const resetForm = () => {
-    setForm({ name: '', base_url: '', sitemap_urls: '', is_active: true, type: 'MANHWA', notes: '' });
+    setForm({ name: '', base_url: '', sitemap_urls: '', is_active: true, type: 'MANHWA', content_rating: 'general', notes: '' });
     setEditingId(null);
     setShowForm(false);
     setError(null);
@@ -75,6 +77,7 @@ export function SourcesManager() {
       sitemap_urls: source.sitemap_urls.join('\n'),
       is_active: source.is_active,
       type: source.type,
+      content_rating: source.content_rating ?? 'general',
       notes: source.notes ?? '',
     });
     setEditingId(source.id);
@@ -104,6 +107,7 @@ export function SourcesManager() {
             sitemap_urls: sitemapUrls,
             is_active: form.is_active,
             type: form.type,
+            content_rating: form.content_rating,
             notes: form.notes || null,
           }),
         });
@@ -125,6 +129,7 @@ export function SourcesManager() {
             sitemap_urls: sitemapUrls,
             is_active: form.is_active,
             type: form.type,
+            content_rating: form.content_rating,
             notes: form.notes || null,
           }),
         });
@@ -167,7 +172,7 @@ export function SourcesManager() {
         body: JSON.stringify({
           sitemapUrls: source.sitemap_urls,
           sourceId: source.id,
-          options: { importNew: true, importUpdates: fixCovers, batchSize: 3 },
+          options: { importNew: true, importUpdates: fixCovers, batchSize: 3, contentRating: source.content_rating ?? 'general' },
         }),
       });
       const json = await res.json() as { data?: { jobId?: string }; error?: string };
@@ -290,16 +295,28 @@ export function SourcesManager() {
                 <option value="MIXED">MIXED</option>
               </select>
             </FormField>
-            <FormField label="Notes (opsional)">
-              <input
-                value={form.notes}
-                onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
-                placeholder="Keterangan singkat"
+            <FormField label="Rating Konten">
+              <select
+                value={form.content_rating}
+                onChange={e => setForm(f => ({ ...f, content_rating: e.target.value as MangaSource['content_rating'] }))}
                 className="w-full rounded-lg px-3 py-2 text-xs"
                 style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
-              />
+              >
+                <option value="general">General (SFW)</option>
+                <option value="mature">Mature (18+)</option>
+              </select>
             </FormField>
           </div>
+
+          <FormField label="Notes (opsional)">
+            <input
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              placeholder="Keterangan singkat"
+              className="w-full rounded-lg px-3 py-2 text-xs"
+              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+            />
+          </FormField>
 
           {error && (
             <div className="rounded-lg px-3 py-2 text-xs" style={{ background: 'rgba(239,68,68,0.08)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.2)' }}>
@@ -368,6 +385,11 @@ export function SourcesManager() {
                     >
                       {source.type}
                     </span>
+                    {source.content_rating === 'mature' && (
+                      <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
+                        18+
+                      </span>
+                    )}
                     {!source.is_active && (
                       <span className="rounded-full px-1.5 py-0.5 text-[10px] uppercase" style={{ background: 'rgba(156,163,175,0.12)', color: '#9ca3af' }}>
                         nonaktif

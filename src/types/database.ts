@@ -636,6 +636,7 @@ export interface Database {
           sitemap_urls: string[];
           is_active: boolean;
           type: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
+          content_rating: 'general' | 'mature';
           notes: string | null;
           created_at: string;
           updated_at: string;
@@ -647,6 +648,7 @@ export interface Database {
           sitemap_urls?: string[];
           is_active?: boolean;
           type?: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
+          content_rating?: 'general' | 'mature';
           notes?: string | null;
         };
         Update: {
@@ -654,6 +656,7 @@ export interface Database {
           sitemap_urls?: string[];
           is_active?: boolean;
           type?: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
+          content_rating?: 'general' | 'mature';
           notes?: string | null;
         };
         Relationships: [];

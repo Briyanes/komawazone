@@ -33,11 +33,12 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json() as {
       sitemapUrls?: string[];
-      sourceId?: string;  // ID dari manga_sources — untuk link manga baru ke sumbernya
+      sourceId?: string;
       options?: {
         importNew?: boolean;
         importUpdates?: boolean;
         batchSize?: number;
+        contentRating?: 'general' | 'mature';
       };
     };
 
@@ -55,8 +56,19 @@ export async function POST(req: NextRequest) {
       importUpdates = true,
       // Hard-cap at 5 regardless of client request to prevent CloudFlare rate-limiting
       batchSize = 3,
+      contentRating = 'general',
     } = options;
     const safeBatchSize = Math.min(batchSize, 5);
+
+    // Full options — disimpan di config agar cron /api/cron/import-advance bisa melanjutkan
+    const importOptions = {
+      importNew,
+      importUpdates,
+      batchSize: safeBatchSize,
+      userId: user.id,
+      sourceId: sourceId ?? null,
+      contentRating,
+    };
 
     // Create import job
     const result = await supabase
@@ -70,7 +82,7 @@ export async function POST(req: NextRequest) {
         updated_manga: 0,
         skipped_items: 0,
         errors: [],
-        config: { sitemapUrls, options },
+        config: { sitemapUrls, options: importOptions },
         created_by: user.id,
       })
       .select()
@@ -90,18 +102,11 @@ export async function POST(req: NextRequest) {
       }, { status: 500 });
     }
 
-    // Schedule background processing AFTER response is sent using next/server after()
-    // Chunk pertama dimulai dari offset 0. Jika masih ada item setelah IMPORT_CHUNK_SIZE,
-    // processImportChunk otomatis trigger POST /resume untuk chunk berikutnya.
+    // Kick off chunk pertama segera via after() agar import mulai tanpa harus menunggu cron.
+    // Chunk berikutnya dilanjutkan oleh /api/cron/import-advance setiap 5 menit.
     after(() =>
-      processImportChunk(jobData.id, sitemapUrls, {
-        importNew,
-        importUpdates,
-        batchSize: safeBatchSize,
-        userId: user.id,
-        sourceId: sourceId ?? null,
-      }, 0).catch(error => {
-        console.error('Sitemap import error:', error);
+      processImportChunk(jobData.id, sitemapUrls, importOptions, 0).catch(error => {
+        console.error('Sitemap import error (chunk 0):', error);
       })
     );
 

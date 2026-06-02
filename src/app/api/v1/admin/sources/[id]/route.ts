@@ -8,6 +8,7 @@ const PatchSchema = z.object({
   sitemap_urls: z.array(z.string().url()).min(1).optional(),
   is_active: z.boolean().optional(),
   type: z.enum(['MANHWA', 'MANGA', 'MANHUA', 'MIXED']).optional(),
+  content_rating: z.enum(['general', 'mature']).optional(),
   notes: z.string().max(500).optional().nullable(),
 });
 
@@ -39,6 +40,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (parsed.data.sitemap_urls !== undefined) update.sitemap_urls = parsed.data.sitemap_urls;
   if (parsed.data.is_active !== undefined) update.is_active = parsed.data.is_active;
   if (parsed.data.type !== undefined) update.type = parsed.data.type;
+  if (parsed.data.content_rating !== undefined) update.content_rating = parsed.data.content_rating;
   if (parsed.data.notes !== undefined) update.notes = parsed.data.notes;
 
   const { data, error } = await (supabase

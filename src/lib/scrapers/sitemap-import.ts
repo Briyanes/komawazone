@@ -10,8 +10,8 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { parseAllSitemaps, type SitemapManga } from '@/lib/scrapers/sitemap-parser';
 import { downloadAndUploadToR2, isR2Url } from '@/lib/storage/r2';
 
-/** Jumlah manga per chunk — aman untuk batas 5 menit Vercel */
-export const IMPORT_CHUNK_SIZE = 5;
+/** Jumlah manga per chunk — per-invokasi cron (20 item = max ~224s untuk kasus terburuk) */
+export const IMPORT_CHUNK_SIZE = 20;
 
 export interface ImportChunkOptions {
   importNew: boolean;
@@ -19,6 +19,8 @@ export interface ImportChunkOptions {
   batchSize: number;
   userId: string;
   sourceId: string | null;
+  /** Rating konten untuk semua manga yang diimport dari sumber ini */
+  contentRating?: 'general' | 'mature';
 }
 
 // ── Main exported function ────────────────────────────────────────────────────
@@ -145,13 +147,14 @@ export async function processImportChunk(
       }
     }
 
-    // Cek apakah masih ada chunk berikutnya
+    // Jika tidak ada chunk berikutnya, tandai selesai.
+    // Jika masih ada, /api/cron/import-advance akan melanjutkan otomatis.
     const nextOffset = offset + IMPORT_CHUNK_SIZE;
-    if (nextOffset < total) {
-      await triggerResume(jobId, options, nextOffset);
-    } else {
+    if (nextOffset >= total) {
       await completeJob(jobId, newCount, updatedCount, skippedCount, errors);
       console.log(`[Job ${jobId}] Selesai: ${newCount} baru, ${updatedCount} diupdate, ${skippedCount} dilewati`);
+    } else {
+      console.log(`[Job ${jobId}] Chunk selesai — offset berikutnya ${nextOffset}/${total}, menunggu cron.`);
     }
 
   } catch (error) {
@@ -232,6 +235,7 @@ async function createManga(url: string, options: ImportChunkOptions): Promise<bo
       source_url: url,
       source_id: options.sourceId ?? null,
       uploaded_by: options.userId,
+      content_rating: options.contentRating ?? 'general',
     }, { onConflict: 'slug', ignoreDuplicates: true }).select().single();
 
     return Boolean(data);
@@ -271,61 +275,6 @@ async function updateManga(url: string, mangaId: string): Promise<boolean> {
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
-
-async function triggerResume(
-  jobId: string,
-  options: ImportChunkOptions,
-  nextOffset: number,
-): Promise<void> {
-  const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000').replace(/\/$/, '');
-  const cronSecret = process.env.CRON_SECRET;
-
-  if (!cronSecret) {
-    console.error(`[Job ${jobId}] CRON_SECRET tidak di-set — auto-resume tidak bisa berjalan!`);
-    const supabase = createAdminClient();
-    await supabase.from('import_jobs').update({
-      status: 'failed',
-      completed_at: new Date().toISOString(),
-      errors: [{ error: 'CRON_SECRET tidak di-set, auto-resume gagal' }],
-    }).eq('id', jobId);
-    return;
-  }
-
-  console.log(`[Job ${jobId}] Trigger resume offset=${nextOffset}...`);
-  let lastError = '';
-  for (let attempt = 1; attempt <= 3; attempt++) {
-    try {
-      const res = await fetch(`${siteUrl}/api/v1/admin/scrape/sitemap/resume`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${cronSecret}`,
-        },
-        body: JSON.stringify({ jobId, options, offset: nextOffset }),
-        signal: AbortSignal.timeout(15_000),
-      });
-      if (res.ok) {
-        console.log(`[Job ${jobId}] Resume offset=${nextOffset} dijadwalkan (attempt ${attempt})`);
-        return;
-      }
-      lastError = `HTTP ${res.status}: ${await res.text().catch(() => '')}`;
-      console.error(`[Job ${jobId}] Resume request gagal (attempt ${attempt}): ${lastError}`);
-    } catch (err) {
-      lastError = err instanceof Error ? err.message : String(err);
-      console.error(`[Job ${jobId}] Gagal trigger resume (attempt ${attempt}):`, lastError);
-    }
-    if (attempt < 3) await new Promise(r => setTimeout(r, 2000 * attempt));
-  }
-
-  // Semua retry gagal — tandai job sebagai failed agar user tahu
-  console.error(`[Job ${jobId}] Semua retry resume gagal. Job ditandai failed.`);
-  const supabase = createAdminClient();
-  await supabase.from('import_jobs').update({
-    status: 'failed',
-    completed_at: new Date().toISOString(),
-    errors: [{ error: `triggerResume gagal setelah 3 retry: ${lastError}` }],
-  }).eq('id', jobId);
-}
 
 async function completeJob(
   jobId: string,

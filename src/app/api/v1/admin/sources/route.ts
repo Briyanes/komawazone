@@ -11,6 +11,7 @@ const SourceSchema = z.object({
   sitemap_urls: z.array(z.string().url()).min(1),
   is_active: z.boolean().default(true),
   type: z.enum(['MANHWA', 'MANGA', 'MANHUA', 'MIXED']).default('MANHWA'),
+  content_rating: z.enum(['general', 'mature']).default('general'),
   notes: z.string().max(500).optional().nullable(),
 });
 
@@ -54,6 +55,7 @@ export async function POST(req: NextRequest) {
     sitemap_urls: parsed.data.sitemap_urls,
     is_active: parsed.data.is_active,
     type: parsed.data.type,
+    content_rating: parsed.data.content_rating,
     notes: parsed.data.notes ?? null,
   };
 
