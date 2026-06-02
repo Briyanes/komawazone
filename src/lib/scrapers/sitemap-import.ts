@@ -198,7 +198,8 @@ async function scrapeAndProcessItem(
       return 'skipped';
     }
 
-    const result = await updateManga(url, existing.id as string);
+    const result = await updateManga(url, existing.id as string, existing.cover_url as string | null);
+    if (!result) console.warn(`[scrapeAndProcessItem] updateManga gagal: ${url}`);
     return result ? 'updated' : 'skipped';
   }
 }
@@ -245,27 +246,44 @@ async function createManga(url: string, options: ImportChunkOptions): Promise<bo
   }
 }
 
-async function updateManga(url: string, mangaId: string): Promise<boolean> {
+async function updateManga(url: string, mangaId: string, existingCoverUrl: string | null): Promise<boolean> {
   const supabase = createAdminClient();
 
   try {
     const { scrapeMangaFromUrl } = await import('@/lib/scrapers/manga-scraper');
     const scraped = await scrapeMangaFromUrl(url);
-    if (!scraped) return false;
-
-    let finalCoverUrl = scraped.cover_url;
-    if (scraped.cover_url && !isR2Url(scraped.cover_url)) {
-      const r2 = await downloadAndUploadToR2(scraped.cover_url, 'covers', scraped.title, { maxRetries: 1, timeout: 12_000 });
-      if (r2.key) finalCoverUrl = r2.url;
+    if (!scraped) {
+      console.warn(`[updateManga] scrapeMangaFromUrl null: ${url}`);
+      return false;
     }
 
-    const { data } = await supabase.from('manga').update({
+    // Hanya update cover_url jika berhasil upload ke R2
+    // Jangan overwrite cover yang ada dengan null atau URL mati
+    let newCoverUrl: string | undefined = undefined;
+    if (scraped.cover_url && !isR2Url(scraped.cover_url)) {
+      const r2 = await downloadAndUploadToR2(scraped.cover_url, 'covers', scraped.title, { maxRetries: 1, timeout: 12_000 });
+      if (r2.key) newCoverUrl = r2.url;
+      else console.warn(`[updateManga] Gagal upload cover ke R2: ${scraped.cover_url}`);
+      // Jika upload gagal: newCoverUrl = undefined → jangan update cover
+    } else if (scraped.cover_url && isR2Url(scraped.cover_url)) {
+      newCoverUrl = scraped.cover_url;
+    }
+    // Jika scraped.cover_url null: newCoverUrl = undefined → preserve existing cover
+
+    const updateData: Record<string, unknown> = {
       description: scraped.description,
-      cover_url: finalCoverUrl,
       status: scraped.status,
       genres: scraped.genres,
       source_url: url,
-    }).eq('id', mangaId).select().single();
+    };
+    if (newCoverUrl !== undefined) {
+      updateData.cover_url = newCoverUrl;
+    } else if (!existingCoverUrl) {
+      // Manga belum punya cover sama sekali, set null agar bisa diretry
+      updateData.cover_url = null;
+    }
+
+    const { data } = await supabase.from('manga').update(updateData).eq('id', mangaId).select().single();
 
     return Boolean(data);
   } catch (err) {
