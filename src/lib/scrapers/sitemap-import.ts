@@ -270,20 +270,22 @@ async function updateManga(url: string, mangaId: string, existingCoverUrl: strin
     }
     // Jika scraped.cover_url null: newCoverUrl = undefined → preserve existing cover
 
-    const updateData: Record<string, unknown> = {
+    // Tentukan cover_url: hanya update jika berhasil dapat R2 URL,
+    // atau set null jika manga belum punya cover sama sekali (agar bisa diretry)
+    const coverUpdate: { cover_url?: string | null } = {};
+    if (newCoverUrl !== undefined) {
+      coverUpdate.cover_url = newCoverUrl;
+    } else if (!existingCoverUrl) {
+      coverUpdate.cover_url = null;
+    }
+
+    const { data } = await supabase.from('manga').update({
       description: scraped.description,
       status: scraped.status,
       genres: scraped.genres,
       source_url: url,
-    };
-    if (newCoverUrl !== undefined) {
-      updateData.cover_url = newCoverUrl;
-    } else if (!existingCoverUrl) {
-      // Manga belum punya cover sama sekali, set null agar bisa diretry
-      updateData.cover_url = null;
-    }
-
-    const { data } = await supabase.from('manga').update(updateData).eq('id', mangaId).select().single();
+      ...coverUpdate,
+    }).eq('id', mangaId).select().single();
 
     return Boolean(data);
   } catch (err) {
