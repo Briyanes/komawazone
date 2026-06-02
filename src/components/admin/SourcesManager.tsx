@@ -357,28 +357,34 @@ export function SourcesManager() {
 
           <div className="grid grid-cols-2 gap-3">
             <FormField label="Tipe Konten">
-              <select
-                value={form.type}
-                onChange={e => setForm(f => ({ ...f, type: e.target.value as MangaSource['type'] }))}
-                className="w-full rounded-lg px-3 py-2 text-xs"
-                style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
-              >
-                <option value="MANHWA">MANHWA</option>
-                <option value="MANGA">MANGA</option>
-                <option value="MANHUA">MANHUA</option>
-                <option value="MIXED">MIXED</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={form.type}
+                  onChange={e => setForm(f => ({ ...f, type: e.target.value as MangaSource['type'] }))}
+                  className="w-full appearance-none rounded-lg px-3 py-2 pr-8 text-xs"
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                >
+                  <option value="MANHWA">MANHWA</option>
+                  <option value="MANGA">MANGA</option>
+                  <option value="MANHUA">MANHUA</option>
+                  <option value="MIXED">MIXED</option>
+                </select>
+                <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }} />
+              </div>
             </FormField>
             <FormField label="Rating Konten">
-              <select
-                value={form.content_rating}
-                onChange={e => setForm(f => ({ ...f, content_rating: e.target.value as MangaSource['content_rating'] }))}
-                className="w-full rounded-lg px-3 py-2 text-xs"
-                style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
-              >
-                <option value="general">General (SFW)</option>
-                <option value="mature">Mature (18+)</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={form.content_rating}
+                  onChange={e => setForm(f => ({ ...f, content_rating: e.target.value as MangaSource['content_rating'] }))}
+                  className="w-full appearance-none rounded-lg px-3 py-2 pr-8 text-xs"
+                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                >
+                  <option value="general">General (SFW)</option>
+                  <option value="mature">Mature (18+)</option>
+                </select>
+                <ChevronDown size={12} className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-secondary)' }} />
+              </div>
             </FormField>
           </div>
 
