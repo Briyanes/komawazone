@@ -11,7 +11,7 @@ import { parseAllSitemaps, type SitemapManga } from '@/lib/scrapers/sitemap-pars
 import { downloadAndUploadToR2, isR2Url } from '@/lib/storage/r2';
 
 /** Jumlah manga per chunk — aman untuk batas 5 menit Vercel */
-export const IMPORT_CHUNK_SIZE = 10;
+export const IMPORT_CHUNK_SIZE = 5;
 
 export interface ImportChunkOptions {
   importNew: boolean;
@@ -114,7 +114,10 @@ export async function processImportChunk(
 
       const batch = chunk.slice(i, i + options.batchSize);
       const results = await Promise.allSettled(
-        batch.map(manga => scrapeAndProcessItem(manga.url, manga.lastModified, options)),
+        batch.map(manga => Promise.race([
+          scrapeAndProcessItem(manga.url, manga.lastModified, options),
+          new Promise<'skipped'>((resolve) => setTimeout(() => resolve('skipped'), 28_000)),
+        ])),
       );
 
       for (const r of results) {
@@ -289,22 +292,39 @@ async function triggerResume(
   }
 
   console.log(`[Job ${jobId}] Trigger resume offset=${nextOffset}...`);
-  try {
-    const res = await fetch(`${siteUrl}/api/v1/admin/scrape/sitemap/resume`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${cronSecret}`,
-      },
-      body: JSON.stringify({ jobId, options, offset: nextOffset }),
-    });
-    if (!res.ok) {
-      const text = await res.text();
-      console.error(`[Job ${jobId}] Resume request gagal: ${res.status} — ${text}`);
+  let lastError = '';
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const res = await fetch(`${siteUrl}/api/v1/admin/scrape/sitemap/resume`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${cronSecret}`,
+        },
+        body: JSON.stringify({ jobId, options, offset: nextOffset }),
+        signal: AbortSignal.timeout(15_000),
+      });
+      if (res.ok) {
+        console.log(`[Job ${jobId}] Resume offset=${nextOffset} dijadwalkan (attempt ${attempt})`);
+        return;
+      }
+      lastError = `HTTP ${res.status}: ${await res.text().catch(() => '')}`;
+      console.error(`[Job ${jobId}] Resume request gagal (attempt ${attempt}): ${lastError}`);
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err);
+      console.error(`[Job ${jobId}] Gagal trigger resume (attempt ${attempt}):`, lastError);
     }
-  } catch (err) {
-    console.error(`[Job ${jobId}] Gagal trigger resume:`, err);
+    if (attempt < 3) await new Promise(r => setTimeout(r, 2000 * attempt));
   }
+
+  // Semua retry gagal — tandai job sebagai failed agar user tahu
+  console.error(`[Job ${jobId}] Semua retry resume gagal. Job ditandai failed.`);
+  const supabase = createAdminClient();
+  await supabase.from('import_jobs').update({
+    status: 'failed',
+    completed_at: new Date().toISOString(),
+    errors: [{ error: `triggerResume gagal setelah 3 retry: ${lastError}` }],
+  }).eq('id', jobId);
 }
 
 async function completeJob(
