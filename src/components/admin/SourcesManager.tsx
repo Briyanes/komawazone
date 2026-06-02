@@ -446,42 +446,44 @@ export function SourcesManager() {
               style={{ background: 'var(--bg-card)', border: `1px solid ${source.is_active ? 'var(--border-light)' : 'rgba(156,163,175,0.2)'}` }}
             >
               {/* Row utama */}
-              <div className="flex items-center gap-3 px-4 py-3">
-                <div
-                  className="flex size-8 shrink-0 items-center justify-center rounded-lg"
-                  style={{ background: source.is_active ? 'rgba(255,107,53,0.1)' : 'rgba(156,163,175,0.1)' }}
-                >
-                  <Globe size={14} style={{ color: source.is_active ? 'var(--color-primary)' : '#9ca3af' }} />
+              <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3">
+                <div className="flex flex-1 min-w-0 items-center gap-3">
+                  <div
+                    className="flex size-8 shrink-0 items-center justify-center rounded-lg"
+                    style={{ background: source.is_active ? 'rgba(255,107,53,0.1)' : 'rgba(156,163,175,0.1)' }}
+                  >
+                    <Globe size={14} style={{ color: source.is_active ? 'var(--color-primary)' : '#9ca3af' }} />
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <span className="text-xs font-semibold" style={{ color: source.is_active ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
+                        {source.name}
+                      </span>
+                      <span
+                        className="rounded-full px-1.5 py-0.5 text-[10px] uppercase font-medium"
+                        style={{ background: TYPE_COLORS[source.type], color: TYPE_TEXT[source.type] }}
+                      >
+                        {source.type}
+                      </span>
+                      {source.content_rating === 'mature' && (
+                        <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
+                          18+
+                        </span>
+                      )}
+                      {!source.is_active && (
+                        <span className="rounded-full px-1.5 py-0.5 text-[10px] uppercase" style={{ background: 'rgba(156,163,175,0.12)', color: '#9ca3af' }}>
+                          nonaktif
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-0.5 text-[11px] truncate" style={{ color: 'var(--text-tertiary)' }}>
+                      {source.base_url} · {source.sitemap_urls.length} sitemap
+                    </div>
+                  </div>
                 </div>
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-semibold" style={{ color: source.is_active ? 'var(--text-primary)' : 'var(--text-tertiary)' }}>
-                      {source.name}
-                    </span>
-                    <span
-                      className="rounded-full px-1.5 py-0.5 text-[10px] uppercase font-medium"
-                      style={{ background: TYPE_COLORS[source.type], color: TYPE_TEXT[source.type] }}
-                    >
-                      {source.type}
-                    </span>
-                    {source.content_rating === 'mature' && (
-                      <span className="rounded-full px-1.5 py-0.5 text-[10px] font-medium" style={{ background: 'rgba(239,68,68,0.12)', color: '#ef4444' }}>
-                        18+
-                      </span>
-                    )}
-                    {!source.is_active && (
-                      <span className="rounded-full px-1.5 py-0.5 text-[10px] uppercase" style={{ background: 'rgba(156,163,175,0.12)', color: '#9ca3af' }}>
-                        nonaktif
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-0.5 text-[11px] truncate" style={{ color: 'var(--text-tertiary)' }}>
-                    {source.base_url} · {source.sitemap_urls.length} sitemap
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-1 shrink-0">
+                <div className="flex items-center gap-1 shrink-0 pl-11 sm:pl-0">
                   {/* Toggle aktif */}
                   <button
                     onClick={() => toggleActive(source)}
