@@ -48,8 +48,17 @@ export async function downloadImageWithRetry(
     }
 
     try {
+      const imageHeaders: HeadersInit = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
+        'Referer': new URL(url).origin + '/',
+        'sec-fetch-dest': 'image',
+        'sec-fetch-mode': 'no-cors',
+        'sec-fetch-site': 'cross-site',
+      };
       const response = await fetch(url, {
-        headers: SCRAPER_HEADERS,
+        headers: imageHeaders,
         signal: AbortSignal.timeout(timeout),
       });
 
