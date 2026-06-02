@@ -486,10 +486,10 @@ export function SourcesManager() {
                   <button
                     onClick={() => toggleActive(source)}
                     title={source.is_active ? 'Nonaktifkan' : 'Aktifkan'}
-                    className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
+                    className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)]"
                     style={{ color: source.is_active ? '#22c55e' : '#9ca3af' }}
                   >
-                    {source.is_active ? <ToggleRight size={16} /> : <ToggleLeft size={16} />}
+                    {source.is_active ? <ToggleRight size={20} /> : <ToggleLeft size={20} />}
                   </button>
 
                   {/* Import sekarang */}
@@ -507,7 +507,7 @@ export function SourcesManager() {
                       <button
                         onClick={() => triggerImport(source)}
                         title="Import manga dari sumber ini sekarang"
-                        className="flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-medium transition-colors hover:opacity-80"
+                        className="flex items-center gap-1 rounded-md px-2 py-1 text-[11px] font-medium transition-colors hover:opacity-80"
                         style={{ background: 'rgba(255,107,53,0.1)', color: 'var(--color-primary)' }}
                       >
                         <Plus size={11} />
@@ -520,8 +520,8 @@ export function SourcesManager() {
                   <button
                     onClick={() => startEdit(source)}
                     title="Edit sumber"
-                    className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-blue-500/10"
-                    style={{ color: editingId === source.id ? '#3b82f6' : 'var(--text-tertiary)' }}
+                    className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)]"
+                    style={{ color: editingId === source.id ? 'var(--color-primary)' : 'var(--text-tertiary)' }}
                   >
                     <Pencil size={13} />
                   </button>
@@ -529,7 +529,7 @@ export function SourcesManager() {
                   {/* Expand/collapse */}
                   <button
                     onClick={() => setExpandedId(expandedId === source.id ? null : source.id)}
-                    className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-white/5"
+                    className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)]"
                     style={{ color: 'var(--text-tertiary)' }}
                   >
                     {expandedId === source.id ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
@@ -538,7 +538,7 @@ export function SourcesManager() {
                   {/* Hapus */}
                   <button
                     onClick={() => handleDelete(source.id, source.name)}
-                    className="flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10"
+                    className="flex size-7 items-center justify-center rounded-md opacity-50 transition-opacity hover:opacity-100"
                     style={{ color: '#ef4444' }}
                     title="Hapus sumber"
                   >
