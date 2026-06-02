@@ -10,6 +10,8 @@ export interface SitemapManga {
   url: string;
   slug: string;
   lastModified: Date | null;
+  /** Rating konten — diset saat import berdasarkan sitemap asalnya, bukan dari parser */
+  contentRating?: 'general' | 'mature';
 }
 
 export interface SitemapParseResult {

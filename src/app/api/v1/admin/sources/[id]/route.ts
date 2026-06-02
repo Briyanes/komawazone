@@ -6,6 +6,7 @@ const PatchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   base_url: z.string().url().optional(),
   sitemap_urls: z.array(z.string().url()).min(1).optional(),
+  sitemap_content_ratings: z.record(z.string(), z.enum(['general', 'mature'])).optional(),
   is_active: z.boolean().optional(),
   type: z.enum(['MANHWA', 'MANGA', 'MANHUA', 'MIXED']).optional(),
   content_rating: z.enum(['general', 'mature']).optional(),
@@ -38,6 +39,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   if (parsed.data.name !== undefined) update.name = parsed.data.name;
   if (parsed.data.base_url !== undefined) update.base_url = parsed.data.base_url;
   if (parsed.data.sitemap_urls !== undefined) update.sitemap_urls = parsed.data.sitemap_urls;
+  if (parsed.data.sitemap_content_ratings !== undefined) update.sitemap_content_ratings = parsed.data.sitemap_content_ratings;
   if (parsed.data.is_active !== undefined) update.is_active = parsed.data.is_active;
   if (parsed.data.type !== undefined) update.type = parsed.data.type;
   if (parsed.data.content_rating !== undefined) update.content_rating = parsed.data.content_rating;

@@ -39,6 +39,7 @@ export async function POST(req: NextRequest) {
         importUpdates?: boolean;
         batchSize?: number;
         contentRating?: 'general' | 'mature';
+        sitemapContentRatings?: Record<string, 'general' | 'mature'>;
       };
     };
 
@@ -57,6 +58,7 @@ export async function POST(req: NextRequest) {
       // Hard-cap at 5 regardless of client request to prevent CloudFlare rate-limiting
       batchSize = 3,
       contentRating = 'general',
+      sitemapContentRatings = {},
     } = options;
     const safeBatchSize = Math.min(batchSize, 5);
 
@@ -68,6 +70,7 @@ export async function POST(req: NextRequest) {
       userId: user.id,
       sourceId: sourceId ?? null,
       contentRating,
+      sitemapContentRatings,
     };
 
     // Create import job

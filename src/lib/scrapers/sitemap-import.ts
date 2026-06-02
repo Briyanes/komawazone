@@ -19,8 +19,15 @@ export interface ImportChunkOptions {
   batchSize: number;
   userId: string;
   sourceId: string | null;
-  /** Rating konten untuk semua manga yang diimport dari sumber ini */
+  /** Rating default untuk manga dari sumber ini (fallback jika URL tidak ada di sitemapContentRatings) */
   contentRating?: 'general' | 'mature';
+  /**
+   * Per-sitemap rating override.
+   * Key = sitemap URL, value = 'general' | 'mature'.
+   * Manga dari sitemap tersebut akan diimport dengan rating ini.
+   * URL yang tidak ada di map akan menggunakan contentRating sebagai fallback.
+   */
+  sitemapContentRatings?: Record<string, 'general' | 'mature'>;
 }
 
 // ── Main exported function ────────────────────────────────────────────────────
@@ -60,7 +67,11 @@ export async function processImportChunk(
 
     // Cek apakah sudah ada daftar URL yang di-cache dari parse pertama
     const jobConfig = job.config as Record<string, unknown> | null;
-    const cachedUrls = jobConfig?.parsedMangaUrls as Array<{ url: string; lastModified: string | null }> | undefined;
+    const cachedUrls = jobConfig?.parsedMangaUrls as Array<{
+      url: string;
+      lastModified: string | null;
+      contentRating?: 'general' | 'mature';
+    }> | undefined;
 
     if (cachedUrls && cachedUrls.length > 0) {
       // Gunakan URL yang sudah di-parse sebelumnya — tidak perlu fetch 86+ sitemap lagi
@@ -69,20 +80,36 @@ export async function processImportChunk(
         url: item.url,
         slug: extractSlugFromUrl(item.url),
         lastModified: item.lastModified ? new Date(item.lastModified) : null,
+        contentRating: item.contentRating ?? options.contentRating ?? 'general',
       }));
     } else {
-      // Pertama kali: parse semua sitemap, lalu simpan hasilnya ke DB
+      // Pertama kali: parse setiap sitemap URL secara terpisah agar bisa
+      // melacak contentRating per-sitemap (sitemapContentRatings).
       console.log(`[Job ${jobId}] Parsing ${sitemapUrls.length} sitemaps (pertama kali)...`);
-      const parseResult = await parseAllSitemaps(sitemapUrls, {
-        timeout: 15_000,
-        includeLastmod: true,
-      });
-      allManga = parseResult.mangas;
+      const sitemapRatings = options.sitemapContentRatings ?? {};
+      const slugSet = new Set<string>();
+      const mangaWithRatings: SitemapManga[] = [];
+
+      for (const sitemapUrl of sitemapUrls) {
+        const rating = (sitemapRatings[sitemapUrl] ?? options.contentRating ?? 'general') as 'general' | 'mature';
+        const parseResult = await parseAllSitemaps([sitemapUrl], {
+          timeout: 15_000,
+          includeLastmod: true,
+        });
+        for (const manga of parseResult.mangas) {
+          if (!slugSet.has(manga.slug)) {
+            slugSet.add(manga.slug);
+            mangaWithRatings.push({ ...manga, contentRating: rating });
+          }
+        }
+      }
+      allManga = mangaWithRatings;
 
       // Cache hasil parse ke DB agar chunk berikutnya langsung pakai ini
       const urlsToCache = allManga.map(m => ({
         url: m.url,
         lastModified: m.lastModified?.toISOString() ?? null,
+        contentRating: m.contentRating,
       }));
       await supabase.from('import_jobs').update({
         total_items: allManga.length,
@@ -117,7 +144,11 @@ export async function processImportChunk(
       const batch = chunk.slice(i, i + options.batchSize);
       const results = await Promise.allSettled(
         batch.map(manga => Promise.race([
-          scrapeAndProcessItem(manga.url, manga.lastModified, options),
+          // Override contentRating per-manga berdasarkan sitemap asalnya
+          scrapeAndProcessItem(manga.url, manga.lastModified, {
+            ...options,
+            contentRating: manga.contentRating ?? options.contentRating ?? 'general',
+          }),
           new Promise<'skipped'>((resolve) => setTimeout(() => resolve('skipped'), 28_000)),
         ])),
       );

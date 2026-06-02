@@ -634,6 +634,8 @@ export interface Database {
           name: string;
           base_url: string;
           sitemap_urls: string[];
+          /** Per-sitemap rating override: { [sitemapUrl]: 'general' | 'mature' } */
+          sitemap_content_ratings: Record<string, 'general' | 'mature'>;
           is_active: boolean;
           type: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
           content_rating: 'general' | 'mature';
@@ -646,6 +648,7 @@ export interface Database {
           name: string;
           base_url: string;
           sitemap_urls?: string[];
+          sitemap_content_ratings?: Record<string, 'general' | 'mature'>;
           is_active?: boolean;
           type?: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
           content_rating?: 'general' | 'mature';
@@ -654,6 +657,7 @@ export interface Database {
         Update: {
           name?: string;
           sitemap_urls?: string[];
+          sitemap_content_ratings?: Record<string, 'general' | 'mature'>;
           is_active?: boolean;
           type?: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
           content_rating?: 'general' | 'mature';

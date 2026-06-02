@@ -8,6 +8,8 @@ interface MangaSource {
   name: string;
   base_url: string;
   sitemap_urls: string[];
+  /** Per-sitemap rating override: { [sitemapUrl]: 'general' | 'mature' } */
+  sitemap_content_ratings: Record<string, 'general' | 'mature'>;
   is_active: boolean;
   type: 'MANHWA' | 'MANGA' | 'MANHUA' | 'MIXED';
   content_rating: 'general' | 'mature';
@@ -41,12 +43,15 @@ export function SourcesManager() {
   const [form, setForm] = useState({
     name: '',
     base_url: '',
-    sitemap_urls: '',
     is_active: true,
     type: 'MANHWA' as MangaSource['type'],
     content_rating: 'general' as MangaSource['content_rating'],
     notes: '',
   });
+  // Setiap entry: URL sitemap + rating override (jika beda dari source default)
+  const [sitemapEntries, setSitemapEntries] = useState<Array<{ url: string; rating: 'general' | 'mature' }>>([
+    { url: '', rating: 'general' },
+  ]);
   const [formLoading, setFormLoading] = useState(false);
   const [fixCovers, setFixCovers] = useState(true);
 
@@ -64,7 +69,8 @@ export function SourcesManager() {
   useEffect(() => { void fetchSources(); }, [fetchSources]);
 
   const resetForm = () => {
-    setForm({ name: '', base_url: '', sitemap_urls: '', is_active: true, type: 'MANHWA', content_rating: 'general', notes: '' });
+    setForm({ name: '', base_url: '', is_active: true, type: 'MANHWA', content_rating: 'general', notes: '' });
+    setSitemapEntries([{ url: '', rating: 'general' }]);
     setEditingId(null);
     setShowForm(false);
     setError(null);
@@ -74,12 +80,17 @@ export function SourcesManager() {
     setForm({
       name: source.name,
       base_url: source.base_url,
-      sitemap_urls: source.sitemap_urls.join('\n'),
       is_active: source.is_active,
       type: source.type,
       content_rating: source.content_rating ?? 'general',
       notes: source.notes ?? '',
     });
+    const ratings = source.sitemap_content_ratings ?? {};
+    setSitemapEntries(
+      source.sitemap_urls.length > 0
+        ? source.sitemap_urls.map(url => ({ url, rating: ratings[url] ?? source.content_rating ?? 'general' }))
+        : [{ url: '', rating: source.content_rating ?? 'general' }]
+    );
     setEditingId(source.id);
     setShowForm(true);
     setError(null);
@@ -90,10 +101,20 @@ export function SourcesManager() {
     setFormLoading(true);
     setError(null);
 
-    const sitemapUrls = form.sitemap_urls
-      .split('\n')
-      .map(u => u.trim())
-      .filter(Boolean);
+    const sitemapUrls = sitemapEntries.map(e => e.url.trim()).filter(Boolean);
+    if (sitemapUrls.length === 0) {
+      setError('Tambahkan minimal satu sitemap URL.');
+      setFormLoading(false);
+      return;
+    }
+
+    // Buat map per-sitemap rating (hanya simpan yang beda dari source default)
+    const sitemapContentRatings: Record<string, 'general' | 'mature'> = {};
+    for (const entry of sitemapEntries) {
+      if (entry.url.trim()) {
+        sitemapContentRatings[entry.url.trim()] = entry.rating;
+      }
+    }
 
     try {
       if (editingId) {
@@ -105,6 +126,7 @@ export function SourcesManager() {
             name: form.name,
             base_url: form.base_url,
             sitemap_urls: sitemapUrls,
+            sitemap_content_ratings: sitemapContentRatings,
             is_active: form.is_active,
             type: form.type,
             content_rating: form.content_rating,
@@ -127,6 +149,7 @@ export function SourcesManager() {
             name: form.name,
             base_url: form.base_url,
             sitemap_urls: sitemapUrls,
+            sitemap_content_ratings: sitemapContentRatings,
             is_active: form.is_active,
             type: form.type,
             content_rating: form.content_rating,
@@ -172,7 +195,13 @@ export function SourcesManager() {
         body: JSON.stringify({
           sitemapUrls: source.sitemap_urls,
           sourceId: source.id,
-          options: { importNew: true, importUpdates: fixCovers, batchSize: 3, contentRating: source.content_rating ?? 'general' },
+          options: {
+            importNew: true,
+            importUpdates: fixCovers,
+            batchSize: 3,
+            contentRating: source.content_rating ?? 'general',
+            sitemapContentRatings: source.sitemap_content_ratings ?? {},
+          },
         }),
       });
       const json = await res.json() as { data?: { jobId?: string }; error?: string };
@@ -269,16 +298,61 @@ export function SourcesManager() {
             </FormField>
           </div>
 
-          <FormField label="Sitemap URLs (satu per baris)">
-            <textarea
-              required
-              rows={4}
-              value={form.sitemap_urls}
-              onChange={e => setForm(f => ({ ...f, sitemap_urls: e.target.value }))}
-              placeholder="https://example.com/manga-sitemap.xml&#10;https://example.com/manga-sitemap2.xml"
-              className="w-full rounded-lg px-3 py-2 text-xs font-mono resize-none"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
-            />
+          <FormField label="Sitemap URLs">
+            <div className="space-y-1.5">
+              {sitemapEntries.map((entry, idx) => (
+                <div key={idx} className="flex items-center gap-1.5">
+                  <input
+                    type="url"
+                    required
+                    value={entry.url}
+                    onChange={e => setSitemapEntries(prev => prev.map((en, i) => i === idx ? { ...en, url: e.target.value } : en))}
+                    placeholder="https://example.com/sitemap.xml"
+                    className="flex-1 rounded-lg px-3 py-2 text-xs font-mono"
+                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                  />
+                  {/* Toggle rating per-sitemap */}
+                  <button
+                    type="button"
+                    onClick={() => setSitemapEntries(prev => prev.map((en, i) =>
+                      i === idx ? { ...en, rating: en.rating === 'mature' ? 'general' : 'mature' } : en
+                    ))}
+                    className="shrink-0 rounded-full px-2 py-1 text-[10px] font-medium transition-colors"
+                    title="Klik untuk toggle rating sitemap ini"
+                    style={entry.rating === 'mature'
+                      ? { background: 'rgba(239,68,68,0.15)', color: '#ef4444', border: '1px solid rgba(239,68,68,0.3)' }
+                      : { background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.2)' }
+                    }
+                  >
+                    {entry.rating === 'mature' ? '18+' : 'G'}
+                  </button>
+                  {/* Hapus entry */}
+                  {sitemapEntries.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => setSitemapEntries(prev => prev.filter((_, i) => i !== idx))}
+                      className="shrink-0 flex size-7 items-center justify-center rounded-lg transition-colors hover:bg-red-500/10"
+                      style={{ color: '#ef4444' }}
+                      title="Hapus sitemap ini"
+                    >
+                      <Trash2 size={12} />
+                    </button>
+                  )}
+                </div>
+              ))}
+              <button
+                type="button"
+                onClick={() => setSitemapEntries(prev => [...prev, { url: '', rating: form.content_rating }])}
+                className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] transition-colors hover:opacity-80"
+                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+              >
+                <Plus size={11} />
+                Tambah URL sitemap
+              </button>
+              <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                Klik badge <span className="font-mono">G</span> / <span className="font-mono">18+</span> untuk set rating per sitemap. Default mengikuti &quot;Rating Konten&quot; di bawah.
+              </p>
+            </div>
           </FormField>
 
           <div className="grid grid-cols-2 gap-3">
@@ -474,11 +548,25 @@ export function SourcesManager() {
                     Sitemap URLs ({source.sitemap_urls.length}):
                   </p>
                   <div className="space-y-0.5">
-                    {source.sitemap_urls.map(url => (
-                      <div key={url} className="truncate text-[11px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
-                        {url}
-                      </div>
-                    ))}
+                    {source.sitemap_urls.map(url => {
+                      const urlRating = (source.sitemap_content_ratings ?? {})[url] ?? source.content_rating ?? 'general';
+                      return (
+                        <div key={url} className="flex items-center gap-1.5">
+                          <span
+                            className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-medium"
+                            style={urlRating === 'mature'
+                              ? { background: 'rgba(239,68,68,0.12)', color: '#ef4444' }
+                              : { background: 'rgba(34,197,94,0.1)', color: '#22c55e' }
+                            }
+                          >
+                            {urlRating === 'mature' ? '18+' : 'G'}
+                          </span>
+                          <span className="truncate text-[11px] font-mono" style={{ color: 'var(--text-tertiary)' }}>
+                            {url}
+                          </span>
+                        </div>
+                      );
+                    })}
                   </div>
                   {source.notes && (
                     <p className="mt-2 text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
