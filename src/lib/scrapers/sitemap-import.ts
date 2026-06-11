@@ -179,13 +179,29 @@ export async function processImportChunk(
     }
 
     // Jika tidak ada chunk berikutnya, tandai selesai.
-    // Jika masih ada, /api/cron/import-advance akan melanjutkan otomatis.
+    // Jika masih ada, auto-trigger /resume untuk melanjutkan chunk berikutnya.
     const nextOffset = offset + IMPORT_CHUNK_SIZE;
     if (nextOffset >= total) {
       await completeJob(jobId, newCount, updatedCount, skippedCount, errors);
       console.log(`[Job ${jobId}] Selesai: ${newCount} baru, ${updatedCount} diupdate, ${skippedCount} dilewati`);
     } else {
-      console.log(`[Job ${jobId}] Chunk selesai — offset berikutnya ${nextOffset}/${total}, menunggu cron.`);
+      console.log(`[Job ${jobId}] Chunk selesai — auto-trigger resume ke offset ${nextOffset}/${total}`);
+      // Trigger resume endpoint untuk chunk berikutnya secara otomatis
+      try {
+        const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || process.env.VERCEL_URL
+          ? `https://${process.env.VERCEL_URL}`
+          : 'http://localhost:3000';
+        await fetch(`${baseUrl}/api/v1/admin/scrape/sitemap/resume`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.CRON_SECRET ?? ''}`,
+          },
+          body: JSON.stringify({ jobId, options, offset: nextOffset }),
+        });
+      } catch (resumeErr) {
+        console.warn(`[Job ${jobId}] Gagal trigger resume — cron akan melanjutkan:`, resumeErr);
+      }
     }
 
   } catch (error) {

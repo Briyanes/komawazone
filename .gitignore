@@ -20,6 +20,12 @@
 # production
 /build
 
+# Script progress files
+scripts/.r2-migrate-progress.json
+scripts/.chapter-download-progress.json
+scripts/failed-covers.jsonl
+scripts/failed-chapters.jsonl
+
 # misc
 .DS_Store
 *.pem
