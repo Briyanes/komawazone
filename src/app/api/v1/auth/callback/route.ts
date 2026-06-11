@@ -31,7 +31,11 @@ export async function GET(request: NextRequest) {
     if (!error) {
       return response;
     }
+
+    // Log the actual error for debugging
+    console.error('[auth/callback] exchangeCodeForSession error:', error.message);
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`);
   }
 
-  return NextResponse.redirect(`${origin}/login?error=auth_callback_error`);
+  return NextResponse.redirect(`${origin}/login?error=no_code`);
 }

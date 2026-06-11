@@ -24,7 +24,9 @@ function translateAuthError(msg: string): string {
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const [serverError, setServerError] = useState<string | null>(null);
+  const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+  const initialError = searchParams?.get('error');
+  const [serverError, setServerError] = useState<string | null>(initialError || null);
   const [isPending, startTransition] = useTransition();
   const isRateLimit = serverError?.includes('Terlalu banyak percobaan');
 
