@@ -9,35 +9,6 @@ export async function middleware(request: NextRequest) {
   // Normalize host (remove port for local dev)
   const cleanHost = host.split(':')[0];
 
-  // --- SUPABASE AUTH COOKIE HANDLING ---
-  // This ensures PKCE cookies and session cookies are always in sync
-  let response = NextResponse.next();
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          // Set on request so downstream handlers can read them
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
-          );
-          // Set on response so browser stores them
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
-          );
-        },
-      },
-    }
-  );
-
-  // Refresh the session — this also ensures cookies are properly set
-  await supabase.auth.getUser();
-
   // --- HUB DOMAIN LOGIC (olluq.com) ---
   const isHubHost =
     cleanHost === HUB_DOMAIN ||
@@ -49,9 +20,7 @@ export async function middleware(request: NextRequest) {
     if (cleanHost.startsWith('www.')) {
       const url = request.nextUrl.clone();
       url.host = HUB_DOMAIN;
-      response = NextResponse.redirect(url);
-      // Re-apply cookies on new response
-      return response;
+      return NextResponse.redirect(url);
     }
 
     // If the path is not allowed on hub → redirect to reader domain
@@ -60,10 +29,40 @@ export async function middleware(request: NextRequest) {
       url.protocol = 'https';
       url.host = READER_DOMAIN;
       url.port = '';
-      response = NextResponse.redirect(url, 302);
-      return response;
+      return NextResponse.redirect(url, 302);
     }
   }
+
+  // --- SUPABASE AUTH COOKIE HANDLING ---
+  // Skip auth API routes — they handle cookies themselves
+  if (pathname.startsWith('/api/v1/auth/')) {
+    return NextResponse.next();
+  }
+
+  let response = NextResponse.next();
+
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) =>
+            request.cookies.set(name, value)
+          );
+          cookiesToSet.forEach(({ name, value, options }) =>
+            response.cookies.set(name, value, options)
+          );
+        },
+      },
+    }
+  );
+
+  // Refresh the session
+  await supabase.auth.getUser();
 
   return response;
 }
