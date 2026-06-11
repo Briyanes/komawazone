@@ -732,11 +732,11 @@ async function downloadImagesForChapters(manga, chapters, gotScraping, stats, pr
         }
       }
 
-      // Insert chapter_images records
+      // Insert chapter_images records (upsert to handle duplicates)
       if (imageRecords.length > 0) {
         const { error: insertErr } = await supabase
           .from('chapter_images')
-          .insert(imageRecords);
+          .upsert(imageRecords, { onConflict: 'chapter_id,number' });
 
         if (insertErr) {
           console.log(`          ⚠️  Ch.${chapter.number}: gagal insert ${imageRecords.length} image records: ${insertErr.message}`);
