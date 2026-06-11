@@ -57,10 +57,11 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
     [filtered, page]
   );
 
-  // Reset ke halaman 1 saat filter berubah
+  // Reset ke halaman 1 saat filter berubah, dan bersihkan seleksi saat pindah halaman
   useEffect(() => { setPage(1); }, [search, statusFilter, ratingFilter]);
+  useEffect(() => { setSelected(new Set()); }, [page]);
 
-  const allSelected = filtered.length > 0 && filtered.every(m => selected.has(m.id));
+  const allSelected = paginated.length > 0 && paginated.every(m => selected.has(m.id));
 
   const toggleSelect = (id: string) => {
     setSelected(prev => {
@@ -72,9 +73,9 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
 
   const toggleAll = () => {
     if (allSelected) {
-      setSelected(prev => { const next = new Set(prev); filtered.forEach(m => next.delete(m.id)); return next; });
+      setSelected(prev => { const next = new Set(prev); paginated.forEach(m => next.delete(m.id)); return next; });
     } else {
-      setSelected(prev => { const next = new Set(prev); filtered.forEach(m => next.add(m.id)); return next; });
+      setSelected(prev => { const next = new Set(prev); paginated.forEach(m => next.add(m.id)); return next; });
     }
   };
 
