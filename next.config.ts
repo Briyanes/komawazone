@@ -86,17 +86,6 @@ const nextConfig: NextConfig = {
     pagesBufferLength: 5, // buffer 5 pages
   },
 
-  // Redirect www → non-www (adjust for your domain)
-  async redirects() {
-    return [
-      {
-        source: '/',
-        has: [{ type: 'host', value: 'www.mangazone.app' }],
-        destination: 'https://mangazone.app/',
-        permanent: true,
-      },
-    ];
-  },
 
   // Serve /api/sitemap as /sitemap.xml (Google standard URL)
   async rewrites() {
