@@ -168,10 +168,8 @@ export function SitemapImportTool() {
     if (!activeJob) return;
 
     try {
-      await fetch('/api/v1/admin/import/jobs', {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ jobId: activeJob.id }),
+      await fetch(`/api/v1/admin/import-jobs/${activeJob.id}/cancel`, {
+        method: 'POST',
       });
 
       if (pollIntervalRef.current) {
@@ -305,16 +303,16 @@ export function SitemapImportTool() {
             </div>
             <input
               type="range"
-              min="5"
-              max="20"
+              min="1"
+              max="5"
               value={options.batchSize}
               onChange={(e) => setOptions({ ...options, batchSize: parseInt(e.target.value) })}
               className="w-full"
               style={{ accentColor: 'var(--color-primary)' }}
             />
             <div className="flex justify-between text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
-              <span>Conservative (5)</span>
-              <span>Aggressive (20)</span>
+              <span>Conservative (1)</span>
+              <span>Aggressive (5)</span>
             </div>
           </div>
         </div>

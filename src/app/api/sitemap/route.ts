@@ -37,6 +37,10 @@ export async function GET() {
   const staticPages = [
     { url: '/', priority: '1.0', changefreq: 'daily' },
     { url: '/search', priority: '0.8', changefreq: 'daily' },
+    { url: '/about', priority: '0.5', changefreq: 'monthly' },
+    { url: '/contact', priority: '0.5', changefreq: 'monthly' },
+    { url: '/terms', priority: '0.3', changefreq: 'monthly' },
+    { url: '/vip', priority: '0.6', changefreq: 'monthly' },
     { url: '/login', priority: '0.3', changefreq: 'monthly' },
     { url: '/register', priority: '0.3', changefreq: 'monthly' },
   ];
