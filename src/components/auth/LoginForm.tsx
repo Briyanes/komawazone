@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
-import { signIn, signInWithOAuth } from '@/lib/auth/actions';
+import { signIn } from '@/lib/auth/actions';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -66,10 +66,8 @@ export function LoginForm() {
   };
 
   const handleOAuth = (provider: 'google' | 'twitter' | 'discord') => {
-    startTransition(async () => {
-      const result = await signInWithOAuth(provider);
-      if (result?.error) setServerError(result.error);
-    });
+    // Use Route Handler instead of Server Action so PKCE cookies are properly set
+    window.location.href = `/api/v1/auth/signin/${provider}`;
   };
 
   return (
