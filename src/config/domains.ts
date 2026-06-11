@@ -8,7 +8,7 @@
  */
 
 export const HUB_DOMAIN = process.env.NEXT_PUBLIC_HUB_DOMAIN || 'olluq.com';
-export const READER_DOMAIN = process.env.NEXT_PUBLIC_READER_DOMAIN || 'read.olluq.xyz';
+export const READER_DOMAIN = process.env.NEXT_PUBLIC_READER_DOMAIN || 'olluq.xyz';
 
 /** Hub pages that are allowed on the HUB domain */
 export const HUB_ALLOWED_PATHS = [
