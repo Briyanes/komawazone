@@ -34,6 +34,8 @@ export function SitemapImportTool() {
     importUpdates: true,
     batchSize: 3, // Conservative default to avoid rate-limiting
   });
+  const [sitemapRatings, setSitemapRatings] = useState<Record<string, 'general' | 'mature'>>({});
+  const [defaultRating, setDefaultRating] = useState<'general' | 'mature'>('general');
   const [activeJob, setActiveJob] = useState<ImportJob | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +77,11 @@ export function SitemapImportTool() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sitemapUrls: sitemaps,
-          options,
+          options: {
+            ...options,
+            contentRating: defaultRating,
+            sitemapContentRatings: sitemapRatings,
+          },
         }),
       });
 
@@ -222,6 +228,31 @@ export function SitemapImportTool() {
               <span className="text-xs flex-1 truncate" style={{ color: 'var(--text-secondary)' }}>
                 {url}
               </span>
+              <select
+                value={sitemapRatings[url] ?? ''}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    setSitemapRatings(prev => ({ ...prev, [url]: val as 'general' | 'mature' }));
+                  } else {
+                    setSitemapRatings(prev => {
+                      const next = { ...prev };
+                      delete next[url];
+                      return next;
+                    });
+                  }
+                }}
+                className="text-xs rounded-md px-2 py-1 border shrink-0"
+                style={{
+                  background: 'var(--bg-primary)',
+                  borderColor: 'var(--border-light)',
+                  color: sitemapRatings[url] === 'mature' ? '#ef4444' : sitemapRatings[url] === 'general' ? '#22c55e' : 'var(--text-tertiary)',
+                }}
+              >
+                <option value="">Default</option>
+                <option value="general">General</option>
+                <option value="mature">Mature</option>
+              </select>
               <button
                 onClick={() => removeSitemap(url)}
                 className="text-red-500 hover:text-red-600 transition-colors"
@@ -293,6 +324,44 @@ export function SitemapImportTool() {
               style={{ accentColor: 'var(--color-primary)' }}
             />
           </label>
+
+          {/* Default Content Rating */}
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+                Default Rating Konten
+              </span>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  onClick={() => setDefaultRating('general')}
+                  className="px-3 py-1 text-xs font-semibold rounded-lg transition-colors"
+                  style={{
+                    background: defaultRating === 'general' ? 'rgba(34,197,94,0.15)' : 'transparent',
+                    color: defaultRating === 'general' ? '#22c55e' : 'var(--text-tertiary)',
+                    border: `1px solid ${defaultRating === 'general' ? 'rgba(34,197,94,0.3)' : 'var(--border-light)'}`,
+                  }}
+                >
+                  General
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDefaultRating('mature')}
+                  className="px-3 py-1 text-xs font-semibold rounded-lg transition-colors"
+                  style={{
+                    background: defaultRating === 'mature' ? 'rgba(239,68,68,0.15)' : 'transparent',
+                    color: defaultRating === 'mature' ? '#ef4444' : 'var(--text-tertiary)',
+                    border: `1px solid ${defaultRating === 'mature' ? 'rgba(239,68,68,0.3)' : 'var(--border-light)'}`,
+                  }}
+                >
+                  Mature
+                </button>
+              </div>
+            </div>
+            <p className="text-[11px] mt-1" style={{ color: 'var(--text-tertiary)' }}>
+              Rating untuk sitemap yang tidak dipilih individual. Manga MATURE tidak tampil untuk user umum.
+            </p>
+          </div>
 
           {/* Batch Size */}
           <div>
