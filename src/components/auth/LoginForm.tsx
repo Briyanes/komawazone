@@ -7,6 +7,7 @@ import Link from 'next/link';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import { loginSchema, type LoginInput } from '@/lib/validations/auth';
 import { signIn } from '@/lib/auth/actions';
+import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -65,9 +66,21 @@ export function LoginForm() {
     });
   };
 
-  const handleOAuth = (provider: 'google' | 'twitter' | 'discord') => {
-    // Use Route Handler instead of Server Action so PKCE cookies are properly set
-    window.location.href = `/api/v1/auth/signin/${provider}`;
+  const handleOAuth = async (provider: 'google' | 'twitter' | 'discord') => {
+    setServerError(null);
+    try {
+      const supabase = createClient();
+      const siteUrl = window.location.origin;
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${siteUrl}/api/v1/auth/callback`,
+        },
+      });
+      if (error) setServerError(error.message);
+    } catch (err) {
+      setServerError(err instanceof Error ? err.message : 'OAuth error');
+    }
   };
 
   return (
