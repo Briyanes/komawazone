@@ -1,21 +1,21 @@
 import Link from 'next/link';
 import { Crown, Check, Zap, Lock } from 'lucide-react';
 import type { Metadata } from 'next';
-import { VIPClientWrapper } from '@/components/payment/VIPClientWrapper';
+import { VoucherRedeemForm } from '@/components/payment/VoucherRedeemForm';
 
 export const metadata: Metadata = { title: 'VIP — OLLUQ' };
-
-const PLANS = [
-  { label: '1 Bulan', price: 'Rp 15.000', value: '15rb', code: '1-month' },
-  { label: '3 Bulan', price: 'Rp 40.000', value: '40rb', badge: 'Hemat 11%', code: '3-month' },
-  { label: '6 Bulan', price: 'Rp 75.000', value: '75rb', badge: 'Hemat 17%', code: '6-month' },
-];
 
 const BENEFITS = [
   { title: 'Genre 18+', desc: 'Akses konten Mature, Ecchi, Adult, Smut, dan genre dewasa lainnya' },
   { title: 'Baca Tanpa Iklan', desc: 'Pengalaman membaca tanpa gangguan iklan sama sekali' },
   { title: 'Early Access', desc: 'Baca chapter terbaru lebih awal sebelum tersedia untuk umum' },
   { title: 'Badge VIP', desc: 'Tampilkan status VIP eksklusif di profil dan komentar kamu' },
+];
+
+const PACKAGES = [
+  { plan: '1 Bulan', price: 'Rp 15.000', code: '1-month' },
+  { plan: '3 Bulan', price: 'Rp 40.000', code: '3-month', badge: 'Hemat 11%' },
+  { plan: '6 Bulan', price: 'Rp 75.000', code: '6-month', badge: 'Hemat 17%' },
 ];
 
 interface Props {
@@ -91,22 +91,49 @@ export default async function VIPPage({ searchParams }: Props) {
         ))}
       </div>
 
-      {/* Payment Method Selection */}
-      <div>
-        <h2 className="text-lg font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Pilih Metode Pembayaran</h2>
-        <VIPClientWrapper plans={PLANS} />
+      {/* Pricing cards */}
+      <div className="space-y-3">
+        <h2 className="text-lg font-semibold text-center" style={{ color: 'var(--text-primary)' }}>
+          Pilih Paket VIP
+        </h2>
+        <div className="grid gap-3 sm:grid-cols-3">
+          {PACKAGES.map(p => (
+            <div
+              key={p.code}
+              className="relative rounded-xl border p-4 text-center space-y-2"
+              style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
+            >
+              {p.badge && (
+                <span
+                  className="absolute -top-2 right-3 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                  style={{ background: '#f59e0b' }}
+                >
+                  {p.badge}
+                </span>
+              )}
+              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.plan}</p>
+              <p className="text-lg font-bold" style={{ color: 'var(--color-primary)' }}>{p.price}</p>
+            </div>
+          ))}
+        </div>
       </div>
+
+      {/* Voucher Redeem — PRIMARY METHOD */}
+      <VoucherRedeemForm />
 
       {/* Manual Payment Info */}
       <div
         className="rounded-2xl border p-6 space-y-3"
         style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
       >
-        <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>Pembayaran Manual (Backup)</h2>
+        <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
+          Beli Kode Voucher via Admin
+        </h2>
         <ol className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          <li className="flex gap-2"><span className="font-bold text-amber-500">1.</span> Transfer sesuai paket yang dipilih ke rekening admin.</li>
+          <li className="flex gap-2"><span className="font-bold text-amber-500">1.</span> Pilih paket VIP dan transfer sesuai harga ke rekening admin.</li>
           <li className="flex gap-2"><span className="font-bold text-amber-500">2.</span> Kirim bukti transfer beserta username/email ke admin via WhatsApp atau Discord.</li>
-          <li className="flex gap-2"><span className="font-bold text-amber-500">3.</span> VIP akan diaktifkan dalam 1×24 jam setelah pembayaran dikonfirmasi.</li>
+          <li className="flex gap-2"><span className="font-bold text-amber-500">3.</span> Admin akan memberikan kode voucher yang bisa di-redeem di atas.</li>
+          <li className="flex gap-2"><span className="font-bold text-amber-500">4.</span> Masukkan kode voucher → VIP langsung aktif!</li>
         </ol>
         <div
           className="mt-4 rounded-xl p-4 text-sm"
@@ -131,4 +158,3 @@ export default async function VIPPage({ searchParams }: Props) {
     </div>
   );
 }
-

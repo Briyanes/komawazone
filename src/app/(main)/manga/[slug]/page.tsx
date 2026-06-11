@@ -424,12 +424,33 @@ export default async function MangaDetailPage({ params }: Props) {
 async function Recommendations({ genres, excludeId }: { genres: string[]; excludeId: string }) {
   if (genres.length === 0) return null;
   const supabase = await createClient();
-  const { data } = await supabase
+
+  // Check if user is VIP
+  const { data: { user } } = await supabase.auth.getUser();
+  let isVip = false;
+  if (user) {
+    const { data } = await supabase
+      .from('users')
+      .select('vip_expires_at')
+      .eq('id', user.id)
+      .single();
+    const exp = (data as { vip_expires_at?: string | null } | null)?.vip_expires_at;
+    isVip = !!exp && new Date(exp) > new Date();
+  }
+
+  let query = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, genres, content_rating')
     .is('deleted_at', null)
     .overlaps('genres', genres)
-    .neq('id', excludeId)
+    .neq('id', excludeId);
+
+  // Filter out mature content for non-VIP users
+  if (!isVip) {
+    query = query.neq('content_rating', 'mature');
+  }
+
+  const { data } = await query
     .order('rating', { ascending: false })
     .limit(8);
 

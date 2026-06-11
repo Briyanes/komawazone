@@ -173,6 +173,49 @@ export interface Database {
           }
         ]
       }
+      vip_codes: {
+        Row: {
+          id: string
+          code: string
+          plan: '1-month' | '3-month' | '6-month'
+          created_by: string | null
+          used_by: string | null
+          used_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          code: string
+          plan: '1-month' | '3-month' | '6-month'
+          created_by?: string | null
+          used_by?: string | null
+          used_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          code?: string
+          plan?: '1-month' | '3-month' | '6-month'
+          created_by?: string | null
+          used_by?: string | null
+          used_at?: string | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: 'vip_codes_created_by_fkey'
+            columns: ['created_by']
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          },
+          {
+            foreignKeyName: 'vip_codes_used_by_fkey'
+            columns: ['used_by']
+            referencedRelation: 'users'
+            referencedColumns: ['id']
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

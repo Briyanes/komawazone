@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Play, RefreshCw, Info } from 'lucide-react';
 
 export default function StorageBackfillPage() {
   const [status, setStatus] = useState<string>('idle');
@@ -41,57 +42,84 @@ export default function StorageBackfillPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold mb-6">Storage Backfill - Manga Covers</h1>
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+          Storage Backfill
+        </h1>
+        <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+          Migrasi cover manga ke Cloudflare R2
+        </p>
+      </div>
 
-        <div className="bg-white rounded-lg shadow p-6 mb-6">
-          <div className="flex gap-4 items-end mb-4">
-            <div>
-              <label className="block text-sm font-medium mb-1">Limit</label>
-              <input
-                type="number"
-                value={limit}
-                onChange={(e) => setLimit(Number(e.target.value))}
-                min="1"
-                max="200"
-                className="border rounded px-3 py-2 w-32"
-              />
-            </div>
-            <button
-              onClick={runBackfill}
-              disabled={status === 'loading'}
-              className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:opacity-50"
-            >
-              {status === 'loading' ? 'Running...' : 'Start Backfill'}
-            </button>
-            <button
-              onClick={checkStatus}
-              disabled={status === 'loading'}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 disabled:opacity-50"
-            >
-              Check Status
-            </button>
+      <div
+        className="rounded-xl p-5 space-y-4"
+        style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+      >
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-tertiary)' }}>
+              Limit per batch
+            </label>
+            <input
+              type="number"
+              value={limit}
+              onChange={e => setLimit(Number(e.target.value))}
+              min={1}
+              max={200}
+              className="rounded-lg px-3 py-2 text-sm w-24"
+              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+            />
           </div>
-
-          {result && (
-            <div className="mt-4 p-4 bg-gray-50 rounded">
-              <pre className="text-sm overflow-auto max-h-96">
-                {JSON.stringify(result, null, 2)}
-              </pre>
-            </div>
-          )}
+          <button
+            onClick={runBackfill}
+            disabled={status === 'loading'}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: 'var(--color-primary)' }}
+          >
+            {status === 'loading' ? (
+              <RefreshCw size={14} className="animate-spin" />
+            ) : (
+              <Play size={14} />
+            )}
+            {status === 'loading' ? 'Running...' : 'Start Backfill'}
+          </button>
+          <button
+            onClick={checkStatus}
+            disabled={status === 'loading'}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80 disabled:opacity-50"
+            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+          >
+            <RefreshCw size={14} />
+            Check Status
+          </button>
         </div>
 
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-          <p className="font-medium mb-2">Info:</p>
-          <ul className="list-disc list-inside space-y-1">
-            <li>Backfill download covers dan upload ke R2</li>
-            <li>Proses jalan di background</li>
-            <li>Bisa cek progress di Import Jobs</li>
-            <li>Max 200 manga per batch</li>
-          </ul>
-        </div>
+        {result && (
+          <div
+            className="rounded-lg p-4 overflow-auto max-h-96"
+            style={{ background: 'var(--bg-tertiary)' }}
+          >
+            <pre className="text-xs font-mono whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>
+              {JSON.stringify(result, null, 2)}
+            </pre>
+          </div>
+        )}
+      </div>
+
+      <div
+        className="rounded-xl p-5 space-y-2"
+        style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}
+      >
+        <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <Info size={14} className="text-blue-500" /> Info
+        </p>
+        <ul className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <li>• Download cover manga dan upload ke Cloudflare R2</li>
+          <li>• Proses berjalan di background</li>
+          <li>• Bisa cek progress di Import Jobs</li>
+          <li>• Max 200 manga per batch</li>
+        </ul>
       </div>
     </div>
   );

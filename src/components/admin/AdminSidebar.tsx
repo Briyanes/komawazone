@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, BookOpen, FileText, Megaphone, BarChart2,
-  Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag, Download, Crown, Globe,
+  Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag, Download, Crown, Globe, Ticket, HardDrive,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
@@ -31,15 +31,17 @@ const navGroups = [
   {
     label: 'Monetization',
     items: [
-      { href: '/admin/ads',           icon: Megaphone, label: 'Ads'           },
-      { href: '/admin/subscriptions', icon: Crown,     label: 'Subscriptions' },
-      { href: '/admin/stats',         icon: BarChart2, label: 'Analytics'     },
+      { href: '/admin/ads',            icon: Megaphone, label: 'Ads'            },
+      { href: '/admin/subscriptions',  icon: Crown,     label: 'Subscriptions'  },
+      { href: '/admin/voucher-codes',  icon: Ticket,    label: 'Voucher Codes'  },
+      { href: '/admin/stats',          icon: BarChart2, label: 'Analytics'      },
     ],
   },
   {
     label: 'System',
     items: [
       { href: '/admin/settings', icon: Settings, label: 'Settings' },
+      { href: '/admin/storage-backfill', icon: HardDrive, label: 'Storage Backfill' },
     ],
   },
 ];
