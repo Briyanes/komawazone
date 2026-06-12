@@ -52,8 +52,8 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="3. Autentikasi Pihak Ketiga">
-            Kami menggunakan Supabase Auth untuk mengelola akun pengguna. Anda dapat mendaftar
-            menggunakan provider berikut:
+            <p>Kami menggunakan Supabase Auth untuk mengelola akun pengguna. Anda dapat mendaftar
+            menggunakan provider berikut:</p>
             <ul style={{ margin: '8px 0 0', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <li><strong>Google:</strong> Kami menerima email dan nama dari akun Google Anda.</li>
               <li><strong>Discord:</strong> Kami menerima email, username, dan avatar Discord.</li>
@@ -80,13 +80,13 @@ export default function PrivacyPage() {
           <Section title="6. Konten Dewasa & Verifikasi Usia">
             <ul style={{ margin: 0, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <li>Konten dewasa (MATURE/18+) hanya ditampilkan kepada pengguna VIP.</li>
-              <li> Kami mencatat status VIP dan preferensi konten pengguna.</li>
+              <li>Kami mencatat status VIP dan preferensi konten pengguna.</li>
               <li>Orang tua dapat meminta pembatasan akses untuk akun anak di bawah umur.</li>
             </ul>
           </Section>
 
           <Section title="7. Berbagi Data">
-            Kami <strong>tidak menjual</strong> data pribadi Anda. Data hanya dibagikan kepada:
+            <p>Kami <strong>tidak menjual</strong> data pribadi Anda. Data hanya dibagikan kepada:</p>
             <ul style={{ margin: '8px 0 0', paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
               <li><strong>Supabase:</strong> Untuk autentikasi dan database.</li>
               <li><strong>Cloudflare:</strong> Untuk penyimpanan aset (R2) dan CDN.</li>
@@ -105,20 +105,20 @@ export default function PrivacyPage() {
           </Section>
 
           <Section title="9. Keamanan">
-            Kami menerapkan langkah-langkah keamanan yang wajar untuk melindungi data Anda,
+            <p>Kami menerapkan langkah-langkah keamanan yang wajar untuk melindungi data Anda,
             termasuk enkripsi, rate limiting, dan pemantauan akses. Namun, tidak ada sistem
-            yang 100% aman.
+            yang 100% aman.</p>
           </Section>
 
           <Section title="10. Perubahan Kebijakan">
-            Kami dapat memperbarui kebijakan privasi ini dari waktu ke waktu. Perubahan signifikan
+            <p>Kami dapat memperbarui kebijakan privasi ini dari waktu ke waktu. Perubahan signifikan
             akan diberitahukan melalui Platform atau email. Penggunaan berkelanjutan merupakan
-            penerimaan kebijakan yang diperbarui.
+            penerimaan kebijakan yang diperbarui.</p>
           </Section>
 
           <Section title="11. Kontak">
-            Untuk pertanyaan tentang privasi atau permintaan data, silakan hubungi kami melalui
-            Discord OLLUQ.
+            <p>Untuk pertanyaan tentang privasi atau permintaan data, silakan hubungi kami melalui
+            Discord OLLUQ.</p>
           </Section>
         </div>
 
