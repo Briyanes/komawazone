@@ -27,6 +27,8 @@ export function useAuth() {
 
   const signOut = useCallback(async () => {
     await supabase.auth.signOut();
+    // Hard redirect to home — clears all cookies, session, and cached state
+    window.location.href = '/';
   }, [supabase]);
 
   async function applySession(session: Session | null) {

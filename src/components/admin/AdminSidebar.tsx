@@ -4,9 +4,10 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard, BookOpen, FileText, Megaphone, BarChart2,
-  Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag, Download, Crown, Globe, Ticket, HardDrive,
+  Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag, Download, Crown, Globe, Ticket, HardDrive, LogOut,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { createClient } from '@/lib/supabase/client';
 
 const navGroups = [
   {
@@ -123,7 +124,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
       </nav>
 
       {/* Footer */}
-      <div className="shrink-0 border-t p-2.5" style={{ borderColor: 'var(--border-light)' }}>
+      <div className="shrink-0 border-t p-2.5 space-y-0.5" style={{ borderColor: 'var(--border-light)' }}>
         <Link
           href="/"
           className="flex items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition-colors hover:bg-[var(--bg-tertiary)]"
@@ -132,6 +133,18 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
           <ArrowLeft size={14} />
           Back to Site
         </Link>
+        <button
+          onClick={async () => {
+            const supabase = createClient();
+            await supabase.auth.signOut();
+            window.location.href = '/';
+          }}
+          className="flex w-full items-center gap-2 rounded-lg px-2.5 py-2 text-xs transition-colors hover:bg-red-500/10"
+          style={{ color: 'var(--color-error, #ef4444)' }}
+        >
+          <LogOut size={14} />
+          Keluar
+        </button>
       </div>
     </div>
   );

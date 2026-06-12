@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuth } from '@/hooks/useAuth';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 
 interface UserProfile {
   id: string;
@@ -27,7 +26,7 @@ interface Stats {
 }
 
 export default function ProfilePage() {
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, signOut } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [stats, setStats] = useState<Stats>({ bookmarks: 0, reading: 0 });
@@ -69,11 +68,8 @@ export default function ProfilePage() {
     })();
   }, [user]);
 
-  const handleLogout = async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut();
-    router.push('/');
-    router.refresh();
+  const handleLogout = () => {
+    void signOut(); // useAuth.signOut clears session + hard redirects to home
   };
 
   const handleSave = () => {
