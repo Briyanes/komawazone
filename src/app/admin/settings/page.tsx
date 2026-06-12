@@ -337,15 +337,22 @@ export default function AdminSettingsPage() {
             </label>
             <Input value={readerDomain} onChange={e => setReaderDomain(e.target.value)} placeholder="olluq.xyz" />
           </div>
-          <div
-            className="flex items-start gap-2 rounded-xl p-3 text-xs"
-            style={{ background: 'rgba(245,158,11,0.08)' }}
-          >
-            <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
-            <p style={{ color: '#f59e0b' }}>
-              Jika reader domain bermasalah (diblokir), ganti domain di sini. Setelah itu update juga env var <code className="font-mono px-1 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.15)' }}>NEXT_PUBLIC_READER_DOMAIN</code> di Vercel dan redeploy.
-            </p>
-          </div>
+          <details className="rounded-xl p-3 text-xs" style={{ background: 'rgba(245,158,11,0.08)' }}>
+            <summary className="flex items-center gap-2 cursor-pointer font-semibold" style={{ color: '#f59e0b' }}>
+              <AlertTriangle size={14} className="shrink-0" />
+              Jika reader domain berubah, update berikut:
+            </summary>
+            <ol className="mt-2 ml-5 space-y-1.5 list-decimal" style={{ color: '#f59e0b' }}>
+              <li>Env var <code className="font-mono px-1 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.15)' }}>NEXT_PUBLIC_READER_DOMAIN</code> di Vercel</li>
+              <li>Add domain baru di Vercel → Settings → Domains</li>
+              <li>Update DNS records di registrar (A/CNAME)</li>
+              <li>Supabase → Auth → URL Config → Redirect URLs: tambah <code className="font-mono px-1 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.15)' }}>https://newdomain.com/**</code></li>
+              <li>Google OAuth → Authorized redirect URIs: tambah callback URL baru</li>
+              <li>Discord OAuth → Redirect URL: update ke domain baru</li>
+              <li>X/Twitter OAuth → Callback URL: update ke domain baru</li>
+              <li>Redeploy di Vercel</li>
+            </ol>
+          </details>
           <div className="flex items-center gap-3 pt-1">
             <Button size="sm" onClick={handleSaveDomain} isLoading={domainPending}>
               <Save size={13} /> Save Domain
