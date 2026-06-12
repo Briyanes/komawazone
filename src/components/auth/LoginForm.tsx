@@ -70,7 +70,9 @@ export function LoginForm() {
     setServerError(null);
     try {
       const supabase = createClient();
-      const siteUrl = window.location.origin;
+      // Always use the reader domain for OAuth callback, never the hub domain
+      const readerDomain = process.env.NEXT_PUBLIC_READER_DOMAIN || 'olluq.xyz';
+      const siteUrl = `https://${readerDomain}`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider,
         options: {
