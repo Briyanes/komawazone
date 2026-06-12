@@ -69,7 +69,8 @@ export async function middleware(request: NextRequest) {
 
   // --- SUPABASE AUTH COOKIE HANDLING ---
   // Skip auth API routes — they handle cookies themselves
-  if (pathname.startsWith('/api/v1/auth/')) {
+  // Skip admin routes — layout validates admin auth server-side
+  if (pathname.startsWith('/api/v1/auth/') || pathname.startsWith('/admin')) {
     return NextResponse.next();
   }
 
