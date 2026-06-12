@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { InAppBrowserBanner } from '@/components/InAppBrowserBanner';
 
 export const metadata: Metadata = {
   title: { default: 'Authentication', template: '%s | OLLUQ' },
@@ -33,9 +34,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       {/* Footer */}
       <p className="mt-6 text-xs" style={{ color: 'var(--text-tertiary)' }}>
         By continuing, you agree to our{' '}
-        <a href="/terms" style={{ color: 'var(--color-primary)' }}>Terms</a> &amp;{' '}
+        <a href="/terms" style={{ color: 'var(--color-primary)' }}>Terms</a> &{' '}
         <a href="/privacy" style={{ color: 'var(--color-primary)' }}>Privacy Policy</a>.
       </p>
+      <InAppBrowserBanner />
     </div>
   );
 }
