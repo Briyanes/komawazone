@@ -88,8 +88,17 @@ export function MangaCard({
             loading="lazy"
           />
         ) : (
-          <div className="flex size-full items-center justify-center">
-            <span className="text-4xl opacity-30">📖</span>
+          <div className="flex size-full items-center justify-center p-3"
+            style={{ background: 'linear-gradient(135deg, var(--bg-tertiary) 0%, var(--border-light) 100%)' }}
+          >
+            <div className="flex flex-col items-center gap-1.5 text-center">
+              <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.25, color: 'var(--text-tertiary)' }}>
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+              </svg>
+              <span className="text-[9px] font-medium leading-tight line-clamp-2" style={{ color: 'var(--text-tertiary)', opacity: 0.5 }}>
+                {decodeHtml(title)}
+              </span>
+            </div>
           </div>
         )}
 
