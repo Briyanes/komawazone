@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from 'react';
 import { Crown, Search, Plus, X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/Button';
+import { SelectInput } from '@/components/ui/SelectInput';
 
 interface VipUser {
   id: string;
@@ -164,17 +165,16 @@ export default function AdminSubscriptionsPage() {
               <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-secondary)' }}>Durasi</label>
-                  <select
+                  <SelectInput
                     value={durationDays}
                     onChange={e => setDurationDays(Number(e.target.value))}
-                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none"
-                    style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+                    className="w-full"
                   >
                     <option value={30}>30 hari (1 bulan)</option>
                     <option value={90}>90 hari (3 bulan)</option>
                     <option value={180}>180 hari (6 bulan)</option>
                     <option value={365}>365 hari (1 tahun)</option>
-                  </select>
+                  </SelectInput>
                 </div>
                 <div>
                   <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-secondary)' }}>Metode Bayar</label>
