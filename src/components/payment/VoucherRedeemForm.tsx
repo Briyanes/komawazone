@@ -38,7 +38,7 @@ export function VoucherRedeemForm() {
 
   return (
     <div
-      className="rounded-2xl border p-6 space-y-4"
+      className="rounded-2xl border p-4 sm:p-6 space-y-4"
       style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
     >
       <div className="flex items-center gap-3">
@@ -59,7 +59,7 @@ export function VoucherRedeemForm() {
       </div>
 
       <form onSubmit={handleRedeem} className="space-y-3">
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2">
           <input
             type="text"
             value={code}
@@ -76,7 +76,7 @@ export function VoucherRedeemForm() {
           <button
             type="submit"
             disabled={loading || !code.trim()}
-            className="flex items-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
+            className="flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40"
             style={{ background: 'var(--color-primary)' }}
           >
             {loading ? (

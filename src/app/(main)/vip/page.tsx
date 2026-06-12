@@ -27,7 +27,7 @@ export default async function VIPPage({ searchParams }: Props) {
   const isMatureGate = reason === 'mature';
 
   return (
-    <div className="mx-auto max-w-2xl px-4 py-12 space-y-10">
+    <div className="mx-auto max-w-2xl px-4 py-8 md:py-12 space-y-8 md:space-y-10">
 
       {/* Contextual banner — shown when redirected from mature content */}
       {isMatureGate && (
@@ -66,10 +66,13 @@ export default async function VIPPage({ searchParams }: Props) {
         >
           <Crown size={32} className="text-amber-500" />
         </div>
-        <h1 className="text-3xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          OLLUQ VIP — All Look Beyond Fantasy
+        <h1 className="text-2xl md:text-3xl font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
+          OLLUQ VIP
         </h1>
-        <p className="text-base" style={{ color: 'var(--text-secondary)' }}>
+        <p className="text-sm md:text-base font-semibold" style={{ color: '#f59e0b' }}>
+          All Look Beyond Fantasy
+        </p>
+        <p className="text-sm md:text-base" style={{ color: 'var(--text-secondary)' }}>
           Dukung OLLUQ dan nikmati fitur eksklusif untuk Beyond Every Story.
         </p>
       </div>
@@ -97,24 +100,31 @@ export default async function VIPPage({ searchParams }: Props) {
           Pilih Paket VIP
         </h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          {PACKAGES.map(p => (
-            <div
-              key={p.code}
-              className="relative rounded-xl border p-4 text-center space-y-2"
-              style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
-            >
-              {p.badge && (
-                <span
-                  className="absolute -top-2 right-3 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
-                  style={{ background: '#f59e0b' }}
-                >
-                  {p.badge}
-                </span>
-              )}
-              <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.plan}</p>
-              <p className="text-lg font-bold" style={{ color: 'var(--color-primary)' }}>{p.price}</p>
-            </div>
-          ))}
+          {PACKAGES.map(p => {
+            const isBest = p.code === '3-month';
+            return (
+              <div
+                key={p.code}
+                className="relative rounded-xl border p-4 text-center space-y-2"
+                style={{
+                  background: isBest ? 'rgba(245,158,11,0.06)' : 'var(--bg-secondary)',
+                  borderColor: isBest ? 'rgba(245,158,11,0.4)' : 'var(--border-light)',
+                  boxShadow: isBest ? '0 0 24px rgba(245,158,11,0.1)' : 'none',
+                }}
+              >
+                {p.badge && (
+                  <span
+                    className="absolute -top-2 right-3 rounded-full px-2 py-0.5 text-[10px] font-bold text-white"
+                    style={{ background: '#f59e0b' }}
+                  >
+                    {p.badge}
+                  </span>
+                )}
+                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.plan}</p>
+                <p className="text-lg font-bold" style={{ color: isBest ? '#f59e0b' : 'var(--color-primary)' }}>{p.price}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -123,7 +133,7 @@ export default async function VIPPage({ searchParams }: Props) {
 
       {/* Manual Payment Info */}
       <div
-        className="rounded-2xl border p-6 space-y-3"
+        className="rounded-2xl border p-4 sm:p-6 space-y-3"
         style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
       >
         <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
