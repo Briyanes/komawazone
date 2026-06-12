@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { Save, CheckCircle, Megaphone } from 'lucide-react';
+import { Save, CheckCircle, Megaphone, Globe, Link2, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -17,6 +17,15 @@ export default function AdminSettingsPage() {
   const [gaCode, setGaCode] = useState('');
   const [headerCode, setHeaderCode] = useState('');
   const [bodyCode, setBodyCode] = useState('');
+
+  // Domain settings
+  const [hubDomain, setHubDomain] = useState('olluq.com');
+  const [readerDomain, setReaderDomain] = useState('olluq.xyz');
+
+  // Bio link settings
+  const [bioTagline, setBioTagline] = useState('Beyond Every Story ✦ Beyond Fantasy');
+  const [bioDescription, setBioDescription] = useState('Platform manga Indonesia terlengkap. Baca ribuan judul manga gratis dengan update setiap hari.');
+  const [bioDiscordUrl, setBioDiscordUrl] = useState('https://discord.gg/olluq');
 
   // Announcement banner
   const [banner, setBanner] = useState<BannerSettings>({ active: false, message: '', type: 'info' });
@@ -40,9 +49,57 @@ export default function AdminSettingsPage() {
         if (data.announcement_banner && typeof data.announcement_banner === 'object') {
           setBanner(data.announcement_banner as BannerSettings);
         }
+        if (typeof data.hub_domain === 'string')     setHubDomain(data.hub_domain);
+        if (typeof data.reader_domain === 'string')   setReaderDomain(data.reader_domain);
+        if (typeof data.bio_tagline === 'string')     setBioTagline(data.bio_tagline);
+        if (typeof data.bio_description === 'string') setBioDescription(data.bio_description);
+        if (typeof data.bio_discord_url === 'string') setBioDiscordUrl(data.bio_discord_url);
       })
       .catch(() => {});
   }, []);
+
+  // Domain settings save
+  const [domainSaved, setDomainSaved] = useState(false);
+  const [domainPending, startDomainTransition] = useTransition();
+
+  const handleSaveDomain = () => {
+    startDomainTransition(async () => {
+      const res = await fetch('/api/v1/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          hub_domain: hubDomain,
+          reader_domain: readerDomain,
+        }),
+      });
+      if (res.ok) {
+        setDomainSaved(true);
+        setTimeout(() => setDomainSaved(false), 3000);
+      }
+    });
+  };
+
+  // Bio link settings save
+  const [bioSaved, setBioSaved] = useState(false);
+  const [bioPending, startBioTransition] = useTransition();
+
+  const handleSaveBio = () => {
+    startBioTransition(async () => {
+      const res = await fetch('/api/v1/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          bio_tagline: bioTagline,
+          bio_description: bioDescription,
+          bio_discord_url: bioDiscordUrl,
+        }),
+      });
+      if (res.ok) {
+        setBioSaved(true);
+        setTimeout(() => setBioSaved(false), 3000);
+      }
+    });
+  };
 
   const handleSave = () => {
     startTransition(async () => {
@@ -251,6 +308,99 @@ export default function AdminSettingsPage() {
               <Save size={13} /> Save Banner
             </Button>
             {bannerSaved && (
+              <span className="flex items-center gap-1 text-xs text-emerald-500">
+                <CheckCircle size={13} /> Saved!
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Domain Settings Card */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="flex items-center gap-2 px-5 py-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
+          <Globe size={15} style={{ color: 'var(--color-primary)' }} />
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Domain Settings
+          </h2>
+        </div>
+        <div className="px-5 py-4 space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Hub Domain (Link Bio)
+            </label>
+            <Input value={hubDomain} onChange={e => setHubDomain(e.target.value)} placeholder="olluq.com" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Reader Domain (Manga)
+            </label>
+            <Input value={readerDomain} onChange={e => setReaderDomain(e.target.value)} placeholder="olluq.xyz" />
+          </div>
+          <div
+            className="flex items-start gap-2 rounded-xl p-3 text-xs"
+            style={{ background: 'rgba(245,158,11,0.08)' }}
+          >
+            <AlertTriangle size={14} className="text-amber-500 mt-0.5 shrink-0" />
+            <p style={{ color: '#f59e0b' }}>
+              Jika reader domain bermasalah (diblokir), ganti domain di sini. Setelah itu update juga env var <code className="font-mono px-1 py-0.5 rounded" style={{ background: 'rgba(245,158,11,0.15)' }}>NEXT_PUBLIC_READER_DOMAIN</code> di Vercel dan redeploy.
+            </p>
+          </div>
+          <div className="flex items-center gap-3 pt-1">
+            <Button size="sm" onClick={handleSaveDomain} isLoading={domainPending}>
+              <Save size={13} /> Save Domain
+            </Button>
+            {domainSaved && (
+              <span className="flex items-center gap-1 text-xs text-emerald-500">
+                <CheckCircle size={13} /> Saved!
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Bio Link Settings Card */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="flex items-center gap-2 px-5 py-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
+          <Link2 size={15} style={{ color: 'var(--color-primary)' }} />
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Bio Link (olluq.com)
+          </h2>
+        </div>
+        <div className="px-5 py-4 space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Tagline
+            </label>
+            <Input value={bioTagline} onChange={e => setBioTagline(e.target.value)} placeholder="Beyond Every Story ✦ Beyond Fantasy" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Description
+            </label>
+            <textarea
+              value={bioDescription}
+              onChange={e => setBioDescription(e.target.value)}
+              rows={3}
+              className="w-full resize-none rounded-xl border px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
+              style={{
+                background: 'var(--bg-primary)',
+                borderColor: 'var(--border-default)',
+                color: 'var(--text-primary)',
+              }}
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Discord URL
+            </label>
+            <Input value={bioDiscordUrl} onChange={e => setBioDiscordUrl(e.target.value)} placeholder="https://discord.gg/..." />
+          </div>
+          <div className="flex items-center gap-3 pt-1">
+            <Button size="sm" onClick={handleSaveBio} isLoading={bioPending}>
+              <Save size={13} /> Save Bio Link
+            </Button>
+            {bioSaved && (
               <span className="flex items-center gap-1 text-xs text-emerald-500">
                 <CheckCircle size={13} /> Saved!
               </span>

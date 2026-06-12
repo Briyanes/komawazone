@@ -1,6 +1,7 @@
 import { Metadata } from 'next';
 import { Zap, BookOpen, Crown, MessageCircle } from 'lucide-react';
 import { READER_DOMAIN } from '@/config/domains';
+import { createClient } from '@/lib/supabase/server';
 
 export const metadata: Metadata = {
   title: 'OLLUQ — Beyond Every Story',
@@ -12,31 +13,54 @@ export const metadata: Metadata = {
   },
 };
 
-const LINKS = [
-  {
-    label: 'Baca Manga',
-    href: `https://${READER_DOMAIN}`,
-    icon: BookOpen,
-    variant: 'primary' as const,
-    desc: 'Ribuan manga gratis, update harian',
-  },
-  {
-    label: 'Upgrade VIP',
-    href: `https://${READER_DOMAIN}/vip`,
-    icon: Crown,
-    variant: 'vip' as const,
-    desc: 'Akses konten 18+, tanpa iklan',
-  },
-  {
-    label: 'Discord',
-    href: 'https://discord.gg/olluq',
-    icon: MessageCircle,
-    variant: 'default' as const,
-    desc: 'Gabung komunitas',
-  },
-];
+const DEFAULTS = {
+  bio_tagline: 'Beyond Every Story ✦ Beyond Fantasy',
+  bio_description: 'Platform manga Indonesia terlengkap. Baca ribuan judul manga gratis dengan update setiap hari.',
+  bio_discord_url: 'https://discord.gg/olluq',
+};
 
-export default function HubPage() {
+export default async function HubPage() {
+  // Fetch bio link settings from DB
+  const supabase = await createClient();
+  const { data: settings } = await supabase
+    .from('site_settings')
+    .select('key, value')
+    .in('key', ['bio_tagline', 'bio_description', 'bio_discord_url', 'reader_domain']);
+
+  const get = (key: string) => {
+    const row = settings?.find(s => s.key === key);
+    return typeof row?.value === 'string' ? row.value : (DEFAULTS as Record<string, string>)[key] ?? '';
+  };
+
+  const tagline = get('bio_tagline');
+  const description = get('bio_description');
+  const discordUrl = get('bio_discord_url');
+  const readerDomain = get('reader_domain') || READER_DOMAIN;
+
+  const LINKS = [
+    {
+      label: 'Baca Manga',
+      href: `https://${readerDomain}`,
+      icon: BookOpen,
+      variant: 'primary' as const,
+      desc: 'Ribuan manga gratis, update harian',
+    },
+    {
+      label: 'Upgrade VIP',
+      href: `https://${readerDomain}/vip`,
+      icon: Crown,
+      variant: 'vip' as const,
+      desc: 'Akses konten 18+, tanpa iklan',
+    },
+    ...(discordUrl ? [{
+      label: 'Discord',
+      href: discordUrl,
+      icon: MessageCircle,
+      variant: 'default' as const,
+      desc: 'Gabung komunitas',
+    }] : []),
+  ];
+
   return (
     <div style={{
       minHeight: '100vh',
@@ -90,7 +114,7 @@ export default function HubPage() {
           marginTop: 0,
           marginBottom: '8px',
         }}>
-          Beyond Every Story ✦ Beyond Fantasy
+          {tagline}
         </p>
 
         {/* Description */}
@@ -103,7 +127,7 @@ export default function HubPage() {
           marginBottom: '32px',
           maxWidth: '320px',
         }}>
-          Platform manga Indonesia terlengkap. Baca ribuan judul manga gratis dengan update setiap hari.
+          {description}
         </p>
 
         {/* Links */}
