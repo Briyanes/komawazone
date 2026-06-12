@@ -7,8 +7,8 @@ import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Avatar } from '@/components/ui/Avatar';
 import { useAuth } from '@/hooks/useAuth';
-import { signOut } from '@/lib/auth/actions';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 interface UserProfile {
   id: string;
@@ -68,6 +68,13 @@ export default function ProfilePage() {
       } catch { /* ignore — partial data already set */ }
     })();
   }, [user]);
+
+  const handleLogout = async () => {
+    const supabase = createClient();
+    await supabase.auth.signOut();
+    router.push('/');
+    router.refresh();
+  };
 
   const handleSave = () => {
     setSaveError('');
@@ -284,11 +291,9 @@ export default function ProfilePage() {
       </div>
 
       {/* Sign out */}
-      <form action={signOut}>
-        <Button variant="ghost" type="submit" className="w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
-          <LogOut size={16} /> Keluar
-        </Button>
-      </form>
+      <Button variant="ghost" onClick={handleLogout} className="w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
+        <LogOut size={16} /> Keluar
+      </Button>
     </div>
   );
 }

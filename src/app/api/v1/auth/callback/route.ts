@@ -27,14 +27,30 @@ export async function GET(request: NextRequest) {
       }
     );
 
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
-    if (!error) {
+    const { data: authData, error } = await supabase.auth.exchangeCodeForSession(code);
+    if (!error && authData.user) {
+      // Check if user is admin → redirect to admin dashboard
+      const { data: profile } = await supabase
+        .from('users')
+        .select('role')
+        .eq('id', authData.user.id)
+        .single();
+
+      if (profile?.role === 'ADMIN') {
+        const adminResponse = NextResponse.redirect(`${origin}/admin`);
+        // Copy session cookies to admin redirect response
+        response.cookies.getAll().forEach((c) => {
+          adminResponse.cookies.set(c.name, c.value);
+        });
+        return adminResponse;
+      }
       return response;
     }
 
     // Log the actual error for debugging
-    console.error('[auth/callback] exchangeCodeForSession error:', error.message);
-    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(error.message)}`);
+    const errMsg = error?.message || 'Unknown error';
+    console.error('[auth/callback] exchangeCodeForSession error:', errMsg);
+    return NextResponse.redirect(`${origin}/login?error=${encodeURIComponent(errMsg)}`);
   }
 
   return NextResponse.redirect(`${origin}/login?error=no_code`);
