@@ -20,9 +20,18 @@ const breadcrumbMap: Record<string, string> = {
   '/admin': 'Dashboard',
   '/admin/manga': 'Manga',
   '/admin/chapters': 'Chapters',
+  '/admin/genres': 'Genres',
+  '/admin/import': 'Import',
+  '/admin/sources': 'Sources',
+  '/admin/comments': 'Comments',
+  '/admin/reports': 'Reports',
+  '/admin/users': 'Users',
   '/admin/ads': 'Ads',
+  '/admin/subscriptions': 'Subscriptions',
+  '/admin/voucher-codes': 'Voucher Codes',
   '/admin/stats': 'Analytics',
   '/admin/settings': 'Settings',
+  '/admin/storage-backfill': 'Storage Backfill',
 };
 
 export function AdminHeader({ profile, onMenuClick }: AdminHeaderProps) {
