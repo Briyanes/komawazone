@@ -11,7 +11,7 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     <>
       <AnnouncementBanner />
       <Header />
-      <main className="flex-1 pb-24 md:pb-0">
+      <main className="flex-1 pb-20 md:pb-0">
         {children}
       </main>
       <Footer />

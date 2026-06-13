@@ -37,7 +37,7 @@ export function Footer() {
   const [openQuick, setOpenQuick] = useState(false);
 
   return (
-    <footer className="mt-16 relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+    <footer className="relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
       {/* Top accent gradient line */}
       <div className="h-px w-full" style={{ background: 'linear-gradient(90deg, transparent 0%, #FF6B35 30%, #a855f7 70%, transparent 100%)' }} />
 
