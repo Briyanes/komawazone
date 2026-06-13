@@ -126,12 +126,13 @@ async function runAutoImport(sources: ActiveSource[]) {
       try {
         // Determine content rating from sitemap_content_ratings or source default
         const sitemapRatings = source.sitemap_content_ratings ?? {};
-        // Find which sitemap URL this manga came from
+        // Match the manga URL to its originating sitemap to get the correct rating
         let contentRating: 'general' | 'mature' = source.content_rating;
-        for (const [sitemapUrl, rating] of Object.entries(sitemapRatings)) {
-          // If the manga URL starts with the sitemap's base, use that rating
-          contentRating = rating;
-          break; // Use first match (typically single sitemap per source)
+        const matchedSitemap = Object.keys(sitemapRatings).find(
+          (sitemapUrl) => item.url.startsWith(sitemapUrl) || item.originSitemap?.startsWith(sitemapUrl),
+        );
+        if (matchedSitemap) {
+          contentRating = sitemapRatings[matchedSitemap];
         }
 
         // Check if manga already exists

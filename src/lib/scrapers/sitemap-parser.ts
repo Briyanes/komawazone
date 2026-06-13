@@ -10,6 +10,8 @@ export interface SitemapManga {
   url: string;
   slug: string;
   lastModified: Date | null;
+  /** Sitemap URL where this manga was discovered */
+  originSitemap?: string;
   /** Rating konten — diset saat import berdasarkan sitemap asalnya, bukan dari parser */
   contentRating?: 'general' | 'mature';
 }
@@ -195,6 +197,7 @@ export async function parseSitemapURL(
       url,
       slug: extractSlug(url),
       lastModified: lastMods[index] ? new Date(lastMods[index]!) : null,
+      originSitemap: sitemapUrl,
     }));
 
     // Filter out non-manga URLs (chapters, tags, category, author, page URLs)
