@@ -27,8 +27,8 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url, 301);
     }
 
-    // www.olluq.xyz → olluq.xyz
-    if (subdomain === 'www' && parentDomain === READER_DOMAIN) {
+    // *.olluq.xyz → olluq.xyz (www, read, 01, etc.)
+    if (parentDomain === READER_DOMAIN && subdomain !== '') {
       const url = request.nextUrl.clone();
       url.protocol = 'https';
       url.host = READER_DOMAIN;

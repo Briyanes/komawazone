@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { READER_DOMAIN } from '@/config/domains';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://olluq.app';
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? `https://${READER_DOMAIN}`;
 
 function xmlEscape(str: string) {
   return str

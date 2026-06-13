@@ -18,6 +18,7 @@ import { ShareButtons } from '@/components/ShareButtons';
 import { ReportMangaButton } from '@/components/manga/ReportMangaButton';
 import { SynopsisToggle } from '@/components/manga/SynopsisToggle';
 import { createClient } from '@/lib/supabase/server';
+import { READER_DOMAIN } from '@/config/domains';
 import type { MangaStatus } from '@/types';
 
 interface Props {
@@ -28,7 +29,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const manga = await getMangaBySlug(slug);
   if (!manga) return { title: 'Not Found' };
-  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://olluq.id';
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? `https://${READER_DOMAIN}`;
   const ogUrl = `${baseUrl}/api/og?title=${encodeURIComponent(manga.title)}&status=${manga.status}&rating=${manga.rating ?? 0}${manga.cover_url ? `&cover=${encodeURIComponent(manga.cover_url)}` : ''}`;
   return {
     title: manga.title,
@@ -90,8 +91,36 @@ export default async function MangaDetailPage({ params }: Props) {
   const firstChapter = [...manga.chapters].sort((a, b) => a.number - b.number)[0];
   const heroBg = manga.banner_url || manga.cover_url;
 
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL ?? `https://${READER_DOMAIN}`;
+
+  // JSON-LD structured data for Google rich snippets
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BookSeries',
+    name: manga.title,
+    alternateName: manga.alt_title || undefined,
+    description: manga.description || undefined,
+    image: manga.cover_url || undefined,
+    author: manga.author ? { '@type': 'Person', name: manga.author } : undefined,
+    illustrator: manga.artist ? { '@type': 'Person', name: manga.artist } : undefined,
+    genre: manga.genres || undefined,
+    inLanguage: 'id',
+    startDate: manga.release_year ? `${manga.release_year}` : undefined,
+    url: `${baseUrl}/manga/${slug}`,
+    aggregateRating: manga.rating > 0 ? {
+      '@type': 'AggregateRating',
+      ratingValue: manga.rating.toFixed(1),
+      bestRating: '5',
+      ratingCount: manga.rating_count || 1,
+    } : undefined,
+  };
+
   return (
     <div className="w-full min-h-screen overflow-x-hidden" style={{ background: 'var(--bg-primary)' }}>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
 
       {/* ── HERO ─────────────────────────────────────────────────────── */}
       <div className="relative w-full overflow-hidden">
