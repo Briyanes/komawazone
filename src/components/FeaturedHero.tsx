@@ -139,13 +139,13 @@ export function FeaturedHero({ items }: { items: FeaturedItem[] }) {
             </div>
           )}
 
-          {/* Title */}
-          <h2
+          {/* Title — H1 for SEO (only shown when FeaturedHero renders, never alongside StaticHero) */}
+          <h1
             className="text-2xl font-black text-white leading-[1.15] md:text-[clamp(1.75rem,3vw,2.5rem)] line-clamp-2"
             style={{ fontFamily: 'var(--font-playfair, serif)', textShadow: '0 2px 24px rgba(0,0,0,0.6)' }}
           >
             {manga.title}
-          </h2>
+          </h1>
 
           {/* Description */}
           {manga.description && (

@@ -28,16 +28,8 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
     return () => clearTimeout(t);
   }, [active, paused, next, items.length]);
 
-  // Show 3 items at a time (prev, current, next)
-  const getIndices = () => {
-    const indices = [];
-    for (let i = -1; i <= 1; i++) {
-      indices.push((active + i + items.length) % items.length);
-    }
-    return indices;
-  };
-
-  const indices = getIndices();
+  // Show 3 items at a time (prev, current, next) — but only 1 if there's only 1 item
+  const indices = items.length === 1 ? [0] : [active - 1, active, active + 1].map(i => (i + items.length) % items.length);
 
   if (!items || items.length === 0) return null;
 
@@ -51,7 +43,8 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
     >
       {/* Carousel container */}
       <div className="relative flex items-center justify-center">
-        {/* Left arrow — overlaid on the left side */}
+        {/* Left arrow — overlaid on the left side (hidden when only 1 item) */}
+        {items.length > 1 && (
         <button
           onClick={() => { setPaused(false); prev(); }}
           className="absolute left-0 z-10 flex size-12 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
@@ -62,12 +55,14 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
         >
           <ChevronLeft size={20} color="white" />
         </button>
+        )}
 
         {/* Carousel items */}
         <div className={`flex items-center justify-center gap-3 ${compact ? 'px-8 pt-6 pb-10' : 'sm:gap-5 px-12'}`}>
           {indices.map((i, pos) => {
             const item = items[i];
-            const isCurrent = pos === 1;
+            // When only 1 item (indices=[0]), pos is 0 — so treat the only item as current
+            const isCurrent = indices.length === 1 ? true : pos === 1;
 
             return (
               <Link
@@ -124,7 +119,8 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
           })}
         </div>
 
-        {/* Right arrow — overlaid on the right side */}
+        {/* Right arrow — overlaid on the right side (hidden when only 1 item) */}
+        {items.length > 1 && (
         <button
           onClick={() => { setPaused(false); next(); }}
           className="absolute right-0 z-10 flex size-12 shrink-0 items-center justify-center rounded-full transition-all hover:scale-110 active:scale-95"
@@ -135,6 +131,7 @@ export function HeroBannerCarousel({ items, compact }: { items: MangaItem[]; com
         >
           <ChevronRight size={20} color="white" />
         </button>
+        )}
       </div>
 
       {/* Dots indicator */}
