@@ -335,50 +335,6 @@ export async function getAdjacentChapters(mangaId: string, currentNumber: number
   };
 }
 
-export async function searchManga(filters: MangaFilters) {
-  const supabase = await createClient();
-  const page = filters.page ?? 1;
-  const perPage = filters.perPage ?? ITEMS_PER_PAGE;
-  const from = (page - 1) * perPage;
-  const to = from + perPage - 1;
-
-  let query = supabase
-    .from('manga')
-    .select('id, slug, title, cover_url, status, rating, views', { count: 'exact' })
-    .is('deleted_at', null)
-    .range(from, to);
-
-  if (filters.search) {
-    query = query.ilike('title', `%${filters.search}%`);
-  }
-  if (filters.status) {
-    query = query.eq('status', filters.status);
-  }
-  if (filters.genre) {
-    query = query.contains('genres', [filters.genre]);
-  }
-
-  const sortMap = {
-    latest:  { column: 'updated_at', ascending: false },
-    popular: { column: 'views',      ascending: false },
-    rating:  { column: 'rating',     ascending: false },
-    title:   { column: 'title',      ascending: true },
-  };
-  const sort = sortMap[filters.sortBy ?? 'latest'];
-  query = query.order(sort.column, { ascending: sort.ascending });
-
-  const { data, count, error } = await query;
-  if (error) throw new Error(error.message);
-
-  return {
-    data: data ?? [],
-    total: count ?? 0,
-    page,
-    perPage,
-    totalPages: Math.ceil((count ?? 0) / perPage),
-  };
-}
-
 export async function getMangaChapterList(mangaId: string): Promise<Array<{ id: string; number: number; title: string | null }>> {
   const supabase = await createClient();
   const { data } = await supabase
