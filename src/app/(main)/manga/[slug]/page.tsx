@@ -60,7 +60,7 @@ export default async function MangaDetailPage({ params }: Props) {
   const manga = await getMangaBySlug(slug);
   if (!manga) notFound();
 
-  // VIP gate for mature content
+  // VIP/Admin gate for mature content
   let isVip = false;
   let isLoggedIn = false;
   if (manga.content_rating === 'mature') {
@@ -70,15 +70,17 @@ export default async function MangaDetailPage({ params }: Props) {
     if (user) {
       const { data } = await supabase
         .from('users')
-        .select('vip_expires_at')
+        .select('vip_expires_at, role')
         .eq('id', user.id)
         .single();
-      const exp = (data as { vip_expires_at?: string | null } | null)?.vip_expires_at;
-      isVip = !!exp && new Date(exp) > new Date();
+      const row = data as { vip_expires_at?: string | null; role?: string | null } | null;
+      if (row?.role === 'ADMIN') {
+        isVip = true;
+      } else {
+        const exp = row?.vip_expires_at;
+        isVip = !!exp && new Date(exp) > new Date();
+      }
     }
-  } else {
-    // For non-mature content, all users can access but are not necessarily VIP
-    // isVip remains false unless user is actually VIP
   }
 
   const chapters = manga.chapters.slice().sort((a, b) => b.number - a.number).map(ch => ({
@@ -425,17 +427,22 @@ async function Recommendations({ genres, excludeId }: { genres: string[]; exclud
   if (genres.length === 0) return null;
   const supabase = await createClient();
 
-  // Check if user is VIP
+  // Check if user is VIP or Admin
   const { data: { user } } = await supabase.auth.getUser();
-  let isVip = false;
+  let canSeeMature = false;
   if (user) {
     const { data } = await supabase
       .from('users')
-      .select('vip_expires_at')
+      .select('vip_expires_at, role')
       .eq('id', user.id)
       .single();
-    const exp = (data as { vip_expires_at?: string | null } | null)?.vip_expires_at;
-    isVip = !!exp && new Date(exp) > new Date();
+    const row = data as { vip_expires_at?: string | null; role?: string | null } | null;
+    if (row?.role === 'ADMIN') {
+      canSeeMature = true;
+    } else {
+      const exp = row?.vip_expires_at;
+      canSeeMature = !!exp && new Date(exp) > new Date();
+    }
   }
 
   let query = supabase
@@ -445,8 +452,8 @@ async function Recommendations({ genres, excludeId }: { genres: string[]; exclud
     .overlaps('genres', genres)
     .neq('id', excludeId);
 
-  // Filter out mature content for non-VIP users
-  if (!isVip) {
+  // Filter out mature content for non-VIP/non-admin users
+  if (!canSeeMature) {
     query = query.neq('content_rating', 'mature');
   }
 

@@ -29,21 +29,26 @@ export default async function ChapterReaderPage({ params }: Props) {
   const chapter = await getChapter(chapterId);
   if (!chapter) notFound();
 
-  // Gate mature chapters for non-VIP users
+  // Gate mature chapters for non-VIP/non-admin users
   if (chapter.manga?.content_rating === 'mature') {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    let isVip = false;
+    let canAccess = false;
     if (user) {
       const { data } = await supabase
         .from('users')
-        .select('vip_expires_at')
+        .select('vip_expires_at, role')
         .eq('id', user.id)
         .single();
-      const exp = (data as { vip_expires_at?: string | null } | null)?.vip_expires_at;
-      isVip = !!exp && new Date(exp) > new Date();
+      const row = data as { vip_expires_at?: string | null; role?: string | null } | null;
+      if (row?.role === 'ADMIN') {
+        canAccess = true;
+      } else {
+        const exp = row?.vip_expires_at;
+        canAccess = !!exp && new Date(exp) > new Date();
+      }
     }
-    if (!isVip) {
+    if (!canAccess) {
       redirect(`/vip?reason=mature&manga=${encodeURIComponent(chapter.manga?.slug ?? '')}`);
     }
   }
