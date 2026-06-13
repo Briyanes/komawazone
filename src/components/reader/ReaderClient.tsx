@@ -657,31 +657,33 @@ export function ReaderClient({
           ))}
 
           {/* End of chapter */}
-          <div className="flex w-full max-w-lg flex-col items-center gap-4 px-6 py-14 text-center">
+          <div className="flex w-full max-w-lg flex-col items-center gap-3 px-4 pb-32 pt-6 text-center">
             <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.4)' }}>
  Akhir Chapter {chapterNumber}               
             </p>
+            {/* Row 1: Sebelumnya & Berikutnya */}
             <div className="flex w-full gap-2">
-              {prevChapterId && (
+              {prevChapterId ? (
                 <Link href={`/manga/${mangaSlug}/chapter/${prevChapterId}`}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
                   style={{ background: 'rgba(255,255,255,.1)' }}>
-                  <ChevronLeft size={16} /><span className="whitespace-nowrap">Sebelumnya</span>
+                  <ChevronLeft size={16} />Sebelumnya
                 </Link>
-              )}
-              <Link href={`/manga/${mangaSlug}`}
-                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
-                style={{ background: 'rgba(255,255,255,.07)' }}>
-                <List size={16} /><span className="whitespace-nowrap">Daftar Chapter</span>
-              </Link>
-              {nextChapterId && (
+              ) : <div className="flex-1" />}
+              {nextChapterId ? (
                 <Link href={`/manga/${mangaSlug}/chapter/${nextChapterId}`}
                   className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-bold text-white hover:opacity-80"
                   style={{ background: 'var(--color-primary)' }}>
-                  <span className="whitespace-nowrap">Berikutnya</span><ChevronRight size={16} />
+                  Berikutnya<ChevronRight size={16} />
                 </Link>
-              )}
+              ) : <div className="flex-1" />}
             </div>
+            {/* Row 2: Daftar Chapter (full width) */}
+            <Link href={`/manga/${mangaSlug}`}
+              className="flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
+              style={{ background: 'rgba(255,255,255,.07)' }}>
+              <List size={16} />Daftar Chapter
+            </Link>
           </div>
 
           <ChapterEngagement chapterId={chapterId} />
@@ -710,32 +712,32 @@ export function ReaderClient({
                 </p>
               </div>
               <div className="flex w-full gap-2">
-                {prevChapterId && (
+                {prevChapterId ? (
                   <Link
                     href={`/manga/${mangaSlug}/chapter/${prevChapterId}`}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
                     style={{ background: 'rgba(255,255,255,.1)' }}
                   >
-                    <ChevronLeft size={16} /><span className="whitespace-nowrap">Sebelumnya</span>
+                    <ChevronLeft size={16} />Sebelumnya
                   </Link>
-                )}
-                <Link
-                  href={`/manga/${mangaSlug}`}
-                  className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
-                  style={{ background: 'rgba(255,255,255,.07)' }}
-                >
-                  <List size={16} /><span className="whitespace-nowrap">Daftar Chapter</span>
-                </Link>
-                {nextChapterId && (
+                ) : <div className="flex-1" />}
+                {nextChapterId ? (
                   <Link
                     href={`/manga/${mangaSlug}/chapter/${nextChapterId}`}
                     className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-bold text-white hover:opacity-80"
                     style={{ background: 'var(--color-primary)' }}
                   >
-                    <span className="whitespace-nowrap">Berikutnya</span><ChevronRight size={16} />
+                    Berikutnya<ChevronRight size={16} />
                   </Link>
-                )}
+                ) : <div className="flex-1" />}
               </div>
+              <Link
+                href={`/manga/${mangaSlug}`}
+                className="flex w-full items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
+                style={{ background: 'rgba(255,255,255,.07)' }}
+              >
+                <List size={16} />Daftar Chapter
+              </Link>
               <ChapterEngagement chapterId={chapterId} />
             </div>
           ) : currentImage && (
