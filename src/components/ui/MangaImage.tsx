@@ -15,7 +15,8 @@
 import NextImage, { type ImageProps } from 'next/image';
 import { forwardRef, useState } from 'react';
 
-// All external manga image hosts (use regular img tag)
+// External manga image hosts that block hotlinking (use regular img tag)
+// R2 URLs are NOT here — they go through next/image for WebP/AVIF optimization
 const EXTERNAL_HOSTS = [
   'img-uwak.gmbr.pro',
   'jablay.gmbr.pro',
@@ -23,12 +24,20 @@ const EXTERNAL_HOSTS = [
   '*.gmbr.pro',
   'manhwaland.land',
   '*.manhwaland.land',
+  '*.kambingjantan.cc',
+  'kambingjantan.cc',
+  '*.gmbar.xyz',
+  'gmbar.xyz',
 ];
 
 function isExternalUrl(src: ImageProps['src']): boolean {
   if (typeof src !== 'string') return false;
   try {
     const url = new URL(src);
+    // R2 URLs always use next/image (optimization enabled)
+    if (url.hostname.endsWith('.r2.dev') || url.hostname.endsWith('.r2.cloudflarestorage.com')) {
+      return false;
+    }
     return EXTERNAL_HOSTS.some(host => {
       if (host.startsWith('*.')) {
         return url.hostname.endsWith(host.slice(2));
