@@ -290,9 +290,13 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
         }
 
         // Also update thumbnail if not set
+        // Use 2nd-from-last image as thumbnail (avoids cover/recap page)
+        const lazyThumb = imageUrls.length >= 2
+          ? imageUrls[imageUrls.length - 2]
+          : imageUrls[0];
         await adminClient
           .from('chapters')
-          .update({ thumbnail_url: imageUrls[0] })
+          .update({ thumbnail_url: lazyThumb })
           .eq('id', chapter.id)
           .is('thumbnail_url', null);
 
