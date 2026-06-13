@@ -53,7 +53,7 @@ async function runChapterCheck(
 ) {
   const supabase = await createClient();
   const { parseChapterListFromHtml } = await import('@/lib/scrapers/manga-scraper');
-  const { SCRAPER_HEADERS } = await import('@/lib/scrapers/scraper-utils');
+  const { buildScraperHeaders } = await import('@/lib/scrapers/scraper-utils');
   const { importAllChapters } = await import('@/app/api/v1/admin/scrape/manga-chapters/route');
 
   let triggered = 0;
@@ -71,7 +71,7 @@ async function runChapterCheck(
 
       // Scrape chapter list dari source
       const res = await fetch(manga.source_url, {
-        headers: SCRAPER_HEADERS,
+        headers: buildScraperHeaders(manga.source_url),
         signal: AbortSignal.timeout(15000),
       });
 

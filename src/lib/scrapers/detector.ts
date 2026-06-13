@@ -21,7 +21,16 @@ export const MANGA_SOURCES: MangaSource[] = [
 
   // 🇰🇷 Korean Manhwa Sources
   {
-    domains: ['manhwaland.land', 'manhwatop.com', 'manhuaplus.com', 'manhwahub.me', 'asuratoon.com', 'toptoon.com'],
+    domains: [
+      'manhwaland.land',       // includes 04x.manhwaland.land
+      'manhwaindo.my',         // General/SFW manhwa
+      'mangasusuku.com',       // Mature manhwa
+      'manhwatop.com',
+      'manhuaplus.com',
+      'manhwahub.me',
+      'asuratoon.com',
+      'toptoon.com',
+    ],
     type: 'MANHWA',
     country: 'KR',
     name: 'Korean Manhwa'

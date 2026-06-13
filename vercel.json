@@ -48,6 +48,14 @@
     {
       "path": "/api/cron/import-advance",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/auto-import",
+      "schedule": "0 */6 * * *"
+    },
+    {
+      "path": "/api/cron/check-new-chapters",
+      "schedule": "30 */6 * * *"
     }
   ]
 }

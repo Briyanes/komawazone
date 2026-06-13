@@ -71,9 +71,15 @@ function inferExtension(fileName: string, contentType: string): string {
 
 export function buildR2PublicUrl(key: string): string {
   const config = getR2Config();
+  // ALWAYS use the public base URL (r2.dev or custom domain).
+  // The S3 API endpoint ({bucket}.{accountId}.r2.cloudflarestorage.com) is NOT publicly accessible.
   if (config.publicBaseUrl) {
     return `${config.publicBaseUrl.replace(/\/$/, '')}/${key}`;
   }
+  // Fallback: construct r2.dev URL from account ID if public base URL not set
+  // Format: https://pub-{hash}.r2.dev/{key}
+  // But we don't have the hash without R2_PUBLIC_BASE_URL, so warn loudly
+  console.warn('[R2] R2_PUBLIC_BASE_URL not set! Falling back to S3 API endpoint which is NOT publicly accessible.');
   return `https://${config.bucket}.${config.accountId}.r2.cloudflarestorage.com/${key}`;
 }
 

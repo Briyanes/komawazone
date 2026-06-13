@@ -1,0 +1,72 @@
+{
+  "brokenImages": [
+    {
+      "page": "01-home",
+      "images": [
+        {
+          "url": "https://olluq.xyz/_next/image?url=https%3A%2F%2Folluq.933578d40533df4bcca40a43611da8cb.r2.cloudflarestorage.com%2Fcovers",
+          "status": 400
+        },
+        {
+          "url": "https://olluq.xyz/_next/image?url=https%3A%2F%2Folluq.933578d40533df4bcca40a43611da8cb.r2.cloudflarestorage.com%2Fcovers",
+          "status": 400
+        },
+        {
+          "url": "https://olluq.xyz/_next/image?url=https%3A%2F%2Folluq.933578d40533df4bcca40a43611da8cb.r2.cloudflarestorage.com%2Fcovers",
+          "status": 400
+        },
+        {
+          "url": "https://olluq.xyz/_next/image?url=https%3A%2F%2Folluq.933578d40533df4bcca40a43611da8cb.r2.cloudflarestorage.com%2Fcovers",
+          "status": 400
+        },
+        {
+          "url": "https://olluq.xyz/_next/image?url=https%3A%2F%2Folluq.933578d40533df4bcca40a43611da8cb.r2.cloudflarestorage.com%2Fcovers",
+          "status": 400
+        }
+      ]
+    },
+    {
+      "page": "05-bookmarks",
+      "images": [
+        {
+          "url": "https://olluq.xyz/_next/image?url=https%3A%2F%2Folluq.933578d40533df4bcca40a43611da8cb.r2.cloudflarestorage.com%2Fcovers",
+          "status": 400
+        }
+      ]
+    }
+  ],
+  "consoleErrors": [
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    {
+      "page": "01-home",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()",
+        "Failed to load resource: the server responded with a status of 400 ()"
+      ]
+    },
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    {
+      "page": "05-bookmarks",
+      "errors": [
+        "Failed to load resource: the server responded with a status of 400 ()"
+      ]
+    },
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined",
+    "WebError: undefined"
+  ],
+  "pageIssues": []
+}

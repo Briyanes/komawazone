@@ -7,15 +7,39 @@ import { detectMangaSource } from './detector';
 
 // ─── Shared request headers ────────────────────────────────────────────────
 
-/** Browser-like headers used for every scraper fetch. */
-export const SCRAPER_HEADERS: HeadersInit = {
-  'User-Agent':
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-  Accept:
-    'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
-  'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
-  Referer: 'https://04x.manhwaland.land/',
-};
+const BASE_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+/**
+ * Build browser-like headers for a specific source URL.
+ * The Referer is set dynamically based on the source domain,
+ * instead of being hardcoded to manhwaland.
+ */
+export function buildScraperHeaders(sourceUrl?: string): HeadersInit {
+  const headers: Record<string, string> = {
+    'User-Agent': BASE_UA,
+    Accept:
+      'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+    'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
+  };
+
+  if (sourceUrl) {
+    try {
+      const origin = new URL(sourceUrl).origin;
+      headers['Referer'] = origin + '/';
+    } catch {
+      // ignore — no Referer set for invalid URLs
+    }
+  }
+
+  return headers;
+}
+
+/**
+ * Default headers (manhwaland fallback for backward compatibility).
+ * Prefer `buildScraperHeaders(url)` for multi-source scraping.
+ */
+export const SCRAPER_HEADERS: HeadersInit = buildScraperHeaders('https://04x.manhwaland.land/');
 
 // ─── SSRF / URL allowlist ──────────────────────────────────────────────────
 

@@ -1,5 +1,5 @@
 import { detectMangaSource } from './detector';
-import { SCRAPER_HEADERS, parseChapterImages, validateScraperUrl } from './scraper-utils';
+import { buildScraperHeaders, parseChapterImages, validateScraperUrl } from './scraper-utils';
 
 type MangaType   = 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON';
 type MangaStatus = 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';
@@ -141,7 +141,7 @@ export function parseChapterListFromHtml(html: string): ChapterEntry[] {
  */
 export async function scrapeChapterImages(chapterUrl: string): Promise<string[]> {
   const res = await fetch(chapterUrl, {
-    headers: SCRAPER_HEADERS,
+    headers: buildScraperHeaders(chapterUrl),
     signal: AbortSignal.timeout(20_000),
   });
 
@@ -262,7 +262,7 @@ export async function scrapeMangaFromUrl(url: string, retries = 3): Promise<Scra
     try {
       // Fetch with browser-like headers to avoid blocking
       const res = await fetch(parsedUrl.toString(), {
-        headers: SCRAPER_HEADERS,
+        headers: buildScraperHeaders(url),
         signal: AbortSignal.timeout(20_000),
       });
 

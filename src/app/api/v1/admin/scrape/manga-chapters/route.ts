@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseChapterListFromHtml, scrapeChapterImages } from '@/lib/scrapers/manga-scraper';
-import { SCRAPER_HEADERS, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
+import { buildScraperHeaders, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
 import { downloadAndUploadToR2, batchDownloadAndUploadToR2 } from '@/lib/storage/r2';
 
 export const maxDuration = 300;
@@ -110,7 +110,7 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
   try {
     // 1. Fetch manga page to get chapter list
     const pageRes = await fetch(sourceUrl, {
-      headers: SCRAPER_HEADERS,
+      headers: buildScraperHeaders(sourceUrl),
       signal: AbortSignal.timeout(20_000),
     });
 
