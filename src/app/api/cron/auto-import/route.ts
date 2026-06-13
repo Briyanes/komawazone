@@ -96,20 +96,10 @@ async function runAutoImport(sources: ActiveSource[]) {
       continue;
     }
 
-    // Parse sitemap
-    let parsed;
-    try {
-      parsed = await parseAllSitemaps(sitemapUrls, {
-        timeout: 15_000,
-        includeLastmod: true,
-      });
-    } catch (err) {
-      console.error(`[AutoImport] ${source.name}: sitemap parse failed:`, err);
-      totalFailed += 10; // estimate
-      continue;
-    }
-
-    console.log(`[AutoImport] ${source.name}: found ${parsed.total} manga in sitemap`);
+    // Process each sitemap URL SEPARATELY so content_rating is always accurate.
+    // (Same approach as manual import in sitemap-import.ts — guarantees the
+    // rating from sitemap_content_ratings map is correctly assigned per-manga.)
+    const sitemapRatings = source.sitemap_content_ratings ?? {};
 
     // Limit per source per run (avoid timeout)
     const MAX_NEW_PER_SOURCE = 30;
@@ -117,91 +107,104 @@ async function runAutoImport(sources: ActiveSource[]) {
     let newThisSource = 0;
     let checkedThisSource = 0;
 
-    for (const item of parsed.mangas) {
-      if (newThisSource >= MAX_NEW_PER_SOURCE && checkedThisSource >= MAX_CHECK_PER_SOURCE) {
-        console.log(`[AutoImport] ${source.name}: reached limits (new=${newThisSource}, checked=${checkedThisSource})`);
-        break;
+    for (const sitemapUrl of sitemapUrls) {
+      // Determine the content rating for THIS specific sitemap
+      const contentRating: 'general' | 'mature' =
+        sitemapRatings[sitemapUrl] ?? source.content_rating ?? 'general';
+
+      // Parse this single sitemap
+      let parsed;
+      try {
+        parsed = await parseAllSitemaps([sitemapUrl], {
+          timeout: 15_000,
+          includeLastmod: true,
+        });
+      } catch (err) {
+        console.error(`[AutoImport] ${source.name}: sitemap parse failed for ${sitemapUrl}:`, err);
+        totalFailed += 5;
+        continue;
       }
 
-      try {
-        // Determine content rating from sitemap_content_ratings or source default
-        const sitemapRatings = source.sitemap_content_ratings ?? {};
-        // Match the manga URL to its originating sitemap to get the correct rating
-        let contentRating: 'general' | 'mature' = source.content_rating;
-        const matchedSitemap = Object.keys(sitemapRatings).find(
-          (sitemapUrl) => item.url.startsWith(sitemapUrl) || item.originSitemap?.startsWith(sitemapUrl),
-        );
-        if (matchedSitemap) {
-          contentRating = sitemapRatings[matchedSitemap];
+      console.log(`[AutoImport] ${source.name} [${contentRating}]: sitemap ${sitemapUrl} → ${parsed.total} manga`);
+
+      for (const item of parsed.mangas) {
+        if (newThisSource >= MAX_NEW_PER_SOURCE && checkedThisSource >= MAX_CHECK_PER_SOURCE) {
+          console.log(`[AutoImport] ${source.name}: reached limits (new=${newThisSource}, checked=${checkedThisSource})`);
+          break;
         }
 
-        // Check if manga already exists
-        const { data: existing } = await supabase
-          .from('manga')
-          .select('id, slug, updated_at, source_url')
-          .or(`slug.eq.${item.slug},source_url.eq.${item.url}`)
-          .is('deleted_at', null)
-          .maybeSingle();
+        try {
+          // Check if manga already exists
+          const { data: existing } = await supabase
+            .from('manga')
+            .select('id, slug, updated_at, source_url')
+            .or(`slug.eq.${item.slug},source_url.eq.${item.url}`)
+            .is('deleted_at', null)
+            .maybeSingle();
 
-        if (!existing) {
-          // NEW manga — check limit
-          if (newThisSource >= MAX_NEW_PER_SOURCE) {
-            totalSkipped++;
-            continue;
-          }
+          if (!existing) {
+            // NEW manga — check limit
+            if (newThisSource >= MAX_NEW_PER_SOURCE) {
+              totalSkipped++;
+              continue;
+            }
 
-          const result = await importNewManga(item.url, item.slug, source.id, adminId, contentRating, source.type);
-          if (result === 'new') { totalNew++; newThisSource++; }
-          else if (result === 'failed') totalFailed++;
-          else totalSkipped++;
+            const result = await importNewManga(item.url, item.slug, source.id, adminId, contentRating, source.type);
+            if (result === 'new') { totalNew++; newThisSource++; }
+            else if (result === 'failed') totalFailed++;
+            else totalSkipped++;
 
-          // Delay between new manga imports
-          await sleep(2000 + Math.random() * 2000);
-        } else {
-          // EXISTING manga — check for chapter updates
-          if (checkedThisSource >= MAX_CHECK_PER_SOURCE) {
-            totalSkipped++;
-            continue;
-          }
-          checkedThisSource++;
+            // Delay between new manga imports
+            await sleep(2000 + Math.random() * 2000);
+          } else {
+            // EXISTING manga — check for chapter updates
+            if (checkedThisSource >= MAX_CHECK_PER_SOURCE) {
+              totalSkipped++;
+              continue;
+            }
+            checkedThisSource++;
 
-          // Check if source has new chapters
-          const { count: dbCount } = await supabase
-            .from('chapters')
-            .select('id', { count: 'exact', head: true })
-            .eq('manga_id', existing.id)
-            .is('deleted_at', null);
+            // Check if source has new chapters
+            const { count: dbCount } = await supabase
+              .from('chapters')
+              .select('id', { count: 'exact', head: true })
+              .eq('manga_id', existing.id)
+              .is('deleted_at', null);
 
-          // Fetch source page to count chapters
-          const chapterRes = await fetch(item.url, {
-            headers: buildScraperHeaders(item.url),
-            signal: AbortSignal.timeout(15_000),
-          });
+            // Fetch source page to count chapters
+            const chapterRes = await fetch(item.url, {
+              headers: buildScraperHeaders(item.url),
+              signal: AbortSignal.timeout(15_000),
+            });
 
-          if (chapterRes.ok) {
-            const html = await chapterRes.text();
-            const { parseChapterListFromHtml } = await import('@/lib/scrapers/manga-scraper');
-            const sourceChapters = parseChapterListFromHtml(html);
+            if (chapterRes.ok) {
+              const html = await chapterRes.text();
+              const { parseChapterListFromHtml } = await import('@/lib/scrapers/manga-scraper');
+              const sourceChapters = parseChapterListFromHtml(html);
 
-            if (sourceChapters.length > (dbCount ?? 0)) {
-              console.log(`[AutoImport] ${item.slug}: source=${sourceChapters.length}, db=${dbCount} → importing new chapters`);
-              const { importAllChapters } = await import('@/app/api/v1/admin/scrape/manga-chapters/route');
-              await importAllChapters(existing.id, item.slug, item.url, true); // metadata-only for speed
-              totalUpdated++;
+              if (sourceChapters.length > (dbCount ?? 0)) {
+                console.log(`[AutoImport] ${item.slug}: source=${sourceChapters.length}, db=${dbCount} → importing new chapters`);
+                const { importAllChapters } = await import('@/app/api/v1/admin/scrape/manga-chapters/route');
+                await importAllChapters(existing.id, item.slug, item.url, true); // metadata-only for speed
+                totalUpdated++;
+              } else {
+                totalSkipped++;
+              }
             } else {
               totalSkipped++;
             }
-          } else {
-            totalSkipped++;
-          }
 
-          // Delay between chapter checks
-          await sleep(1500 + Math.random() * 1500);
+            // Delay between chapter checks
+            await sleep(1500 + Math.random() * 1500);
+          }
+        } catch (err) {
+          console.error(`[AutoImport] Error for ${item.slug}:`, err);
+          totalFailed++;
         }
-      } catch (err) {
-        console.error(`[AutoImport] Error for ${item.slug}:`, err);
-        totalFailed++;
       }
+
+      // Early exit if both limits reached
+      if (newThisSource >= MAX_NEW_PER_SOURCE && checkedThisSource >= MAX_CHECK_PER_SOURCE) break;
     }
 
     console.log(`[AutoImport] ${source.name} done: new=${newThisSource}, checked=${checkedThisSource}`);
