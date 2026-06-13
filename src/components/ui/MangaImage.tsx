@@ -63,9 +63,7 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
       style,
       alt,
       src,
-      sizes,
       priority,
-      quality,
       ...rest
     } = props;
 
@@ -134,7 +132,7 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
   }
 
   // Local/Supabase images → use Next.js Image with optimization
-  return <NextImage ref={ref as any} {...props} />;
+  return <NextImage ref={ref as React.Ref<HTMLImageElement>} {...props} />;
 });
 
 MangaImage.displayName = 'MangaImage';

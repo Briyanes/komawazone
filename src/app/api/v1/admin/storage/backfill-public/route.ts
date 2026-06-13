@@ -74,7 +74,7 @@ async function runBackfill(jobId: string | null, limit: number, offset: number) 
   const adminSupabase = createAdminClient();
 
   let success = 0;
-  let skipped = 0;
+  const skipped = 0;
   let failed = 0;
 
   try {

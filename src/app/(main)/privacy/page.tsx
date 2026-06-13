@@ -1,4 +1,5 @@
 import { Metadata } from 'next';
+import Link from 'next/link';
 
 export const metadata: Metadata = {
   title: 'Privacy Policy — OLLUQ',
@@ -124,7 +125,7 @@ export default function PrivacyPage() {
 
         {/* Back link */}
         <div style={{ marginTop: '48px', paddingTop: '24px', borderTop: '1px solid var(--border-light)' }}>
-          <a
+          <Link
             href="/"
             style={{
               fontSize: '13px',
@@ -133,7 +134,7 @@ export default function PrivacyPage() {
             }}
           >
             ← Kembali ke OLLUQ
-          </a>
+          </Link>
         </div>
       </div>
     </div>

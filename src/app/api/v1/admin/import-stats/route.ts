@@ -33,7 +33,7 @@ export async function GET() {
   const activeMangaIds = new Set<string>();
   let mangaPage = 0;
   const MANGA_PAGE_SIZE = 1000;
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     const { data: mPage } = await supabase
       .from('manga')
@@ -52,7 +52,7 @@ export async function GET() {
   let activeChapterCount = 0;
   let chapPage = 0;
   const PAGE_SIZE = 1000;
-  // eslint-disable-next-line no-constant-condition
+   
   while (true) {
     const { data: page } = await supabase
       .from('chapters')

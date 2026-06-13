@@ -265,13 +265,27 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
       const { scrapeChapterImages } = await import('@/lib/scrapers/manga-scraper');
       const mangaSlug = chapter.manga.slug;
       const chapterNum = chapter.number;
+      const intNum = Math.floor(chapterNum);
       // Chapter URL format: {origin}/{manga-slug}-chapter-{N}/
+      // Some sources zero-pad single digits (chapter-02, chapter-09) but not
+      // chapter-1 or chapter-10+. Try multiple formats to handle this.
       const origin = chapter.manga.source_url
         ? new URL(chapter.manga.source_url).origin
         : 'https://04x.manhwaland.land';
-      const chapterUrl = `${origin}/${mangaSlug}-chapter-${chapterNum}/`;
+      const paddedNum = String(intNum).padStart(2, '0');
+      const candidateUrls = intNum !== chapterNum
+        // Decimal chapters (e.g. 10.5): only try the exact number
+        ? [`${origin}/${mangaSlug}-chapter-${chapterNum}/`]
+        // Integer chapters: try plain, zero-padded, then 3-digit padded
+        : intNum < 100
+          ? [`${origin}/${mangaSlug}-chapter-${intNum}/`, `${origin}/${mangaSlug}-chapter-${paddedNum}/`]
+          : [`${origin}/${mangaSlug}-chapter-${intNum}/`];
 
-      const imageUrls = await scrapeChapterImages(chapterUrl);
+      let imageUrls: string[] = [];
+      for (const url of candidateUrls) {
+        imageUrls = await scrapeChapterImages(url);
+        if (imageUrls.length > 0) break;
+      }
       if (imageUrls.length > 0) {
         const imageRows = imageUrls.map((url, i) => ({
           chapter_id: chapter.id,

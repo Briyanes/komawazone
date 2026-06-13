@@ -5,7 +5,7 @@ import { Play, RefreshCw, Info } from 'lucide-react';
 
 export default function StorageBackfillPage() {
   const [status, setStatus] = useState<string>('idle');
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [limit, setLimit] = useState(50);
 
   const runBackfill = async () => {

@@ -652,32 +652,55 @@ async function downloadImagesForChapters(manga, chapters, gotScraping, stats, pr
   for (const chapter of chapters) {
     try {
       // Derive chapter URL from manga source_url + chapter number
-      let chapterUrl = chapter.url;
-      if (!chapterUrl) {
-        // Try to construct: manhwaland URLs typically: /manga-slug/chapter-N/
+      // Some sources zero-pad single digits (chapter-02, chapter-09) — try multiple formats
+      let candidateUrls = [];
+      if (chapter.url) {
+        candidateUrls = [chapter.url];
+      } else {
         const sourceParsed = new URL(manga.source_url);
         const pathParts = sourceParsed.pathname.replace(/\/$/, '').split('/');
         const slug = pathParts[pathParts.length - 1];
-        chapterUrl = `${sourceParsed.origin}/${slug}-chapter-${Math.floor(chapter.number)}/`;
+        const intNum = Math.floor(chapter.number);
+        const paddedNum = String(intNum).padStart(2, '0');
+        if (intNum !== chapter.number) {
+          // Decimal chapters (e.g. 10.5): only try exact number
+          candidateUrls = [`${sourceParsed.origin}/${slug}-chapter-${chapter.number}/`];
+        } else if (intNum < 100) {
+          // Integer chapters under 100: try plain, then zero-padded
+          candidateUrls = [
+            `${sourceParsed.origin}/${slug}-chapter-${intNum}/`,
+            `${sourceParsed.origin}/${slug}-chapter-${paddedNum}/`,
+          ];
+        } else {
+          candidateUrls = [`${sourceParsed.origin}/${slug}-chapter-${intNum}/`];
+        }
       }
 
-      console.log(`          Ch.${chapter.number}: scraping images from ${chapterUrl.slice(0, 60)}...`);
+      // Try each candidate URL until we find images
+      let chapterHtml = null;
+      let workingUrl = null;
+      for (const tryUrl of candidateUrls) {
+        chapterHtml = await fetchPageHtml(tryUrl, gotScraping);
+        if (chapterHtml && parseChapterImages(chapterHtml).length > 0) {
+          workingUrl = tryUrl;
+          break;
+        }
+      }
 
-      const chapterHtml = await fetchPageHtml(chapterUrl, gotScraping);
-      if (!chapterHtml) {
+      if (!chapterHtml || !workingUrl) {
         stats.imagesFailed++;
-        logFailure({ manga_id: manga.id, chapter_id: chapter.id, chapter_number: chapter.number, phase: 'fetch_chapter_page', error: 'Failed to fetch chapter page', url: chapterUrl });
+        logFailure({ manga_id: manga.id, chapter_id: chapter.id, chapter_number: chapter.number, phase: 'fetch_chapter_page', error: 'Failed to fetch chapter page', urls: candidateUrls });
         continue;
       }
 
       const imageUrls = parseChapterImages(chapterHtml);
       if (imageUrls.length === 0) {
         stats.imagesFailed++;
-        logFailure({ manga_id: manga.id, chapter_id: chapter.id, chapter_number: chapter.number, phase: 'parse_images', error: 'No images found', url: chapterUrl });
+        logFailure({ manga_id: manga.id, chapter_id: chapter.id, chapter_number: chapter.number, phase: 'parse_images', error: 'No images found', url: workingUrl });
         continue;
       }
 
-      console.log(`          Ch.${chapter.number}: ${imageUrls.length} images ditemukan`);
+      console.log(`          Ch.${chapter.number}: ${imageUrls.length} images from ${workingUrl.slice(0, 60)}...`);
 
       if (DRY_RUN) {
         stats.imagesUploaded += imageUrls.length;
@@ -745,9 +768,9 @@ async function downloadImagesForChapters(manga, chapters, gotScraping, stats, pr
           console.log(`          ✅ Ch.${chapter.number}: ${imageRecords.length} images uploaded & saved`);
         }
 
-        // Update chapter thumbnail — use 2nd image (better preview), fallback to 1st
-        const thumbRecord = imageRecords.length >= 2
-          ? imageRecords[1]
+        // Update chapter thumbnail — use 5th image (index 4), fallback to 1st
+        const thumbRecord = imageRecords.length >= 5
+          ? imageRecords[4]
           : imageRecords[0];
         if (thumbRecord?.image_url) {
           await supabase

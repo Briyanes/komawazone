@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     const job = jobResult.data as unknown as {
       id: string;
       started_at: string;
-      [key: string]: any;
+      [key: string]: unknown;
     };
 
     if (!job.started_at) {

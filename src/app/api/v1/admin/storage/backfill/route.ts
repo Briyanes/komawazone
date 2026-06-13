@@ -243,17 +243,19 @@ async function runBackfill(
         : await baseQuery.limit(limit);
 
       // Group by chapter
-      const byChapter = new Map<string, Array<{ chapter_id: string; image_url: string; number: number; manga: any }>>();
-      for (const img of (images ?? [])) {
-        const chapterId = (img as any).chapter_id;
+      type ChapterImage = { chapter_id: string; image_url: string; number: number; manga: { title: string; slug: string } | null };
+      type ImageWithRelations = { chapter_id: string; image_url: string; number: number; chapters?: { manga: { title: string; slug: string } | null } | null };
+      const byChapter = new Map<string, Array<ChapterImage>>();
+      for (const img of ((images as ImageWithRelations[] | null) ?? [])) {
+        const chapterId = img.chapter_id;
         if (!byChapter.has(chapterId)) {
           byChapter.set(chapterId, []);
         }
         byChapter.get(chapterId)!.push({
           chapter_id: chapterId,
-          image_url: (img as any).image_url,
-          number: (img as any).number,
-          manga: (img as any).chapters?.manga,
+          image_url: img.image_url,
+          number: img.number,
+          manga: img.chapters?.manga ?? null,
         });
       }
 

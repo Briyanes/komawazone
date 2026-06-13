@@ -162,16 +162,19 @@ export async function importFromGoogleSheet(
     // Convert to SheetMangaData
     const data: SheetMangaData[] = rows
       .slice(1) // Skip header row
-      .map((row: any) => ({
-        url: row.URL || row.url || '',
-        slug: row.Slug || row.slug || '',
-        title: row.Title || row.title || '',
-        type: (row.Type || row.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
-        status: (row.Status || row.status || 'NEW') as 'NEW' | 'UPDATED' | 'EXISTING',
-        lastmod: row['Last Modified'] || row.lastmod || new Date().toISOString(),
-        imported: (row.Imported || row.imported) === 'Yes' || row.imported === true,
-        notes: row.Notes || row.notes || '',
-      }))
+      .map((row) => {
+        const r = row.toObject() as Record<string, string>;
+        return {
+          url: r.URL || r.url || '',
+          slug: r.Slug || r.slug || '',
+          title: r.Title || r.title || '',
+          type: (r.Type || r.type || 'MANHWA') as 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON',
+          status: (r.Status || r.status || 'NEW') as 'NEW' | 'UPDATED' | 'EXISTING',
+          lastmod: r['Last Modified'] || r.lastmod || new Date().toISOString(),
+          imported: r.Imported === 'Yes' || r.imported === 'true',
+          notes: r.Notes || r.notes || '',
+        };
+      })
       .filter(item => item.url && item.slug); // Only valid entries
 
     console.log(`Google Sheets: Imported ${data.length} rows from ${tabName}`);

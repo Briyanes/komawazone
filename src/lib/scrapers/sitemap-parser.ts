@@ -129,7 +129,6 @@ async function fetchSitemap(
       },
       signal: controller.signal,
       // Next.js fetch options
-      // @ts-ignore - Next.js specific options
       next: { revalidate: 3600 }, // Cache for 1 hour
     });
 
@@ -282,7 +281,7 @@ export async function parseAllSitemaps(
   sitemapUrls: string[],
   options: SitemapParseOptions = {}
 ): Promise<SitemapParseResult> {
-  let allMangas: SitemapManga[] = [];
+  const allMangas: SitemapManga[] = [];
   const processedSitemaps = new Set<string>();
   const slugSet = new Set<string>();
   const maxDepth = 3; // Prevent infinite loops
