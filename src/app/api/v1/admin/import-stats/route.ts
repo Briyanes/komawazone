@@ -20,13 +20,11 @@ export async function GET() {
   const [
     { count: totalManga },
     { count: mangaWithSource },
-    { count: totalChapters },
     { data: recentJobs },
   ] = await Promise.all([
     supabase.from('manga').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('manga').select('id', { count: 'exact', head: true })
       .not('source_url', 'is', null).is('deleted_at', null),
-    supabase.from('chapters').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('import_jobs').select('*').order('started_at', { ascending: false }).limit(50),
   ]);
 
@@ -48,8 +46,10 @@ export async function GET() {
     mangaPage++;
   }
 
-  // Count active manga WITH chapters using pagination-aware approach
+  // Count active manga WITH chapters + total active chapters
+  // using pagination-aware approach
   const mangaWithChaptersSet = new Set<string>();
+  let activeChapterCount = 0;
   let chapPage = 0;
   const PAGE_SIZE = 1000;
   // eslint-disable-next-line no-constant-condition
@@ -62,7 +62,10 @@ export async function GET() {
     if (!page || page.length === 0) break;
     for (const c of page) {
       // Only count if the manga is still active (not soft-deleted)
-      if (activeMangaIds.has(c.manga_id)) mangaWithChaptersSet.add(c.manga_id);
+      if (activeMangaIds.has(c.manga_id)) {
+        mangaWithChaptersSet.add(c.manga_id);
+        activeChapterCount++;
+      }
     }
     if (page.length < PAGE_SIZE) break;
     chapPage++;
@@ -76,7 +79,7 @@ export async function GET() {
     data: {
       totalManga: totalManga ?? 0,
       mangaWithSource: mangaWithSource ?? 0,
-      totalChapters: totalChapters ?? 0,
+      totalChapters: activeChapterCount,
       mangaWithoutChapters,
       recentJobs: recentJobs ?? [],
     },
