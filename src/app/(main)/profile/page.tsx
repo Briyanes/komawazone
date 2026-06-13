@@ -287,7 +287,7 @@ export default function ProfilePage() {
       </div>
 
       {/* Sign out */}
-      <Button variant="ghost" onClick={handleLogout} className="w-full text-red-500 hover:bg-red-50 dark:hover:bg-red-950/20">
+      <Button variant="ghost" onClick={handleLogout} className="w-full text-red-500 hover:text-red-400">
         <LogOut size={16} /> Keluar
       </Button>
     </div>
