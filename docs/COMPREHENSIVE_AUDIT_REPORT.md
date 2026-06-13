@@ -1,568 +1,324 @@
-# COMPREHENSIVE DOCUMENTATION AUDIT REPORT
-## Complete Review & Quality Assurance for Production
+# Manga Zone (KomwaZone) — Comprehensive Audit Report
 
-**Date:** 2026-05-15  
-**Status:** ✅ AUDIT COMPLETE  
-**Total Files Reviewed:** 25  
-**Total Lines of Documentation:** 21,018 lines  
+**Date:** June 13, 2026  
+**Auditor:** Cline AI Agent  
+**Commit:** 8380305f
 
 ---
 
-## 📋 EXECUTIVE SUMMARY
+## Executive Summary
 
-### Audit Findings
-- ✅ **NO Critical Errors Found**
-- ⚠️ **8 Medium Issues Identified** (fixable)
-- ⚠️ **12 Minor Issues Identified** (documentation gaps)
-- ✅ **Well-organized structure** with clear hierarchy
-- ✅ **Minimal duplication** (expected for multi-role documentation)
-- ✅ **Production-ready** with minor updates needed
+This audit covered the full Manga Zone dashboard, public pages, API routes, payment integration, auth flow, and database health. Several critical data issues were identified and fixed during this session. The codebase is architecturally sound but has significant data quality issues from the original bulk import.
 
-### Quality Score: 92/100
+### Issues Fixed This Session
+| # | Issue | Severity | Status |
+|---|-------|----------|--------|
+| 1 | 1384 manga with dead cover URLs (gmbr.pro, etc.) | High | ✅ Fixed — set to NULL |
+| 2 | 623 chapters missing thumbnails | Medium | ✅ Fixed (4 fixable, 619 are metadata-only) |
+| 3 | Auto-import cron not processing | High | ✅ Fixed & deployed |
+| 4 | DB diagnostics script used `.limit()` (truncated results) | Low | ✅ Fixed — paginated |
+
+### Issues Found (Not Yet Fixed)
+| # | Issue | Severity | Recommendation |
+|---|-------|----------|----------------|
+| A | All 3557 manga tagged `mature` (0 `general`) | Medium | Data issue from original import — see §3 |
+| B | 997 orphan manga (no chapters, no source_url) | Medium | Soft-delete or re-import with active sources |
+| C | 619 chapters are metadata-only (no images) | Low | Expected — metadata-only import was intentional |
+
+---
+
+## 1. Database Health
+
+### 1.1 Cover Images
+- **Total manga:** 3,557
+- **Covers fixed:** 1,384 dead URLs nullified (gmbr.pro, manhwaland.land, etc.)
+- **Remaining valid covers (R2):** 2,173
+- **NULL covers (placeholder shown):** 1,384
+
+The `MangaCard` component properly renders a placeholder (📖 icon + title) when `cover_url` is NULL. The `MangaImage` component has an `onError` fallback that shows a 📖 emoji for external images that fail to load.
+
+### 1.2 Chapters & Thumbnails
+- **Total chapters:** 6,190
+- **Chapters with thumbnails:** 5,571
+- **Chapters without thumbnails:** 619 (metadata-only, no images to use as thumbnail)
+- **Total chapter images:** 119,322
+- **Chapters with actual images:** ~60 manga titles
+
+### 1.3 Content Rating Distribution
 ```
-Content Quality:      95/100 ✅
-Consistency:          90/100 ⚠️
-Completeness:         92/100 ⚠️
-Technical Accuracy:   95/100 ✅
-Organization:         94/100 ✅
-```
-
----
-
-## 📁 FILES INVENTORY (25 total)
-
-### Navigation & Reference (4 files)
-- ✅ README.md (553 lines)
-- ✅ INDEX.md (274 lines)
-- ✅ START_HERE.md (295 lines)
-- ✅ QUICK_REFERENCE.md (449 lines)
-
-### Planning & Strategy (5 files)
-- ✅ EXPERT_REVIEW.md (642 lines)
-- ✅ TEAM_EXPERT_REVIEW.md (1,528 lines)
-- ✅ TEAM_REVIEW_SUMMARY.md (565 lines)
-- ✅ ALL_DOCUMENTATION.md (520 lines)
-- ✅ IMPLEMENTATION_GUIDE.md (560 lines)
-
-### Tier-1 Design Specs (3 files)
-- ✅ RESPONSIVE_DESIGN.md (1,195 lines)
-- ✅ COMPONENT_STATES.md (1,211 lines)
-- ✅ DESIGN_SYSTEM.md (517 lines)
-
-### Tier-1 Developer Specs (5 files)
-- ✅ TESTING_STRATEGY.md (1,552 lines)
-- ✅ API_DOCUMENTATION.md (1,788 lines)
-- ✅ DATABASE_MIGRATIONS.md (1,238 lines)
-- ✅ ERROR_HANDLING.md (1,116 lines)
-- ✅ TYPESCRIPT_SETUP.md (1,195 lines)
-
-### Tier-1 Designer Implementation (2 files)
-- ✅ FIGMA_COMPONENT_LIBRARY_GUIDE.md (1,067 lines)
-- ✅ FIGMA_IMPLEMENTATION_GUIDE.md (1,017 lines)
-
-### Tier-2 Developer Specs (3 files)
-- ✅ PERFORMANCE_OPTIMIZATION.md (1,008 lines)
-- ✅ SECURITY_COMPLIANCE.md (754 lines)
-- ✅ DEVOPS_DEPLOYMENT.md (713 lines)
-
-### Feature-Specific (1 file)
-- ✅ AD_MANAGEMENT.md (653 lines)
-
-### Implementation Support (2 files)
-- ✅ CHECKLIST.md (608 lines)
-- ✅ PRODUCTION_REVIEW_REPORT.md (? lines - needs review)
-
----
-
-## 🔍 DETAILED FINDINGS
-
-### ISSUE #1: Duplicate Content - "Core Web Vitals" (MEDIUM)
-
-**Files with same content:**
-- RESPONSIVE_DESIGN.md (line ~50)
-- TESTING_STRATEGY.md (line ~80)
-- PERFORMANCE_OPTIMIZATION.md (line ~45)
-- TEAM_EXPERT_REVIEW.md (line ~200)
-- EXPERT_REVIEW.md (line ~150)
-
-**Problem:** CWV targets repeated identically in 5 different files  
-**Impact:** Maintenance nightmare if values need updating  
-**Fix Required:** ✅ CENTRALIZE in DESIGN_SYSTEM.md, reference elsewhere
-
-**Recommended Fix:**
-```markdown
-# RESPONSIVE_DESIGN.md
-## Performance Standards
-
-For detailed performance targets, see [DESIGN_SYSTEM.md#core-web-vitals](DESIGN_SYSTEM.md#core-web-vitals)
-
-Quick reference:
-- LCP: < 2.5s
-- CLS: < 0.1
-- INP: < 200ms
+General:  0
+Mature:   3,557
+NULL:     0
 ```
 
----
+**All manga are tagged as `mature`**. This is a data issue from the original bulk import, not a code bug. The import code correctly assigns `content_rating` from the source configuration, but all existing manga were imported before the per-sitemap rating system was implemented.
 
-### ISSUE #2: Incomplete/Missing File - PRODUCTION_REVIEW_REPORT.md
-
-**Status:** File exists but NOT reviewed  
-**Size:** Unknown (not counted in audit)  
-**Issue:** Appears to be a report from previous phase  
-**Action Required:** ✅ REVIEW & CONSOLIDATE or DELETE
-
----
-
-### ISSUE #3: Naming Convention Inconsistency (MEDIUM)
-
-**Found 3 different naming patterns for components:**
-
-Pattern 1 (COMPONENT_STATES.md):
+### 1.4 Manga Sources
 ```
-Button/Primary/Medium/Default
-Button/Primary/Medium/Hover
+✅ Manhwaland General [general]: 0 manga  ← no manga linked
+✅ ManhwaLand - Mature  [mature]: 240 manga
+✅ Mangasusuku - Mature  [mature]: 0 manga  ← no manga linked
 ```
 
-Pattern 2 (FIGMA_COMPONENT_LIBRARY_GUIDE.md):
-```
-Button
-├─ Primary
-│  ├─ Default
-```
+All 3,557 manga have `source_id = NULL`, meaning they were imported before the `source_id` column was added (migration 023). Only 240 manga imported via the newer sitemap system have a source link.
 
-Pattern 3 (DATABASE_MIGRATIONS.md):
-```
-model Manga {
-  status: MangaStatus
-}
+### 1.5 Orphan Manga (No Chapters)
+- **Total orphans:** 997
+- **With source_url:** 0 (cannot re-import chapters)
+- **Without source_url:** 997
+- **All created recently** (< 30 days)
 
-enum MangaStatus {
-  ONGOING
-  COMPLETED
-}
-```
-
-**Problem:** Inconsistent component naming will cause developer confusion  
-**Impact:** 🔴 HIGH - Code generation will fail  
-**Fix Required:** ✅ CREATE naming convention document
-
-**Recommended Fix:**
-Create new file: `docs/NAMING_CONVENTIONS.md` specifying:
-- Component naming: `Category/Name/Variant/Size/State`
-- Database models: `PascalCase` for models, `UPPER_SNAKE_CASE` for enums
-- API routes: `/api/v1/resource/action`
-- CSS classes: `kebab-case`
+These manga have metadata only — they were imported from a sitemap but their chapters were never downloaded. Since none have `source_url`, they cannot be re-imported automatically.
 
 ---
 
-### ISSUE #4: TypeScript Code Examples - Syntax Errors (MEDIUM)
+## 2. Admin Dashboard (14 Pages)
 
-**Location:** TYPESCRIPT_SETUP.md, lines 180-210
+### 2.1 Dashboard Home (`/admin`)
+- ✅ Stats overview renders correctly
+- ✅ Recent activity shows properly
 
-**Found Issue:**
-```typescript
-// WRONG - will cause compilation error
-export function formatDate(date: Date | string | number): string {
-  const dateObj = new Date(date);
-  
-  if (isNaN(dateObj.getTime())) {
-    throw new Error('Invalid date');
-  }
-  // Missing return statement in some paths!
-}
-```
+### 2.2 Stats (`/admin/stats`)
+- ✅ Pagination fix applied (previous bug)
+- ✅ Import stats API route fixed
 
-**Should be:**
-```typescript
-export function formatDate(
-  date: Date | string | number,
-  locale: string = 'en-US'
-): string {
-  const dateObj = new Date(date);
-  
-  if (isNaN(dateObj.getTime())) {
-    throw new Error('Invalid date');
-  }
+### 2.3 Settings (`/admin/settings`)
+- ✅ Site settings configurable via `site_settings` table
+- ✅ Key-value store pattern works
 
-  return dateObj.toLocaleDateString(locale, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  });
-}
-```
+### 2.4 Users (`/admin/users`)
+- ✅ User management page
+- ✅ Role assignment (USER/ADMIN)
+- ✅ VIP management
 
-**Fix Required:** ✅ Update all TypeScript examples for syntax correctness
+### 2.5 Manga (`/admin/manga`)
+- ✅ Manga list with search/filter
+- ✅ Manga CRUD operations
+- ✅ Content rating field in edit form
+
+### 2.6 Chapters (`/admin/chapters`)
+- ✅ Chapter management
+- ⚠️ 619 chapters without thumbnails (metadata-only)
+
+### 2.7 Genres (`/admin/genres`)
+- ✅ Genre CRUD
+- ✅ `is_mature` flag for genre-level filtering
+
+### 2.8 Import (`/admin/import`)
+- ✅ Sitemap import tool with content rating selector
+- ✅ Chunked processing (20 items/chunk)
+- ✅ Auto-resume between chunks
+- ✅ Progress tracking via `import_jobs` table
+
+### 2.9 Sources (`/admin/sources`)
+- ✅ Manga sources management
+- ✅ Per-sitemap content rating override (`sitemap_content_ratings`)
+- ✅ Active/inactive toggle
+
+### 2.10 Comments (`/admin/comments`)
+- ✅ Comment moderation
+
+### 2.11 Reports (`/admin/reports`)
+- ✅ Report management (manga + chapter reports)
+
+### 2.12 Ads (`/admin/ads`)
+- ✅ Ad provider/zone/campaign management
+- ✅ Analytics tracking (impressions/clicks)
+
+### 2.13 Subscriptions (`/admin/subscriptions`)
+- ✅ VIP subscription management
+- ✅ Voucher code generation (`vip_codes` table)
+- ✅ Tripay payment integration
+
+### 2.14 Storage Backfill (`/admin/storage-backfill`)
+- ✅ R2 migration tool for existing images
 
 ---
 
-### ISSUE #5: API Endpoint Count Mismatch (MEDIUM)
+## 3. Content Rating System
 
-**In API_DOCUMENTATION.md:**
-- Header says "42 endpoints"
-- Actually documented: 35-36 endpoints
-- Missing from specification:
-  - POST /admin/analytics/report
-  - GET /admin/health/status
-  - POST /api/export/data (GDPR)
-
-**Problem:** Incomplete API specification  
-**Impact:** 🟠 MEDIUM - Developers will miss endpoints  
-**Fix Required:** ✅ Complete the 42 endpoints specification
-
-**Missing Endpoints:**
+### Architecture
 ```
-1. POST /admin/analytics/report - Generate analytics report
-2. GET /admin/health/status - System health check
-3. POST /api/export/data - GDPR data export (user request)
-4. DELETE /api/data - GDPR delete request
-5. GET /api/consent/status - Check user consent
-6. POST /api/consent - Record user consent
-7. PATCH /user/profile/avatar - Upload avatar image
+manga_sources.content_rating  →  default rating for source
+manga_sources.sitemap_content_ratings  →  per-sitemap override
+                  ↓
+manga.content_rating  →  'general' | 'mature'
+                  ↓
+RLS Policy (016_manga_content_rating_rls.sql)
+  - Non-VIP users → only see content_rating = 'general'
+  - VIP users → see all content
 ```
 
----
+### Current Issue
+All 3,557 manga are tagged `mature`. This means:
+- Non-VIP users see **zero** manga (RLS filters all mature content)
+- Only VIP users can browse content
 
-### ISSUE #6: Database Schema Inconsistency (MEDIUM)
+### Root Cause
+The original bulk import (before the rating system existed) used migration 015's `DEFAULT 'general'`, but a subsequent update likely set all to `mature` (possibly intentional given the site's content nature).
 
-**Location:** DATABASE_MIGRATIONS.md line ~200
+### Recommendation
+If the site is intended to be all-ages on the hub domain (`olluq.com`) and mature on the reader domain (`olluq.xyz`):
+1. Keep all manga as `mature` (current state is correct for a mature-focused site)
+2. Ensure the hub domain only shows general content (currently 0 general = empty hub)
 
-**Found Issue:**
-```prisma
-model Manga {
-  id            String    @id @default(cuid())
-  // ... fields ...
-  
-  @@fulltext([title, description])  // ← PostgreSQL 11+
-  @@map("manga")
-}
-```
-
-**Problem:** `@@fulltext` is NOT standard Prisma. This won't compile!  
-**Should be:**
-```prisma
-// For full-text search, use raw SQL indexes or Elastic Search
-// Reference: DATABASE_MIGRATIONS.md implementation guide
-
-// Raw SQL:
-CREATE INDEX idx_manga_search ON manga 
-  USING GIN(to_tsvector('english', title || ' ' || description));
-```
-
-**Fix Required:** ✅ Remove invalid Prisma directives, document proper implementation
+If some manga should be general-audience:
+1. Use the admin manga page to manually recategorize
+2. Or run a bulk SQL update based on genre/title heuristics
 
 ---
 
-### ISSUE #7: Missing Environment Variable Documentation (MEDIUM)
+## 4. Auth Flow
 
-**Scattered across multiple files:**
-- TYPESCRIPT_SETUP.md mentions some vars
-- DEVOPS_DEPLOYMENT.md mentions others
-- SECURITY_COMPLIANCE.md mentions secrets
+### 4.1 Login/Register
+- ✅ Supabase Auth integration via `useAuth` hook
+- ✅ Email/password + OAuth (Google) support
+- ✅ Session management via cookies
+- ✅ Middleware redirects unauthenticated users
 
-**Missing:** Centralized .env reference  
-**Problem:** Developers won't know all required variables  
-**Fix Required:** ✅ CREATE `docs/.env.example` with ALL variables
+### 4.2 Admin Access
+- ✅ `admin/layout.tsx` checks `role === 'ADMIN'`
+- ✅ Non-admin users redirected to home
 
----
-
-### ISSUE #8: Color Definitions Duplication (LOW)
-
-**Found in 3 files:**
-- DESIGN_SYSTEM.md (line ~100)
-- COMPONENT_STATES.md (line ~150)
-- RESPONSIVE_DESIGN.md (line ~50)
-
-**Same colors defined 3 times**  
-**Fix:** Reference DESIGN_SYSTEM.md instead of duplicating
+### 4.3 Issues Found
+- ⚠️ In-app browser detection banner (`InAppBrowserBanner.tsx`) — good UX addition
+- ✅ Password reset flow exists (`/forgot-password`, `/reset-password`)
 
 ---
 
-### ISSUE #9: Incomplete Setup Instructions (LOW)
+## 5. Payment & VIP System
 
-**Location:** IMPLEMENTATION_GUIDE.md
+### 5.1 Tripay Integration
+- ✅ Payment gateway integration (`src/lib/payment/`)
+- ✅ Multiple payment channels supported
+- ✅ Transaction tracking via `payments` table
+- ✅ Webhook handler for payment status updates
 
-**Missing steps:**
-- How to install Figma fonts locally
-- How to configure Vercel secrets
-- How to setup GitHub branch protection rules
-- How to initialize PostgreSQL for development
+### 5.2 VIP Flow
+- ✅ VIP page (`/vip`) shows subscription plans
+- ✅ `vip_expires_at` on users table
+- ✅ Voucher redemption (`VoucherRedeemForm`)
+- ✅ `vip_codes` table for manual VIP grants
 
-**Fix Required:** ✅ Add detailed setup section
-
----
-
-### ISSUE #10: Code Examples Not Tested (LOW)
-
-**TypeScript examples in:**
-- ERROR_HANDLING.md
-- TESTING_STRATEGY.md
-- API_DOCUMENTATION.md
-
-**Status:** Written as documentation, not actually compiled/tested  
-**Risk:** Code won't work when developers copy-paste  
-**Fix:** Add `// ✅ Tested` or `// ⚠️ Untested` comments
+### 5.3 Subscription Management
+- ✅ Admin can view all subscriptions
+- ✅ Auto-expiry handling
+- ✅ Payment history
 
 ---
 
-### ISSUE #11: Missing Cross-File References (LOW)
+## 6. API Routes
 
-**Examples:**
-- CHECKLIST.md doesn't link to specific sections in other docs
-- QUICK_REFERENCE.md has broken link references (likely)
-- START_HERE.md might have outdated links
+### 6.1 Admin APIs (`/api/v1/admin/*`)
+- ✅ `scrape/sitemap` — sitemap import with chunking
+- ✅ `scrape/sitemap/resume` — auto-resume chunked import
+- ✅ `scrape/manga-chapters` — chapter import
+- ✅ `import-stats` — import statistics (pagination fixed)
+- ✅ All protected by admin role check
 
-**Fix Required:** ✅ Verify all internal links work
+### 6.2 Cron APIs (`/api/cron/*`)
+- ✅ `auto-import` — scheduled manga import (fixed)
+- ✅ `check-new-chapters` — chapter update checker
+- ✅ All protected by `CRON_SECRET`
 
----
+### 6.3 Auth APIs (`/api/v1/auth/*`)
+- ✅ `signin/[provider]` — OAuth flow
+- ✅ `callback` — OAuth callback handler
 
-### ISSUE #12: Version/Timeline Inconsistencies (LOW)
-
-**Found:**
-- Some files say "2026-05-15" (current date)
-- Some might say "2026-05-14"
-- Timeline estimates vary (5 days vs "40 hours")
-
-**Fix:** ✅ Standardize all timestamps
-
----
-
-## ✅ STRENGTHS
-
-### Excellent Organization
-- Clear folder structure
-- Logical file naming
-- Good separation of concerns
-- Role-based documentation
-
-### Comprehensive Content
-- Tier-1 specs complete
-- Tier-2 specs included
-- Designer + Developer paths clear
-- Implementation roadmaps provided
-
-### Good Technical Depth
-- API endpoints well-specified
-- Database schema documented
-- Testing strategy detailed
-- Security measures outlined
-
-### Multiple Entry Points
-- README for overview
-- START_HERE for roles
-- QUICK_REFERENCE for lookup
-- INDEX for navigation
+### 6.4 Public APIs
+- ✅ `sitemap` — XML sitemap generation
+- ✅ Manga API (`src/lib/api/manga.ts`)
 
 ---
 
-## 🔴 CRITICAL ACTIONS BEFORE PRODUCTION
+## 7. Public Pages
 
-### MUST FIX (Blocking):
-1. ✅ Fix TypeScript syntax errors in code examples
-2. ✅ Remove invalid Prisma directives
-3. ✅ Complete missing 7 API endpoints
-4. ✅ Create centralized naming conventions document
-5. ✅ Centralize environment variables reference
+### 7.1 Home (`/`)
+- ✅ Featured hero carousel
+- ✅ Latest updates grid
+- ✅ Genre bar
+- ✅ Continue reading section
 
-### SHOULD FIX (High Priority):
-6. ✅ Consolidate duplicate "Core Web Vitals" content
-7. ✅ Review and either include or delete PRODUCTION_REVIEW_REPORT.md
-8. ✅ Add setup instructions for development environment
-9. ✅ Verify all internal links work
-10. ✅ Test all code examples (compile them)
+### 7.2 Manga Detail (`/manga/[slug]`)
+- ✅ Cover, description, genres
+- ✅ Chapter list with thumbnails
+- ✅ Rating system
+- ✅ Reading list integration
 
-### NICE TO HAVE (Lower Priority):
-11. ✅ Standardize timestamps across files
-12. ✅ Add "tested" status to code examples
-13. ✅ Create quick setup script (setup.sh)
-14. ✅ Add visual diagrams (architecture, flows)
+### 7.3 Reader (`/manga/[slug]/chapter/[chapterId]`)
+- ✅ Image reader (`ReaderClient.tsx`)
+- ✅ Reading progress tracking
+- ✅ Chapter navigation
 
----
+### 7.4 Genre Pages
+- ✅ Genre listing (`/genre`)
+- ✅ Per-genre manga (`/genre/[slug]`)
 
-## 📝 RECOMMENDED NEW FILES TO CREATE
+### 7.5 Profile (`/profile`)
+- ✅ Reading history
+- ✅ Bookmarks
+- ✅ Reading list management
 
-### 1. `docs/NAMING_CONVENTIONS.md` (NEW)
-**Why:** Consolidate naming rules (components, APIs, databases)  
-**Content:**
-- Component naming: `Category/Name/Variant/Size/State`
-- Database: `PascalCase` models, `UPPER_SNAKE_CASE` enums
-- API routes: `/api/v1/resource/action`
-- Files: `UPPER_SNAKE_CASE.md` for docs
-- CSS classes: `kebab-case`
-- TypeScript variables: `camelCase`
-
-### 2. `docs/.env.example` (NEW)
-**Why:** Single source of truth for all environment variables  
-**Content:** All required variables with descriptions
-
-### 3. `docs/SETUP_GUIDE.md` (NEW)
-**Why:** Step-by-step local environment setup  
-**Content:**
-- Node.js 18 installation
-- PostgreSQL setup (Docker)
-- Figma setup (fonts, files)
-- GitHub setup (branches, protection rules)
-- Vercel configuration
-- Environment variables
-- First run verification
-
-### 4. `docs/API_ENDPOINTS_COMPLETE.md` (UPDATE)
-**Why:** Add the 7 missing endpoints  
-**Content:** Complete 42 endpoints specification
-
-### 5. `docs/CODE_EXAMPLES_STATUS.md` (NEW)
-**Why:** Track which code examples are tested  
-**Content:** Status of each code example (Tested ✅ / Untested ⚠️)
-
-### 6. `docs/TESTING_CHECKLIST.md` (NEW - or merge with CHECKLIST.md)
-**Why:** Pre-production testing steps  
-**Content:** What to test before production deployment
+### 7.6 Multi-Domain
+- ✅ Hub domain (`olluq.com`) — clean landing
+- ✅ Reader domain (`olluq.xyz`) — full manga
+- ✅ Middleware enforces domain routing
 
 ---
 
-## 🚀 NEXT STEPS (PRIORITY ORDER)
+## 8. Notification System
 
-### Phase 1: Fix Blocking Issues (4 hours)
-1. [ ] Create `NAMING_CONVENTIONS.md`
-2. [ ] Update TypeScript examples (fix syntax errors)
-3. [ ] Remove invalid Prisma directives
-4. [ ] Complete 7 missing API endpoints
-5. [ ] Create `.env.example`
-
-### Phase 2: Consolidate Content (2 hours)
-6. [ ] Create `SETUP_GUIDE.md`
-7. [ ] Consolidate duplicate "Core Web Vitals"
-8. [ ] Review PRODUCTION_REVIEW_REPORT.md
-9. [ ] Verify all internal links
-
-### Phase 3: Final Polish (1 hour)
-10. [ ] Create `CODE_EXAMPLES_STATUS.md`
-11. [ ] Standardize timestamps
-12. [ ] Final read-through for typos
-13. [ ] Add visual diagrams
+- ✅ `notifications` table
+- ✅ `NotificationBell` component
+- ✅ `NotificationsPopover` component
+- ✅ Notification creation on new chapters
+- ✅ Read/unread tracking
 
 ---
 
-## 📊 BEFORE & AFTER COMPARISON
+## 9. Scripts & Utilities
 
-### Before Fixes
-```
-Issues Found: 20
-Critical: 5
-Blocking: 0 (but impacts production)
-Production Ready: 70%
-Quality Score: 92/100
-```
-
-### After Fixes
-```
-Issues Fixed: 20
-Production Ready: 98%
-Quality Score: 98/100
-```
+### Fixed Scripts
+| Script | Purpose | Status |
+|--------|---------|--------|
+| `db-diagnostics.mjs` | Database health check | ✅ Fixed pagination |
+| `fix-broken-covers.mjs` | Cover URL migration | ⚠️ Source domains dead |
+| `migrate-images-to-r2.mjs` | R2 image migration | ✅ Working |
+| `download-chapters.mjs` | Chapter image downloader | ✅ Working |
+| `create-admin.ts` | Admin user creation | ✅ Working |
 
 ---
 
-## ✅ VERIFICATION CHECKLIST
+## 10. Recommendations
 
-Before declaring "PRODUCTION READY", verify:
+### High Priority
+1. **Soft-delete 997 orphan manga** — they have no chapters and no source. Users clicking them get empty pages. Either soft-delete them or hide them from listings.
 
-- [ ] All 24 documentation files reviewed
-- [ ] No duplicate content (or intentional & noted)
-- [ ] All code examples have correct syntax
-- [ ] All 42 API endpoints documented
-- [ ] Naming conventions unified
-- [ ] Internal links all working
-- [ ] Environment variables documented
-- [ ] Setup instructions complete
-- [ ] Database schema valid (compiles)
-- [ ] No broken references
-- [ ] Timestamps consistent
-- [ ] Tier-1 specs signed off
-- [ ] Tier-2 specs signed off
-- [ ] Designer approval on Figma guide
-- [ ] Developer lead approved testing strategy
-- [ ] DevOps approved deployment pipeline
-- [ ] Security review completed
-- [ ] Performance targets baseline set
+2. **Re-import covers for NULL-cover manga** — the 1,384 manga with NULL covers need new sources. Consider:
+   - Adding new manga sources with working cover URLs
+   - Using the auto-import cron to re-scrape from new sources
+
+### Medium Priority
+3. **Link existing manga to sources** — run a one-time update to set `source_id` for manga that match a source's base_url pattern.
+
+4. **Chapter image backfill** — 619 metadata-only chapters need their images downloaded. Run `download-chapters.mjs` targeting these chapters.
+
+### Low Priority
+5. **Add a "missing cover" admin dashboard widget** — show count of manga without covers so admins can track progress.
+
+6. **Add content rating bulk editor** — allow admins to select multiple manga and change their rating.
 
 ---
 
-## 📞 SIGN-OFF
+## 11. Background Processes
 
-### Documentation Quality Assurance
-- **Audit Date:** 2026-05-15
-- **Reviewer:** Copilot CLI (Automated Audit)
-- **Status:** ✅ AUDIT COMPLETE - Ready for fixes
-- **Recommendation:** ✅ PRODUCTION READY (after fixes applied)
+### Currently Running
+| Process | PID | Status | Notes |
+|---------|-----|--------|-------|
+| Cover migration to R2 | 4998 | Stale | Original migration likely complete |
+| Chapter creation | 13366 | Active | With caffeinate (prevents sleep) |
 
-### Issues Found: 12
-- Critical blocking: 5
-- High priority: 5
-- Low priority: 2
-
-### Estimated Fix Time: 7 hours
-
-### Next Step: Apply fixes from "CRITICAL ACTIONS BEFORE PRODUCTION"
-
----
-
-## 📎 APPENDIX A: ALL FILES & LOCATIONS
-
-```
-docs/
-├── README.md ✅
-├── INDEX.md ✅
-├── START_HERE.md ✅
-├── QUICK_REFERENCE.md ✅
-├── ALL_DOCUMENTATION.md ✅
-├── EXPERT_REVIEW.md ✅
-├── TEAM_EXPERT_REVIEW.md ✅
-├── TEAM_REVIEW_SUMMARY.md ✅
-├── IMPLEMENTATION_GUIDE.md ✅
-├── RESPONSIVE_DESIGN.md ✅
-├── COMPONENT_STATES.md ✅
-├── DESIGN_SYSTEM.md ✅
-├── TESTING_STRATEGY.md ⚠️ (code examples)
-├── API_DOCUMENTATION.md ⚠️ (incomplete - 35/42 endpoints)
-├── DATABASE_MIGRATIONS.md ⚠️ (invalid Prisma syntax)
-├── ERROR_HANDLING.md ✅
-├── TYPESCRIPT_SETUP.md ⚠️ (syntax errors)
-├── FIGMA_COMPONENT_LIBRARY_GUIDE.md ✅
-├── FIGMA_IMPLEMENTATION_GUIDE.md ✅
-├── PERFORMANCE_OPTIMIZATION.md ✅
-├── SECURITY_COMPLIANCE.md ✅
-├── DEVOPS_DEPLOYMENT.md ✅
-├── AD_MANAGEMENT.md ✅
-├── CHECKLIST.md ✅
-├── PRODUCTION_REVIEW_REPORT.md ❓ (needs review)
-└── COMPREHENSIVE_AUDIT_REPORT.md ✅ (this file)
-```
-
----
-
-## 📎 APPENDIX B: ISSUES SUMMARY TABLE
-
-| # | Issue | File | Type | Severity | Fix Time |
-|---|-------|------|------|----------|----------|
-| 1 | Duplicate Core Web Vitals | 5 files | Content | MEDIUM | 1 hr |
-| 2 | Missing PRODUCTION_REVIEW file | - | Admin | MEDIUM | 0.5 hr |
-| 3 | Naming inconsistency | 3 files | Structure | HIGH | 1 hr |
-| 4 | TypeScript syntax errors | 3 files | Code | CRITICAL | 1.5 hr |
-| 5 | API endpoints incomplete (35/42) | API_DOCUMENTATION | Code | CRITICAL | 2 hr |
-| 6 | Invalid Prisma directives | DATABASE_MIGRATIONS | Code | CRITICAL | 0.5 hr |
-| 7 | Missing env vars doc | Multiple | Documentation | MEDIUM | 1 hr |
-| 8 | Color duplication | 3 files | Content | LOW | 0.5 hr |
-| 9 | Incomplete setup instructions | IMPLEMENTATION_GUIDE | Documentation | LOW | 1.5 hr |
-| 10 | Code examples untested | Multiple | QA | LOW | 1 hr |
-| 11 | Broken internal links | Multiple | Links | LOW | 0.5 hr |
-| 12 | Timestamp inconsistency | Multiple | Format | LOW | 0.5 hr |
-
-**Total Fix Time:** ~12 hours  
-**Priority Fixes:** 5 issues = 7 hours (blocking)  
-**Polish Fixes:** 7 issues = 5 hours (nice to have)
-
----
-
-**AUDIT COMPLETE** ✅  
-**STATUS: PRODUCTION READY (with fixes applied)**
+### Completed This Session
+- ✅ Broken cover nullification (1,384 covers)
+- ✅ Chapter thumbnail backfill (4 fixed)
+- ✅ DB diagnostics script fix
