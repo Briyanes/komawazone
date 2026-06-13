@@ -103,8 +103,8 @@ const CONCURRENCY = Math.min(parseInt(args['concurrency'] ?? '3'), 10);
 const BATCH_SIZE  = 30;
 const CLEANUP_DEAD = args['cleanup-dead'] === true || args['cleanup-dead'] === 'true';
 
-if (!CLEANUP_DEAD && !['covers', 'covers-null', 'chapters', 'all'].includes(TYPE)) {
-  console.error('❌ --type must be: covers, covers-null, chapters, or all');
+if (!CLEANUP_DEAD && !['covers', 'covers-null', 'covers-from-chapters', 'chapters', 'all'].includes(TYPE)) {
+  console.error('❌ --type must be: covers, covers-null, covers-from-chapters, chapters, or all');
   process.exit(1);
 }
 
@@ -499,6 +499,161 @@ async function main() {
     if (progress.failed > 0) {
       console.log(`\n💡  Detail kegagalan disimpan di: ${FAILURES_FILE}`);
     }
+    console.log('');
+    return;
+  }
+
+  // ── Phase: covers-from-chapters — Ambil cover dari chapter images ────────
+  if (TYPE === 'covers-from-chapters') {
+    console.log('🖼️  Ambil cover dari chapter images (page 2)...');
+    console.log('');
+
+    // Count manga with null cover but having chapters with images
+    const { count: nullCount, error: countErr } = await supabase
+      .from('manga')
+      .select('id', { count: 'exact', head: true })
+      .is('cover_url', null)
+      .is('deleted_at', null);
+
+    if (countErr) {
+      console.error('❌ Gagal menghitung manga null:', countErr.message);
+      process.exit(1);
+    }
+
+    console.log(`📊 Manga tanpa cover: ${nullCount ?? '?'}`);
+    console.log('');
+
+    const toProcess = LIMIT ?? nullCount ?? 0;
+    let processed = 0;
+
+    while (processed < toProcess) {
+      const batchLimit = Math.min(BATCH_SIZE, toProcess - processed);
+
+      let query = supabase
+        .from('manga')
+        .select('id, title, slug')
+        .is('cover_url', null)
+        .is('deleted_at', null)
+        .order('id')
+        .limit(batchLimit);
+
+      if (RESUME && progress.lastProcessedId) {
+        query = query.gt('id', progress.lastProcessedId);
+      }
+
+      const { data: mangaRows, error } = await query;
+      if (error || !mangaRows?.length) {
+        if (error) console.error('❌ Query error:', error.message);
+        break;
+      }
+
+      for (const manga of mangaRows) {
+        processed++;
+        progress.processed++;
+        const progressLabel = `[${processed}/${toProcess}]`;
+
+        // Find first chapter with images
+        const { data: chapters } = await supabase
+          .from('chapters')
+          .select('id, number')
+          .eq('manga_id', manga.id)
+          .is('deleted_at', null)
+          .order('number')
+          .limit(1);
+
+        if (!chapters?.length) {
+          progress.failed++;
+          console.log(`${progressLabel} ⏭️  No chapters: ${(manga.title || manga.id).slice(0, 40)}`);
+          progress.lastProcessedId = manga.id;
+          saveProgress(progress);
+          continue;
+        }
+
+        // Get chapter images — prefer page 2, fallback page 1
+        const { data: images } = await supabase
+          .from('chapter_images')
+          .select('image_url, number')
+          .eq('chapter_id', chapters[0].id)
+          .order('number')
+          .limit(3);
+
+        if (!images?.length) {
+          progress.failed++;
+          console.log(`${progressLabel} ⏭️  No images: ${(manga.title || manga.id).slice(0, 40)}`);
+          progress.lastProcessedId = manga.id;
+          saveProgress(progress);
+          continue;
+        }
+
+        // Pick page 2 if available, else page 1
+        const coverSource = images.find(img => img.number === 2) ?? images[0];
+        const sourceUrl = coverSource.image_url;
+
+        // Skip if already R2 URL (shouldn't be null cover if R2 image exists, but just in case)
+        if (isR2Url(sourceUrl)) {
+          // Directly use as cover
+          if (!DRY_RUN) {
+            await supabase.from('manga').update({ cover_url: sourceUrl }).eq('id', manga.id);
+          }
+          progress.migrated++;
+          console.log(`${progressLabel} ✅ (direct) ${(manga.title || manga.id).slice(0, 40)}`);
+          progress.lastProcessedId = manga.id;
+          saveProgress(progress);
+          continue;
+        }
+
+        // Skip dead CDN
+        if (isDeadCdn(sourceUrl)) {
+          progress.failed++;
+          console.log(`${progressLabel} ⚠️  Dead CDN: ${(manga.title || manga.id).slice(0, 40)}`);
+          progress.lastProcessedId = manga.id;
+          saveProgress(progress);
+          continue;
+        }
+
+        // Download image
+        const imageData = await downloadImage(sourceUrl, gotScraping);
+        if (!imageData) {
+          progress.failed++;
+          console.log(`${progressLabel} ❌ Download failed: ${(manga.title || manga.id).slice(0, 40)}`);
+          progress.lastProcessedId = manga.id;
+          saveProgress(progress);
+          continue;
+        }
+
+        // Upload to R2
+        const ext = getExtension(sourceUrl, imageData.contentType);
+        const key = `covers/${manga.id}.${ext}`;
+
+        if (!DRY_RUN) {
+          try {
+            const r2Url = await uploadToR2(imageData.buffer, key, imageData.contentType);
+            await supabase.from('manga').update({ cover_url: r2Url }).eq('id', manga.id);
+            progress.migrated++;
+            const size = (imageData.buffer.length / 1024).toFixed(0);
+            console.log(`${progressLabel} ✅ ${(manga.title || manga.id).slice(0, 40)} (${size}KB from ch.${chapters[0].number} p.${coverSource.number})`);
+          } catch (err) {
+            progress.failed++;
+            console.log(`${progressLabel} ❌ Upload gagal: ${err.message}`);
+          }
+        } else {
+          progress.migrated++;
+          console.log(`${progressLabel} 🔍 DRY: ${(manga.title || manga.id).slice(0, 40)} (ch.${chapters[0].number} p.${coverSource.number})`);
+        }
+
+        progress.lastProcessedId = manga.id;
+        saveProgress(progress);
+      }
+
+      if (mangaRows.length < batchLimit) break;
+    }
+
+    console.log('');
+    console.log('══════════════════════════════════════');
+    console.log(`✅  Berhasil   : ${progress.migrated}`);
+    console.log(`❌  Gagal      : ${progress.failed}`);
+    console.log(`📦  Total      : ${progress.processed}`);
+    if (DRY_RUN) console.log('\n⚠️  Dry run — tidak ada yang benar-benar diupload.');
     console.log('');
     return;
   }

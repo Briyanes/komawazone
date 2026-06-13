@@ -745,11 +745,14 @@ async function downloadImagesForChapters(manga, chapters, gotScraping, stats, pr
           console.log(`          ✅ Ch.${chapter.number}: ${imageRecords.length} images uploaded & saved`);
         }
 
-        // Update chapter thumbnail with first image
-        if (imageRecords[0]?.image_url) {
+        // Update chapter thumbnail — use 2nd image (better preview), fallback to 1st
+        const thumbRecord = imageRecords.length >= 2
+          ? imageRecords[1]
+          : imageRecords[0];
+        if (thumbRecord?.image_url) {
           await supabase
             .from('chapters')
-            .update({ thumbnail_url: imageRecords[0].image_url })
+            .update({ thumbnail_url: thumbRecord.image_url })
             .eq('id', chapter.id);
         }
       }
