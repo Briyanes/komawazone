@@ -30,7 +30,25 @@ export async function GET() {
     supabase.from('import_jobs').select('*').order('started_at', { ascending: false }).limit(50),
   ]);
 
-  // Count manga WITH chapters using pagination-aware approach
+  // Fetch all active (non-soft-deleted) manga IDs so we only count chapters
+  // belonging to active manga — prevents negative counts after soft-deletes
+  const activeMangaIds = new Set<string>();
+  let mangaPage = 0;
+  const MANGA_PAGE_SIZE = 1000;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const { data: mPage } = await supabase
+      .from('manga')
+      .select('id')
+      .is('deleted_at', null)
+      .range(mangaPage * MANGA_PAGE_SIZE, (mangaPage + 1) * MANGA_PAGE_SIZE - 1);
+    if (!mPage || mPage.length === 0) break;
+    for (const m of mPage) activeMangaIds.add(m.id);
+    if (mPage.length < MANGA_PAGE_SIZE) break;
+    mangaPage++;
+  }
+
+  // Count active manga WITH chapters using pagination-aware approach
   const mangaWithChaptersSet = new Set<string>();
   let chapPage = 0;
   const PAGE_SIZE = 1000;
@@ -42,13 +60,15 @@ export async function GET() {
       .is('deleted_at', null)
       .range(chapPage * PAGE_SIZE, (chapPage + 1) * PAGE_SIZE - 1);
     if (!page || page.length === 0) break;
-    for (const c of page) mangaWithChaptersSet.add(c.manga_id);
+    for (const c of page) {
+      // Only count if the manga is still active (not soft-deleted)
+      if (activeMangaIds.has(c.manga_id)) mangaWithChaptersSet.add(c.manga_id);
+    }
     if (page.length < PAGE_SIZE) break;
     chapPage++;
   }
 
-  // Count manga WITHOUT chapters — count all manga, subtract those with chapters
-  // totalManga already has the exact count, so we just need to know how many have chapters
+  // Count manga WITHOUT chapters — only among active manga
   const mangaWithoutChapters = (totalManga ?? 0) - mangaWithChaptersSet.size;
 
   return NextResponse.json({
