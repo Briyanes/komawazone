@@ -42,7 +42,7 @@ export function QuickAddButton({ mangaId, className }: QuickAddButtonProps) {
       className={cn(
         'absolute top-1.5 right-1.5 z-10',
         'flex size-7 items-center justify-center rounded-full',
-        'opacity-0 group-hover:opacity-100 transition-opacity duration-150',
+        'md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-150',
         'shadow-md backdrop-blur-sm',
         added
           ? 'bg-[var(--color-primary)] text-white'

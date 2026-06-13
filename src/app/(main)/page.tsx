@@ -144,6 +144,10 @@ async function HeroSection() {
       {/* Mobile: HeroBannerCarousel */}
       {carouselItems.length > 0 && (
         <div className="md:hidden">
+          {/* Visually-hidden H1 for SEO — mobile hero doesn't have one */}
+          <h1 className="sr-only">
+            Olluq — Baca Manga, Manhwa & Manhua Gratis Sub Indo
+          </h1>
           <HeroBannerCarousel items={carouselItems} compact />
         </div>
       )}
