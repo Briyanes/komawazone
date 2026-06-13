@@ -245,9 +245,9 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         }
 
         const finalImages = successfulUploads.map(r => r.url);
-        // Use 2nd-from-last image as thumbnail (avoids cover/recap page)
-        const thumbnailUrl = finalImages.length >= 2
-          ? finalImages[finalImages.length - 2]
+        // Use 5th image (index 4) as thumbnail
+        const thumbnailUrl = finalImages.length >= 5
+          ? finalImages[4]
           : finalImages[0] ?? r2Results[0]?.url;
 
         const { data: chapterRecord, error: chapterErr } = await supabase
@@ -313,9 +313,9 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         );
 
         // Update thumbnail_url on chapter record if not set
-        // Use 2nd-from-last image as thumbnail (avoids cover/recap page)
-        const backfillThumb = finalImages.length >= 2
-          ? finalImages[finalImages.length - 2]
+        // Use 5th image (index 4) as thumbnail
+        const backfillThumb = finalImages.length >= 5
+          ? finalImages[4]
           : finalImages[0] ?? r2Results[0]?.url;
         await supabase.from('chapters')
           .update({ thumbnail_url: backfillThumb })
