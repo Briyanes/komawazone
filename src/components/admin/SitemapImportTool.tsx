@@ -34,7 +34,10 @@ export function SitemapImportTool() {
     importUpdates: true,
     batchSize: 3, // Conservative default to avoid rate-limiting
   });
-  const [sitemapRatings, setSitemapRatings] = useState<Record<string, 'general' | 'mature'>>({});
+  // Pre-set sitemap7 as mature (known mature-only sitemap from manhwaland)
+  const [sitemapRatings, setSitemapRatings] = useState<Record<string, 'general' | 'mature'>>({
+    'https://04x.manhwaland.land/manga-sitemap7.xml': 'mature',
+  });
   const [defaultRating, setDefaultRating] = useState<'general' | 'mature'>('general');
   const [activeJob, setActiveJob] = useState<ImportJob | null>(null);
   const [loading, setLoading] = useState(false);
