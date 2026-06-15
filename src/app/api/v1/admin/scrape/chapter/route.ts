@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { detectMangaSource, getSupportedDomains } from '@/lib/scrapers/detector';
+import { detectMangaSource } from '@/lib/scrapers/detector';
 import { SCRAPER_HEADERS, parseChapterImages, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {

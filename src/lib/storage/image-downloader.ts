@@ -1,4 +1,4 @@
-import { validateScraperUrl, SCRAPER_HEADERS } from '@/lib/scrapers/scraper-utils';
+import { validateScraperUrl } from '@/lib/scrapers/scraper-utils';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 const DEFAULT_TIMEOUT = 30000; // 30 seconds

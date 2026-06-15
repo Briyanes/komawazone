@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { Upload, Play, XCircle, CheckCircle, Clock, ExternalLink, Download } from 'lucide-react';
+import { Upload, XCircle, CheckCircle, Clock, Download } from 'lucide-react';
 
 const DEFAULT_SITEMAPS = [
   'https://04x.manhwaland.land/manga-sitemap.xml',

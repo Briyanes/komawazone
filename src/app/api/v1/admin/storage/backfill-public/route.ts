@@ -180,7 +180,7 @@ async function runBackfill(jobId: string | null, limit: number, offset: number) 
  *
  * Get status of public page manga covers
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   const supabase = await createClient();
   if (!await assertAdmin(supabase)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

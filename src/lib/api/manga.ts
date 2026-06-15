@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
-import type { MangaFilters } from '@/types';
 
 export type ChapterImage = {
   id: string;
@@ -63,8 +62,6 @@ export type MangaWithChapters = {
 /** Number of free preview chapters for mature manga */
 export const MATURE_PREVIEW_CHAPTERS = 3;
 
-const ITEMS_PER_PAGE = 20;
-
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 /**
@@ -87,7 +84,7 @@ async function isMatureAllowed(supabase: SupabaseServerClient): Promise<boolean>
 
 export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, banner_url, status, rating, views, description, genres, content_rating')
     .is('deleted_at', null)
@@ -101,7 +98,7 @@ export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
 
 export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select(`
       id, slug, title, cover_url, status, rating, views, content_rating,
@@ -117,7 +114,7 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
 
 export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating')
     .is('deleted_at', null)
@@ -131,7 +128,7 @@ export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
 export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
@@ -148,7 +145,7 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
 
 export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
@@ -161,7 +158,7 @@ export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
 
 export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
@@ -176,7 +173,7 @@ export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
 export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)

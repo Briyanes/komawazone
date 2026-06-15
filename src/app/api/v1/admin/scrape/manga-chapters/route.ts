@@ -2,7 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { parseChapterListFromHtml, scrapeChapterImages } from '@/lib/scrapers/manga-scraper';
 import { buildScraperHeaders, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
-import { downloadAndUploadToR2, batchDownloadAndUploadToR2 } from '@/lib/storage/r2';
+import { batchDownloadAndUploadToR2 } from '@/lib/storage/r2';
 
 export const maxDuration = 300;
 

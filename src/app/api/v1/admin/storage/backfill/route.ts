@@ -268,7 +268,6 @@ async function runBackfill(
             continue;
           }
 
-          const mangaTitle = toDownload[0].manga?.title || 'Unknown';
           console.log(`[Backfill] Downloading ${toDownload.length} images for chapter ${chapterId}...`);
 
           const r2Results = await batchDownloadAndUploadToR2(

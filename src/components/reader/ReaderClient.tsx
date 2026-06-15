@@ -147,7 +147,7 @@ export function ReaderClient({
 
     // Increment views (fire-and-forget, once per chapter load)
     fetch(`/api/v1/chapters/${chapterId}/view`, { method: 'POST' }).catch(() => {});
-  }, [chapterId, chapterNumber, mangaSlug, mangaTitle]);
+  }, [chapterId, chapterNumber, mangaSlug, mangaTitle, mangaCover]);
 
   const savePrefs = useCallback((next: Partial<{ readMode: ReadMode; fitMode: FitMode; direction: Direction; brightness: number; contrast: number; darkOverlay: number }>) => {
     const current = loadPrefs();

@@ -1,5 +1,5 @@
 import { detectMangaSource } from './detector';
-import { buildScraperHeaders, parseChapterImages, validateScraperUrl } from './scraper-utils';
+import { buildScraperHeaders, parseChapterImages } from './scraper-utils';
 
 type MangaType   = 'MANGA' | 'MANHWA' | 'MANHUA' | 'WEBTOON';
 type MangaStatus = 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';

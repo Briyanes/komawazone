@@ -251,7 +251,6 @@ async function runRetry(jobId: string | null, chapters: Array<{ id: string; numb
 
           try {
             const ext = getExtension(imgUrl, imageData.contentType);
-            const key = `chapters/${chapter.id}/${pageIdx}.${ext}`;
             const { url } = await uploadBufferToR2({
               buffer: imageData.buffer,
               contentType: imageData.contentType,
@@ -340,7 +339,7 @@ async function runRetry(jobId: string | null, chapters: Array<{ id: string; numb
  *
  * Get count of chapters with 0 images
  */
-export async function GET(request: NextRequest) {
+export async function GET() {
   const supabase = await createClient();
   if (!await assertAdmin(supabase)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -349,7 +348,7 @@ export async function GET(request: NextRequest) {
   const adminSupabase = createAdminClient();
 
   // Count chapters with 0 images using a left join approach
-  const { data: stats } = await adminSupabase.rpc('get_chapter_image_stats' as never);
+  await adminSupabase.rpc('get_chapter_image_stats' as never);
 
   // Fallback: just count total chapters
   const { count: totalChapters } = await adminSupabase
