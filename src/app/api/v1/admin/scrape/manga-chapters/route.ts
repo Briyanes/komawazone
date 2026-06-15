@@ -175,6 +175,29 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
       }
 
       console.log(`[ChapterImport] Metadata-only: inserted ${insertedCount}/${toImport.length} chapters for ${slug}`);
+
+      // Notify readers about new chapters (digest — one notification per user)
+      if (insertedCount > 0) {
+        const { data: readers } = await supabase
+          .from('reading_list')
+          .select('user_id')
+          .eq('manga_id', mangaId)
+          .eq('status', 'reading');
+
+        if (readers && readers.length > 0) {
+          const notifs = readers.map((r: { user_id: string }) => ({
+            user_id: r.user_id,
+            type: 'new_chapter' as const,
+            title: `${insertedCount} chapter baru tersedia`,
+            body: `${insertedCount} chapter baru sudah bisa dibaca!`,
+            manga_id: mangaId,
+            read: false,
+          }));
+          await supabase.from('notifications').insert(notifs);
+          console.log(`[ChapterImport] 🔔 Notified ${readers.length} readers about ${insertedCount} new chapters (digest)`);
+        }
+      }
+
       return;
     }
 
@@ -274,6 +297,29 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
 
         imported++;
         console.log(`[ChapterImport] ✓ New ch.${chapter.number} (${finalImages.length} pages, ${successfulUploads.length} to R2)`);
+
+        // Notify users tracking this manga about the new chapter
+        const { data: readers } = await supabase
+          .from('reading_list')
+          .select('user_id')
+          .eq('manga_id', mangaId)
+          .eq('status', 'reading');
+
+        if (readers && readers.length > 0) {
+          const notifs = readers.map((r: { user_id: string }) => ({
+            user_id: r.user_id,
+            type: 'new_chapter' as const,
+            title: `Chapter baru tersedia`,
+            body: `Chapter ${chapter.number} sudah bisa dibaca!`,
+            manga_id: mangaId,
+            chapter_id: chapterRecord.id,
+            read: false,
+          }));
+          for (let n = 0; n < notifs.length; n += 500) {
+            await supabase.from('notifications').insert(notifs.slice(n, n + 500));
+          }
+          console.log(`[ChapterImport] 🔔 Notified ${readers.length} readers about ch.${chapter.number}`);
+        }
 
       } catch (err) {
         console.error(`[ChapterImport] ✗ Chapter ${chapter.number}:`, err);

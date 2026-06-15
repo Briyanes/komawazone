@@ -56,6 +56,10 @@
     {
       "path": "/api/cron/check-new-chapters",
       "schedule": "0 3 * * *"
+    },
+    {
+      "path": "/api/cron/expire-subscriptions",
+      "schedule": "0 1 * * *"
     }
   ]
 }
