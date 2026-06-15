@@ -382,7 +382,7 @@ export function ReaderClient({
           'fixed top-0 inset-x-0 z-50 transition-all duration-300',
           showControls ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-full pointer-events-none'
         )}
-        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,.9) 0%, transparent 100%)' }}
+        style={{ background: 'linear-gradient(to bottom, rgba(0,0,0,.75) 0%, rgba(0,0,0,.4) 50%, transparent 100%)' }}
       >
         <div className="flex items-center gap-2 px-3 py-3">
           <Link
@@ -613,7 +613,7 @@ export function ReaderClient({
 
       {/* WEBTOON MODE */}
       {readMode === 'webtoon' && (
-        <div className="flex flex-col items-center pt-[74px] md:pt-12">
+        <div className="flex flex-col items-center pt-[80px] md:pt-12">
           {/* Auto-advance banner */}
           {autoAdvance !== null && nextChapterId && (
             <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-2xl"
@@ -743,7 +743,7 @@ export function ReaderClient({
           ) : currentImage && (
             <>
               {/* Image area */}
-              <div className="relative flex flex-1 items-center justify-center pt-[74px] md:pt-12" style={{ minHeight: 'calc(100dvh - 80px)' }}>
+              <div className="relative flex flex-1 items-center justify-center pt-[80px] md:pt-12" style={{ minHeight: 'calc(100dvh - 80px)' }}>
                 <div
                   className="relative select-none"
                   style={{ maxWidth: fitMode === 'full' ? '100%' : 800, width: '100%' }}
