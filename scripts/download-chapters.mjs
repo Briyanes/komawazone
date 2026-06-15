@@ -152,6 +152,8 @@ const DEAD_CDN_HOSTS = new Set([
   'gmbr.manhwaland.in',
   'gmbr.manhwaland.com',
   'gmbr-in.gmbr.pro',
+  'go.gmbar.xyz',      // OLD CDN — dead, returns timeout
+  'go.gmbar.pro',      // OLD CDN variant
 ]);
 
 function getExtension(url, contentType) {
@@ -181,7 +183,8 @@ async function downloadImage(url, gotScraping) {
         locales: ['id-ID', 'en-US'],
       },
       headers: {
-        'Referer': (() => { try { return new URL(url).origin + '/'; } catch { return undefined; } })(),
+        // Always use manhwaland as Referer — CDN expects hotlink from the reader site
+        'Referer': 'https://04x.manhwaland.land/',
         'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
       },
     });

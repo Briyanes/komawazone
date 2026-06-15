@@ -1,8 +1,8 @@
 /**
- * Backfill chapter thumbnail_url to use 5th image (index 4).
+ * Backfill chapter thumbnail_url to use 2nd-from-last image.
  *
  * For each chapter that has chapter_images:
- *   thumbnail_url = images[4] (or images[0] if <5 pages)
+ *   thumbnail_url = images[images.length - 2] (or images[0] if only 1 page)
  *
  * Usage: node --env-file=.env.local scripts/backfill-chapter-thumbnails.mjs
  */
@@ -91,7 +91,7 @@ async function processBatch(chapters) {
 }
 
 async function main() {
-  console.log('=== Backfill Chapter Thumbnails (5th image from top) ===\n');
+  console.log('=== Backfill Chapter Thumbnails (2nd-from-last image) ===\n');
 
   // Get total count
   const { count: totalChapters } = await sb

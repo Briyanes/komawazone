@@ -209,7 +209,7 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
             className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white"
             style={{ background: 'rgba(255,107,53,0.25)', border: '1px solid rgba(255,107,53,0.45)' }}
           >
-            ✦ All Look Beyond Fantasy
+            ✦ Look Beyond Fantasy
           </span>
 
           {/* Headline */}
@@ -223,7 +223,7 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
 
           <p className="text-sm leading-relaxed text-white/55 md:text-base max-w-sm">
             Temukan ribuan manga, manhwa & manhua.<br className="hidden md:block" />
-            Update setiap hari. Beyond Every Story.
+            Update setiap hari, gratis selamanya.
           </p>
 
           {/* Stats */}
@@ -251,7 +251,7 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
               className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-white transition-all hover:opacity-90 active:scale-95"
               style={{ background: 'var(--color-primary)', boxShadow: '0 8px 28px rgba(255,107,53,0.45)' }}
             >
-              Mulai Journey <ChevronRight size={15} />
+              Mulai Membaca <ChevronRight size={15} />
             </Link>
             <Link
               href="/genre"
