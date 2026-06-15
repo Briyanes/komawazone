@@ -15,7 +15,7 @@ async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
 const DEAD_CDN_HOSTS = new Set([
   'cdn-go-wd.gmbr.pro', 'cdn-okto.gmbr.pro', 'gmbr.manhwaland.in',
   'gmbr.manhwaland.com', 'gmbr-in.gmbr.pro', 'go.gmbar.xyz', 'go.gmbar.pro',
-  'go.uwakjawa.xyz',
+  'go.uwakjawa.xyz', 'api-l.gmbr.pro', 'img-uwak.gmbr.pro', 'jablay.gmbr.pro',
 ]);
 
 function isDeadCdn(url: string): boolean {
