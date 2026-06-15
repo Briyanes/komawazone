@@ -5,7 +5,7 @@ import type { Metadata } from 'next';
 import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { Suspense } from 'react';
-import { Star, Eye, BookOpen, Bookmark, Heart, BarChart2, User, Pen, Calendar, Sparkles, Crown, Lock } from 'lucide-react';
+import { Star, Eye, BookOpen, Bookmark, Heart, BarChart2, User, Pen, Calendar, Sparkles } from 'lucide-react';
 import { getMangaBySlug, MATURE_PREVIEW_CHAPTERS } from '@/lib/api/manga';
 import { Badge } from '@/components/ui/Badge';
 import { ChapterListSection } from '@/components/manga/ChapterListSection';
@@ -63,11 +63,9 @@ export default async function MangaDetailPage({ params }: Props) {
 
   // VIP/Admin gate for mature content
   let isVip = false;
-  let isLoggedIn = false;
   if (manga.content_rating === 'mature') {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
-    isLoggedIn = !!user;
     if (user) {
       const { data } = await supabase
         .from('users')
@@ -323,62 +321,12 @@ export default async function MangaDetailPage({ params }: Props) {
               <ReviewsCarousel slug={slug} />
             </Suspense>
 
-            {/* Chapter list */}
-            {manga.content_rating !== 'mature' || isVip ? (
-              <ChapterListSection chapters={chapters} mangaSlug={slug} />
-            ) : (
-              <>
-                {/* Preview: first 3 chapters are free */}
-                <ChapterListSection chapters={chapters.filter(ch => ch.number <= MATURE_PREVIEW_CHAPTERS)} mangaSlug={slug} />
-                {/* Locked chapters: 4+ require VIP */}
-                <div
-                  className="rounded-2xl p-6 sm:p-8 text-center space-y-4"
-                  style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(245,158,11,0.35)' }}
-                >
-                  <div className="flex justify-center">
-                    <span className="flex size-14 items-center justify-center rounded-full" style={{ background: '#f59e0b' }}>
-                      <Lock size={24} className="text-white" />
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-                      {chapters.length - MATURE_PREVIEW_CHAPTERS > 0
-                        ? `${chapters.length - MATURE_PREVIEW_CHAPTERS} Chapter Lainnya — Khusus VIP`
-                        : 'Konten 18+ — Khusus VIP'}
-                    </p>
-                    <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                      Kamu sudah membaca {MATURE_PREVIEW_CHAPTERS} chapter gratis. Upgrade ke VIP untuk membuka semua chapter tanpa batas.
-                    </p>
-                  </div>
-                  {isLoggedIn ? (
-                    <Link
-                      href="/vip"
-                      className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white"
-                      style={{ background: '#f59e0b' }}
-                    >
-                      <Crown size={15} /> Upgrade ke VIP
-                    </Link>
-                  ) : (
-                    <div className="flex justify-center gap-3">
-                      <Link
-                        href="/login"
-                        className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white"
-                        style={{ background: 'var(--color-primary)' }}
-                      >
-                        Masuk
-                      </Link>
-                      <Link
-                        href="/vip"
-                        className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold"
-                        style={{ background: '#f59e0b', color: 'white' }}
-                      >
-                        <Crown size={15} /> VIP
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
+            {/* Chapter list — all chapters shown; locked if mature & non-VIP */}
+            <ChapterListSection
+              chapters={chapters}
+              mangaSlug={slug}
+              previewLimit={manga.content_rating === 'mature' && !isVip ? MATURE_PREVIEW_CHAPTERS : undefined}
+            />
 
             {/* Comment Section */}
             <MangaCommentSection mangaSlug={slug} />

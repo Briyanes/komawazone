@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useMemo, useEffect, useRef } from 'react';
-import { Search, X, ArrowUpDown, BookOpen, Eye, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, X, ArrowUpDown, BookOpen, Eye, EyeOff, ChevronLeft, ChevronRight, Crown } from 'lucide-react';
 import { ChapterItem } from './ChapterItem';
 
 interface Chapter {
@@ -25,9 +25,11 @@ const PAGE_SIZE = 10;
 export function ChapterListSection({
   chapters: all,
   mangaSlug,
+  previewLimit,
 }: {
   chapters: Chapter[];
   mangaSlug: string;
+  previewLimit?: number;
 }) {
   const [query, setQuery] = useState('');
   const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
@@ -192,7 +194,9 @@ export function ChapterListSection({
           </div>
         ) : (
           <>
-            {visible.map((ch, i) => (
+            {visible.map((ch, i) => {
+              const locked = previewLimit != null && ch.number > previewLimit;
+              return (
               <div key={ch.id} style={{ borderBottom: i < visible.length - 1 ? '1px solid var(--border-light)' : 'none' }}>
                 <ChapterItem
                   id={ch.id}
@@ -201,13 +205,37 @@ export function ChapterListSection({
                   title={ch.title}
                   releaseDate={ch.release_date}
                   views={ch.views}
-                  isNew={sortOrder === 'newest' && !query.trim() && ch.number === newestChapterNumber}
+                  isNew={!locked && sortOrder === 'newest' && !query.trim() && ch.number === newestChapterNumber}
                   isRead={readChapters.has(ch.id)}
+                  isLocked={locked}
                   thumbnailUrl={ch.thumbnail_url}
                   isCurrent={chapterProgress?.chapterId === ch.id}
                 />
               </div>
-            ))}
+              );
+            })}
+
+            {/* Inline VIP CTA banner */}
+            {previewLimit != null && (
+              <div
+                className="flex items-center justify-between gap-3 px-4 py-3"
+                style={{ borderTop: '1px solid var(--border-light)', background: 'rgba(245,158,11,0.06)' }}
+              >
+                <div className="flex items-center gap-2">
+                  <Crown size={16} style={{ color: '#f59e0b' }} />
+                  <span className="text-xs font-semibold" style={{ color: 'var(--text-secondary)' }}>
+                    Buka {all.filter(ch => ch.number > previewLimit).length} chapter lagi
+                  </span>
+                </div>
+                <a
+                  href="/vip"
+                  className="inline-flex items-center gap-1.5 rounded-full px-4 py-1.5 text-xs font-bold text-white"
+                  style={{ background: '#f59e0b' }}
+                >
+                  <Crown size={12} /> VIP
+                </a>
+              </div>
+            )}
 
             {totalPages > 1 && (
               <div
