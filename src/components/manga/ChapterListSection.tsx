@@ -26,13 +26,15 @@ export function ChapterListSection({
   chapters: all,
   mangaSlug,
   previewLimit,
+  defaultSortOrder = 'newest',
 }: {
   chapters: Chapter[];
   mangaSlug: string;
   previewLimit?: number;
+  defaultSortOrder?: 'newest' | 'oldest';
 }) {
   const [query, setQuery] = useState('');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>('newest');
+  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest'>(defaultSortOrder);
   const [readFilter, setReadFilter] = useState<'all' | 'unread' | 'read'>('all');
   const [page, setPage] = useState(0);
   const [readChapters, setReadChapters] = useState<Set<string>>(new Set());

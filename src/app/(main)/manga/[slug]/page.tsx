@@ -329,6 +329,7 @@ export default async function MangaDetailPage({ params }: Props) {
               chapters={chapters}
               mangaSlug={slug}
               previewLimit={manga.content_rating === 'mature' && !isVip ? MATURE_PREVIEW_CHAPTERS : undefined}
+              defaultSortOrder={manga.content_rating === 'mature' && !isVip ? 'oldest' : 'newest'}
             />
 
             {/* Comment Section */}
