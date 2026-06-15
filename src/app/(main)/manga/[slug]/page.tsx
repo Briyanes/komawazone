@@ -6,7 +6,7 @@ import MangaImage from '@/components/ui/MangaImage';
 import Link from 'next/link';
 import { Suspense } from 'react';
 import { Star, Eye, BookOpen, Bookmark, Heart, BarChart2, User, Pen, Calendar, Sparkles, Crown, Lock } from 'lucide-react';
-import { getMangaBySlug } from '@/lib/api/manga';
+import { getMangaBySlug, MATURE_PREVIEW_CHAPTERS } from '@/lib/api/manga';
 import { Badge } from '@/components/ui/Badge';
 import { ChapterListSection } from '@/components/manga/ChapterListSection';
 import { MangaActions } from '@/components/manga/MangaActions';
@@ -327,52 +327,57 @@ export default async function MangaDetailPage({ params }: Props) {
             {manga.content_rating !== 'mature' || isVip ? (
               <ChapterListSection chapters={chapters} mangaSlug={slug} />
             ) : (
-              <div
-                className="rounded-2xl p-8 text-center space-y-4"
-                style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(245,158,11,0.35)' }}
-              >
-                <div className="flex justify-center">
-                  <span className="flex size-14 items-center justify-center rounded-full" style={{ background: '#f59e0b' }}>
-                    <Lock size={24} className="text-white" />
-                  </span>
-                </div>
-                <div>
-                  <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-                    Konten 18+ — Khusus VIP
-                  </p>
-                  <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-                    {isLoggedIn
-                      ? 'Manga ini mengandung konten dewasa. Upgrade ke VIP untuk membaca semua chapter.'
-                      : 'Manga ini mengandung konten dewasa. Login atau upgrade ke VIP untuk membaca.'}
-                  </p>
-                </div>
-                {isLoggedIn ? (
-                  <Link
-                    href="/vip"
-                    className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white"
-                    style={{ background: '#f59e0b' }}
-                  >
-                    <Crown size={15} /> Upgrade ke VIP
-                  </Link>
-                ) : (
-                  <div className="flex justify-center gap-3">
-                    <Link
-                      href="/login"
-                      className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white"
-                      style={{ background: 'var(--color-primary)' }}
-                    >
-                      Masuk
-                    </Link>
+              <>
+                {/* Preview: first 3 chapters are free */}
+                <ChapterListSection chapters={chapters.filter(ch => ch.number <= MATURE_PREVIEW_CHAPTERS)} mangaSlug={slug} />
+                {/* Locked chapters: 4+ require VIP */}
+                <div
+                  className="rounded-2xl p-6 sm:p-8 text-center space-y-4"
+                  style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(245,158,11,0.35)' }}
+                >
+                  <div className="flex justify-center">
+                    <span className="flex size-14 items-center justify-center rounded-full" style={{ background: '#f59e0b' }}>
+                      <Lock size={24} className="text-white" />
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+                      {chapters.length - MATURE_PREVIEW_CHAPTERS > 0
+                        ? `${chapters.length - MATURE_PREVIEW_CHAPTERS} Chapter Lainnya — Khusus VIP`
+                        : 'Konten 18+ — Khusus VIP'}
+                    </p>
+                    <p className="mt-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+                      Kamu sudah membaca {MATURE_PREVIEW_CHAPTERS} chapter gratis. Upgrade ke VIP untuk membuka semua chapter tanpa batas.
+                    </p>
+                  </div>
+                  {isLoggedIn ? (
                     <Link
                       href="/vip"
-                      className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold"
-                      style={{ background: '#f59e0b', color: 'white' }}
+                      className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white"
+                      style={{ background: '#f59e0b' }}
                     >
-                      <Crown size={15} /> VIP
+                      <Crown size={15} /> Upgrade ke VIP
                     </Link>
-                  </div>
-                )}
-              </div>
+                  ) : (
+                    <div className="flex justify-center gap-3">
+                      <Link
+                        href="/login"
+                        className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold text-white"
+                        style={{ background: 'var(--color-primary)' }}
+                      >
+                        Masuk
+                      </Link>
+                      <Link
+                        href="/vip"
+                        className="inline-flex items-center gap-2 rounded-full px-6 py-2.5 text-sm font-bold"
+                        style={{ background: '#f59e0b', color: 'white' }}
+                      >
+                        <Crown size={15} /> VIP
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              </>
             )}
 
             {/* Comment Section */}
@@ -456,37 +461,13 @@ async function Recommendations({ genres, excludeId }: { genres: string[]; exclud
   if (genres.length === 0) return null;
   const supabase = await createClient();
 
-  // Check if user is VIP or Admin
-  const { data: { user } } = await supabase.auth.getUser();
-  let canSeeMature = false;
-  if (user) {
-    const { data } = await supabase
-      .from('users')
-      .select('vip_expires_at, role')
-      .eq('id', user.id)
-      .single();
-    const row = data as { vip_expires_at?: string | null; role?: string | null } | null;
-    if (row?.role === 'ADMIN') {
-      canSeeMature = true;
-    } else {
-      const exp = row?.vip_expires_at;
-      canSeeMature = !!exp && new Date(exp) > new Date();
-    }
-  }
-
-  let query = supabase
+  // Show all manga (general + mature) — mature is gated at chapter level
+  const { data } = await supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, genres, content_rating')
     .is('deleted_at', null)
     .overlaps('genres', genres)
-    .neq('id', excludeId);
-
-  // Filter out mature content for non-VIP/non-admin users
-  if (!canSeeMature) {
-    query = query.neq('content_rating', 'mature');
-  }
-
-  const { data } = await query
+    .neq('id', excludeId)
     .order('rating', { ascending: false })
     .limit(8);
 

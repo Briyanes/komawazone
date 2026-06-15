@@ -2,7 +2,7 @@ import { notFound, redirect } from 'next/navigation';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { cache } from 'react';
-import { getChapterWithImages, getAdjacentChapters, getMangaChapterList } from '@/lib/api/manga';
+import { getChapterWithImages, getAdjacentChapters, getMangaChapterList, MATURE_PREVIEW_CHAPTERS } from '@/lib/api/manga';
 import { ReaderClient } from '@/components/reader/ReaderClient';
 import { AdZone } from '@/components/ads/AdZone';
 import { createClient } from '@/lib/supabase/server';
@@ -29,8 +29,8 @@ export default async function ChapterReaderPage({ params }: Props) {
   const chapter = await getChapter(chapterId);
   if (!chapter) notFound();
 
-  // Gate mature chapters for non-VIP/non-admin users
-  if (chapter.manga?.content_rating === 'mature') {
+  // Gate mature chapters: first 3 are free preview, chapter 4+ requires VIP
+  if (chapter.manga?.content_rating === 'mature' && chapter.number > MATURE_PREVIEW_CHAPTERS) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     let canAccess = false;

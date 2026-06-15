@@ -60,6 +60,9 @@ export type MangaWithChapters = {
   chapters: Array<{ id: string; number: number; title: string | null; release_date: string; views: number; thumbnail_url?: string | null; chapter_images: Array<{ image_url: string; number: number }> }>;
 };
 
+/** Number of free preview chapters for mature manga */
+export const MATURE_PREVIEW_CHAPTERS = 3;
+
 const ITEMS_PER_PAGE = 20;
 
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -84,7 +87,6 @@ async function isMatureAllowed(supabase: SupabaseServerClient): Promise<boolean>
 
 export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
   let q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, banner_url, status, rating, views, description, genres, content_rating')
@@ -92,7 +94,6 @@ export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
     .eq('is_featured', true)
     .order('updated_at', { ascending: false })
     .limit(limit);
-  if (!canSeeMature) q = q.eq('content_rating', 'general');
   const { data, error } = await q;
   if (error) return [];
   return (data ?? []) as unknown as MangaListItem[];
@@ -100,7 +101,6 @@ export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
 
 export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
   let q = supabase
     .from('manga')
     .select(`
@@ -110,7 +110,6 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
     .is('deleted_at', null)
     .order('updated_at', { ascending: false })
     .limit(limit);
-  if (!canSeeMature) q = q.eq('content_rating', 'general');
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -118,14 +117,12 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
 
 export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
   let q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating')
     .is('deleted_at', null)
     .order('views', { ascending: false })
     .limit(limit);
-  if (!canSeeMature) q = q.eq('content_rating', 'general');
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -133,7 +130,6 @@ export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
 
 export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
   let q = supabase
     .from('manga')
@@ -142,7 +138,6 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
     .gte('updated_at', since)
     .order('views', { ascending: false })
     .limit(limit);
-  if (!canSeeMature) q = q.eq('content_rating', 'general');
   const { data, error } = await q;
   if (error || !data || data.length === 0) {
     // Fallback: just return popular if no recent updates
@@ -153,14 +148,12 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
 
 export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
   let q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
     .limit(limit);
-  if (!canSeeMature) q = q.eq('content_rating', 'general');
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -168,7 +161,6 @@ export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
 
 export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
   let q = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, rating, views, content_rating, chapters(id, number, title, release_date)`)
@@ -176,7 +168,6 @@ export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
     .eq('status', 'COMPLETED')
     .order('rating', { ascending: false })
     .limit(limit);
-  if (!canSeeMature) q = q.eq('content_rating', 'general');
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -184,7 +175,6 @@ export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
 
 export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
   let q = supabase
     .from('manga')
@@ -193,7 +183,6 @@ export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
     .gte('updated_at', since)
     .order('views', { ascending: false })
     .limit(limit);
-  if (!canSeeMature) q = q.eq('content_rating', 'general');
   const { data, error } = await q;
   if (error || !data || data.length === 0) return getPopularManga(limit);
   return (data ?? []) as unknown as MangaListItem[];
@@ -201,7 +190,6 @@ export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
 
 export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null, limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const canSeeMature = await isMatureAllowed(supabase);
   let query = supabase
     .from('manga')
     .select(`id, slug, title, cover_url, status, type, rating, views, content_rating, chapters(id, number, title, release_date)`)
@@ -209,7 +197,6 @@ export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null,
     .order('rating', { ascending: false })
     .limit(limit);
   if (type) query = query.eq('type', type);
-  if (!canSeeMature) query = query.eq('content_rating', 'general');
   const { data, error } = await query;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -362,3 +349,5 @@ export async function getMangaChapterList(mangaId: string): Promise<Array<{ id: 
     .order('number', { ascending: true });
   return (data ?? []) as Array<{ id: string; number: number; title: string | null }>;
 }
+
+export { isMatureAllowed };

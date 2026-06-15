@@ -34,6 +34,21 @@ interface ActiveCampaign {
 
 export async function AdZone({ placement, className }: AdZoneProps) {
   const supabase = await createClient();
+
+  // VIP users get ad-free experience
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data: userRow } = await supabase
+      .from('users')
+      .select('role, vip_expires_at')
+      .eq('id', user.id)
+      .single();
+    const row = userRow as { role?: string | null; vip_expires_at?: string | null } | null;
+    if (row?.role === 'ADMIN') return null;
+    const exp = row?.vip_expires_at;
+    if (exp && new Date(exp) > new Date()) return null;
+  }
+
   const now = new Date().toISOString();
 
   const { data } = await supabase

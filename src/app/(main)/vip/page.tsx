@@ -6,9 +6,9 @@ import { VoucherRedeemForm } from '@/components/payment/VoucherRedeemForm';
 export const metadata: Metadata = { title: 'VIP — OLLUQ' };
 
 const BENEFITS = [
-  { title: 'Genre 18+', desc: 'Akses konten Mature, Ecchi, Adult, Smut, dan genre dewasa lainnya' },
+  { title: 'Bebas Baca 18+', desc: 'Akses penuh semua chapter konten Mature, Ecchi, Adult, Smut, dan genre dewasa lainnya' },
   { title: 'Baca Tanpa Iklan', desc: 'Pengalaman membaca tanpa gangguan iklan sama sekali' },
-  { title: 'Early Access', desc: 'Baca chapter terbaru lebih awal sebelum tersedia untuk umum' },
+  { title: 'Akses Seluruh Chapter', desc: 'Buka semua chapter yang terkunci di manga 18+ (gratisan cuma bisa 3 chapter awal)' },
   { title: 'Badge VIP', desc: 'Tampilkan status VIP eksklusif di profil dan komentar kamu' },
 ];
 
