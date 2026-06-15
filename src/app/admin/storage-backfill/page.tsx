@@ -214,20 +214,22 @@ export default function StorageBackfillPage() {
         </div>
 
         {/* Show running job indicator */}
-        {retryResult?.data && (retryResult.data as Record<string, unknown>).running_job && (
-          <div
-            className="rounded-lg p-3 flex items-center gap-2 text-sm"
-            style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}
-          >
-            <RefreshCw size={14} className="animate-spin text-blue-500" />
-            <span style={{ color: 'var(--text-secondary)' }}>
-              {(() => {
-                const job = (retryResult.data as Record<string, unknown>).running_job as { processed_items: number; total_items: number } | undefined;
-                return job ? `Job running: ${job.processed_items}/${job.total_items} chapters processed` : '';
-              })()}
-            </span>
-          </div>
-        )}
+        {(() => {
+          const data = retryResult?.data as Record<string, unknown> | undefined;
+          const job = data?.running_job as { processed_items: number; total_items: number } | undefined;
+          if (!job) return null;
+          return (
+            <div
+              className="rounded-lg p-3 flex items-center gap-2 text-sm"
+              style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}
+            >
+              <RefreshCw size={14} className="animate-spin text-blue-500" />
+              <span style={{ color: 'var(--text-secondary)' }}>
+                {`Job running: ${job.processed_items}/${job.total_items} chapters processed`}
+              </span>
+            </div>
+          );
+        })()}
 
         {/* Show success message */}
         {retryStatus === 'success' && retryResult?.total != null && (
