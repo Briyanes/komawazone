@@ -772,9 +772,11 @@ async function downloadImagesForChapters(manga, chapters, gotScraping, stats, pr
         }
 
         // Update chapter thumbnail — use 5th image (index 4), fallback to 1st
-        const thumbRecord = imageRecords.length >= 5
-          ? imageRecords[4]
-          : imageRecords[0];
+        // Sort by page number first — failed downloads leave gaps in the array
+        const sortedRecords = imageRecords.slice().sort((a, b) => a.number - b.number);
+        const thumbRecord = sortedRecords.length >= 5
+          ? sortedRecords[4]
+          : sortedRecords[0];
         if (thumbRecord?.image_url) {
           await supabase
             .from('chapters')

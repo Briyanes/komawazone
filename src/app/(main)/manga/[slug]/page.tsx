@@ -82,10 +82,13 @@ export default async function MangaDetailPage({ params }: Props) {
     }
   }
 
-  const chapters = manga.chapters.slice().sort((a, b) => b.number - a.number).map(ch => ({
-    ...ch,
-    thumbnail_url: ch.thumbnail_url ?? (ch.chapter_images ?? []).slice().sort((a, b) => a.number - b.number)[1]?.image_url ?? (ch.chapter_images ?? []).slice().sort((a, b) => a.number - b.number)[0]?.image_url ?? null,
-  }));
+  const chapters = manga.chapters.slice().sort((a, b) => b.number - a.number).map(ch => {
+    const imgs = (ch.chapter_images ?? []).slice().sort((a, b) => a.number - b.number);
+    return {
+      ...ch,
+      thumbnail_url: ch.thumbnail_url ?? imgs[4]?.image_url ?? imgs[0]?.image_url ?? null,
+    };
+  });
   const firstChapter = [...manga.chapters].sort((a, b) => a.number - b.number)[0];
   const heroBg = manga.banner_url || manga.cover_url;
 
