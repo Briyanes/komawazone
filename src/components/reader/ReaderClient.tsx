@@ -613,7 +613,7 @@ export function ReaderClient({
 
       {/* WEBTOON MODE */}
       {readMode === 'webtoon' && (
-        <div className="flex flex-col items-center pt-12">
+        <div className="flex flex-col items-center pt-20 md:pt-12">
           {/* Auto-advance banner */}
           {autoAdvance !== null && nextChapterId && (
             <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-2xl"
@@ -743,7 +743,7 @@ export function ReaderClient({
           ) : currentImage && (
             <>
               {/* Image area */}
-              <div className="relative flex flex-1 items-center justify-center pt-12" style={{ minHeight: 'calc(100dvh - 80px)' }}>
+              <div className="relative flex flex-1 items-center justify-center pt-20 md:pt-12" style={{ minHeight: 'calc(100dvh - 80px)' }}>
                 <div
                   className="relative select-none"
                   style={{ maxWidth: fitMode === 'full' ? '100%' : 800, width: '100%' }}
