@@ -54,6 +54,7 @@ const MIME_EXT = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp'
 const DEAD_CDN_HOSTS = new Set([
   'cdn-go-wd.gmbr.pro', 'cdn-okto.gmbr.pro', 'gmbr.manhwaland.in',
   'gmbr.manhwaland.com', 'gmbr-in.gmbr.pro', 'go.gmbar.xyz', 'go.gmbar.pro',
+  'go.uwakjawa.xyz', 'img-uwak.gmbr.pro', 'jablay.gmbr.pro',
 ]);
 
 const SCRAPE_OPTS = {
@@ -245,32 +246,65 @@ async function retryChapter(chapter, manga) {
   return { success: imageRecords.length, failed, totalImages: imageUrls.length };
 }
 
+// ── Get chapters with 0 images from DB ─────────────────────────────────────────
+async function getChaptersWithoutImages() {
+  console.log('  🔍 Querying DB for chapters without images...');
+
+  // Fetch all chapter_ids that HAVE images
+  const chaptersWithImages = new Set();
+  let offset = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('chapter_images')
+      .select('chapter_id')
+      .range(offset, offset + 999);
+    if (error || !data || data.length === 0) break;
+    data.forEach(d => chaptersWithImages.add(d.chapter_id));
+    if (data.length < 1000) break;
+    offset += 1000;
+    if (offset % 10000 === 0) process.stdout.write(`    ${offset} images scanned...\r`);
+  }
+  console.log(`  📊 ${chaptersWithImages.size} chapters already have images`);
+
+  // Fetch all chapters
+  const allChapters = [];
+  offset = 0;
+  while (true) {
+    const { data, error } = await supabase
+      .from('chapters')
+      .select('id, number, manga_id')
+      .is('deleted_at', null)
+      .order('number')
+      .range(offset, offset + 999);
+    if (error || !data || data.length === 0) break;
+    allChapters.push(...data);
+    if (data.length < 1000) break;
+    offset += 1000;
+  }
+  console.log(`  📊 ${allChapters.length} total chapters in DB`);
+
+  // Filter: chapters WITHOUT images
+  const chaptersWithout = allChapters.filter(ch => !chaptersWithImages.has(ch.id));
+  console.log(`  📊 ${chaptersWithout.length} chapters have ZERO images`);
+
+  return chaptersWithout;
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
-  const failedFile = 'scripts/failed-chapters.jsonl';
-  if (!existsSync(failedFile)) {
-    console.log('❌ scripts/failed-chapters.jsonl tidak ditemukan!');
-    process.exit(1);
-  }
-
   console.log('═══════════════════════════════════════════════');
   console.log('  Retry Failed Images — Re-scrape Edition');
+  console.log('  Mode: Direct DB query (chapters with 0 images)');
   console.log('═══════════════════════════════════════════════');
   console.log(`  Delay: ${CHAPTER_DELAY}ms | Limit: ${LIMIT || 'all'}`);
   console.log('');
 
-  // Read failed entries, get unique chapter_ids
-  const lines = readFileSync(failedFile, 'utf8').split('\n').filter(l => l.trim());
-  const entries = lines.map(l => JSON.parse(l));
-  const uniqueChapterIds = [...new Set(entries.map(e => e.chapter_id))];
+  // Get chapters with 0 images directly from DB
+  const chaptersToProcess = await getChaptersWithoutImages();
 
-  console.log(`📊 Total failed images: ${entries.length}`);
-  console.log(`📊 Unique chapters: ${uniqueChapterIds.length}`);
   console.log('');
 
-  let chaptersToProcess = uniqueChapterIds;
   if (LIMIT > 0) {
-    chaptersToProcess = chaptersToProcess.slice(0, LIMIT);
     console.log(`⚠️  Limited to ${LIMIT} chapters\n`);
   }
 
@@ -280,34 +314,33 @@ async function main() {
   let chaptersStillBroken = 0;
   const startTime = Date.now();
 
+  // Cache manga data to avoid repeated queries
+  const mangaCache = new Map();
+
   for (let i = 0; i < chaptersToProcess.length; i++) {
-    const chapterId = chaptersToProcess[i];
+    const chapter = chaptersToProcess[i];
 
-    // Fetch chapter info
-    const { data: chapter } = await supabase
-      .from('chapters')
-      .select('id, number, manga_id')
-      .eq('id', chapterId)
-      .single();
+    if (LIMIT > 0 && i >= LIMIT) break;
 
-    if (!chapter) {
-      console.log(`  [${i + 1}/${chaptersToProcess.length}] Chapter ${chapterId.slice(0, 8)} not found`);
-      continue;
+    // Get manga info (from cache or DB)
+    let manga = mangaCache.get(chapter.manga_id);
+    if (!manga) {
+      const { data } = await supabase
+        .from('manga')
+        .select('id, title, source_url')
+        .eq('id', chapter.manga_id)
+        .single();
+      manga = data;
+      if (manga) mangaCache.set(chapter.manga_id, manga);
     }
-
-    // Fetch manga source_url
-    const { data: manga } = await supabase
-      .from('manga')
-      .select('id, title, source_url')
-      .eq('id', chapter.manga_id)
-      .single();
 
     if (!manga?.source_url) {
-      console.log(`  [${i + 1}/${chaptersToProcess.length}] No source_url for "${manga?.title || chapterId}"`);
+      if ((i + 1) % 100 === 0) console.log(`  [${i + 1}/${chaptersToProcess.length}] Skip — no source_url for "${manga?.title || chapter.manga_id.slice(0, 8)}"`);
+      chaptersStillBroken++;
       continue;
     }
 
-    process.stdout.write(`  [${i + 1}/${chaptersToProcess.length}] "${manga.title.slice(0, 25)}" Ch.${chapter.number}... `);
+    process.stdout.write(`  [${i + 1}/${chaptersToProcess.length}] "${(manga.title || '?').slice(0, 25)}" Ch.${chapter.number}... `);
 
     const result = await retryChapter(chapter, manga);
 
