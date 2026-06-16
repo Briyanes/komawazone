@@ -29,6 +29,24 @@ export async function GET(request: NextRequest) {
 
     const { data: authData, error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error && authData.user) {
+      // Sync avatar_url + username from OAuth metadata to DB
+      // This ensures the profile avatar is always up-to-date after OAuth login
+      const md = authData.user.user_metadata ?? {};
+      const oauthAvatar = md.avatar_url ?? md.picture ?? null;
+      const oauthName = md.name ?? md.full_name ?? md.username ?? null;
+
+      if (oauthAvatar || oauthName) {
+        await supabase.from('users').upsert(
+          {
+            id: authData.user.id,
+            email: authData.user.email ?? '',
+            ...(oauthName && { username: oauthName }),
+            ...(oauthAvatar && { avatar_url: oauthAvatar }),
+          },
+          { onConflict: 'id' }
+        );
+      }
+
       // Check if user is admin → redirect to admin dashboard
       const { data: profile } = await supabase
         .from('users')

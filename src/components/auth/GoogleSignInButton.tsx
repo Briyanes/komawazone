@@ -39,8 +39,25 @@ export function GoogleSignInButton({ onError }: { onError?: (msg: string) => voi
           return;
         }
 
-        // Check if user is admin → redirect to admin dashboard
         if (data.user) {
+          // Decode JWT payload to get Google profile data (name, picture, email)
+          const payload = JSON.parse(
+            atob(response.credential.split('.')[1])
+          ) as { name?: string; picture?: string; email?: string };
+
+          // Upsert user row with avatar_url + username from Google
+          // This ensures the DB has the avatar even though GIS doesn't trigger handle_new_user()
+          await supabase.from('users').upsert(
+            {
+              id: data.user.id,
+              email: data.user.email ?? payload.email ?? '',
+              username: payload.name ?? data.user.email?.split('@')[0] ?? 'User',
+              avatar_url: payload.picture ?? null,
+            },
+            { onConflict: 'id' }
+          );
+
+          // Check if user is admin → redirect to admin dashboard
           const { data: profile } = await supabase
             .from('users')
             .select('role')

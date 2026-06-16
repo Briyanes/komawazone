@@ -65,7 +65,11 @@ export function useAuth() {
             ?? session.user.email?.split('@')[0]
             ?? 'User',
           // Prefer DB avatar_url (if set), then OAuth provider avatar
-          avatar_url: userData?.avatar_url ?? session.user.user_metadata?.avatar_url ?? null,
+          // Note: Google uses "picture", other providers use "avatar_url"
+          avatar_url: userData?.avatar_url
+            ?? session.user.user_metadata?.avatar_url
+            ?? session.user.user_metadata?.picture
+            ?? null,
           role: userData?.role ?? session.user.user_metadata?.role,
         },
       };

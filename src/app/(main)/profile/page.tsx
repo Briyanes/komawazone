@@ -29,6 +29,8 @@ export default function ProfilePage() {
   const { user, isAuthenticated, isLoading, signOut } = useAuth();
   const router = useRouter();
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  // Fallback avatar from OAuth metadata (used when DB avatar_url is null)
+  const oauthAvatar = user?.user_metadata?.avatar_url ?? user?.user_metadata?.picture ?? null;
   const [stats, setStats] = useState<Stats>({ bookmarks: 0, reading: 0 });
   const [isEditing, setIsEditing] = useState(false);
   const [username, setUsername] = useState('');
@@ -112,11 +114,11 @@ export default function ProfilePage() {
         className="rounded-2xl p-6 text-center space-y-3"
         style={{ background: 'var(--bg-secondary)' }}
       >
-        {/* Avatar */}
+        {/* Avatar — prefer DB avatar_url, fallback to OAuth provider avatar, then initials */}
         <div className="flex justify-center">
-          {profile.avatar_url ? (
+          {(profile.avatar_url || oauthAvatar) ? (
             <div className="relative size-24 rounded-full overflow-hidden ring-4 ring-[var(--color-primary)] ring-offset-2">
-              <Image src={profile.avatar_url} alt={displayName} fill className="object-cover" />
+              <Image src={profile.avatar_url ?? oauthAvatar!} alt={displayName} fill className="object-cover" />
             </div>
           ) : (
             <Avatar
