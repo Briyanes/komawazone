@@ -134,22 +134,15 @@ export function GoogleSignInButton({ onError }: { onError?: (msg: string) => voi
     };
   }, [clientId, handleCredentialResponse]);
 
-  // Trigger the hidden GIS button click
-  const handleClick = useCallback(() => {
-    const hiddenBtn = hiddenButtonRef.current;
-    if (!hiddenBtn) return;
-    const clickable = hiddenBtn.querySelector('div[role="button"]') as HTMLElement | null;
-    if (clickable) {
-      clickable.click();
-    }
-  }, []);
-
   // If no client ID configured, don't render (caller should show fallback)
   if (!clientId) return null;
 
   return (
     <div className="relative w-full">
-      {/* Hidden GIS button — Google renders its button here; we click it programmatically */}
+      {/* GIS button container — Google renders its button here.
+          Container must be visible-sized for GIS to render properly.
+          We overlay it on top of our styled button (opacity 0) so the
+          user clicks Google's real button without seeing it. */}
       <div
         ref={hiddenButtonRef}
         aria-hidden="true"
@@ -157,18 +150,18 @@ export function GoogleSignInButton({ onError }: { onError?: (msg: string) => voi
           position: 'absolute',
           top: 0,
           left: 0,
-          width: '1px',
-          height: '1px',
+          width: '100%',
+          height: '44px',
           overflow: 'hidden',
           opacity: 0,
-          pointerEvents: 'none',
+          cursor: 'pointer',
+          zIndex: 10,
         }}
       />
 
-      {/* Our custom button — matches Discord/X OAuthButtons styling */}
+      {/* Our custom button — visual only (GIS button overlay receives clicks) */}
       <button
         type="button"
-        onClick={handleClick}
         disabled={!scriptLoaded}
         className="flex w-full items-center justify-center gap-2.5 rounded-lg border px-4 py-2.5 text-sm font-medium transition-opacity hover:opacity-80 disabled:cursor-wait"
         style={{
