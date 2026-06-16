@@ -43,24 +43,32 @@ export function useAuth() {
     if (session?.user) {
       const { data } = await supabase
         .from('users')
-        .select('vip_expires_at, role')
+        .select('vip_expires_at, role, username, avatar_url')
         .eq('id', session.user.id)
         .single();
-      const userData = data as { vip_expires_at?: string | null; role?: string } | null;
+      const userData = data as { vip_expires_at?: string | null; role?: string; username?: string | null; avatar_url?: string | null } | null;
       const vipExpiresAt = userData?.vip_expires_at ?? null;
       base.vipExpiresAt = vipExpiresAt;
       base.isVip = !!vipExpiresAt && new Date(vipExpiresAt) > new Date();
 
-      // Update user metadata with role
-      if (userData?.role) {
-        base.user = {
-          ...session.user,
-          user_metadata: {
-            ...session.user.user_metadata,
-            role: userData.role,
-          },
-        };
-      }
+      // Merge DB profile data (username, avatar_url, role) into user_metadata
+      // This fixes: Google OAuth users have no 'username' in metadata → "@User" in header
+      base.user = {
+        ...session.user,
+        user_metadata: {
+          ...session.user.user_metadata,
+          // Prefer DB username, then Google name/full_name, then email prefix
+          username: userData?.username
+            ?? session.user.user_metadata?.username
+            ?? session.user.user_metadata?.name
+            ?? session.user.user_metadata?.full_name
+            ?? session.user.email?.split('@')[0]
+            ?? 'User',
+          // Prefer DB avatar_url (if set), then OAuth provider avatar
+          avatar_url: userData?.avatar_url ?? session.user.user_metadata?.avatar_url ?? null,
+          role: userData?.role ?? session.user.user_metadata?.role,
+        },
+      };
     }
     setState(base);
   }

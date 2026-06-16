@@ -150,6 +150,7 @@ export function Header() {
                   isAdmin={user?.user_metadata?.role === 'ADMIN'}
                   onSignOut={async () => { setMenuOpen(false); await signOut(); }}
                   onClose={() => setMenuOpen(false)}
+                  email={user?.email}
                 />
               )}
             </div>
@@ -197,12 +198,14 @@ function UserMenu({
   isAdmin,
   onSignOut,
   onClose,
+  email,
 }: {
   username: string;
   isVip: boolean;
   isAdmin?: boolean;
   onSignOut: () => void;
   onClose: () => void;
+  email?: string;
 }) {
   const ref = useRef<HTMLDivElement>(null);
 
@@ -221,7 +224,10 @@ function UserMenu({
       style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-light)', zIndex: 'var(--z-overlay)' }}
     >
       <div className="border-b px-3 py-2" style={{ borderColor: 'var(--border-light)' }}>
-        <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>@{username}</p>
+        <p className="text-sm font-semibold truncate" style={{ color: 'var(--text-primary)' }}>@{username}</p>
+        {email && (
+          <p className="text-xs truncate mt-0.5" style={{ color: 'var(--text-tertiary)' }}>{email}</p>
+        )}
         <div className="flex items-center gap-1.5 mt-1">
           {isVip && (
             <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-white" style={{ background: '#f59e0b' }}>
