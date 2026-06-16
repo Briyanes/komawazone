@@ -9,6 +9,7 @@ import { registerSchema, type RegisterInput } from '@/lib/validations/auth';
 import { signUp } from '@/lib/auth/actions';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { OAuthButtons, OAuthDivider } from '@/components/auth/OAuthButtons';
 
 export function RegisterForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -64,6 +65,10 @@ export function RegisterForm() {
           Bergabung dengan OLLUQ — Beyond Every Story
         </p>
       </div>
+
+      {/* OAuth buttons */}
+      <OAuthButtons onError={setServerError} />
+      <OAuthDivider />
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {serverError && (
