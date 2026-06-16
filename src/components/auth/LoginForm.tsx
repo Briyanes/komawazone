@@ -2,9 +2,13 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { OAuthButtons } from '@/components/auth/OAuthButtons';
+import { useAuth } from '@/hooks/useAuth';
 
 export function LoginForm() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
   const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
   const initialError = searchParams?.get('error');
   const [serverError, setServerError] = useState<string | null>(initialError || null);
@@ -13,6 +17,22 @@ export function LoginForm() {
   useEffect(() => {
     if (initialError) setServerError(initialError);
   }, [initialError]);
+
+  // Redirect already-authenticated users away from /login
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
+
+  // Show nothing while checking auth or redirecting
+  if (!isLoading && isAuthenticated) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <div className="h-6 w-6 animate-spin rounded-full border-2 border-current border-t-transparent opacity-50" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

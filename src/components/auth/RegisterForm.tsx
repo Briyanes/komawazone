@@ -1,21 +1,32 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { useState, useEffect, useTransition } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Eye, EyeOff, UserPlus, MailOpen } from 'lucide-react';
 import { registerSchema, type RegisterInput } from '@/lib/validations/auth';
 import { signUp } from '@/lib/auth/actions';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { OAuthButtons, OAuthDivider } from '@/components/auth/OAuthButtons';
+import { useAuth } from '@/hooks/useAuth';
 
 export function RegisterForm() {
+  const router = useRouter();
+  const { isAuthenticated, isLoading } = useAuth();
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+
+  // Redirect already-authenticated users away from /register
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      router.replace('/');
+    }
+  }, [isLoading, isAuthenticated, router]);
 
   const {
     register,
