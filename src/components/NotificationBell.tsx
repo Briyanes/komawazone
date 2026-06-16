@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { Bell, X, CheckCheck } from 'lucide-react';
+import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 
 interface Notification {
@@ -116,31 +117,76 @@ export function NotificationBell() {
                 <p className="text-sm" style={{ color: 'var(--text-tertiary)' }}>Belum ada notifikasi</p>
               </div>
             ) : (
-              notifications.map(n => (
-                <button
-                  key={n.id}
-                  onClick={() => { markRead(n.id); setOpen(false); }}
-                  className="w-full px-4 py-3 text-left transition-colors hover:bg-[var(--bg-tertiary)]"
-                  style={{ borderBottom: '1px solid var(--border-light)', background: n.read ? 'transparent' : 'rgba(255,107,53,0.04)' }}
-                >
-                  <div className="flex items-start gap-2.5">
-                    {!n.read && (
-                      <span className="mt-1.5 size-2 shrink-0 rounded-full" style={{ background: 'var(--color-primary)' }} />
-                    )}
-                    <div className={`min-w-0 ${n.read ? '' : ''}`}>
-                      <p className="text-xs font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>{n.title}</p>
-                      {n.body && <p className="mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>{n.body}</p>}
-                      <p className="mt-1 text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-                        {new Date(n.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                      </p>
-                    </div>
-                  </div>
-                </button>
-              ))
+              notifications.map(n => {
+                const mangaHref = n.manga_id ? `/manga?id=${n.manga_id}` : null;
+                return (
+                  <NotificationItem
+                    key={n.id}
+                    notification={n}
+                    href={mangaHref}
+                    onRead={markRead}
+                    onNavigate={() => setOpen(false)}
+                  />
+                );
+              })
             )}
           </div>
         </div>
       )}
     </div>
+  );
+}
+
+function NotificationItem({
+  notification: n,
+  href,
+  onRead,
+  onNavigate,
+}: {
+  notification: Notification;
+  href: string | null;
+  onRead: (id: string) => void;
+  onNavigate: () => void;
+}) {
+  const handleClick = () => {
+    onRead(n.id);
+    onNavigate();
+  };
+
+  const content = (
+    <>
+      <div className="flex items-start gap-2.5">
+        {!n.read && (
+          <span className="mt-1.5 size-2 shrink-0 rounded-full" style={{ background: 'var(--color-primary)' }} />
+        )}
+        <div className="min-w-0">
+          <p className="text-xs font-semibold leading-snug" style={{ color: 'var(--text-primary)' }}>{n.title}</p>
+          {n.body && <p className="mt-0.5 text-xs" style={{ color: 'var(--text-secondary)' }}>{n.body}</p>}
+          <p className="mt-1 text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+            {new Date(n.created_at).toLocaleDateString('en', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+          </p>
+        </div>
+      </div>
+    </>
+  );
+
+  const className = "w-full block px-4 py-3 text-left transition-colors hover:bg-[var(--bg-tertiary)]";
+  const style: React.CSSProperties = {
+    borderBottom: '1px solid var(--border-light)',
+    background: n.read ? 'transparent' : 'rgba(255,107,53,0.04)',
+  };
+
+  if (href) {
+    return (
+      <Link href={href} onClick={handleClick} className={className} style={style}>
+        {content}
+      </Link>
+    );
+  }
+
+  return (
+    <button onClick={() => onRead(n.id)} className={className} style={style}>
+      {content}
+    </button>
   );
 }

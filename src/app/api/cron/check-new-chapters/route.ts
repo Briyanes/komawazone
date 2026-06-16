@@ -55,6 +55,7 @@ async function runChapterCheck(
   const { parseChapterListFromHtml } = await import('@/lib/scrapers/manga-scraper');
   const { buildScraperHeaders } = await import('@/lib/scrapers/scraper-utils');
   const { importAllChapters } = await import('@/app/api/v1/admin/scrape/manga-chapters/route');
+  const { notifyNewChapters } = await import('@/lib/notifications');
 
   let triggered = 0;
   let upToDate = 0;
@@ -88,8 +89,11 @@ async function runChapterCheck(
 
       if (sourceCount > localCount) {
         console.log(`[ChapterCheck] ${manga.title}: source=${sourceCount}, db=${localCount} → triggering import`);
+        const newCount = sourceCount - localCount;
         // importAllChapters handles its own dedup (skips existing chapter numbers)
         await importAllChapters(manga.id, manga.slug, manga.source_url);
+        // Notify all users who bookmarked this manga
+        await notifyNewChapters(manga.id, manga.title, newCount);
         triggered++;
       } else {
         upToDate++;
