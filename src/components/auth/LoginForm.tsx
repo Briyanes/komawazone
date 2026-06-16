@@ -10,6 +10,7 @@ import { signIn } from '@/lib/auth/actions';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { GoogleSignInButton } from '@/components/auth/GoogleSignInButton';
 
 /** Map Supabase English error messages → Bahasa Indonesia */
 function translateAuthError(msg: string): string {
@@ -98,8 +99,14 @@ export function LoginForm() {
 
       {/* OAuth buttons */}
       <div className="space-y-2">
-        <OAuthButton provider="google"  label="Lanjutkan dengan Google"   onClick={() => handleOAuth('google')} />
-        <OAuthButton provider="discord" label="Lanjutkan dengan Discord"  onClick={() => handleOAuth('discord')} />
+        {/* Google: Use direct GIS flow (consent shows our domain, not supabase.co).
+            Falls back to Supabase OAuth if NEXT_PUBLIC_GOOGLE_CLIENT_ID not set. */}
+        {process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ? (
+          <GoogleSignInButton onError={setServerError} />
+        ) : (
+          <OAuthButton provider="google" label="Lanjutkan dengan Google" onClick={() => handleOAuth('google')} />
+        )}
+        <OAuthButton provider="discord" label="Lanjutkan dengan Discord" onClick={() => handleOAuth('discord')} />
         <OAuthButton provider="twitter" label="Lanjutkan dengan X (Twitter)" onClick={() => handleOAuth('twitter')} />
       </div>
 
