@@ -98,18 +98,63 @@ export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
 
 export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const q = supabase
+
+  // Step 1: Find the most recently published chapters to get manga IDs in release order
+  const { data: recentChapters } = await supabase
+    .from('chapters')
+    .select('manga_id, release_date')
+    .is('deleted_at', null)
+    .lte('release_date', new Date().toISOString())
+    .order('release_date', { ascending: false })
+    .limit(limit * 5);
+
+  if (!recentChapters || recentChapters.length === 0) {
+    // Fallback: no chapters at all, use updated_at
+    const { data, error } = await supabase
+      .from('manga')
+      .select(`
+        id, slug, title, cover_url, status, rating, views, content_rating,
+        chapters(id, number, title, release_date)
+      `)
+      .is('deleted_at', null)
+      .order('updated_at', { ascending: false })
+      .limit(limit);
+    if (error) throw new Error(error.message);
+    return (data ?? []) as unknown as MangaListItem[];
+  }
+
+  // Step 2: Deduplicate manga IDs preserving most-recent-first order
+  const seenManga = new Set<string>();
+  const orderedIds: string[] = [];
+  for (const ch of recentChapters) {
+    if (!seenManga.has(ch.manga_id)) {
+      seenManga.add(ch.manga_id);
+      orderedIds.push(ch.manga_id);
+      if (orderedIds.length >= limit) break;
+    }
+  }
+
+  if (orderedIds.length === 0) return [];
+
+  // Step 3: Fetch full manga data with nested chapters
+  const { data: mangaData, error } = await supabase
     .from('manga')
     .select(`
       id, slug, title, cover_url, status, rating, views, content_rating,
       chapters(id, number, title, release_date)
     `)
-    .is('deleted_at', null)
-    .order('updated_at', { ascending: false })
-    .limit(limit);
-  const { data, error } = await q;
+    .in('id', orderedIds)
+    .is('deleted_at', null);
+
   if (error) throw new Error(error.message);
-  return (data ?? []) as unknown as MangaListItem[];
+
+  // Step 4: Sort results to match the release-date order from step 2
+  const orderMap = new Map(orderedIds.map((id, i) => [id, i]));
+  const sorted = (mangaData ?? []).sort(
+    (a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999)
+  );
+
+  return sorted as unknown as MangaListItem[];
 }
 
 export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {

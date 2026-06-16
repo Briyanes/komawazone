@@ -43,7 +43,13 @@ function timeAgo(dateStr: string): string {
   if (hours < 24) return `${hours}j lalu`;
   if (days < 7)   return `${days}h lalu`;
   if (days < 30)  return `${Math.floor(days / 7)}mgg lalu`;
-  return `${Math.floor(days / 30)}bln lalu`;
+  const months = Math.floor(days / 30);
+  if (months < 12) return `${months}bln lalu`;
+  const years = Math.floor(months / 12);
+  const remainingMonths = months % 12;
+  return remainingMonths > 0
+    ? `${years}thn ${remainingMonths}bln lalu`
+    : `${years}thn lalu`;
 }
 
 export function MangaCard({
