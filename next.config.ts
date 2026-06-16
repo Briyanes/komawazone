@@ -56,6 +56,10 @@ const nextConfig: NextConfig = {
       // Cloudflare R2
       { protocol: 'https', hostname: '**.r2.dev' },
       { protocol: 'https', hostname: '**.r2.cloudflarestorage.com' },
+      // OAuth provider avatars
+      { protocol: 'https', hostname: 'lh3.googleusercontent.com' },  // Google
+      { protocol: 'https', hostname: 'cdn.discordapp.com' },          // Discord (already above, but explicit)
+      { protocol: 'https', hostname: 'pbs.twimg.com' },               // X/Twitter
     ],
     formats: ['image/avif', 'image/webp'],
     deviceSizes: [390, 640, 750, 828, 1080, 1200],
