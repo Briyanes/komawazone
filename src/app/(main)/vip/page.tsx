@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Crown, Check, Zap, Lock } from 'lucide-react';
 import type { Metadata } from 'next';
+import { createClient } from '@/lib/supabase/server';
 import { VoucherRedeemForm } from '@/components/payment/VoucherRedeemForm';
 import { MarketplaceLinks } from '@/components/payment/MarketplaceLinks';
 
@@ -26,6 +27,29 @@ interface Props {
 export default async function VIPPage({ searchParams }: Props) {
   const { reason, manga } = await searchParams;
   const isMatureGate = reason === 'mature';
+
+  // Fetch marketplace links server-side so they render immediately (no client fetch)
+  const supabase = await createClient();
+  const marketKeys = [
+    'marketplace_tokopedia_url',
+    'marketplace_shopee_url',
+    'marketplace_whatsapp_url',
+    'marketplace_wa_label',
+  ];
+  const { data: settingRows } = await supabase
+    .from('site_settings')
+    .select('key, value')
+    .in('key', marketKeys);
+  const settingsMap: Record<string, string> = {};
+  for (const row of settingRows ?? []) {
+    settingsMap[row.key] = typeof row.value === 'string' ? row.value : String(row.value ?? '');
+  }
+  const marketLinks = {
+    tokopedia_url: settingsMap.marketplace_tokopedia_url || '',
+    shopee_url: settingsMap.marketplace_shopee_url || '',
+    whatsapp_url: settingsMap.marketplace_whatsapp_url || '',
+    whatsapp_label: settingsMap.marketplace_wa_label || '',
+  };
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 md:py-12 space-y-8 md:space-y-10">
@@ -130,7 +154,7 @@ export default async function VIPPage({ searchParams }: Props) {
       </div>
 
       {/* Marketplace + How to Buy */}
-      <MarketplaceLinks />
+      <MarketplaceLinks links={marketLinks} />
 
       {/* Voucher Redeem */}
       <VoucherRedeemForm />

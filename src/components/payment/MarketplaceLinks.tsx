@@ -1,6 +1,3 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import { MessageCircle } from 'lucide-react';
 
 interface MarketLinks {
@@ -10,28 +7,7 @@ interface MarketLinks {
   whatsapp_label?: string;
 }
 
-export function MarketplaceLinks() {
-  const [links, setLinks] = useState<MarketLinks>({});
-  const [loaded, setLoaded] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/v1/admin/settings')
-      .then(r => r.json())
-      .then((d: { data?: Record<string, unknown> }) => {
-        const data = d.data ?? {};
-        setLinks({
-          tokopedia_url: typeof data.marketplace_tokopedia_url === 'string' ? data.marketplace_tokopedia_url : '',
-          shopee_url: typeof data.marketplace_shopee_url === 'string' ? data.marketplace_shopee_url : '',
-          whatsapp_url: typeof data.marketplace_whatsapp_url === 'string' ? data.marketplace_whatsapp_url : '',
-          whatsapp_label: typeof data.marketplace_wa_label === 'string' ? data.marketplace_wa_label : '',
-        });
-        setLoaded(true);
-      })
-      .catch(() => setLoaded(true));
-  }, []);
-
-  if (!loaded) return null;
-
+export function MarketplaceLinks({ links }: { links: MarketLinks }) {
   const { tokopedia_url, shopee_url, whatsapp_url, whatsapp_label } = links;
   const hasMarket = tokopedia_url || shopee_url;
   const hasWa = whatsapp_url;
