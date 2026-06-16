@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useTransition } from 'react';
-import { Crown, Search, Plus, X } from 'lucide-react';
+import { useState, useTransition, useEffect } from 'react';
+import { Crown, Search, Plus, X, Ticket, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/Button';
 import { SelectInput } from '@/components/ui/SelectInput';
@@ -28,6 +28,17 @@ interface Subscription {
   users: any;
 }
 
+interface Voucher {
+  id: string;
+  code: string;
+  plan: string;
+  created_at: string;
+  used_at: string | null;
+  used_by: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  users?: any;
+}
+
 interface SubscriptionsClientProps {
   initialSubscriptions: Subscription[];
 }
@@ -42,6 +53,63 @@ export function SubscriptionsClient({ initialSubscriptions }: SubscriptionsClien
   const [notes, setNotes] = useState('');
   const [error, setError] = useState('');
   const [isPending, startTransition] = useTransition();
+
+  // Voucher state
+  const [activeTab, setActiveTab] = useState<'subs' | 'vouchers'>('subs');
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [voucherFilter, setVoucherFilter] = useState<'all' | 'unused' | 'used'>('all');
+  const [showGenPanel, setShowGenPanel] = useState(false);
+  const [genPlan, setGenPlan] = useState<'1-month' | '3-month' | '6-month'>('1-month');
+  const [genCount, setGenCount] = useState(10);
+  const [genResult, setGenResult] = useState<Voucher[] | null>(null);
+  const [copiedCode, setCopiedCode] = useState<string | null>(null);
+  const [copiedAll, setCopiedAll] = useState(false);
+
+  // Load vouchers when voucher tab is opened
+  useEffect(() => {
+    if (activeTab === 'vouchers') loadVouchers();
+  }, [activeTab, voucherFilter]);
+
+  async function loadVouchers() {
+    try {
+      const filterParam = voucherFilter !== 'all' ? `?filter=${voucherFilter}` : '';
+      const res = await fetch(`/api/v1/admin/vouchers${filterParam}`);
+      const data = await res.json() as { status: string; data: Voucher[] };
+      if (data.status === 'success') setVouchers(data.data);
+    } catch { /* network error */ }
+  }
+
+  const handleGenerate = () => {
+    setError('');
+    startTransition(async () => {
+      const res = await fetch('/api/v1/admin/vouchers', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan: genPlan, count: genCount }),
+      });
+      const data = await res.json() as { status: string; data: Voucher[]; error?: string };
+      if (data.status === 'success') {
+        setGenResult(data.data);
+        setShowGenPanel(false);
+        await loadVouchers();
+      } else {
+        setError(data.error ?? 'Gagal generate kode');
+      }
+    });
+  };
+
+  const handleCopyCode = (code: string) => {
+    navigator.clipboard.writeText(code);
+    setCopiedCode(code);
+    setTimeout(() => setCopiedCode(null), 2000);
+  };
+
+  const handleCopyAllUnused = () => {
+    const unused = vouchers.filter(v => !v.used_by).map(v => v.code).join('\n');
+    navigator.clipboard.writeText(unused);
+    setCopiedAll(true);
+    setTimeout(() => setCopiedAll(false), 2000);
+  };
 
   async function loadSubscriptions() {
     try {
@@ -108,12 +176,194 @@ export function SubscriptionsClient({ initialSubscriptions }: SubscriptionsClien
   const isActive = (sub: Subscription) =>
     sub.status === 'active' && new Date(sub.expires_at) > new Date();
 
+  const unusedCount = vouchers.filter(v => !v.used_by).length;
+
   return (
     <div className="w-full max-w-3xl space-y-6">
       <div className="flex items-center justify-between">
         <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Subscriptions VIP
+          Subscriptions & Vouchers
         </h1>
+      </div>
+
+      {/* Tab switcher */}
+      <div className="flex gap-1 rounded-xl p-1" style={{ background: 'var(--bg-secondary)' }}>
+        <button
+          onClick={() => setActiveTab('subs')}
+          className={cn(
+            'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+            activeTab === 'subs' ? 'text-white' : ''
+          )}
+          style={activeTab === 'subs' ? { background: 'var(--color-primary)' } : { color: 'var(--text-secondary)' }}
+        >
+          <Crown size={14} className="inline mr-1" /> Subscriptions
+        </button>
+        <button
+          onClick={() => setActiveTab('vouchers')}
+          className={cn(
+            'flex-1 rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+            activeTab === 'vouchers' ? 'text-white' : ''
+          )}
+          style={activeTab === 'vouchers' ? { background: 'var(--color-primary)' } : { color: 'var(--text-secondary)' }}
+        >
+          <Ticket size={14} className="inline mr-1" /> Vouchers
+          {unusedCount > 0 && activeTab !== 'vouchers' && (
+            <span className="ml-1 rounded-full bg-amber-500 px-1.5 py-0.5 text-[10px] text-white">{unusedCount}</span>
+          )}
+        </button>
+      </div>
+
+      {/* ════════════════ VOUCHER TAB ════════════════ */}
+      {activeTab === 'vouchers' && (
+        <div className="space-y-4">
+          {/* Generate result modal */}
+          {genResult && (
+            <div className="rounded-2xl border p-5 space-y-3" style={{ background: 'rgba(16,185,129,0.06)', borderColor: 'rgba(16,185,129,0.3)' }}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Check size={16} className="text-emerald-500" />
+                  <h2 className="text-sm font-semibold text-emerald-500">
+                    {genResult.length} kode berhasil dibuat!
+                  </h2>
+                </div>
+                <button
+                  onClick={() => setGenResult(null)}
+                  className="size-6 flex items-center justify-center rounded"
+                  style={{ color: 'var(--text-tertiary)' }}
+                >
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                {genResult.map(v => (
+                  <div key={v.code} className="flex items-center justify-between rounded-lg px-3 py-2 font-mono text-sm"
+                    style={{ background: 'var(--bg-secondary)', color: 'var(--text-primary)' }}>
+                    {v.code}
+                    <button onClick={() => handleCopyCode(v.code)} className="hover:opacity-70">
+                      {copiedCode === v.code ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                    </button>
+                  </div>
+                ))}
+              </div>
+              <Button size="sm" onClick={() => { navigator.clipboard.writeText(genResult.map(v => v.code).join('\n')); setCopiedAll(true); setTimeout(() => setCopiedAll(false), 2000); }}>
+                {copiedAll ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy All Codes</>}
+              </Button>
+            </div>
+          )}
+
+          {/* Generate panel */}
+          {showGenPanel ? (
+            <div className="rounded-2xl border p-5 space-y-4" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Generate Voucher Codes</h2>
+                <button onClick={() => setShowGenPanel(false)} className="size-6 flex items-center justify-center rounded" style={{ color: 'var(--text-tertiary)' }}>
+                  <X size={14} />
+                </button>
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-secondary)' }}>Paket</label>
+                  <SelectInput value={genPlan} onChange={e => setGenPlan(e.target.value as typeof genPlan)} className="w-full">
+                    <option value="1-month">1 Bulan (Rp 15.000)</option>
+                    <option value="3-month">3 Bulan (Rp 40.000)</option>
+                    <option value="6-month">6 Bulan (Rp 75.000)</option>
+                  </SelectInput>
+                </div>
+                <div>
+                  <label className="text-xs font-medium mb-1 block" style={{ color: 'var(--text-secondary)' }}>Jumlah</label>
+                  <input
+                    type="number" min={1} max={100} value={genCount}
+                    onChange={e => setGenCount(Math.min(100, Math.max(1, Number(e.target.value))))}
+                    className="w-full rounded-lg border px-3 py-2 text-sm outline-none focus:border-[var(--color-primary)]"
+                    style={{ background: 'var(--bg-primary)', borderColor: 'var(--border-default)', color: 'var(--text-primary)' }}
+                  />
+                </div>
+              </div>
+              <Button onClick={handleGenerate} isLoading={isPending}>
+                <Ticket size={14} /> Generate {genCount} Kode
+              </Button>
+              {error && <p className="text-xs text-red-500">{error}</p>}
+            </div>
+          ) : (
+            <div className="flex gap-2">
+              <Button size="sm" onClick={() => setShowGenPanel(true)}>
+                <Plus size={14} /> Generate Voucher
+              </Button>
+              {unusedCount > 0 && (
+                <Button size="sm" variant="secondary" onClick={handleCopyAllUnused}>
+                  {copiedAll ? <><Check size={14} /> Copied!</> : <><Copy size={14} /> Copy All Unused ({unusedCount})</>}
+                </Button>
+              )}
+            </div>
+          )}
+
+          {/* Filter buttons */}
+          <div className="flex gap-1 text-xs">
+            {(['all', 'unused', 'used'] as const).map(f => (
+              <button
+                key={f}
+                onClick={() => setVoucherFilter(f)}
+                className={cn('rounded-lg px-3 py-1.5 font-medium', voucherFilter === f ? 'text-white' : '')}
+                style={voucherFilter === f
+                  ? { background: 'var(--color-primary)' }
+                  : { background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+              >
+                {f === 'all' ? 'Semua' : f === 'unused' ? 'Belum Dipakai' : 'Sudah Dipakai'}
+              </button>
+            ))}
+          </div>
+
+          {/* Voucher list */}
+          <div className="rounded-2xl overflow-hidden border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+            {vouchers.length === 0 ? (
+              <div className="py-10 text-center text-sm" style={{ color: 'var(--text-tertiary)' }}>
+                Belum ada voucher. Click "Generate Voucher" untuk membuat.
+              </div>
+            ) : (
+              <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
+                {vouchers.map(v => (
+                  <div key={v.id} className="flex items-center gap-3 px-5 py-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm font-medium" style={{ color: 'var(--text-primary)' }}>
+                          {v.code}
+                        </span>
+                        <span
+                          className="rounded-full px-1.5 py-0.5 text-[10px] font-bold"
+                          style={{
+                            background: v.used_by ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)',
+                            color: v.used_by ? '#ef4444' : '#10b981',
+                          }}
+                        >
+                          {v.used_by ? 'USED' : 'AVAILABLE'}
+                        </span>
+                      </div>
+                      <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                        {v.plan} · dibuat {new Date(v.created_at).toLocaleDateString('id-ID')}
+                        {v.used_by && v.users?.[0]?.email && ` · dipakai oleh ${v.users[0].email}`}
+                      </p>
+                    </div>
+                    {!v.used_by && (
+                      <button
+                        onClick={() => handleCopyCode(v.code)}
+                        className="text-xs px-2.5 py-1 rounded-lg border"
+                        style={{ color: 'var(--text-secondary)', borderColor: 'var(--border-light)' }}
+                      >
+                        {copiedCode === v.code ? <Check size={12} className="text-emerald-500" /> : <Copy size={12} />}
+                      </button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ════════════════ SUBSCRIPTIONS TAB ════════════════ */}
+      {activeTab === 'subs' && (
+        <>
+      <div className="flex justify-end">
         <Button size="sm" onClick={() => setShowGrant(v => !v)}>
           <Plus size={14} /> Grant VIP
         </Button>
@@ -261,6 +511,8 @@ export function SubscriptionsClient({ initialSubscriptions }: SubscriptionsClien
           </div>
         )}
       </div>
+        </>
+      )}
     </div>
   );
 }

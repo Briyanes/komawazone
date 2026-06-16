@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { Crown, Check, Zap, Lock } from 'lucide-react';
 import type { Metadata } from 'next';
 import { VoucherRedeemForm } from '@/components/payment/VoucherRedeemForm';
+import { MarketplaceLinks } from '@/components/payment/MarketplaceLinks';
 
 export const metadata: Metadata = { title: 'VIP — OLLUQ' };
 
@@ -128,30 +129,23 @@ export default async function VIPPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Voucher Redeem — PRIMARY METHOD */}
+      {/* Marketplace + How to Buy */}
+      <MarketplaceLinks />
+
+      {/* Voucher Redeem */}
       <VoucherRedeemForm />
 
-      {/* Manual Payment Info */}
+      {/* FAQ / Help */}
       <div
-        className="rounded-2xl border p-4 sm:p-6 space-y-3"
-        style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
+        className="rounded-2xl border p-4 text-sm space-y-2"
+        style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)', color: 'var(--text-secondary)' }}
       >
-        <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-          Beli Kode Voucher via Admin
-        </h2>
-        <ol className="space-y-2 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          <li className="flex gap-2"><span className="font-bold text-amber-500">1.</span> Pilih paket VIP dan transfer sesuai harga ke rekening admin.</li>
-          <li className="flex gap-2"><span className="font-bold text-amber-500">2.</span> Kirim bukti transfer beserta username/email ke admin via WhatsApp atau Discord.</li>
-          <li className="flex gap-2"><span className="font-bold text-amber-500">3.</span> Admin akan memberikan kode voucher yang bisa di-redeem di atas.</li>
-          <li className="flex gap-2"><span className="font-bold text-amber-500">4.</span> Masukkan kode voucher → VIP langsung aktif!</li>
-        </ol>
-        <div
-          className="mt-4 rounded-xl p-4 text-sm"
-          style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
-        >
-          <p className="font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Hubungi Admin:</p>
-          <p>WhatsApp / Discord — lihat halaman <a href="/about" className="underline hover:no-underline" style={{ color: 'var(--color-primary)' }}>About</a></p>
-        </div>
+        <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+          Pertanyaan yang sering ditanya
+        </p>
+        <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Kode voucher gak masuk-masuk?</span> Tunggu 5-10 menit setelah pembayaran confirmed. Kalo masih gak ada, chat admin.</p>
+        <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Voucher expired?</span> Semua voucher berlaku 30 hari dari tanggal pembelian. Buruan redeem ya!</p>
+        <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Bisa refund?</span> Karena ini produk digital, gak bisa refund setelah kode udah dikirim.</p>
       </div>
 
       {/* CTA */}

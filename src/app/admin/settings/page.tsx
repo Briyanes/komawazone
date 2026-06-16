@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useTransition, useEffect } from 'react';
-import { Save, CheckCircle, Megaphone, Globe, Link2, AlertTriangle } from 'lucide-react';
+import { Save, CheckCircle, Megaphone, Globe, Link2, AlertTriangle, ShoppingBag } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 
@@ -26,6 +26,12 @@ export default function AdminSettingsPage() {
   const [bioTagline, setBioTagline] = useState('Beyond Every Story ✦ Beyond Fantasy');
   const [bioDescription, setBioDescription] = useState('Platform manga Indonesia terlengkap. Baca ribuan judul manga gratis dengan update setiap hari.');
   const [bioDiscordUrl, setBioDiscordUrl] = useState('https://discord.gg/olluq');
+
+  // Marketplace links
+  const [tokopediaUrl, setTokopediaUrl] = useState('');
+  const [shopeeUrl, setShopeeUrl] = useState('');
+  const [waUrl, setWaUrl] = useState('');
+  const [waLabel, setWaLabel] = useState('');
 
   // Announcement banner
   const [banner, setBanner] = useState<BannerSettings>({ active: false, message: '', type: 'info' });
@@ -54,9 +60,36 @@ export default function AdminSettingsPage() {
         if (typeof data.bio_tagline === 'string')     setBioTagline(data.bio_tagline);
         if (typeof data.bio_description === 'string') setBioDescription(data.bio_description);
         if (typeof data.bio_discord_url === 'string') setBioDiscordUrl(data.bio_discord_url);
+        if (typeof data.marketplace_tokopedia_url === 'string') setTokopediaUrl(data.marketplace_tokopedia_url);
+        if (typeof data.marketplace_shopee_url === 'string') setShopeeUrl(data.marketplace_shopee_url);
+        if (typeof data.marketplace_whatsapp_url === 'string') setWaUrl(data.marketplace_whatsapp_url);
+        if (typeof data.marketplace_wa_label === 'string') setWaLabel(data.marketplace_wa_label);
       })
       .catch(() => {});
   }, []);
+
+  // Marketplace links save
+  const [marketSaved, setMarketSaved] = useState(false);
+  const [marketPending, startMarketTransition] = useTransition();
+
+  const handleSaveMarket = () => {
+    startMarketTransition(async () => {
+      const res = await fetch('/api/v1/admin/settings', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          marketplace_tokopedia_url: tokopediaUrl,
+          marketplace_shopee_url: shopeeUrl,
+          marketplace_whatsapp_url: waUrl,
+          marketplace_wa_label: waLabel,
+        }),
+      });
+      if (res.ok) {
+        setMarketSaved(true);
+        setTimeout(() => setMarketSaved(false), 3000);
+      }
+    });
+  };
 
   // Domain settings save
   const [domainSaved, setDomainSaved] = useState(false);
@@ -408,6 +441,55 @@ export default function AdminSettingsPage() {
               <Save size={13} /> Save Bio Link
             </Button>
             {bioSaved && (
+              <span className="flex items-center gap-1 text-xs text-emerald-500">
+                <CheckCircle size={13} /> Saved!
+              </span>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Marketplace Links Card */}
+      <div className="rounded-2xl overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+        <div className="flex items-center gap-2 px-5 py-4 border-b" style={{ borderColor: 'var(--border-light)' }}>
+          <ShoppingBag size={15} style={{ color: 'var(--color-primary)' }} />
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Marketplace & Kontak (VIP Page)
+          </h2>
+        </div>
+        <div className="px-5 py-4 space-y-4">
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Tokopedia URL
+            </label>
+            <Input value={tokopediaUrl} onChange={e => setTokopediaUrl(e.target.value)} placeholder="https://www.tokopedia.com/olluq" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              Shopee URL
+            </label>
+            <Input value={shopeeUrl} onChange={e => setShopeeUrl(e.target.value)} placeholder="https://shopee.co.id/olluq" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              WhatsApp URL
+            </label>
+            <Input value={waUrl} onChange={e => setWaUrl(e.target.value)} placeholder="https://wa.me/6281xxx" />
+          </div>
+          <div className="space-y-1">
+            <label className="text-xs font-medium" style={{ color: 'var(--text-secondary)' }}>
+              WhatsApp Label (opsional)
+            </label>
+            <Input value={waLabel} onChange={e => setWaLabel(e.target.value)} placeholder="Chat Admin (08:00 - 22:00)" />
+          </div>
+          <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+            Kosongkan link yang tidak digunakan — tombolnya otomatis hilang dari halaman VIP.
+          </p>
+          <div className="flex items-center gap-3 pt-1">
+            <Button size="sm" onClick={handleSaveMarket} isLoading={marketPending}>
+              <Save size={13} /> Save Marketplace
+            </Button>
+            {marketSaved && (
               <span className="flex items-center gap-1 text-xs text-emerald-500">
                 <CheckCircle size={13} /> Saved!
               </span>

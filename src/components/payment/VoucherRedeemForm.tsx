@@ -49,11 +49,11 @@ export function VoucherRedeemForm() {
           <Ticket size={20} style={{ color: 'var(--color-primary)' }} />
         </div>
         <div>
-          <h2 className="text-base font-semibold" style={{ color: 'var(--text-primary)' }}>
-            Redeem Kode Voucher
+          <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            Punya Kode Voucher?
           </h2>
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-            Masukkan kode voucher untuk mengaktifkan VIP secara otomatis
+            Masukin kode di sini, VIP lu langsung aktif
           </p>
         </div>
       </div>
@@ -108,7 +108,7 @@ export function VoucherRedeemForm() {
       )}
 
       <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-        Belum punya kode? Hubungi admin atau beli voucher di toko online kami.
+        Belum punya kode? Scroll ke atas buat beli via Tokopedia/Shopee 👆
       </p>
     </div>
   );

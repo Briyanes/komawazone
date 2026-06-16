@@ -20,6 +20,17 @@ const ALLOWED_KEYS = [
   'ga_code',
   'header_code',
   'body_code',
+  // Domain & Bio
+  'hub_domain',
+  'reader_domain',
+  'bio_tagline',
+  'bio_description',
+  'bio_discord_url',
+  // Marketplace links
+  'marketplace_tokopedia_url',
+  'marketplace_shopee_url',
+  'marketplace_whatsapp_url',
+  'marketplace_wa_label',
 ];
 
 export async function GET() {
