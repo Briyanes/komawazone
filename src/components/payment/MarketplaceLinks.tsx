@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Image from 'next/image';
 import { MessageCircle } from 'lucide-react';
 
 interface MarketLinks {
@@ -72,7 +71,8 @@ export function MarketplaceLinks() {
               className="flex items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: '#03AC0E' }}
             >
-              <Image src="/icons/tokopedia.png" alt="Tokopedia" width={20} height={20} className="shrink-0" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/tokopedia.png" alt="Tokopedia" width={20} height={20} className="shrink-0" />
               Beli di Tokopedia
             </a>
           )}
@@ -84,7 +84,8 @@ export function MarketplaceLinks() {
               className="flex items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
               style={{ background: '#EE4D2D' }}
             >
-              <Image src="/icons/shopee.png" alt="Shopee" width={20} height={20} className="shrink-0" />
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/icons/shopee.png" alt="Shopee" width={20} height={20} className="shrink-0" />
               Beli di Shopee
             </a>
           )}
