@@ -177,9 +177,11 @@ function parseManhwalandManga(html: string): ScrapedManga {
     title = titleMatch ? decodeHtmlEntities(titleMatch[1].replace(/\s*[-|]\s*ManhwaLand.*/i, '').trim()) : '';
   }
 
-  // Description from og:description meta
-  const description = getMeta(html, 'property', 'og:description')
-    || getMeta(html, 'name', 'description');
+  // Description from og:description meta (decode HTML entities)
+  const description = decodeHtmlEntities(
+    getMeta(html, 'property', 'og:description')
+    || getMeta(html, 'name', 'description')
+  );
 
   // Cover: primary source is the main post image (img.wp-post-image in the thumb div)
   const wpPostImg = html.match(/<img[^>]+src="([^"]+)"[^>]+class="[^"]*wp-post-image[^"]*"/i)
@@ -190,11 +192,11 @@ function parseManhwalandManga(html: string): ScrapedManga {
 
   // Genres from rel="tag" links
   const genreMatches = html.matchAll(/rel="tag">([^<]+)<\/a>/g);
-  const genres = Array.from(genreMatches, m => m[1].trim()).filter(Boolean);
+  const genres = Array.from(genreMatches, m => decodeHtmlEntities(m[1].trim())).filter(Boolean);
 
   // Author / Artist from div.imptdt blocks
-  const author = imptdt(html, 'Author');
-  const artist = imptdt(html, 'Artist');
+  const author = decodeHtmlEntities(imptdt(html, 'Author'));
+  const artist = decodeHtmlEntities(imptdt(html, 'Artist'));
 
   // Status from div.imptdt
   const statusRaw = imptdt(html, 'Status').toUpperCase();
