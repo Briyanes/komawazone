@@ -358,15 +358,14 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           finalImages.map((url, i) => ({ chapter_id: ch.id, image_url: url, number: i + 1 }))
         );
 
-        // Update thumbnail_url on chapter record if not set
-        // Use 5th image (index 4) as thumbnail
+        // Update thumbnail_url on chapter record
+        // Use 5th image (index 4) as thumbnail — always update to ensure consistency
         const backfillThumb = finalImages.length >= 5
           ? finalImages[4]
           : finalImages[0] ?? r2Results[0]?.url;
         await supabase.from('chapters')
           .update({ thumbnail_url: backfillThumb })
-          .eq('id', ch.id)
-          .is('thumbnail_url', null);
+          .eq('id', ch.id);
 
         backfilled++;
         console.log(`[ChapterImport] ✓ Backfill ch.${ch.number} (${finalImages.length} pages, ${successfulUploads.length} to R2)`);

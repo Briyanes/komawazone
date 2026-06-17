@@ -289,12 +289,15 @@ async function runBackfill(
             }
           }
 
-          // Update thumbnail if first image was uploaded
-          const firstResult = r2Results[0];
-          if (firstResult?.key) {
+          // Update thumbnail: use 5th image (index 4) if available, fallback to first
+          const successfulResults = r2Results.filter(r => r.key);
+          const thumbResult = successfulResults.length >= 5
+            ? successfulResults[4]
+            : successfulResults[0];
+          if (thumbResult?.key) {
             await adminSupabase
               .from('chapters')
-              .update({ thumbnail_url: firstResult.url })
+              .update({ thumbnail_url: thumbResult.url })
               .eq('id', chapterId);
           }
 
