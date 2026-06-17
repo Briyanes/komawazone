@@ -347,10 +347,7 @@ export async function GET() {
 
   const adminSupabase = createAdminClient();
 
-  // Count chapters with 0 images using a left join approach
-  await adminSupabase.rpc('get_chapter_image_stats' as never);
-
-  // Fallback: just count total chapters
+  // Count chapters with 0 images
   const { count: totalChapters } = await adminSupabase
     .from('chapters')
     .select('*', { count: 'exact', head: true })

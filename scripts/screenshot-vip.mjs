@@ -19,7 +19,7 @@ await mobilePage.evaluate(() => {
 await mobilePage.waitForTimeout(1000);
 
 const mobileInfo = await mobilePage.evaluate(() => {
-  const imgs = document.querySelectorAll('img[src*="tokopedia"], img[src*="shopee"]');
+  const imgs = document.querySelectorAll('img[src*="tokped"], img[src*="shopee"]');
   return Array.from(imgs).map(img => {
     const rect = img.getBoundingClientRect();
     const parent = img.closest('a');
@@ -57,7 +57,7 @@ await desktopPage.evaluate(() => {
 await desktopPage.waitForTimeout(1000);
 
 const desktopInfo = await desktopPage.evaluate(() => {
-  const imgs = document.querySelectorAll('img[src*="tokopedia"], img[src*="shopee"]');
+  const imgs = document.querySelectorAll('img[src*="tokped"], img[src*="shopee"]');
   return Array.from(imgs).map(img => {
     const rect = img.getBoundingClientRect();
     const parent = img.closest('a');

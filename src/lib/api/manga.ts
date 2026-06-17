@@ -332,16 +332,16 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
           console.error('[LazyImages] Insert failed for chapter', chapterId, insertErr.message);
         }
 
-        // Also update thumbnail if not set
-        // Use 5th image (index 4) as thumbnail
+        // Always update thumbnail to 5th image (index 4) for consistency.
+        // Previously this only updated when thumbnail_url was NULL, which meant
+        // chapters with an incorrect thumbnail (e.g. cover image) were never fixed.
         const lazyThumb = imageUrls.length >= 5
           ? imageUrls[4]
           : imageUrls[0];
         await adminClient
           .from('chapters')
           .update({ thumbnail_url: lazyThumb })
-          .eq('id', chapter.id)
-          .is('thumbnail_url', null);
+          .eq('id', chapter.id);
 
         chapter.chapter_images = (inserted ?? []) as ChapterImage[];
       }
