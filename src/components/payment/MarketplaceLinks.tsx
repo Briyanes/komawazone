@@ -44,12 +44,11 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
               href={tokopedia_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: '#03AC0E' }}
+              className="flex items-center justify-center rounded-xl px-4 py-4 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/tokopedia.png" alt="Tokopedia" style={{ height: '24px', width: 'auto' }} className="shrink-0" />
-              Beli di Tokopedia
+              <img src="/icons/tokopedia.png" alt="Beli di Tokopedia" style={{ height: '32px', width: 'auto' }} className="shrink-0" />
             </a>
           )}
           {shopee_url && (
@@ -57,12 +56,11 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
               href={shopee_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2.5 rounded-xl px-4 py-3.5 text-sm font-bold text-white transition-all hover:scale-[1.02] active:scale-[0.98]"
-              style={{ background: '#EE4D2D' }}
+              className="flex items-center justify-center rounded-xl px-4 py-4 transition-all hover:scale-[1.02] active:scale-[0.98]"
+              style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/shopee.png" alt="Shopee" style={{ height: '24px', width: 'auto' }} className="shrink-0" />
-              Beli di Shopee
+              <img src="/icons/shopee.png" alt="Beli di Shopee" style={{ height: '32px', width: 'auto' }} className="shrink-0" />
             </a>
           )}
         </div>
