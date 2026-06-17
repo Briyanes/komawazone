@@ -35,23 +35,40 @@ export async function POST(request: NextRequest) {
 
     const adminSupabase = createAdminClient();
 
-    // Find chapters that have images but thumbnail_url may be wrong/missing
-    const query = adminSupabase
+    // Step 1: Prioritize chapters with NULL thumbnail (most critical)
+    let q1 = adminSupabase
       .from('chapters')
       .select('id, number, manga_id')
       .is('deleted_at', null)
-      .order('number');
+      .is('thumbnail_url', null);
+    if (mangaId) q1 = q1.eq('manga_id', mangaId);
+    const nullResult = await q1.order('number').limit(limit);
 
-    const { data: chapters, error } = mangaId
-      ? await query.eq('manga_id', mangaId).limit(limit)
-      : await query.limit(limit);
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (nullResult.error) {
+      return NextResponse.json({ error: nullResult.error.message }, { status: 500 });
     }
 
-    if (!chapters || chapters.length === 0) {
-      return NextResponse.json({ status: 'success', message: 'No chapters found' });
+    let chapters = nullResult.data ?? [];
+    let nullCount = chapters.length;
+
+    // Step 2: If fewer than limit, fill with chapters that have thumbnails (fix wrong ones)
+    if (chapters.length < limit) {
+      const remaining = limit - chapters.length;
+      let q2 = adminSupabase
+        .from('chapters')
+        .select('id, number, manga_id')
+        .is('deleted_at', null)
+        .not('thumbnail_url', 'is', null);
+      if (mangaId) q2 = q2.eq('manga_id', mangaId);
+      const fillResult = await q2.order('number').limit(remaining);
+
+      if (fillResult.data && fillResult.data.length > 0) {
+        chapters = [...chapters, ...fillResult.data];
+      }
+    }
+
+    if (chapters.length === 0) {
+      return NextResponse.json({ status: 'success', message: 'No chapters found to process' });
     }
 
     // Create import job for tracking
@@ -77,9 +94,10 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       status: 'success',
-      message: `Regenerate thumbnails job started for ${chapters.length} chapters`,
+      message: `Regenerate thumbnails job started for ${chapters.length} chapters (${nullCount} new + ${chapters.length - nullCount} re-fix)`,
       jobId,
       total: chapters.length,
+      nullThumbnails: nullCount,
     });
   } catch (error) {
     return NextResponse.json(
