@@ -38,7 +38,8 @@ export function VoucherRedeemForm() {
 
   return (
     <div
-      className="rounded-2xl border p-4 sm:p-6 space-y-4"
+      id="redeem"
+      className="rounded-2xl border p-4 sm:p-6 space-y-4 scroll-mt-4"
       style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
     >
       <div className="flex items-center gap-3">

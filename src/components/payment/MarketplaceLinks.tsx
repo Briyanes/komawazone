@@ -24,7 +24,8 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
 
   return (
     <div
-      className="rounded-2xl border p-4 sm:p-6 space-y-5"
+      id="marketplace"
+      className="rounded-2xl border p-4 sm:p-6 space-y-5 scroll-mt-4"
       style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
     >
       <div>
@@ -38,7 +39,7 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
 
       {/* Marketplace buttons */}
       {hasMarket && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+        <div className="grid grid-cols-2 gap-2.5">
           {tokopedia_url && (
             <a
               href={tokopedia_url}
