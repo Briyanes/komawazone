@@ -48,7 +48,7 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
               style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/tokopedia.png" alt="Beli di Tokopedia" style={{ height: '40px', width: 'auto', maxWidth: '100%' }} className="shrink-0" />
+              <img src="/icons/tokopedia.svg" alt="Beli di Tokopedia" style={{ height: '40px', width: 'auto', maxWidth: '100%' }} className="shrink-0" />
             </a>
           )}
           {shopee_url && (
@@ -60,7 +60,7 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
               style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/shopee.png" alt="Beli di Shopee" style={{ height: '40px', width: 'auto', maxWidth: '100%' }} className="shrink-0" />
+              <img src="/icons/shopee.svg" alt="Beli di Shopee" style={{ height: '40px', width: 'auto', maxWidth: '100%' }} className="shrink-0" />
             </a>
           )}
         </div>
