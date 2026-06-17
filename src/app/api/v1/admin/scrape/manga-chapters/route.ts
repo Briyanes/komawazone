@@ -259,7 +259,6 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         console.log(`[ChapterImport] Downloading ${sourceImages.length} images for ch.${chapter.number} to R2...`);
         const r2Results = await batchDownloadAndUploadToR2(sourceImages, 'pages', `${slug}-ch${chapter.number}`);
 
-        // Filter successful uploads
         const successfulUploads = r2Results.filter(r => r.key !== null);
         const failedUploads = r2Results.filter(r => r.key === null);
 
@@ -267,11 +266,15 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           console.warn(`[ChapterImport] ${failedUploads.length}/${sourceImages.length} images failed to upload to R2, using original URLs`);
         }
 
-        const finalImages = successfulUploads.map(r => r.url);
-        // Use 5th image (index 4) as thumbnail
-        const thumbnailUrl = finalImages.length >= 5
-          ? finalImages[4]
-          : finalImages[0] ?? r2Results[0]?.url;
+        // IMPORTANT: Keep ALL images in original order — failures fall back to
+        // their original URL. This preserves page numbers so the 5th-page
+        // thumbnail (index 4) stays correct and no pages go "missing" from DB.
+        const finalImages = r2Results.map(r => r.url);
+
+        // Thumbnail: 5th page (index 4) by ORIGINAL order, not filtered order.
+        const thumbnailUrl = r2Results.length >= 5
+          ? r2Results[4].url
+          : r2Results[0]?.url;
 
         const { data: chapterRecord, error: chapterErr } = await supabase
           .from('chapters')
@@ -344,7 +347,6 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         console.log(`[ChapterImport] Backfill: downloading ${sourceImages.length} images for ch.${ch.number} to R2...`);
         const r2Results = await batchDownloadAndUploadToR2(sourceImages, 'pages', `${slug}-ch${ch.number}`);
 
-        // Filter successful uploads
         const successfulUploads = r2Results.filter(r => r.key !== null);
         const failedUploads = r2Results.filter(r => r.key === null);
 
@@ -352,17 +354,19 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           console.warn(`[ChapterImport] Backfill: ${failedUploads.length}/${sourceImages.length} images failed to upload to R2, using original URLs`);
         }
 
-        const finalImages = successfulUploads.map(r => r.url);
+        // IMPORTANT: Keep ALL images in original order (see new-chapter block
+        // above for rationale). Failed uploads fall back to original URL.
+        const finalImages = r2Results.map(r => r.url);
 
         await supabase.from('chapter_images').insert(
           finalImages.map((url, i) => ({ chapter_id: ch.id, image_url: url, number: i + 1 }))
         );
 
-        // Update thumbnail_url on chapter record
-        // Use 5th image (index 4) as thumbnail — always update to ensure consistency
-        const backfillThumb = finalImages.length >= 5
-          ? finalImages[4]
-          : finalImages[0] ?? r2Results[0]?.url;
+        // Update thumbnail_url on chapter record.
+        // ALWAYS use the 5th page (index 4) by ORIGINAL order, not filtered order.
+        const backfillThumb = r2Results.length >= 5
+          ? r2Results[4].url
+          : r2Results[0]?.url;
         await supabase.from('chapters')
           .update({ thumbnail_url: backfillThumb })
           .eq('id', ch.id);

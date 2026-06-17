@@ -236,33 +236,48 @@ async function runRetry(jobId: string | null, chapters: Array<{ id: string; numb
           continue;
         }
 
-        // Download & upload each image
+        // Download & upload each image.
+        // IMPORTANT: Keep ALL pages in original order. Failed/dead-CDN pages
+        // fall back to their original URL so page numbers (and the 5th-page
+        // thumbnail) stay correct. Do NOT skip failed pages from the array.
         const imageRecords: Array<{ chapter_id: string; number: number; image_url: string; width: number; height: number }> = [];
         let chapterFailed = 0;
 
         for (let j = 0; j < imageUrls.length; j++) {
           const imgUrl = imageUrls[j];
           const pageIdx = j + 1;
+          let resolvedUrl: string | null = null;
 
-          if (isDeadCdn(imgUrl)) { chapterFailed++; continue; }
-
-          const imageData = await downloadImage(imgUrl, workingUrl);
-          if (!imageData) { chapterFailed++; continue; }
-
-          try {
-            const ext = getExtension(imgUrl, imageData.contentType);
-            const { url } = await uploadBufferToR2({
-              buffer: imageData.buffer,
-              contentType: imageData.contentType,
-              fileName: `${pageIdx}.${ext}`,
-              folder: 'chapters',
-            });
-            // uploadBufferToR2 generates its own key, but we want a specific path
-            // We need to use the returned URL directly
-            imageRecords.push({ chapter_id: chapter.id, number: pageIdx, image_url: url, width: 0, height: 0 });
-          } catch {
+          if (!isDeadCdn(imgUrl)) {
+            const imageData = await downloadImage(imgUrl, workingUrl);
+            if (imageData) {
+              try {
+                const ext = getExtension(imgUrl, imageData.contentType);
+                const { url } = await uploadBufferToR2({
+                  buffer: imageData.buffer,
+                  contentType: imageData.contentType,
+                  fileName: `${pageIdx}.${ext}`,
+                  folder: 'chapters',
+                });
+                resolvedUrl = url;
+              } catch {
+                chapterFailed++;
+              }
+            } else {
+              chapterFailed++;
+            }
+          } else {
             chapterFailed++;
           }
+
+          // Always push a record — fall back to original URL on failure
+          imageRecords.push({
+            chapter_id: chapter.id,
+            number: pageIdx,
+            image_url: resolvedUrl ?? imgUrl,
+            width: 0,
+            height: 0,
+          });
 
           // Small delay between images
           if (j < imageUrls.length - 1) await new Promise(r => setTimeout(r, 300));
@@ -274,7 +289,7 @@ async function runRetry(jobId: string | null, chapters: Array<{ id: string; numb
             .from('chapter_images')
             .upsert(imageRecords, { onConflict: 'chapter_id,number' });
 
-          // Update thumbnail (5th image or first)
+          // Update thumbnail: 5th page (index 4) by ORIGINAL order, not filtered.
           const thumb = imageRecords.length >= 5 ? imageRecords[4] : imageRecords[0];
           await adminSupabase
             .from('chapters')
@@ -283,7 +298,8 @@ async function runRetry(jobId: string | null, chapters: Array<{ id: string; numb
 
           repaired++;
           totalImages += imageRecords.length;
-          console.log(`[Retry Images] (${i + 1}/${chapters.length}) Ch.${chapter.number} — ${imageRecords.length} images (${chapterFailed} failed)`);
+          const uploadedCount = imageRecords.length - chapterFailed;
+          console.log(`[Retry Images] (${i + 1}/${chapters.length}) Ch.${chapter.number} — ${imageRecords.length} pages (${uploadedCount} to R2, ${chapterFailed} failed)`);
         } else {
           failed++;
           console.log(`[Retry Images] (${i + 1}/${chapters.length}) Ch.${chapter.number} — all ${imageUrls.length} downloads failed`);

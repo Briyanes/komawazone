@@ -289,15 +289,19 @@ async function runBackfill(
             }
           }
 
-          // Update thumbnail: use 5th image (index 4) if available, fallback to first
-          const successfulResults = r2Results.filter(r => r.key);
-          const thumbResult = successfulResults.length >= 5
-            ? successfulResults[4]
-            : successfulResults[0];
-          if (thumbResult?.key) {
+          // Update thumbnail: ALWAYS pick the 5th image (index 4) by ORIGINAL page
+          // order (sorted by `number`), NOT by filtered array index.
+          // The previous code used successfulResults[4] which shifted index when
+          // some uploads failed — causing the wrong image to be used as thumbnail.
+          const sortedImgs = imgs.slice().sort((a, b) => a.number - b.number);
+          const thumbImg = sortedImgs.length >= 5 ? sortedImgs[4] : sortedImgs[0];
+          if (thumbImg) {
+            // If the 5th image was re-uploaded just now, use the new R2 URL
+            const reuploaded = r2Results.find(r => r.key && r.originalUrl === thumbImg.image_url);
+            const thumbUrl = reuploaded?.url ?? thumbImg.image_url;
             await adminSupabase
               .from('chapters')
-              .update({ thumbnail_url: thumbResult.url })
+              .update({ thumbnail_url: thumbUrl })
               .eq('id', chapterId);
           }
 
