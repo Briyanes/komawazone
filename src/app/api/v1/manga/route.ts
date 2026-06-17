@@ -1,9 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit, RateLimits } from '@/lib/rate-limit';
 
 const PER_PAGE = 20;
 
 export async function GET(request: NextRequest) {
+  // Rate limit: 60 requests per minute per IP (browse/search)
+  const rl = await rateLimit(request, RateLimits.search);
+  if (!rl.success) {
+    return NextResponse.json(
+      { status: 'error', error: 'Terlalu banyak permintaan. Coba lagi nanti.' },
+      { status: 429, headers: { 'X-RateLimit-Reset': rl.resetAt.toISOString() } }
+    );
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const params = await Promise.resolve(searchParams);

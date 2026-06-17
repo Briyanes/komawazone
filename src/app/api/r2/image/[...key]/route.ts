@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
+import { rateLimit } from '@/lib/rate-limit';
 
 /**
  * GET /api/r2/image/[...key]
@@ -52,9 +53,22 @@ async function streamToBuffer(stream: Readable | ReadableStream | unknown): Prom
 }
 
 export async function GET(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ key: string[] }> }
 ) {
+  // Rate limit: 300 image requests per minute per IP (prevents bandwidth abuse)
+  const rl = await rateLimit(req, { limit: 300, window: 60 * 1000 });
+  if (!rl.success) {
+    return new NextResponse('Too many requests', {
+      status: 429,
+      headers: {
+        'Content-Type': 'text/plain',
+        'X-RateLimit-Reset': rl.resetAt.toISOString(),
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+
   const { key: keyParts } = await params;
   const key = keyParts.join('/');
 

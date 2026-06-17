@@ -39,7 +39,60 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
   const [bulkRating, setBulkRating] = useState<'general' | 'mature'>('general');
   const [isPending, startTransition] = useTransition();
   const [importingChapters, setImportingChapters] = useState<Set<string>>(new Set());
+  const [importJobs, setImportJobs] = useState<Record<string, {
+    jobId: string;
+    status: 'running' | 'completed' | 'failed' | 'cancelled';
+    processed: number;
+    total: number;
+    newChapters: number;
+    updatedChapters: number;
+    failed: number;
+  }>>({});
   const [page, setPage] = useState(1);
+
+  // Poll import job progress
+  useEffect(() => {
+    const runningJobs = Object.entries(importJobs).filter(([, j]) => j.status === 'running');
+    if (runningJobs.length === 0) return;
+
+    const interval = setInterval(async () => {
+      for (const [mangaId, job] of runningJobs) {
+        try {
+          const res = await fetch(`/api/v1/admin/import/jobs?id=${job.jobId}&limit=1`);
+          if (!res.ok) continue;
+          const data = await res.json();
+          const jobData = data?.data?.jobs?.[0];
+          if (!jobData) continue;
+
+          setImportJobs(prev => ({
+            ...prev,
+            [mangaId]: {
+              ...prev[mangaId],
+              status: jobData.status,
+              processed: jobData.processed_items ?? 0,
+              total: jobData.total_items ?? 0,
+              newChapters: jobData.new_manga ?? 0,
+              updatedChapters: jobData.updated_manga ?? 0,
+              failed: jobData.skipped_items ?? 0,
+            },
+          }));
+
+          // Remove from importingChapters when job finishes
+          if (['completed', 'failed', 'cancelled'].includes(jobData.status)) {
+            setImportingChapters(prev => {
+              const next = new Set(prev);
+              next.delete(mangaId);
+              return next;
+            });
+          }
+        } catch {
+          // non-critical
+        }
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [importJobs]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -119,12 +172,30 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ manga_id: id }),
       });
-      const data = await res.json() as { message?: string; error?: string };
+      const data = await res.json() as { message?: string; error?: string; jobId?: string };
       if (!res.ok) throw new Error(data.error ?? 'Gagal memulai import');
-      alert(data.message ?? 'Import chapter dimulai di background!');
+
+      // Track job progress if jobId is returned
+      if (data.jobId) {
+        setImportJobs(prev => ({
+          ...prev,
+          [id]: {
+            jobId: data.jobId!,
+            status: 'running',
+            processed: 0,
+            total: 0,
+            newChapters: 0,
+            updatedChapters: 0,
+            failed: 0,
+          },
+        }));
+      } else {
+        // Backward compat: no jobId, just show alert
+        alert(data.message ?? 'Import chapter dimulai di background!');
+        setImportingChapters(prev => { const s = new Set(prev); s.delete(id); return s; });
+      }
     } catch (err) {
       alert(err instanceof Error ? err.message : 'Terjadi kesalahan');
-    } finally {
       setImportingChapters(prev => { const s = new Set(prev); s.delete(id); return s; });
     }
   };
@@ -258,6 +329,42 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
         </div>
       )}
 
+      {/* Import Progress Panel */}
+      {Object.entries(importJobs).filter(([, j]) => j.status === 'running' || (j.processed > 0 && j.status === 'completed' && Date.now() - Number(j.jobId?.split('-').pop()?.slice(0, 10) ?? 0) * 1000 < 10_000)).length > 0 && (
+        <div className="rounded-xl border p-3 space-y-2" style={{ background: 'var(--bg-tertiary)', borderColor: 'var(--color-primary)' }}>
+          {Object.entries(importJobs).map(([mangaId, job]) => {
+            const manga = mangaList.find(m => m.id === mangaId);
+            if (!manga) return null;
+            const pct = job.total > 0 ? Math.min(100, Math.round((job.processed / job.total) * 100)) : 0;
+            return (
+              <div key={mangaId} className="space-y-1">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>
+                    📖 {decodeHtml(manga.title)}
+                  </span>
+                  <span className="text-xs font-semibold shrink-0" style={{
+                    color: job.status === 'completed' ? '#10B981' : job.status === 'failed' ? '#EF4444' : 'var(--color-primary)'
+                  }}>
+                    {job.status === 'running' && `${job.processed}/${job.total || '?'} (${pct}%)`}
+                    {job.status === 'completed' && `✓ Selesai: ${job.newChapters} baru, ${job.updatedChapters} update`}
+                    {job.status === 'failed' && '✗ Gagal'}
+                  </span>
+                </div>
+                <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{
+                      width: `${pct}%`,
+                      background: job.status === 'completed' ? '#10B981' : job.status === 'failed' ? '#EF4444' : 'var(--color-primary)',
+                    }}
+                  />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
       {/* Table */}
       <div className="rounded-xl overflow-hidden border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
         <div
@@ -348,7 +455,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
                     className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)] disabled:opacity-40"
                     style={{ color: 'var(--color-primary)' }}
                   >
-                    <BookOpen size={13} />
+                    <BookOpen size={13} className={importingChapters.has(manga.id) ? 'animate-pulse' : ''} />
                   </button>
                   <Link href={`/admin/manga/${manga.id}`}
                     className="flex size-7 items-center justify-center rounded-md transition-colors hover:bg-[var(--bg-tertiary)]"

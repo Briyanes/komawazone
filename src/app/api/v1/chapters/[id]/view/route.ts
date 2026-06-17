@@ -1,10 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(
-  _req: NextRequest,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  // Rate limit: 30 view-increments per minute per IP (prevent view inflation spam)
+  const rl = await rateLimit(req, { limit: 30, window: 60 * 1000 });
+  if (!rl.success) {
+    return NextResponse.json(
+      { status: 'error', error: 'Too many requests' },
+      { status: 429, headers: { 'X-RateLimit-Reset': rl.resetAt.toISOString() } }
+    );
+  }
+
   try {
     const { id } = await params;
     const supabase = await createClient();

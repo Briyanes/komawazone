@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { parseChapterListFromHtml, scrapeChapterImages } from '@/lib/scrapers/manga-scraper';
 import { buildScraperHeaders, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
 import { batchDownloadAndUploadToR2 } from '@/lib/storage/r2';
@@ -61,13 +62,33 @@ export async function POST(req: NextRequest) {
   if (ssrfError) {
     return NextResponse.json({ error: `source_url tidak valid: ${ssrfError}` }, { status: 400 });
   }
+  // Create import job for tracking (so admin can monitor progress)
+  const adminSupabase = createAdminClient();
+  const { data: job } = await adminSupabase
+    .from('import_jobs')
+    .insert({
+      job_type: 'scrape_manga_chapters',
+      status: 'running',
+      total_items: 0, // will be updated once chapter list is fetched
+      processed_items: 0,
+      new_manga: 0,
+      updated_manga: 0,
+      skipped_items: 0,
+      created_by: user.id,
+    })
+    .select('id')
+    .single();
+
+  const jobId = job?.id ?? null;
+
   // Return immediately, process in background
-  after(() => importAllChapters(manga.id, manga.slug, sourceUrl));
+  after(() => importAllChapters(manga.id, manga.slug, sourceUrl, false, jobId));
 
   return NextResponse.json({
     status: 'success',
     message: `Import chapter dimulai untuk "${manga.title}". Proses berjalan di background.`,
     data: { manga_id: manga.id, source_url: sourceUrl },
+    jobId,
   });
 }
 
@@ -102,10 +123,22 @@ export async function GET(req: NextRequest) {
  *                      Much faster — use for bulk imports. Images are fetched lazily
  *                      the first time a chapter is read.
  */
-export async function importAllChapters(mangaId: string, slug: string, sourceUrl: string, metadataOnly = false) {
+export async function importAllChapters(mangaId: string, slug: string, sourceUrl: string, metadataOnly = false, jobId: string | null = null) {
   const supabase = await createClient();
+  const adminSupabase = createAdminClient();
 
-  console.log(`[ChapterImport] Starting for manga ${slug} from ${sourceUrl} (metadataOnly=${metadataOnly})`);
+  console.log(`[ChapterImport] Starting for manga ${slug} from ${sourceUrl} (metadataOnly=${metadataOnly}, jobId=${jobId})`);
+
+  // Helper to update job progress (typed loosely to avoid strict excess-property errors)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const updateJob = async (updates: any) => {
+    if (!jobId) return;
+    try {
+      await adminSupabase.from('import_jobs').update(updates).eq('id', jobId);
+    } catch {
+      // non-critical
+    }
+  };
 
   try {
     // 1. Fetch manga page to get chapter list
@@ -149,6 +182,9 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
 
     console.log(`[ChapterImport] ${toImport.length} new chapters to import (${existingNums.size} already exist)`);
 
+    // Update job with total items to process (approx — refined later in full mode)
+    await updateJob({ total_items: toImport.length > 0 ? toImport.length : 1 });
+
     // 3a. Metadata-only mode: insert chapter records without scraping images (fast)
     if (metadataOnly) {
       if (toImport.length === 0) return;
@@ -173,6 +209,14 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           insertedCount += (insertData?.length ?? 0);
         }
       }
+
+      await updateJob({
+        status: 'completed',
+        processed_items: insertedCount,
+        new_manga: insertedCount,
+        skipped_items: (toImport.length - insertedCount),
+        completed_at: new Date().toISOString(),
+      });
 
       console.log(`[ChapterImport] Metadata-only: inserted ${insertedCount}/${toImport.length} chapters for ${slug}`);
 
@@ -234,6 +278,10 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
     let imported = 0;
     let backfilled = 0;
     let failed = 0;
+    let processedTotal = 0;
+
+    // Update job with accurate total (new + backfill)
+    await updateJob({ total_items: toImport.length + backfillBatch.length });
 
     // Process new chapters: scrape images → download to R2 → insert chapter → insert images
     for (const chapter of toImport) {
@@ -299,7 +347,18 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         );
 
         imported++;
+        processedTotal++;
         console.log(`[ChapterImport] ✓ New ch.${chapter.number} (${finalImages.length} pages, ${successfulUploads.length} to R2)`);
+
+        // Update job progress (every 3 chapters to reduce DB writes)
+        if (processedTotal % 3 === 0) {
+          await updateJob({
+            processed_items: processedTotal,
+            new_manga: imported,
+            updated_manga: backfilled,
+            skipped_items: failed,
+          });
+        }
 
         // Notify users tracking this manga about the new chapter
         const { data: readers } = await supabase
@@ -372,7 +431,17 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
           .eq('id', ch.id);
 
         backfilled++;
+        processedTotal++;
         console.log(`[ChapterImport] ✓ Backfill ch.${ch.number} (${finalImages.length} pages, ${successfulUploads.length} to R2)`);
+
+        if (processedTotal % 3 === 0) {
+          await updateJob({
+            processed_items: processedTotal,
+            new_manga: imported,
+            updated_manga: backfilled,
+            skipped_items: failed,
+          });
+        }
 
       } catch (err) {
         console.error(`[ChapterImport] ✗ Backfill ch.${ch.number}:`, err);
@@ -382,7 +451,20 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
 
     console.log(`[ChapterImport] Done for ${slug}: ${imported} new, ${backfilled} backfilled, ${failed} failed`);
 
+    await updateJob({
+      status: 'completed',
+      processed_items: processedTotal,
+      new_manga: imported,
+      updated_manga: backfilled,
+      skipped_items: failed,
+      completed_at: new Date().toISOString(),
+    });
+
   } catch (err) {
     console.error(`[ChapterImport] Fatal error for ${slug}:`, err);
+    await updateJob({
+      status: 'failed',
+      completed_at: new Date().toISOString(),
+    });
   }
 }

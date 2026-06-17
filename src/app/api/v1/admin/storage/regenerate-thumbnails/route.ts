@@ -205,28 +205,110 @@ async function runRegenerate(
 /**
  * GET /api/v1/admin/storage/regenerate-thumbnails
  *
- * Get stats about thumbnail regeneration potential
+ * Get stats about thumbnail regeneration potential.
+ *
+ * Query params:
+ *  - detailed=1  → sample up to 100 chapters with their current thumbnail + expected (5th image) for visual audit
+ *  - mangaId=xxx → filter by manga
  */
-export async function GET() {
+export async function GET(request: NextRequest) {
   const supabase = await createClient();
   if (!await assertAdmin(supabase)) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
   const adminSupabase = createAdminClient();
+  const { searchParams } = new URL(request.url);
+  const detailed = searchParams.get('detailed') === '1';
+  const mangaId = searchParams.get('mangaId');
 
   // Count total chapters
-  const { count: totalChapters } = await adminSupabase
+  let totalQ = adminSupabase
     .from('chapters')
     .select('*', { count: 'exact', head: true })
     .is('deleted_at', null);
+  if (mangaId) totalQ = totalQ.eq('manga_id', mangaId);
+  const { count: totalChapters } = await totalQ;
 
   // Count chapters with null thumbnail
-  const { count: nullThumbnails } = await adminSupabase
+  let nullQ = adminSupabase
     .from('chapters')
     .select('*', { count: 'exact', head: true })
     .is('deleted_at', null)
     .is('thumbnail_url', null);
+  if (mangaId) nullQ = nullQ.eq('manga_id', mangaId);
+  const { count: nullThumbnails } = await nullQ;
+
+  // Count "wrong" thumbnails: thumbnail_url != 5th image's URL
+  // We need to sample chapters and check their images
+  let wrongCount = 0;
+  let auditedSample: Array<{
+    chapter_id: string;
+    chapter_number: number;
+    manga_id: string;
+    current_thumbnail: string | null;
+    expected_thumbnail: string | null;
+    image_count: number;
+    is_wrong: boolean;
+    is_null: boolean;
+  }> = [];
+
+  if (detailed || totalChapters) {
+    // Fetch chapters (sample of 200 for stats accuracy, or all if detailed)
+    let chapterQ = adminSupabase
+      .from('chapters')
+      .select('id, number, manga_id, thumbnail_url')
+      .is('deleted_at', null)
+      .order('number');
+    if (mangaId) chapterQ = chapterQ.eq('manga_id', mangaId);
+    if (detailed) {
+      chapterQ = chapterQ.limit(100);
+    } else {
+      chapterQ = chapterQ.limit(200);
+    }
+    const { data: chaptersSample } = await chapterQ;
+
+    if (chaptersSample && chaptersSample.length > 0) {
+      // Batch fetch images for these chapters
+      const chapterIds = chaptersSample.map(c => c.id);
+      const { data: images } = await adminSupabase
+        .from('chapter_images')
+        .select('chapter_id, image_url, number')
+        .in('chapter_id', chapterIds)
+        .order('number', { ascending: true });
+
+      // Group images by chapter_id
+      const imagesByChapter = new Map<string, Array<{ image_url: string; number: number }>>();
+      for (const img of images ?? []) {
+        const arr = imagesByChapter.get(img.chapter_id as string) ?? [];
+        arr.push({ image_url: img.image_url, number: img.number as number });
+        imagesByChapter.set(img.chapter_id as string, arr);
+      }
+
+      for (const ch of chaptersSample) {
+        const imgs = imagesByChapter.get(ch.id) ?? [];
+        const expected = imgs.length >= 5 ? imgs[4].image_url : imgs[0]?.image_url ?? null;
+        const current = ch.thumbnail_url;
+        const isNull = !current;
+        // "Wrong" = has a thumbnail but it doesn't match the expected 5th (or 1st if <5 imgs)
+        const isWrong = !isNull && expected !== null && current !== expected;
+
+        if (isWrong) wrongCount++;
+        if (detailed) {
+          auditedSample.push({
+            chapter_id: ch.id,
+            chapter_number: ch.number as number,
+            manga_id: ch.manga_id as string,
+            current_thumbnail: current,
+            expected_thumbnail: expected,
+            image_count: imgs.length,
+            is_wrong: isWrong,
+            is_null: isNull,
+          });
+        }
+      }
+    }
+  }
 
   // Check for running job
   const { data: runningJob } = await adminSupabase
@@ -243,6 +325,9 @@ export async function GET() {
     data: {
       total_chapters: totalChapters ?? 0,
       null_thumbnails: nullThumbnails ?? 0,
+      wrong_thumbnails_sampled: wrongCount,
+      audited: auditedSample.length,
+      sample: detailed ? auditedSample : undefined,
       running_job: runningJob ?? null,
     },
   });
