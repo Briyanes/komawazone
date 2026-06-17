@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { X, Crown, Check, Zap, Ticket, ShoppingBag } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -15,14 +16,16 @@ const BENEFITS = [
 
 export function VIPPromoModal() {
   const { isVip } = useAuth();
+  const pathname = usePathname();
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
     if (isVip) return; // already VIP — don't show
+    if (pathname === '/vip') return; // already on VIP page — don't show
     if (localStorage.getItem(STORAGE_KEY)) return;
     const timer = setTimeout(() => setVisible(true), 1800);
     return () => clearTimeout(timer);
-  }, [isVip]);
+  }, [isVip, pathname]);
 
   const dismiss = () => {
     localStorage.setItem(STORAGE_KEY, '1');
