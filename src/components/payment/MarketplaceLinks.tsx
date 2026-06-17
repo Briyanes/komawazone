@@ -48,7 +48,7 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
               style={{ background: '#03AC0E' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/tokopedia.png" alt="Tokopedia" className="h-6 w-auto shrink-0 object-contain" />
+              <img src="/icons/tokopedia.png" alt="Tokopedia" style={{ height: '24px', width: 'auto' }} className="shrink-0" />
               Beli di Tokopedia
             </a>
           )}
@@ -61,7 +61,7 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
               style={{ background: '#EE4D2D' }}
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/icons/shopee.png" alt="Shopee" className="h-6 w-auto shrink-0 object-contain" />
+              <img src="/icons/shopee.png" alt="Shopee" style={{ height: '24px', width: 'auto' }} className="shrink-0" />
               Beli di Shopee
             </a>
           )}
