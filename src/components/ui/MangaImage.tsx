@@ -14,6 +14,7 @@
 
 import NextImage, { type ImageProps } from 'next/image';
 import { forwardRef, useState } from 'react';
+import { proxyR2Url } from '@/lib/image-proxy';
 
 // External manga image hosts that block hotlinking (use regular img tag)
 // R2 URLs are NOT here — they go through next/image for WebP/AVIF optimization
@@ -34,9 +35,9 @@ function isExternalUrl(src: ImageProps['src']): boolean {
   if (typeof src !== 'string') return false;
   try {
     const url = new URL(src);
-    // R2 URLs always use next/image (optimization enabled)
+    // R2 dev URLs: route through our proxy (they return 403 from browser)
     if (url.hostname.endsWith('.r2.dev') || url.hostname.endsWith('.r2.cloudflarestorage.com')) {
-      return false;
+      return true;
     }
     return EXTERNAL_HOSTS.some(host => {
       if (host.startsWith('*.')) {
@@ -62,10 +63,11 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
       className,
       style,
       alt,
-      src,
+      src: rawSrc,
       priority,
       ...rest
     } = props;
+    const src = proxyR2Url(rawSrc as string);
 
     // Show placeholder if image failed to load
     if (imageError) {
