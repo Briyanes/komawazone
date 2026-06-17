@@ -7,7 +7,10 @@ export async function GET(
 ) {
   const { provider } = await params;
   const { origin } = new URL(request.url);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? origin;
+  // IMPORTANT: For OAuth, always use the actual request origin so localhost
+  // login works during development. NEXT_PUBLIC_SITE_URL (production) is only
+  // used as fallback if origin somehow isn't available.
+  const siteUrl = origin;
 
   // Collect cookies to set from Supabase
   const cookiesToSet: { name: string; value: string; options: Record<string, unknown> }[] = [];
