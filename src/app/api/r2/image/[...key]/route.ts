@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
+import { Readable } from 'stream';
 
 /**
  * GET /api/r2/image/[...key]
@@ -10,6 +11,11 @@ import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
  *
  * Example: /api/r2/image/chapters/473ad2ac-c46a-46b5-b2b0-4bf86e17d3d6/5.jpg
  */
+
+// Force Node.js runtime (not Edge) for S3 SDK + stream support
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 const s3Client = new S3Client({
   region: 'auto',
   endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -19,7 +25,31 @@ const s3Client = new S3Client({
   },
 });
 
-const CACHE_TIMEOUT = 10; // seconds to wait for R2
+// Convert a readable stream to a Buffer
+async function streamToBuffer(stream: Readable | ReadableStream | unknown): Promise<Buffer> {
+  if (stream instanceof Readable) {
+    const chunks: Buffer[] = [];
+    for await (const chunk of stream) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    return Buffer.concat(chunks);
+  }
+
+  // Handle web ReadableStream
+  if (typeof ReadableStream !== 'undefined' && stream instanceof ReadableStream) {
+    const reader = (stream as ReadableStream).getReader();
+    const chunks: Uint8Array[] = [];
+    // eslint-disable-next-line no-constant-condition
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      if (value) chunks.push(value);
+    }
+    return Buffer.concat(chunks);
+  }
+
+  throw new Error('Unsupported stream type');
+}
 
 export async function GET(
   _req: NextRequest,
@@ -45,31 +75,17 @@ export async function GET(
       Key: key,
     });
 
-    // Use AbortController for timeout
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), CACHE_TIMEOUT * 1000);
-
-    const response = await s3Client.send(command, {
-      abortSignal: controller.signal,
-    });
-    clearTimeout(timeout);
+    const response = await s3Client.send(command);
 
     if (!response.Body) {
       return NextResponse.json({ error: 'Image not found' }, { status: 404 });
     }
 
-    // Convert stream to buffer
-    const chunks: Uint8Array[] = [];
-    const reader = (response.Body as ReadableStream).getReader();
-    // @ts-expect-error - ReadableStream type compatibility
-    for await (const chunk of reader) {
-      chunks.push(chunk);
-    }
-    const buffer = Buffer.concat(chunks);
+    const buffer = await streamToBuffer(response.Body);
 
     const contentType = response.ContentType || `image/${ext === 'jpg' ? 'jpeg' : ext}`;
 
-    return new NextResponse(buffer, {
+    return new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         'Content-Type': contentType,
@@ -80,10 +96,19 @@ export async function GET(
   } catch (error) {
     console.error('[R2 Proxy] Error fetching:', key, error instanceof Error ? error.message : error);
 
-    if (error instanceof Error && error.name === 'AbortError') {
-      return NextResponse.json({ error: 'Timeout fetching image' }, { status: 504 });
-    }
+    // Return a 1x1 transparent pixel as fallback instead of error JSON
+    // This prevents broken image icons in the browser
+    const transparentPixel = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
+      'base64'
+    );
 
-    return NextResponse.json({ error: 'Failed to fetch image' }, { status: 500 });
+    return new NextResponse(new Uint8Array(transparentPixel), {
+      status: 200, // Return 200 with transparent pixel to avoid breaking UI
+      headers: {
+        'Content-Type': 'image/png',
+        'Cache-Control': 'no-store',
+      },
+    });
   }
 }
