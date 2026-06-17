@@ -59,18 +59,22 @@ export async function POST(req: NextRequest) {
     : now;
   const newExpiry = new Date(baseDate.getTime() + days * 24 * 60 * 60 * 1000);
 
-  // Mark voucher as used
-  const { error: updateVoucherError } = await supabase
+  // Mark voucher as used — atomic claim via .is('used_by', null)
+  // Bug fix #4: Verify the row was actually updated to prevent race condition (double-redeem)
+  const { data: claimedVoucher, error: updateVoucherError } = await supabase
     .from('vip_codes')
     .update({
       used_by: user.id,
       used_at: new Date().toISOString(),
     })
     .eq('id', voucher.id)
-    .is('used_by', null); // Extra safety: only update if not yet used
+    .is('used_by', null) // Extra safety: only update if not yet used
+    .select('id')
+    .single();
 
-  if (updateVoucherError) {
-    return NextResponse.json({ error: 'Gagal menukar kode. Coba lagi.' }, { status: 500 });
+  if (updateVoucherError || !claimedVoucher) {
+    // Race condition: another request claimed it between our SELECT and UPDATE
+    return NextResponse.json({ error: 'Kode voucher sudah pernah digunakan' }, { status: 400 });
   }
 
   // Update user VIP expiry
@@ -79,8 +83,14 @@ export async function POST(req: NextRequest) {
     .update({ vip_expires_at: newExpiry.toISOString() })
     .eq('id', user.id);
 
+  // Bug fix #5: Rollback voucher claim if user update fails (so the code is still usable)
   if (userUpdateError) {
     console.error('Failed to update VIP:', userUpdateError);
+    await supabase
+      .from('vip_codes')
+      .update({ used_by: null, used_at: null })
+      .eq('id', voucher.id)
+      .eq('used_by', user.id); // Only rollback if still owned by this user
     return NextResponse.json({ error: 'Gagal mengaktifkan VIP. Hubungi admin.' }, { status: 500 });
   }
 

@@ -35,6 +35,7 @@ export default function VoucherCodesPage() {
   const [genCount, setGenCount] = useState(10);
   const [generating, setGenerating] = useState(false);
   const [generatedCodes, setGeneratedCodes] = useState<VoucherCode[]>([]);
+  const [genError, setGenError] = useState<string | null>(null); // Bug fix #6: error feedback
 
   const fetchCodes = useCallback(async () => {
     setLoading(true);
@@ -43,12 +44,19 @@ export default function VoucherCodesPage() {
     if (statusFilter) params.set('status', statusFilter);
     if (planFilter) params.set('plan', planFilter);
 
-    const res = await fetch(`/api/v1/admin/voucher-codes?${params}`);
-    const data = await res.json();
-    setCodes(data.codes ?? []);
-    setTotal(data.total ?? 0);
-    setTotalPages(data.totalPages ?? 1);
-    setLoading(false);
+    try {
+      const res = await fetch(`/api/v1/admin/voucher-codes?${params}`);
+      const data = await res.json();
+      setCodes(data.codes ?? []);
+      setTotal(data.total ?? 0);
+      setTotalPages(data.totalPages ?? 1);
+    } catch {
+      // Bug fix #6: catch network errors instead of silently crashing
+      setCodes([]);
+      setTotalPages(1);
+    } finally {
+      setLoading(false);
+    }
   }, [page, statusFilter, planFilter]);
 
   useEffect(() => { fetchCodes(); }, [fetchCodes]);
@@ -56,6 +64,7 @@ export default function VoucherCodesPage() {
   const handleGenerate = async () => {
     setGenerating(true);
     setGeneratedCodes([]);
+    setGenError(null); // Bug fix #6: reset error
     try {
       const res = await fetch('/api/v1/admin/voucher-codes', {
         method: 'POST',
@@ -63,24 +72,40 @@ export default function VoucherCodesPage() {
         body: JSON.stringify({ plan: genPlan, count: genCount }),
       });
       const data = await res.json();
+      if (!res.ok) {
+        setGenError(data.error || 'Gagal generate kode');
+        return;
+      }
       if (data.codes) {
         setGeneratedCodes(data.codes);
         fetchCodes();
       }
-    } catch (err) {
-      console.error(err);
+    } catch {
+      // Bug fix #6: show error to user, not just console.error
+      setGenError('Gagal terhubung ke server');
+    } finally {
+      setGenerating(false);
     }
-    setGenerating(false);
   };
 
   const handleDelete = async (id: string) => {
     if (!confirm('Hapus kode ini?')) return;
-    await fetch('/api/v1/admin/voucher-codes', {
-      method: 'DELETE',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ id }),
-    });
-    fetchCodes();
+    try {
+      const res = await fetch('/api/v1/admin/voucher-codes', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id }),
+      });
+      // Bug fix #6: verify delete success before refetch
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || 'Gagal menghapus kode');
+        return;
+      }
+      fetchCodes();
+    } catch {
+      alert('Gagal terhubung ke server');
+    }
   };
 
   const copyToClipboard = (text: string, key: string) => {
@@ -186,6 +211,17 @@ export default function VoucherCodesPage() {
             Generate {genCount} Kode
           </button>
         </div>
+
+        {/* Bug fix #6: Show generate error feedback */}
+        {genError && (
+          <div
+            className="flex items-center gap-2 rounded-lg px-3 py-2 text-sm"
+            style={{ background: 'rgba(239,68,68,0.1)', color: '#ef4444' }}
+          >
+            <span>⚠️</span>
+            <span>{genError}</span>
+          </div>
+        )}
 
         {/* Generated codes result */}
         {generatedCodes.length > 0 && (
