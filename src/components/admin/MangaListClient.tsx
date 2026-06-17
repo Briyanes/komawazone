@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition, useEffect } from 'react';
 import Link from 'next/link';
-import { Plus, Edit, ExternalLink, Search, X, Star, Trash2, RefreshCw, BookOpen, DownloadCloud } from 'lucide-react';
+import { Plus, Edit, ExternalLink, Search, X, Star, Trash2, RefreshCw, BookOpen } from 'lucide-react';
 import { DeleteMangaButton } from '@/components/admin/DeleteMangaButton';
 import { SelectInput } from '@/components/ui/SelectInput';
 import { decodeHtml } from '@/lib/cn';
@@ -49,34 +49,6 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
     failed: number;
   }>>({});
   const [page, setPage] = useState(1);
-  const [batchJobId, setBatchJobId] = useState<string | null>(null);
-  const [batchStats, setBatchStats] = useState<{ processed: number; total: number; status: string } | null>(null);
-  const [batchLoading, setBatchLoading] = useState(false);
-
-  // Poll batch job progress (master job)
-  useEffect(() => {
-    if (!batchJobId) return;
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`/api/v1/admin/import/jobs?id=${batchJobId}&limit=1`);
-        if (!res.ok) return;
-        const data = await res.json();
-        const jobData = data?.data?.jobs?.[0];
-        if (!jobData) return;
-        setBatchStats({
-          processed: jobData.processed_items ?? 0,
-          total: jobData.total_items ?? 0,
-          status: jobData.status,
-        });
-        if (['completed', 'failed', 'cancelled'].includes(jobData.status)) {
-          setBatchJobId(null);
-        }
-      } catch {
-        // non-critical
-      }
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [batchJobId]);
 
   // Poll import job progress
   useEffect(() => {
@@ -228,36 +200,6 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
     }
   };
 
-  const handleBatchIncomplete = async () => {
-    if (!confirm(
-      '🚀 DOWNLOAD ALL MISSING\n\n' +
-      'Ini akan mencari semua manga dengan chapter belum lengkap (~141 manga, ~3,658 chapter)\n' +
-      'dan mendownload gambar mereka secara berurutan di background.\n\n' +
-      '⚠️ Proses ini memakan waktu 2-3 hari. Pastikan laptop/server tetap menyala.\n\n' +
-      'Lanjutkan?'
-    )) return;
-    setBatchLoading(true);
-    try {
-      const res = await fetch('/api/v1/admin/scrape/batch-incomplete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ limit: 500 }),
-      });
-      const data = await res.json() as { message?: string; error?: string; data?: { count: number; jobId?: string } };
-      if (!res.ok) throw new Error(data.error ?? 'Gagal memulai batch');
-      if (data.data?.jobId) {
-        setBatchJobId(data.data.jobId);
-        setBatchStats({ processed: 0, total: data.data.count, status: 'running' });
-      } else {
-        alert(data.message ?? 'Batch download dimulai!');
-      }
-    } catch (err) {
-      alert(err instanceof Error ? err.message : 'Terjadi kesalahan');
-    } finally {
-      setBatchLoading(false);
-    }
-  };
-
   const handleBulkStatus = () => {
     startTransition(async () => {
       const ids = [...selected];
@@ -331,52 +273,12 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
           {filtered.length} / {mangaList.length} judul
         </span>
         <div className="flex-1" />
-        <button
-          onClick={handleBatchIncomplete}
-          disabled={batchLoading || !!batchJobId}
-          className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white shrink-0 disabled:opacity-50"
-          style={{ background: '#8B5CF6' }}
-          title="Download semua manga yang belum lengkap chapter-nya"
-        >
-          <DownloadCloud size={15} className={batchLoading ? 'animate-spin' : ''} />
-          {batchLoading ? 'Memulai...' : 'Download All Missing'}
-        </button>
         <Link href="/admin/manga/new"
           className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-white shrink-0"
           style={{ background: 'var(--color-primary)' }}>
           <Plus size={15} /> Tambah Manga
         </Link>
       </div>
-
-      {/* Batch Progress Panel */}
-      {batchStats && (
-        <div className="rounded-xl border p-3 space-y-2" style={{ background: 'var(--bg-tertiary)', borderColor: '#8B5CF6' }}>
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-medium truncate" style={{ color: 'var(--text-primary)' }}>
-              🚀 Batch Download All Missing
-            </span>
-            <span className="text-xs font-semibold shrink-0" style={{
-              color: batchStats.status === 'completed' ? '#10B981' : batchStats.status === 'failed' ? '#EF4444' : '#8B5CF6'
-            }}>
-              {batchStats.status === 'running' && `${batchStats.processed}/${batchStats.total} manga (${batchStats.total > 0 ? Math.round((batchStats.processed / batchStats.total) * 100) : 0}%)`}
-              {batchStats.status === 'completed' && `✓ Selesai: ${batchStats.processed} manga diproses`}
-              {batchStats.status === 'failed' && '✗ Gagal'}
-            </span>
-          </div>
-          <div className="h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-secondary)' }}>
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${batchStats.total > 0 ? Math.min(100, (batchStats.processed / batchStats.total) * 100) : 0}%`,
-                background: batchStats.status === 'completed' ? '#10B981' : batchStats.status === 'failed' ? '#EF4444' : '#8B5CF6',
-              }}
-            />
-          </div>
-          <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-            ⏱️ Estimasi: 2-3 hari. Biarkan laptop menyala. Progress update tiap 5 detik.
-          </p>
-        </div>
-      )}
 
       {/* Bulk action bar */}
       {selected.size > 0 && (
