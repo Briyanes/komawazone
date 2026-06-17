@@ -115,6 +115,8 @@ html {
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
   overflow-x: hidden;
+  /* Prevent iOS rubber-band bounce — native feel */
+  overscroll-behavior-y: none;
 }
 
 body {
@@ -127,6 +129,12 @@ body {
   transition: background-color var(--duration-base), color var(--duration-base);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Remove grey/blue tap highlight on iOS & Android */
+  -webkit-tap-highlight-color: transparent;
+  /* Eliminate 300ms tap delay on legacy iOS */
+  touch-action: manipulation;
+  /* Smooth momentum scrolling on iOS */
+  -webkit-overflow-scrolling: touch;
 }
 
 /* ── Focus styles ──────────────────────────────────────────────────── */
@@ -205,8 +213,10 @@ img, video {
   --glass-border: rgba(255,255,255,0.07);
 }
 
-/* ── Floating nav safe area ─────────────────────────────────────────── */
-.pb-safe { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+/* ── Safe-area utilities (iPhone notch & home indicator) ───────────── */
+.pb-safe    { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+.pt-safe    { padding-top: max(0.5rem, env(safe-area-inset-top)); }
+.bottom-safe { bottom: calc(0.5rem + env(safe-area-inset-bottom)); }
 
 /* ── Glass utility ──────────────────────────────────────────────────── */
 .glass {

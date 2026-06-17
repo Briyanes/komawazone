@@ -616,8 +616,8 @@ export function ReaderClient({
         <div className="flex flex-col items-center pt-[65px] md:pt-12">
           {/* Auto-advance banner */}
           {autoAdvance !== null && nextChapterId && (
-            <div className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-2xl"
-              style={{ background: 'rgba(20,20,20,0.95)', border: '1px solid rgba(255,107,53,0.4)', whiteSpace: 'nowrap' }}>
+            <div className="fixed left-1/2 z-50 -translate-x-1/2 flex items-center gap-3 rounded-2xl px-4 py-2.5 shadow-2xl"
+              style={{ background: 'rgba(20,20,20,0.95)', border: '1px solid rgba(255,107,53,0.4)', whiteSpace: 'nowrap', bottom: 'calc(80px + env(safe-area-inset-bottom))' }}>
               <span className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.8)' }}>
                 Chapter berikutnya dalam <span style={{ color: 'var(--color-primary)', fontVariantNumeric: 'tabular-nums' }}>{autoAdvance}s</span>
               </span>
@@ -630,7 +630,7 @@ export function ReaderClient({
           )}
 
           {/* Floating page counter */}
-          <div className="fixed bottom-16 left-1/2 z-40 -translate-x-1/2">
+          <div className="fixed left-1/2 z-40 -translate-x-1/2" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
             <span className="rounded-full px-3 py-1 text-xs font-semibold tabular-nums"
               style={{ background: 'rgba(0,0,0,0.6)', color: 'rgba(255,255,255,0.65)' }}>
               {currentPage} / {images.length}
@@ -766,7 +766,7 @@ export function ReaderClient({
               </div>
 
               {/* Page indicator — tap to jump */}
-              <div className="fixed bottom-16 inset-x-0 flex justify-center z-40">
+              <div className="fixed inset-x-0 flex justify-center z-40" style={{ bottom: 'calc(64px + env(safe-area-inset-bottom))' }}>
                 {pageInputMode ? (
                   <form onSubmit={e => {
                     e.preventDefault();
@@ -802,7 +802,10 @@ export function ReaderClient({
       {/* ── BOTTOM NAV ── */}
       <div
         className="fixed bottom-0 inset-x-0 z-50 flex items-center gap-3 px-4 py-3"
-        style={{ background: 'linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 100%)' }}
+        style={{
+          background: 'linear-gradient(to top, rgba(0,0,0,.85) 0%, transparent 100%)',
+          paddingBottom: 'calc(0.75rem + env(safe-area-inset-bottom))',
+        }}
       >
         {readMode === 'paged' ? (
           <>
