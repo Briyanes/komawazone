@@ -152,6 +152,8 @@ const DEAD_CDN_HOSTS = new Set([
   'gmbr.manhwaland.in',
   'gmbr.manhwaland.com',
   'gmbr-in.gmbr.pro',
+  'api-l.gmbr.pro',    // 403 Cloudflare hotlink protection (June 2026)
+  'gmbr.pro',          // All gmbr.pro subdomains blocked by Cloudflare
   'go.gmbar.xyz',      // OLD CDN — dead, returns timeout
   'go.gmbar.pro',      // OLD CDN variant
   'go.uwakjawa.xyz',   // DEAD CDN — DNS/connection failure
