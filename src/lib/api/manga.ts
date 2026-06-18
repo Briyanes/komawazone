@@ -292,10 +292,11 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
   const chapter = data as unknown as ChapterDetail;
 
   // Lazy-load images: if chapter was imported as metadata-only (no images yet),
-  // scrape and save them now on first read.
+  // scrape, download to R2, and save them now on first read.
   if (chapter.chapter_images.length === 0 && chapter.manga?.slug) {
     try {
       const { scrapeChapterImages } = await import('@/lib/scrapers/manga-scraper');
+      const { batchDownloadAndUploadToR2 } = await import('@/lib/storage/r2');
       const mangaSlug = chapter.manga.slug;
       const chapterNum = chapter.number;
       const intNum = Math.floor(chapterNum);
@@ -314,13 +315,28 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
           ? [`${origin}/${mangaSlug}-chapter-${intNum}/`, `${origin}/${mangaSlug}-chapter-${paddedNum}/`]
           : [`${origin}/${mangaSlug}-chapter-${intNum}/`];
 
-      let imageUrls: string[] = [];
+      let sourceImageUrls: string[] = [];
       for (const url of candidateUrls) {
-        imageUrls = await scrapeChapterImages(url);
-        if (imageUrls.length > 0) break;
+        sourceImageUrls = await scrapeChapterImages(url);
+        if (sourceImageUrls.length > 0) break;
       }
-      if (imageUrls.length > 0) {
-        const imageRows = imageUrls.map((url, i) => ({
+      if (sourceImageUrls.length > 0) {
+        // Download and upload images to R2 so we control the CDN URL.
+        // This ensures thumbnails and reader images are reliable (no hotlink
+        // protection, no external dependency).
+        console.log(`[LazyImages] Downloading ${sourceImageUrls.length} images for ch.${chapterNum} to R2...`);
+        const r2Results = await batchDownloadAndUploadToR2(
+          sourceImageUrls,
+          'pages',
+          `${mangaSlug}-ch${chapterNum}`
+        );
+
+        // Keep ALL images in original order — failures fall back to their
+        // original URL. This preserves page numbers so the 5th-page
+        // thumbnail (index 4) stays correct.
+        const finalUrls = r2Results.map(r => r.url);
+
+        const imageRows = finalUrls.map((url, i) => ({
           chapter_id: chapter.id,
           image_url: url,
           number: i + 1,
@@ -336,12 +352,11 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
           console.error('[LazyImages] Insert failed for chapter', chapterId, insertErr.message);
         }
 
-        // Always update thumbnail to 5th image (index 4) for consistency.
-        // Previously this only updated when thumbnail_url was NULL, which meant
-        // chapters with an incorrect thumbnail (e.g. cover image) were never fixed.
-        const lazyThumb = imageUrls.length >= 5
-          ? imageUrls[4]
-          : imageUrls[0];
+        // Always update thumbnail to 5th image (index 4) by ORIGINAL order.
+        // Uses r2Results (not filtered) so the index matches the source order.
+        const lazyThumb = r2Results.length >= 5
+          ? r2Results[4].url
+          : r2Results[0]?.url;
         await adminClient
           .from('chapters')
           .update({ thumbnail_url: lazyThumb })

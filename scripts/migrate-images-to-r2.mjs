@@ -762,13 +762,15 @@ async function main() {
     const idx = TYPE === 'all' ? 1 : 0;
     const toProcess = (TYPE === 'all' ? null : LIMIT) ?? (counts[idx].count ?? 0);
     let chapterProcessed = 0;
+    // Track which chapter_ids had images migrated so we can refresh their thumbnail
+    const chaptersToRefresh = new Set();
 
     while (chapterProcessed < toProcess) {
       const batchLimit = Math.min(BATCH_SIZE, toProcess - chapterProcessed);
 
       const { data: rows, error } = await supabase
         .from('chapter_images')
-        .select('id, image_url, chapter_id')
+        .select('id, image_url, chapter_id, number')
         .not('image_url', 'is', null)
         .not('image_url', 'ilike', '%r2.cloudflarestorage.com%')
         .not('image_url', 'ilike', `%${r2Base || 'r2.dev'}%`)
@@ -795,6 +797,8 @@ async function main() {
           try {
             const r2Url = await uploadToR2(imageData.buffer, key, imageData.contentType);
             await supabase.from('chapter_images').update({ image_url: r2Url }).eq('id', row.id);
+            // Mark this chapter for thumbnail refresh
+            chaptersToRefresh.add(row.chapter_id);
             totalMigrated++;
             if (totalMigrated % 50 === 0) {
               console.log(`[${chapterProcessed}] ✅ ${totalMigrated} chapter images migrated so far...`);
@@ -807,6 +811,35 @@ async function main() {
           totalMigrated++;
         }
       }, CONCURRENCY);
+
+      // ── Refresh thumbnails for migrated chapters ───────────────────────────
+      // After migrating images, the chapter's thumbnail_url may still point
+      // to the OLD external URL. Re-derive it from the now-R2 chapter_images.
+      if (!DRY_RUN && chaptersToRefresh.size > 0) {
+        const chapterIds = [...chaptersToRefresh];
+        for (let ci = 0; ci < chapterIds.length; ci += 50) {
+          const chunk = chapterIds.slice(ci, ci + 50);
+          const { data: chRows } = await supabase
+            .from('chapters')
+            .select('id')
+            .in('id', chunk);
+
+          for (const chRow of chRows ?? []) {
+            const { data: imgs } = await supabase
+              .from('chapter_images')
+              .select('image_url, number')
+              .eq('chapter_id', chRow.id)
+              .order('number', { ascending: true });
+
+            if (imgs && imgs.length > 0) {
+              const newThumb = imgs.length >= 5 ? imgs[4].image_url : imgs[0].image_url;
+              await supabase.from('chapters').update({ thumbnail_url: newThumb }).eq('id', chRow.id);
+            }
+          }
+        }
+        console.log(`   🔄 Refreshed thumbnails for ${chaptersToRefresh.size} chapters`);
+        chaptersToRefresh.clear();
+      }
 
       // Save progress
       const lastRow = rows[rows.length - 1];
