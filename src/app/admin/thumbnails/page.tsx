@@ -117,205 +117,248 @@ export default function ThumbnailAuditPage() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h1 className="text-2xl font-bold">🖼️ Thumbnail Audit</h1>
-            <p className="text-gray-400 text-sm mt-1">
-              Audit & regenerate thumbnail chapter (pakai gambar ke-5)
-            </p>
-          </div>
-          <button
-            onClick={() => router.push('/admin')}
-            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-sm transition"
-          >
-            ← Dashboard
-          </button>
-        </div>
-
-        {/* Message */}
-        {message && (
-          <div className={`p-4 rounded-lg mb-6 ${message.type === 'success' ? 'bg-green-900/50 border border-green-700' : 'bg-red-900/50 border border-red-700'}`}>
-            <p className="text-sm">{message.text}</p>
-          </div>
-        )}
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className="text-gray-400 text-xs uppercase tracking-wide">Total Chapters</p>
-            <p className="text-2xl font-bold mt-1">{stats?.total_chapters.toLocaleString() ?? '—'}</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className="text-gray-400 text-xs uppercase tracking-wide">Thumbnail NULL</p>
-            <p className="text-2xl font-bold mt-1 text-red-400">{stats?.null_thumbnails.toLocaleString() ?? '—'}</p>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className="text-gray-400 text-xs uppercase tracking-wide">Wrong (sampled)</p>
-            <p className="text-2xl font-bold mt-1 text-yellow-400">
-              {stats?.wrong_thumbnails_sampled ?? '—'}
-              {stats && stats.audited > 0 && (
-                <span className="text-sm text-gray-500 ml-1">/{stats.audited} ({wrongPct}%)</span>
-              )}
-            </p>
-          </div>
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-4">
-            <p className="text-gray-400 text-xs uppercase tracking-wide">Estimasi Wrong Total</p>
-            <p className="text-2xl font-bold mt-1 text-orange-400">~{estimatedWrongTotal.toLocaleString()}</p>
-          </div>
-        </div>
-
-        {/* Running Job Banner */}
-        {stats?.running_job && (
-          <div className="bg-blue-900/30 border border-blue-700 rounded-xl p-4 mb-6">
-            <div className="flex items-center gap-3">
-              <div className="animate-spin h-5 w-5 border-2 border-blue-400 border-t-transparent rounded-full" />
-              <div className="flex-1">
-                <p className="text-sm font-medium">Job regenerate berjalan...</p>
-                <div className="w-full bg-gray-800 rounded-full h-2 mt-2">
-                  <div
-                    className="bg-blue-500 h-2 rounded-full transition-all"
-                    style={{ width: `${(stats.running_job.processed_items / stats.running_job.total_items) * 100}%` }}
-                  />
-                </div>
-                <p className="text-xs text-gray-400 mt-1">
-                  {stats.running_job.processed_items} / {stats.running_job.total_items} chapter diproses
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Actions */}
-        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 mb-6">
-          <h2 className="font-semibold mb-3">⚡ Regenerate Thumbnails</h2>
-          <div className="flex flex-wrap gap-3 items-center">
-            <input
-              type="text"
-              placeholder="Filter by manga ID (opsional)"
-              value={mangaFilter}
-              onChange={(e) => setMangaFilter(e.target.value)}
-              className="flex-1 min-w-[200px] bg-gray-800 border border-gray-700 rounded-lg px-3 py-2 text-sm"
-            />
-            <button
-              onClick={() => handleRegenerate(500)}
-              disabled={regenerating}
-              className="px-4 py-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 rounded-lg text-sm font-medium transition"
-            >
-              Regenerate 500
-            </button>
-            <button
-              onClick={() => handleRegenerate(2000)}
-              disabled={regenerating}
-              className="px-4 py-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 rounded-lg text-sm font-medium transition"
-            >
-              Regenerate 2000 (MAX)
-            </button>
-            <button
-              onClick={() => fetchStats()}
-              disabled={loading}
-              className="px-4 py-2 bg-gray-700 hover:bg-gray-600 disabled:opacity-50 rounded-lg text-sm transition"
-            >
-              {loading ? 'Loading...' : '↻ Refresh'}
-            </button>
-          </div>
-          <p className="text-xs text-gray-500 mt-2">
-            Prioritas: chapter dengan thumbnail NULL dulu, lalu yang wrong. Logic: gambar ke-5 (index 4),
-            fallback ke gambar pertama kalau {'<'} 5 halaman.
+    <div className="space-y-5 w-full">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
+            🖼️ Thumbnail Audit
+          </h1>
+          <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
+            Audit & regenerate thumbnail chapter (pakai gambar ke-5)
           </p>
         </div>
+        <button
+          onClick={() => router.push('/admin')}
+          className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
+          style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+        >
+          ← Dashboard
+        </button>
+      </div>
 
-        {/* Visual Audit Grid */}
-        {filteredSample.length > 0 && (
-          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="font-semibold">🔍 Visual Audit (100 sample)</h2>
-              <div className="flex gap-2 text-xs">
-                <button
-                  onClick={() => setFilter('all')}
-                  className={`px-3 py-1.5 rounded-lg ${filter === 'all' ? 'bg-blue-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-                >
-                  All ({stats?.sample?.length ?? 0})
-                </button>
-                <button
-                  onClick={() => setFilter('wrong')}
-                  className={`px-3 py-1.5 rounded-lg ${filter === 'wrong' ? 'bg-yellow-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-                >
-                  ⚠️ Wrong ({stats?.sample?.filter(s => s.is_wrong).length ?? 0})
-                </button>
-                <button
-                  onClick={() => setFilter('null')}
-                  className={`px-3 py-1.5 rounded-lg ${filter === 'null' ? 'bg-red-600' : 'bg-gray-800 hover:bg-gray-700'}`}
-                >
-                  ❌ NULL ({stats?.sample?.filter(s => s.is_null).length ?? 0})
-                </button>
-              </div>
-            </div>
+      {/* Message */}
+      {message && (
+        <div
+          className="rounded-lg p-4 border"
+          style={
+            message.type === 'success'
+              ? { background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.3)' }
+              : { background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)' }
+          }
+        >
+          <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{message.text}</p>
+        </div>
+      )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-              {filteredSample.map(item => (
+      {/* Stats Cards */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="rounded-xl p-4 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+          <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Total Chapters</p>
+          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: 'var(--text-primary)' }}>
+            {stats?.total_chapters.toLocaleString() ?? '—'}
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+          <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Thumbnail NULL</p>
+          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: '#ef4444' }}>
+            {stats?.null_thumbnails.toLocaleString() ?? '—'}
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+          <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Wrong (sampled)</p>
+          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: '#f59e0b' }}>
+            {stats?.wrong_thumbnails_sampled ?? '—'}
+            {stats && stats.audited > 0 && (
+              <span className="text-sm ml-1" style={{ color: 'var(--text-tertiary)' }}>
+                /{stats.audited} ({wrongPct}%)
+              </span>
+            )}
+          </p>
+        </div>
+        <div className="rounded-xl p-4 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+          <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Estimasi Wrong Total</p>
+          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: '#f97316' }}>
+            ~{estimatedWrongTotal.toLocaleString()}
+          </p>
+        </div>
+      </div>
+
+      {/* Running Job Banner */}
+      {stats?.running_job && (
+        <div className="rounded-xl p-4 border" style={{ background: 'rgba(59,130,246,0.08)', borderColor: 'rgba(59,130,246,0.3)' }}>
+          <div className="flex items-center gap-3">
+            <div className="animate-spin h-5 w-5 border-2 rounded-full" style={{ borderColor: '#3b82f6', borderTopColor: 'transparent' }} />
+            <div className="flex-1">
+              <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Job regenerate berjalan...</p>
+              <div className="w-full rounded-full h-2 mt-2" style={{ background: 'var(--bg-tertiary)' }}>
                 <div
-                  key={item.chapter_id}
-                  className={`border rounded-lg overflow-hidden ${
-                    item.is_null ? 'border-red-600' : item.is_wrong ? 'border-yellow-600' : 'border-gray-700'
-                  }`}
-                >
-                  <div className="aspect-[2/3] bg-gray-950 relative">
-                    {toProxyUrl(item.current_thumbnail) ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
-                        src={toProxyUrl(item.current_thumbnail)!}
-                        alt={`Ch ${item.chapter_number}`}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).style.opacity = '0.2';
-                        }}
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center text-gray-600 text-xs">
-                        NO THUMBNAIL
-                      </div>
-                    )}
-                    {/* Status badge */}
-                    <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                      {item.is_null && <span className="bg-red-600 text-white px-1 rounded">NULL</span>}
-                      {item.is_wrong && <span className="bg-yellow-600 text-black px-1 rounded">WRONG</span>}
+                  className="h-2 rounded-full transition-all"
+                  style={{
+                    width: `${(stats.running_job.processed_items / stats.running_job.total_items) * 100}%`,
+                    background: '#3b82f6',
+                  }}
+                />
+              </div>
+              <p className="text-xs mt-1" style={{ color: 'var(--text-tertiary)' }}>
+                {stats.running_job.processed_items} / {stats.running_job.total_items} chapter diproses
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Actions */}
+      <div className="rounded-xl p-5 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+        <h2 className="font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>⚡ Regenerate Thumbnails</h2>
+        <div className="flex flex-wrap gap-3 items-center">
+          <input
+            type="text"
+            placeholder="Filter by manga ID (opsional)"
+            value={mangaFilter}
+            onChange={(e) => setMangaFilter(e.target.value)}
+            className="flex-1 min-w-[200px] rounded-lg px-3 py-2 text-sm border outline-none"
+            style={{
+              background: 'var(--bg-primary)',
+              borderColor: 'var(--border-light)',
+              color: 'var(--text-primary)',
+            }}
+          />
+          <button
+            onClick={() => handleRegenerate(500)}
+            disabled={regenerating}
+            className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-50"
+            style={{ background: '#3b82f6' }}
+          >
+            Regenerate 500
+          </button>
+          <button
+            onClick={() => handleRegenerate(2000)}
+            disabled={regenerating}
+            className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-50"
+            style={{ background: '#8b5cf6' }}
+          >
+            Regenerate 2000 (MAX)
+          </button>
+          <button
+            onClick={() => fetchStats()}
+            disabled={loading}
+            className="rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
+            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
+          >
+            {loading ? 'Loading...' : '↻ Refresh'}
+          </button>
+        </div>
+        <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
+          Prioritas: chapter dengan thumbnail NULL dulu, lalu yang wrong. Logic: gambar ke-5 (index 4),
+          fallback ke gambar pertama jika kurang dari 5 halaman.
+        </p>
+      </div>
+
+      {/* Visual Audit Grid */}
+      {filteredSample.length > 0 && (
+        <div className="rounded-xl p-5 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>🔍 Visual Audit (100 sample)</h2>
+            <div className="flex gap-2 text-xs">
+              <button
+                onClick={() => setFilter('all')}
+                className="rounded-lg px-3 py-1.5 font-medium transition-colors"
+                style={
+                  filter === 'all'
+                    ? { background: '#3b82f6', color: 'white' }
+                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
+                }
+              >
+                All ({stats?.sample?.length ?? 0})
+              </button>
+              <button
+                onClick={() => setFilter('wrong')}
+                className="rounded-lg px-3 py-1.5 font-medium transition-colors"
+                style={
+                  filter === 'wrong'
+                    ? { background: '#f59e0b', color: 'white' }
+                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
+                }
+              >
+                ⚠️ Wrong ({stats?.sample?.filter(s => s.is_wrong).length ?? 0})
+              </button>
+              <button
+                onClick={() => setFilter('null')}
+                className="rounded-lg px-3 py-1.5 font-medium transition-colors"
+                style={
+                  filter === 'null'
+                    ? { background: '#ef4444', color: 'white' }
+                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
+                }
+              >
+                ❌ NULL ({stats?.sample?.filter(s => s.is_null).length ?? 0})
+              </button>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {filteredSample.map(item => (
+              <div
+                key={item.chapter_id}
+                className="border rounded-lg overflow-hidden"
+                style={{
+                  borderColor: item.is_null ? '#ef4444' : item.is_wrong ? '#f59e0b' : 'var(--border-light)',
+                }}
+              >
+                <div className="aspect-[2/3] relative" style={{ background: 'var(--bg-primary)' }}>
+                  {toProxyUrl(item.current_thumbnail) ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={toProxyUrl(item.current_thumbnail)!}
+                      alt={`Ch ${item.chapter_number}`}
+                      className="w-full h-full object-cover"
+                      loading="lazy"
+                      onError={(e) => {
+                        (e.target as HTMLImageElement).style.opacity = '0.2';
+                      }}
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                      NO THUMBNAIL
                     </div>
-                  </div>
-                  <div className="p-2 text-xs">
-                    <p className="font-medium">Chapter {item.chapter_number}</p>
-                    <p className="text-gray-500">{item.image_count} pages</p>
-                    {item.is_wrong && item.expected_thumbnail && (
-                      <div className="mt-1 pt-1 border-t border-gray-800">
-                        <p className="text-gray-500 text-[10px]">Expected (5th):</p>
-                        <div className="aspect-[2/3] mt-1 bg-gray-950 rounded overflow-hidden">
-                          {/* eslint-disable-next-line @next/next/no-img-element */}
-                          <img
-                            src={toProxyUrl(item.expected_thumbnail)!}
-                            alt="Expected"
-                            className="w-full h-full object-cover opacity-70"
-                            loading="lazy"
-                          />
-                        </div>
-                      </div>
-                    )}
+                  )}
+                  {/* Status badge */}
+                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold">
+                    {item.is_null && <span className="text-white px-1 rounded" style={{ background: '#ef4444' }}>NULL</span>}
+                    {item.is_wrong && <span className="text-black px-1 rounded" style={{ background: '#f59e0b' }}>WRONG</span>}
                   </div>
                 </div>
-              ))}
-            </div>
+                <div className="p-2 text-xs">
+                  <p className="font-medium" style={{ color: 'var(--text-primary)' }}>Chapter {item.chapter_number}</p>
+                  <p style={{ color: 'var(--text-tertiary)' }}>{item.image_count} pages</p>
+                  {item.is_wrong && item.expected_thumbnail && (
+                    <div className="mt-1 pt-1 border-t" style={{ borderColor: 'var(--border-light)' }}>
+                      <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Expected (5th):</p>
+                      <div className="aspect-[2/3] mt-1 rounded overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={toProxyUrl(item.expected_thumbnail)!}
+                          alt="Expected"
+                          className="w-full h-full object-cover opacity-70"
+                          loading="lazy"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
+      )}
 
-        {loading && !stats && (
-          <div className="text-center py-12 text-gray-500">
-            <div className="animate-spin h-8 w-8 border-2 border-gray-600 border-t-transparent rounded-full mx-auto mb-3" />
-            Memuat audit...
-          </div>
-        )}
-      </div>
+      {loading && !stats && (
+        <div className="text-center py-12" style={{ color: 'var(--text-tertiary)' }}>
+          <div className="animate-spin h-8 w-8 border-2 border-t-transparent rounded-full mx-auto mb-3" style={{ borderColor: 'var(--text-tertiary)', borderTopColor: 'transparent' }} />
+          Memuat audit...
+        </div>
+      )}
     </div>
   );
 }
