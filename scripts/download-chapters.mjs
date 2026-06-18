@@ -10,7 +10,7 @@
  *   node scripts/download-chapters.mjs --manga=SLUG                 # manga spesifik by slug
  *   node scripts/download-chapters.mjs --manga-id=UUID              # manga spesifik by id
  *   node scripts/download-chapters.mjs --images-only                # hanya download images untuk chapter yang sudah ada
- *   node scripts/download-chapters.mjs --limit=10                   # hanya 10 manga
+ *   node scripts/download-chapters.mjs --limit=5000                 # process up to 5000 manga (was 500)
  *   node scripts/download-chapters.mjs --dry-run                    # preview tanpa upload
  *   node scripts/download-chapters.mjs --resume                     # lanjutkan dari progress terakhir
  *   node scripts/download-chapters.mjs --concurrency=2              # 2 manga paralel
@@ -154,6 +154,7 @@ const DEAD_CDN_HOSTS = new Set([
   'gmbr-in.gmbr.pro',
   'go.gmbar.xyz',      // OLD CDN — dead, returns timeout
   'go.gmbar.pro',      // OLD CDN variant
+  'go.uwakjawa.xyz',   // DEAD CDN — DNS/connection failure
 ]);
 
 function getExtension(url, contentType) {
@@ -171,27 +172,30 @@ function isDeadCdn(url) {
 async function downloadImage(url, gotScraping) {
   if (isDeadCdn(url)) return null;
   try {
-    const response = await gotScraping({
-      url,
-      responseType: 'buffer',
-      timeout: { request: 20_000 },
-      retry: { limit: 1, statusCodes: [429, 500, 502, 503, 504] },
-      headerGeneratorOptions: {
-        browsers: [{ name: 'chrome', minVersion: 112, maxVersion: 124 }],
-        devices: ['desktop'],
-        operatingSystems: ['macos'],
-        locales: ['id-ID', 'en-US'],
-      },
-      headers: {
-        // Always use manhwaland as Referer — CDN expects hotlink from the reader site
-        'Referer': 'https://04x.manhwaland.land/',
-        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
-      },
-    });
-    if (response.statusCode !== 200) return null;
-    const contentType = (response.headers['content-type'] || 'image/jpeg').split(';')[0].trim();
-    if (!contentType.startsWith('image/')) return null;
-    return { buffer: response.body, contentType };
+    // Hard 25s timeout — prevents hang on slow/dead CDN
+    return await withTimeout(async (signal) => {
+      const response = await gotScraping({
+        url,
+        responseType: 'buffer',
+        timeout: { request: 15_000 },
+        retry: { limit: 0 },  // NO retries
+        signal,
+        headerGeneratorOptions: {
+          browsers: [{ name: 'chrome', minVersion: 112, maxVersion: 124 }],
+          devices: ['desktop'],
+          operatingSystems: ['macos'],
+          locales: ['id-ID', 'en-US'],
+        },
+        headers: {
+          'Referer': 'https://04x.manhwaland.land/',
+          'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+        },
+      });
+      if (response.statusCode !== 200) return null;
+      const contentType = (response.headers['content-type'] || 'image/jpeg').split(';')[0].trim();
+      if (!contentType.startsWith('image/')) return null;
+      return { buffer: response.body, contentType };
+    }, 25_000, `downloadImage(${url.slice(0, 50)})`);
   } catch {
     return null;
   }
@@ -342,6 +346,20 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
+// ── Hard timeout wrapper — kills hung requests after maxMs ────────────────────
+function withTimeout(promiseFactory, maxMs, label = 'request') {
+  return new Promise((resolve, reject) => {
+    const controller = new AbortController();
+    const timer = setTimeout(() => {
+      controller.abort();
+      reject(new Error(`⏱️ ${label} timed out after ${maxMs}ms`));
+    }, maxMs);
+    promiseFactory(controller.signal)
+      .then(v => { clearTimeout(timer); resolve(v); })
+      .catch(e => { clearTimeout(timer); reject(e); });
+  });
+}
+
 // ── Main ──────────────────────────────────────────────────────────────────────
 async function main() {
   console.log('');
@@ -380,34 +398,54 @@ async function main() {
     console.log('');
   }
 
-  // ── Build manga query ─────────────────────────────────────────────────────
-  let mangaQuery = supabase
-    .from('manga')
-    .select('id, slug, title, source_url')
-    .is('deleted_at', null)
-    .not('source_url', 'is', null)
-    .order('id');
+  // ── Build manga query with PAGINATION (Supabase caps at 1000/page) ────────
+  const PAGE_SIZE = 1000;
+  let mangaList = [];
+  let currentPage = 0;
 
-  if (MANGA_SLUG) {
-    mangaQuery = mangaQuery.eq('slug', MANGA_SLUG);
-  } else if (MANGA_ID) {
-    mangaQuery = mangaQuery.eq('id', MANGA_ID);
-  } else if (!IMAGES_ONLY) {
-    // Default: manga yang belum punya chapter
-    // We'll filter after fetching since Supabase doesn't have a "has no related rows" filter
-    mangaQuery = mangaQuery.limit(LIMIT ?? 500);
+  if (MANGA_SLUG || MANGA_ID) {
+    // Single manga — no pagination needed
+    let q = supabase
+      .from('manga')
+      .select('id, slug, title, source_url')
+      .is('deleted_at', null)
+      .not('source_url', 'is', null);
+    if (MANGA_SLUG) q = q.eq('slug', MANGA_SLUG);
+    if (MANGA_ID) q = q.eq('id', MANGA_ID);
+    const { data, error } = await q;
+    if (error) { console.error('❌ Gagal query manga:', error.message); process.exit(1); }
+    mangaList = data ?? [];
   } else {
-    mangaQuery = mangaQuery.limit(LIMIT ?? 500);
-  }
+    // Paginated fetch — get ALL manga (Supabase returns max 1000 per request)
+    console.log(`📊 Fetching manga with pagination (page size: ${PAGE_SIZE})...`);
+    while (true) {
+      let q = supabase
+        .from('manga')
+        .select('id, slug, title, source_url')
+        .is('deleted_at', null)
+        .not('source_url', 'is', null)
+        .order('id')
+        .range(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE - 1);
 
-  if (RESUME && lastProcessedMangaId) {
-    mangaQuery = mangaQuery.gt('id', lastProcessedMangaId);
-  }
+      if (RESUME && lastProcessedMangaId) {
+        q = q.gt('id', lastProcessedMangaId);
+      }
 
-  const { data: mangaList, error: mangaErr } = await mangaQuery;
-  if (mangaErr) {
-    console.error('❌ Gagal query manga:', mangaErr.message);
-    process.exit(1);
+      const { data, error } = await q;
+      if (error) { console.error('❌ Gagal query manga:', error.message); process.exit(1); }
+      if (!data?.length) break;
+
+      mangaList.push(...data);
+      console.log(`   Page ${currentPage + 1}: +${data.length} manga (total: ${mangaList.length})`);
+
+      if (data.length < PAGE_SIZE) break;  // Last page
+      currentPage++;
+    }
+
+    // Apply CLI limit if specified
+    if (LIMIT && mangaList.length > LIMIT) {
+      mangaList = mangaList.slice(0, LIMIT);
+    }
   }
 
   if (!mangaList?.length) {
@@ -415,7 +453,7 @@ async function main() {
     return;
   }
 
-  console.log(`📊 Manga ditemukan: ${mangaList.length}`);
+  console.log(`📊 Total manga ditemukan: ${mangaList.length}`);
   console.log('');
 
   // ── Stats ──────────────────────────────────────────────────────────────────
@@ -583,28 +621,32 @@ async function main() {
   console.log('');
 }
 
-// ── Helper: Fetch HTML page with got-scraping ─────────────────────────────────
+// ── Helper: Fetch HTML page with got-scraping + HARD TIMEOUT ──────────────────
 async function fetchPageHtml(url, gotScraping) {
   try {
-    const response = await gotScraping({
-      url,
-      responseType: 'text',
-      timeout: { request: 25_000 },
-      retry: { limit: 1, statusCodes: [429, 500, 502, 503, 504] },
-      headerGeneratorOptions: {
-        browsers: [{ name: 'chrome', minVersion: 112, maxVersion: 124 }],
-        devices: ['desktop'],
-        operatingSystems: ['macos'],
-        locales: ['id-ID', 'en-US'],
-      },
-      headers: {
-        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-      },
-    });
-
-    if (response.statusCode !== 200) return null;
-    if (isBlockedPage(response.body)) return null;
-    return response.body;
+    // Hard 30s timeout — if got-scraping hangs, AbortController kills it
+    const html = await withTimeout(async (signal) => {
+      const response = await gotScraping({
+        url,
+        responseType: 'text',
+        timeout: { request: 20_000 },
+        retry: { limit: 0 },  // NO retries — we handle failures ourselves
+        signal,  // AbortController signal
+        headerGeneratorOptions: {
+          browsers: [{ name: 'chrome', minVersion: 112, maxVersion: 124 }],
+          devices: ['desktop'],
+          operatingSystems: ['macos'],
+          locales: ['id-ID', 'en-US'],
+        },
+        headers: {
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+        },
+      });
+      if (response.statusCode !== 200) return null;
+      if (isBlockedPage(response.body)) return null;
+      return response.body;
+    }, 30_000, `fetchPageHtml(${url.slice(0, 50)})`);
+    return html;
   } catch {
     return null;
   }

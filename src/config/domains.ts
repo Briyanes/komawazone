@@ -35,8 +35,7 @@ export function isHubAllowedPath(pathname: string): boolean {
   }
 
   // Auth routes work on both domains
-  if (pathname.startsWith('/login') || pathname.startsWith('/register') ||
-      pathname.startsWith('/forgot-password') || pathname.startsWith('/reset-password')) {
+  if (pathname.startsWith('/login') || pathname.startsWith('/register')) {
     return true;
   }
 

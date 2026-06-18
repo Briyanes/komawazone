@@ -1,25 +1,15 @@
 'use client';
 
-import { useState, useEffect, useTransition } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { Eye, EyeOff, UserPlus, MailOpen } from 'lucide-react';
-import { registerSchema, type RegisterInput } from '@/lib/validations/auth';
-import { signUp } from '@/lib/auth/actions';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { OAuthButtons, OAuthDivider } from '@/components/auth/OAuthButtons';
+import { OAuthButtons } from '@/components/auth/OAuthButtons';
 import { useAuth } from '@/hooks/useAuth';
 
 export function RegisterForm() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
-  const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
-  const [isPending, startTransition] = useTransition();
 
   // Redirect already-authenticated users away from /register
   useEffect(() => {
@@ -27,44 +17,6 @@ export function RegisterForm() {
       router.replace('/');
     }
   }, [isLoading, isAuthenticated, router]);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<RegisterInput>({ resolver: zodResolver(registerSchema) });
-
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const onSubmit = ({ confirmPassword: _confirmPassword, ...data }: RegisterInput) => {
-    setServerError(null);
-    startTransition(async () => {
-      const result = await signUp(data);
-      if (result?.error) {
-        setServerError(result.error);
-      } else if (result?.success) {
-        setSuccess(result.message ?? 'Account created!');
-      }
-    });
-  };
-
-  if (success) {
-    return (
-      <div className="space-y-4 text-center">
-      <div className="flex justify-center">
-          <MailOpen size={48} style={{ color: 'var(--color-primary)' }} />
-        </div>
-        <h2 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-          Cek email Anda
-        </h2>
-        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
-          {success}
-        </p>
-        <Link href="/login" style={{ color: 'var(--color-primary)', fontWeight: 600 }}>
-          Kembali ke Masuk
-        </Link>
-      </div>
-    );
-  }
 
   return (
     <div className="space-y-6">
@@ -77,75 +29,17 @@ export function RegisterForm() {
         </p>
       </div>
 
-      {/* OAuth buttons */}
+      {/* OAuth buttons (only register method) */}
       <OAuthButtons onError={setServerError} />
-      <OAuthDivider />
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        {serverError && (
-          <div
-            className="rounded-lg px-3 py-2 text-sm text-white"
-            style={{ background: 'var(--color-error)' }}
-          >
-            {serverError}
-          </div>
-        )}
-
-        <Input
-          label="Username"
-          type="text"
-          placeholder="mangafan99"
-          autoComplete="username"
-          error={errors.username?.message}
-          hint="3–20 karakter. Huruf, angka, dan garis bawah."
-          {...register('username')}
-        />
-
-        <Input
-          label="Email"
-          type="email"
-          placeholder="you@example.com"
-          autoComplete="email"
-          error={errors.email?.message}
-          {...register('email')}
-        />
-
-        <div className="relative">
-          <Input
-            label="Password"
-            type={showPassword ? 'text' : 'password'}
-            placeholder="Min. 8 karakter"
-            autoComplete="new-password"
-            error={errors.password?.message}
-            hint="Harus mengandung huruf kapital dan angka."
-            {...register('password')}
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((v) => !v)}
-            className="absolute right-3 top-[34px]"
-            style={{ color: 'var(--text-tertiary)' }}
-            tabIndex={-1}
-            aria-label={showPassword ? 'Hide password' : 'Show password'}
-          >
-            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
-          </button>
+      {serverError && (
+        <div
+          className="rounded-lg px-3 py-2 text-sm text-white"
+          style={{ background: 'var(--color-error)' }}
+        >
+          {serverError}
         </div>
-
-        <Input
-          label="Confirm Password"
-          type="password"
-          placeholder="••••••••"
-          autoComplete="new-password"
-          error={errors.confirmPassword?.message}
-          {...register('confirmPassword')}
-        />
-
-        <Button type="submit" className="w-full" isLoading={isPending}>
-          <UserPlus size={16} />
-          Buat Akun
-        </Button>
-      </form>
+      )}
 
       <p className="text-center text-sm" style={{ color: 'var(--text-secondary)' }}>
         Sudah punya akun?{' '}
