@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { Play, RefreshCw, Info, AlertTriangle, CheckCircle, Image as ImageIcon, Search, ArrowLeft, Activity } from 'lucide-react';
 
 interface SampleItem {
   chapter_id: string;
@@ -32,9 +33,7 @@ interface Stats {
 /** Convert source-CDN URL or R2 key to a proxy-safe URL */
 function toProxyUrl(url: string | null): string | null {
   if (!url) return null;
-  // R2 internal: /api/r2/image/<key>
   if (url.startsWith('/api/r2/image/')) return url;
-  // R2 full URL: extract key
   if (url.includes('r2.dev') || url.includes('r2.cloudflarestorage.com')) {
     const m = url.match(/\/([^/]+(?:\/[^/]+)+\.(?:jpg|jpeg|png|webp|gif|avif))/i);
     if (m) return `/api/r2/image/${m[1]}`;
@@ -117,57 +116,72 @@ export default function ThumbnailAuditPage() {
     : 0;
 
   return (
-    <div className="space-y-5 w-full">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>
-            🖼️ Thumbnail Audit
+            Thumbnail Audit
           </h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--text-tertiary)' }}>
-            Audit & regenerate thumbnail chapter (pakai gambar ke-5)
+          <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
+            Audit & regenerate thumbnail chapter (pakai gambar ke-5 teratas)
           </p>
         </div>
         <button
           onClick={() => router.push('/admin')}
-          className="rounded-lg px-4 py-2 text-sm font-medium transition-colors"
-          style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)' }}
+          className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80"
+          style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
         >
-          ← Dashboard
+          <ArrowLeft size={14} />
+          Dashboard
         </button>
       </div>
 
       {/* Message */}
       {message && (
         <div
-          className="rounded-lg p-4 border"
+          className="rounded-lg p-4 flex items-center gap-2 text-sm"
           style={
             message.type === 'success'
-              ? { background: 'rgba(16,185,129,0.08)', borderColor: 'rgba(16,185,129,0.3)' }
-              : { background: 'rgba(239,68,68,0.08)', borderColor: 'rgba(239,68,68,0.3)' }
+              ? { background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }
+              : { background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }
           }
         >
-          <p className="text-sm" style={{ color: 'var(--text-primary)' }}>{message.text}</p>
+          {message.type === 'success' ? (
+            <CheckCircle size={14} className="text-green-500" />
+          ) : (
+            <AlertTriangle size={14} className="text-red-500" />
+          )}
+          <span style={{ color: 'var(--text-secondary)' }}>{message.text}</span>
         </div>
       )}
 
       {/* Stats Cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <div className="rounded-xl p-4 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+        <div
+          className="rounded-xl p-4"
+          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+        >
           <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Total Chapters</p>
           <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: 'var(--text-primary)' }}>
             {stats?.total_chapters.toLocaleString() ?? '—'}
           </p>
         </div>
-        <div className="rounded-xl p-4 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+        <div
+          className="rounded-xl p-4"
+          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+        >
           <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Thumbnail NULL</p>
-          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: '#ef4444' }}>
+          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: 'var(--color-error)' }}>
             {stats?.null_thumbnails.toLocaleString() ?? '—'}
           </p>
         </div>
-        <div className="rounded-xl p-4 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+        <div
+          className="rounded-xl p-4"
+          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+        >
           <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Wrong (sampled)</p>
-          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: '#f59e0b' }}>
+          <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: 'var(--color-warning)' }}>
             {stats?.wrong_thumbnails_sampled ?? '—'}
             {stats && stats.audited > 0 && (
               <span className="text-sm ml-1" style={{ color: 'var(--text-tertiary)' }}>
@@ -176,7 +190,10 @@ export default function ThumbnailAuditPage() {
             )}
           </p>
         </div>
-        <div className="rounded-xl p-4 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+        <div
+          className="rounded-xl p-4"
+          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+        >
           <p className="text-xs font-medium uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Estimasi Wrong Total</p>
           <p className="text-2xl font-bold tabular-nums mt-1" style={{ color: '#f97316' }}>
             ~{estimatedWrongTotal.toLocaleString()}
@@ -186,17 +203,20 @@ export default function ThumbnailAuditPage() {
 
       {/* Running Job Banner */}
       {stats?.running_job && (
-        <div className="rounded-xl p-4 border" style={{ background: 'rgba(59,130,246,0.08)', borderColor: 'rgba(59,130,246,0.3)' }}>
+        <div
+          className="rounded-xl p-4"
+          style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}
+        >
           <div className="flex items-center gap-3">
-            <div className="animate-spin h-5 w-5 border-2 rounded-full" style={{ borderColor: '#3b82f6', borderTopColor: 'transparent' }} />
+            <RefreshCw size={16} className="animate-spin text-blue-500" />
             <div className="flex-1">
               <p className="text-sm font-medium" style={{ color: 'var(--text-primary)' }}>Job regenerate berjalan...</p>
-              <div className="w-full rounded-full h-2 mt-2" style={{ background: 'var(--bg-tertiary)' }}>
+              <div className="w-full h-2 rounded-full overflow-hidden mt-2" style={{ background: 'var(--bg-tertiary)' }}>
                 <div
-                  className="h-2 rounded-full transition-all"
+                  className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${(stats.running_job.processed_items / stats.running_job.total_items) * 100}%`,
-                    background: '#3b82f6',
+                    width: `${stats.running_job.total_items > 0 ? Math.min(100, (stats.running_job.processed_items / stats.running_job.total_items) * 100) : 0}%`,
+                    background: 'linear-gradient(90deg, #3b82f6, #6366f1)',
                   }}
                 />
               </div>
@@ -208,91 +228,129 @@ export default function ThumbnailAuditPage() {
         </div>
       )}
 
-      {/* Actions */}
-      <div className="rounded-xl p-5 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
-        <h2 className="font-semibold mb-3" style={{ color: 'var(--text-primary)' }}>⚡ Regenerate Thumbnails</h2>
-        <div className="flex flex-wrap gap-3 items-center">
-          <input
-            type="text"
-            placeholder="Filter by manga ID (opsional)"
-            value={mangaFilter}
-            onChange={(e) => setMangaFilter(e.target.value)}
-            className="flex-1 min-w-[200px] rounded-lg px-3 py-2 text-sm border outline-none"
-            style={{
-              background: 'var(--bg-primary)',
-              borderColor: 'var(--border-light)',
-              color: 'var(--text-primary)',
-            }}
-          />
+      {/* Regenerate Section */}
+      <div
+        className="rounded-xl p-5 space-y-4"
+        style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+      >
+        <div className="flex items-center gap-2">
+          <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+            Regenerate Thumbnails
+          </h2>
+          <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}>
+            <ImageIcon size={10} /> Thumbnail
+          </span>
+        </div>
+
+        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+          Update thumbnail chapter agar pakai gambar ke-5 (bukan gambar pertama).
+          Fix bug thumbnail yang masih menampilkan gambar halaman cover.
+          Prioritas: chapter dengan thumbnail NULL dulu, lalu yang wrong.
+        </p>
+
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label className="block text-xs font-medium mb-1" style={{ color: 'var(--text-tertiary)' }}>
+              Manga ID (opsional)
+            </label>
+            <input
+              type="text"
+              placeholder="UUID manga..."
+              value={mangaFilter}
+              onChange={e => setMangaFilter(e.target.value)}
+              className="rounded-lg px-3 py-2 text-sm w-64"
+              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+            />
+          </div>
           <button
             onClick={() => handleRegenerate(500)}
             disabled={regenerating}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-50"
-            style={{ background: '#3b82f6' }}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: 'var(--color-primary)' }}
           >
+            {regenerating ? (
+              <RefreshCw size={14} className="animate-spin" />
+            ) : (
+              <Play size={14} />
+            )}
             Regenerate 500
           </button>
           <button
             onClick={() => handleRegenerate(2000)}
             disabled={regenerating}
-            className="rounded-lg px-4 py-2 text-sm font-medium text-white transition-opacity disabled:opacity-50"
-            style={{ background: '#8b5cf6' }}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+            style={{ background: 'var(--color-primary)' }}
           >
+            {regenerating ? (
+              <RefreshCw size={14} className="animate-spin" />
+            ) : (
+              <Play size={14} />
+            )}
             Regenerate 2000 (MAX)
           </button>
           <button
             onClick={() => fetchStats()}
             disabled={loading}
-            className="rounded-lg px-4 py-2 text-sm font-medium transition-colors disabled:opacity-50"
-            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
+            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80 disabled:opacity-50"
+            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
           >
-            {loading ? 'Loading...' : '↻ Refresh'}
+            <RefreshCw size={14} />
+            {loading ? 'Loading...' : 'Refresh'}
           </button>
         </div>
-        <p className="text-xs mt-2" style={{ color: 'var(--text-tertiary)' }}>
-          Prioritas: chapter dengan thumbnail NULL dulu, lalu yang wrong. Logic: gambar ke-5 (index 4),
-          fallback ke gambar pertama jika kurang dari 5 halaman.
-        </p>
       </div>
 
       {/* Visual Audit Grid */}
       {filteredSample.length > 0 && (
-        <div className="rounded-xl p-5 border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-semibold" style={{ color: 'var(--text-primary)' }}>🔍 Visual Audit (100 sample)</h2>
+        <div
+          className="rounded-xl p-5 space-y-4"
+          style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+        >
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div className="flex items-center gap-2">
+              <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+                Visual Audit
+              </h2>
+              <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(59,130,246,0.1)', color: '#3b82f6' }}>
+                <Search size={10} /> {stats?.sample?.length ?? 0} Sample
+              </span>
+            </div>
             <div className="flex gap-2 text-xs">
               <button
                 onClick={() => setFilter('all')}
-                className="rounded-lg px-3 py-1.5 font-medium transition-colors"
+                className="flex items-center gap-1 rounded-lg px-3 py-1.5 font-medium transition-opacity hover:opacity-80"
                 style={
                   filter === 'all'
-                    ? { background: '#3b82f6', color: 'white' }
-                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
+                    ? { background: 'var(--color-primary)', color: 'white' }
+                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }
                 }
               >
+                <Activity size={10} />
                 All ({stats?.sample?.length ?? 0})
               </button>
               <button
                 onClick={() => setFilter('wrong')}
-                className="rounded-lg px-3 py-1.5 font-medium transition-colors"
+                className="flex items-center gap-1 rounded-lg px-3 py-1.5 font-medium transition-opacity hover:opacity-80"
                 style={
                   filter === 'wrong'
-                    ? { background: '#f59e0b', color: 'white' }
-                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
+                    ? { background: 'var(--color-warning)', color: 'white' }
+                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }
                 }
               >
-                ⚠️ Wrong ({stats?.sample?.filter(s => s.is_wrong).length ?? 0})
+                <AlertTriangle size={10} />
+                Wrong ({stats?.sample?.filter(s => s.is_wrong).length ?? 0})
               </button>
               <button
                 onClick={() => setFilter('null')}
-                className="rounded-lg px-3 py-1.5 font-medium transition-colors"
+                className="flex items-center gap-1 rounded-lg px-3 py-1.5 font-medium transition-opacity hover:opacity-80"
                 style={
                   filter === 'null'
-                    ? { background: '#ef4444', color: 'white' }
-                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }
+                    ? { background: 'var(--color-error)', color: 'white' }
+                    : { background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }
                 }
               >
-                ❌ NULL ({stats?.sample?.filter(s => s.is_null).length ?? 0})
+                <AlertTriangle size={10} />
+                NULL ({stats?.sample?.filter(s => s.is_null).length ?? 0})
               </button>
             </div>
           </div>
@@ -301,9 +359,9 @@ export default function ThumbnailAuditPage() {
             {filteredSample.map(item => (
               <div
                 key={item.chapter_id}
-                className="border rounded-lg overflow-hidden"
+                className="rounded-lg overflow-hidden"
                 style={{
-                  borderColor: item.is_null ? '#ef4444' : item.is_wrong ? '#f59e0b' : 'var(--border-light)',
+                  border: `1px solid ${item.is_null ? 'var(--color-error)' : item.is_wrong ? 'var(--color-warning)' : 'var(--border-light)'}`,
                 }}
               >
                 <div className="aspect-[2/3] relative" style={{ background: 'var(--bg-primary)' }}>
@@ -324,16 +382,20 @@ export default function ThumbnailAuditPage() {
                     </div>
                   )}
                   {/* Status badge */}
-                  <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded text-[10px] font-bold">
-                    {item.is_null && <span className="text-white px-1 rounded" style={{ background: '#ef4444' }}>NULL</span>}
-                    {item.is_wrong && <span className="text-black px-1 rounded" style={{ background: '#f59e0b' }}>WRONG</span>}
+                  <div className="absolute top-1 left-1">
+                    {item.is_null && (
+                      <span className="text-white px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ background: 'var(--color-error)' }}>NULL</span>
+                    )}
+                    {item.is_wrong && (
+                      <span className="text-white px-1.5 py-0.5 rounded text-[10px] font-bold" style={{ background: 'var(--color-warning)' }}>WRONG</span>
+                    )}
                   </div>
                 </div>
                 <div className="p-2 text-xs">
                   <p className="font-medium" style={{ color: 'var(--text-primary)' }}>Chapter {item.chapter_number}</p>
                   <p style={{ color: 'var(--text-tertiary)' }}>{item.image_count} pages</p>
                   {item.is_wrong && item.expected_thumbnail && (
-                    <div className="mt-1 pt-1 border-t" style={{ borderColor: 'var(--border-light)' }}>
+                    <div className="mt-1 pt-1" style={{ borderTop: '1px solid var(--border-light)' }}>
                       <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>Expected (5th):</p>
                       <div className="aspect-[2/3] mt-1 rounded overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -353,9 +415,28 @@ export default function ThumbnailAuditPage() {
         </div>
       )}
 
+      {/* Info Section */}
+      <div
+        className="rounded-xl p-5 space-y-2"
+        style={{ background: 'rgba(59,130,246,0.06)', border: '1px solid rgba(59,130,246,0.2)' }}
+      >
+        <p className="flex items-center gap-2 text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+          <Info size={14} className="text-blue-500" /> Info
+        </p>
+        <ul className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
+          <li>• <strong>Thumbnail Audit</strong>: Cek apakah thumbnail chapter sudah pakai gambar ke-5</li>
+          <li>• <strong>NULL</strong>: Chapter tidak punya thumbnail sama sekali</li>
+          <li>• <strong>Wrong</strong>: Thumbnail masih pakai gambar pertama (cover), harusnya gambar ke-5</li>
+          <li>• <strong>Regenerate</strong>: Update thumbnail ke gambar ke-5 teratas, fallback ke gambar pertama jika kurang dari 5 halaman</li>
+          <li>• <strong>Filter Manga ID</strong>: Hanya audit/regenerate chapter dari manga tertentu</li>
+          <li>• Job berjalan di background, progress update otomatis setiap 5 detik</li>
+          <li>• Max 2000 chapter per batch regenerate</li>
+        </ul>
+      </div>
+
       {loading && !stats && (
         <div className="text-center py-12" style={{ color: 'var(--text-tertiary)' }}>
-          <div className="animate-spin h-8 w-8 border-2 border-t-transparent rounded-full mx-auto mb-3" style={{ borderColor: 'var(--text-tertiary)', borderTopColor: 'transparent' }} />
+          <RefreshCw size={24} className="animate-spin mx-auto mb-3" />
           Memuat audit...
         </div>
       )}
