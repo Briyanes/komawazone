@@ -116,26 +116,25 @@ export async function middleware(request: NextRequest) {
   }
 
   // --- BLOCK MALICIOUS USER-AGENTS (scrapers, downloaders) ---
-  // Skip UA check for:
-  //   - Static assets (handled by matcher)
-  //   - API routes that crawlers might legitimately access (sitemap, robots, RSS)
-  //   - Hub domain (link bio page — shouldn't have heavy scraping)
-  if (
-    !pathname.startsWith('/api/sitemap') &&
-    !pathname.startsWith('/robots') &&
-    !pathname.startsWith('/manifest') &&
-    !pathname.startsWith('/favicon') &&
-    pathname !== '/hub'
-  ) {
-    if (userAgent && !isLegitimateBrowserUA(userAgent)) {
-      logSuspiciousActivity('BLOCKED_UA', request, { ua_snippet: userAgent.slice(0, 120) });
-      // Return a generic 403 — don't reveal why
-      return new NextResponse('Access Denied', {
-        status: 403,
-        headers: { 'Content-Type': 'text/plain' },
-      });
-    }
-  }
+  // ⚠️ DISABLED: Blokir user-real browser users (termasuk Incognito).
+  // Hanya honeypot + hotlink protection yang aktif sekarang.
+  // Untuk re-enable, uncomment block di bawah.
+  //
+  // if (
+  //   !pathname.startsWith('/api/sitemap') &&
+  //   !pathname.startsWith('/robots') &&
+  //   !pathname.startsWith('/manifest') &&
+  //   !pathname.startsWith('/favicon') &&
+  //   pathname !== '/hub'
+  // ) {
+  //   if (userAgent && !isLegitimateBrowserUA(userAgent)) {
+  //     logSuspiciousActivity('BLOCKED_UA', request, { ua_snippet: userAgent.slice(0, 120) });
+  //     return new NextResponse('Access Denied', {
+  //       status: 403,
+  //       headers: { 'Content-Type': 'text/plain' },
+  //     });
+  //   }
+  // }
 
   // --- SUBDOMAIN REDIRECTS (read.olluq.com, 01.olluq.com, www.olluq.xyz) ---
   const parts = cleanHost.split('.');
