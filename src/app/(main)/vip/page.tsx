@@ -1,11 +1,18 @@
 import Link from 'next/link';
-import { Crown, Check, Zap, Lock } from 'lucide-react';
+import { Crown, Check, Zap, Lock, Sparkles } from 'lucide-react';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { VoucherRedeemForm } from '@/components/payment/VoucherRedeemForm';
 import { MarketplaceLinks } from '@/components/payment/MarketplaceLinks';
 
-export const metadata: Metadata = { title: 'VIP — OLLUQ' };
+export const metadata: Metadata = {
+  title: 'VIP — OLLUQ',
+  description: 'Upgrade ke OLLUQ VIP untuk akses penuh konten 18+, baca tanpa iklan, badge eksklusif, dan semua chapter terbuka. Mulai dari Rp 15.000.',
+  openGraph: {
+    title: 'OLLUQ VIP — Beyond Every Story',
+    description: 'Bebas baca 18+, tanpa iklan, akses semua chapter. Mulai dari Rp 15.000/bulan.',
+  },
+};
 
 const BENEFITS = [
   { title: 'Bebas Baca 18+', desc: 'Akses penuh semua chapter konten Mature, Ecchi, Adult, Smut, dan genre dewasa lainnya' },
@@ -28,8 +35,29 @@ export default async function VIPPage({ searchParams }: Props) {
   const { reason, manga } = await searchParams;
   const isMatureGate = reason === 'mature';
 
-  // Fetch marketplace links server-side so they render immediately (no client fetch)
   const supabase = await createClient();
+
+  // ── Check if user is already VIP ──
+  let isVip = false;
+  let vipExpiresAt: string | null = null;
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    const { data } = await supabase
+      .from('users')
+      .select('vip_expires_at, role')
+      .eq('id', user.id)
+      .single();
+    const row = data as { vip_expires_at?: string | null; role?: string | null } | null;
+    if (row?.role === 'ADMIN') {
+      isVip = true;
+    } else {
+      const exp = row?.vip_expires_at ?? null;
+      isVip = !!exp && new Date(exp) > new Date();
+      vipExpiresAt = isVip ? exp : null;
+    }
+  }
+
+  // Fetch marketplace links server-side so they render immediately (no client fetch)
   const marketKeys = [
     'marketplace_tokopedia_url',
     'marketplace_shopee_url',
@@ -54,8 +82,31 @@ export default async function VIPPage({ searchParams }: Props) {
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 md:py-12 space-y-8 md:space-y-10">
 
+      {/* ── Already VIP banner ── */}
+      {isVip && (
+        <div
+          className="flex items-center gap-3 rounded-2xl border p-4"
+          style={{ background: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.35)' }}
+        >
+          <div
+            className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+            style={{ background: 'rgba(34,197,94,0.15)' }}
+          >
+            <Sparkles size={18} className="text-emerald-500" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-emerald-500">VIP Aktif 🎉</p>
+            <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
+              {vipExpiresAt
+                ? `Berlaku sampai ${new Date(vipExpiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}. Nikmati semua konten 18+ dan baca tanpa iklan!`
+                : 'Status admin — akses penuh tanpa batas.'}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Contextual banner — shown when redirected from mature content */}
-      {isMatureGate && (
+      {isMatureGate && !isVip && (
         <div
           className="flex items-start gap-3 rounded-2xl border p-4"
           style={{ background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }}

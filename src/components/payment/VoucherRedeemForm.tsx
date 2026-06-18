@@ -3,10 +3,26 @@
 import { useState } from 'react';
 import { Ticket, Check, AlertCircle, Loader2 } from 'lucide-react';
 
+/** Auto-format voucher code: OLLUQ-XXXX-XXXX (3 groups) */
+function formatVoucherCode(raw: string): string {
+  const clean = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+  const parts = [clean.slice(0, 5), clean.slice(5, 9), clean.slice(9, 13)];
+  return parts.filter(Boolean).join('-');
+}
+
 export function VoucherRedeemForm() {
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setCode(formatVoucherCode(e.target.value));
+  };
+
+  const handlePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    setCode(formatVoucherCode(e.clipboardData.getData('text')));
+  };
 
   const handleRedeem = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -64,9 +80,12 @@ export function VoucherRedeemForm() {
           <input
             type="text"
             value={code}
-            onChange={e => setCode(e.target.value.toUpperCase())}
+            onChange={handleChange}
+            onPaste={handlePaste}
             placeholder="OLLUQ-XXXX-XXXX"
-            maxLength={18}
+            maxLength={14}
+            autoComplete="off"
+            spellCheck={false}
             className="flex-1 rounded-xl px-4 py-3 text-sm font-mono tracking-wider placeholder:font-sans placeholder:tracking-normal"
             style={{
               background: 'var(--bg-tertiary)',

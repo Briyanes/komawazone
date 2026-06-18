@@ -82,15 +82,26 @@ export default async function MangaDetailPage({ params }: Props) {
     }
   }
 
+  // Dead manga CDN domains - their images return 403/404 forever
+  const DEAD_DOMAINS = ['gmbr.pro', 'gmbar.xyz'];
+
+  const isDeadUrl = (url: string | null | undefined): boolean => {
+    if (!url) return true;
+    return DEAD_DOMAINS.some(d => url.includes(d));
+  };
+
   const chapters = manga.chapters.slice().sort((a, b) => b.number - a.number).map(ch => {
     const imgs = (ch.chapter_images ?? []).slice().sort((a, b) => a.number - b.number);
-    // ALWAYS prioritize the 5th image (index 4) from chapter_images as thumbnail.
-    // Do NOT trust ch.thumbnail_url from DB because it may be stale/wrong
-    // (e.g. set to cover image, or set to first image by old buggy code).
-    // Only fall back to thumbnail_url if chapter_images is empty (metadata-only import).
+    // Use the 5th image (index 4) as thumbnail, but ONLY if it's from a working domain.
+    // Dead domains like gmbr.pro return 403, so skip them to avoid broken thumbnails.
+    const fifth = imgs[4]?.image_url;
+    const first = imgs[0]?.image_url;
     return {
       ...ch,
-      thumbnail_url: imgs[4]?.image_url ?? imgs[0]?.image_url ?? ch.thumbnail_url ?? null,
+      thumbnail_url: !isDeadUrl(fifth) ? fifth
+                     : !isDeadUrl(first) ? first
+                     : !isDeadUrl(ch.thumbnail_url) ? ch.thumbnail_url
+                     : null,
     };
   });
   const firstChapter = [...manga.chapters].sort((a, b) => a.number - b.number)[0];

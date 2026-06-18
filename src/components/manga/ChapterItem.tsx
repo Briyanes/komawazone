@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
 import { Eye, Lock } from 'lucide-react';
@@ -36,6 +37,8 @@ export function ChapterItem({
   const timeAgo = formatDistanceToNow(new Date(releaseDate), { addSuffix: true });
   const href = isLocked ? '/vip' : `/manga/${mangaSlug}/chapter/${id}`;
   const proxiedThumb = proxyImageUrl(thumbnailUrl);
+  const [imgError, setImgError] = useState(false);
+  const showThumb = !!proxiedThumb && !imgError;
 
   return (
     <Link
@@ -49,14 +52,15 @@ export function ChapterItem({
       )}
     >
       {/* Thumbnail or number badge */}
-      {proxiedThumb ? (
+      {showThumb ? (
         <div className="relative shrink-0 overflow-hidden rounded-lg" style={{ width: 100, height: 68 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
-            src={proxiedThumb}
+            src={proxiedThumb as string}
             alt={`Chapter ${number}`}
             className="h-full w-full object-cover"
             loading="lazy"
+            onError={() => setImgError(true)}
             style={isLocked ? { filter: 'blur(6px)' } : undefined}
           />
           {isLocked && (
