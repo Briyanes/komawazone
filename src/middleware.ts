@@ -2,46 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { HUB_DOMAIN, READER_DOMAIN, isHubAllowedPath } from '@/config/domains';
 
-/** Subdomains that should redirect to the reader domain */
-const READER_SUBDOMAINS = ['read', '01', 'www'];
-
-/**
- * Suspicious User-Agent patterns commonly used by scrapers, downloaders, and bots.
- * Legitimate browsers (Chrome, Firefox, Safari, Edge) send a UA containing "Mozilla/".
- */
-const BLOCKED_UA_PATTERNS = [
-  'curl',
-  'wget',
-  'python-requests',
-  'python-httpx',
-  'python-urllib',
-  'httpx',
-  'axios',
-  'node-fetch',
-  'got/',
-  'postman',
-  'insomnia',
-  'httpie',
-  'scrapy',
-  'mechanize',
-  'phantomjs',
-  'headless',
-  'puppeteer',
-  'selenium',
-  'wkhtmltopdf',
-  'aria2',
-  'internet-archive',
-  'heritrix',
-  'openvas',
-  'nikto',
-  'sqlmap',
-  'masscan',
-  'nmap',
-  'crawler',
-  'spider',
-  'scraper',
-];
-
 /**
  * R2 image proxy hotlink protection.
  * Allow requests only when:
@@ -58,18 +18,8 @@ const ALLOWED_IMAGE_REFERRERS = [
   'vercel.app', // preview deployments
 ];
 
-/**
- * Check if a User-Agent looks like a legitimate browser.
- * Real browsers always send "Mozilla/5.0" at the start.
- */
-function isLegitimateBrowserUA(ua: string | null): boolean {
-  if (!ua || ua.length < 10) return false;
-  const lower = ua.toLowerCase();
-  // Real browsers always contain Mozilla/5.0
-  if (!lower.includes('mozilla/5.0')) return false;
-  // Check against blocked patterns
-  return !BLOCKED_UA_PATTERNS.some((p) => lower.includes(p));
-}
+const READER_SUBDOMAINS = ['read', '01', 'www'];
+
 
 /**
  * Log suspicious activity (could be extended to write to DB / Sentry)
@@ -79,7 +29,6 @@ function logSuspiciousActivity(
   request: NextRequest,
   extra?: Record<string, unknown>
 ) {
-  // eslint-disable-next-line no-console
   console.warn(`[SECURITY:${type}]`, {
     ip:
       request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
@@ -96,6 +45,7 @@ function logSuspiciousActivity(
 export async function middleware(request: NextRequest) {
   const host = request.headers.get('host') ?? '';
   const { pathname } = request.nextUrl;
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const userAgent = request.headers.get('user-agent');
 
   // Normalize host (remove port for local dev)

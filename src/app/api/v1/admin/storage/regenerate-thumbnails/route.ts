@@ -49,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     let chapters = nullResult.data ?? [];
-    let nullCount = chapters.length;
+    const nullCount = chapters.length;
 
     // Step 2: If fewer than limit, fill with chapters that have thumbnails (fix wrong ones)
     if (chapters.length < limit) {
@@ -242,7 +242,7 @@ export async function GET(request: NextRequest) {
   // Count "wrong" thumbnails: thumbnail_url != 5th image's URL
   // We need to sample chapters and check their images
   let wrongCount = 0;
-  let auditedSample: Array<{
+  const auditedSample: Array<{
     chapter_id: string;
     chapter_number: number;
     manga_id: string;

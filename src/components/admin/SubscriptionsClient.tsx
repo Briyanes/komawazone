@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useTransition, useEffect } from 'react';
+import { useState, useTransition, useEffect, useCallback } from 'react';
 import { Crown, Search, Plus, X, Ticket, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { Button } from '@/components/ui/Button';
@@ -65,19 +65,19 @@ export function SubscriptionsClient({ initialSubscriptions }: SubscriptionsClien
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [copiedAll, setCopiedAll] = useState(false);
 
-  // Load vouchers when voucher tab is opened
-  useEffect(() => {
-    if (activeTab === 'vouchers') loadVouchers();
-  }, [activeTab, voucherFilter]);
-
-  async function loadVouchers() {
+  // Load vouchers when voucher tab is opened or filter changes
+  const loadVouchers = useCallback(async () => {
     try {
       const filterParam = voucherFilter !== 'all' ? `?filter=${voucherFilter}` : '';
       const res = await fetch(`/api/v1/admin/vouchers${filterParam}`);
       const data = await res.json() as { status: string; data: Voucher[] };
       if (data.status === 'success') setVouchers(data.data);
     } catch { /* network error */ }
-  }
+  }, [voucherFilter]);
+
+  useEffect(() => {
+    if (activeTab === 'vouchers') loadVouchers();
+  }, [activeTab, loadVouchers]);
 
   const handleGenerate = () => {
     setError('');
@@ -317,7 +317,7 @@ export function SubscriptionsClient({ initialSubscriptions }: SubscriptionsClien
           <div className="rounded-2xl overflow-hidden border" style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
             {vouchers.length === 0 ? (
               <div className="py-10 text-center text-sm" style={{ color: 'var(--text-tertiary)' }}>
-                Belum ada voucher. Click "Generate Voucher" untuk membuat.
+                Belum ada voucher. Klik &ldquo;Generate Voucher&rdquo; untuk membuat.
               </div>
             ) : (
               <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>

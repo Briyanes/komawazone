@@ -245,9 +245,13 @@ export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null,
 }
 
 export async function getMangaBySlug(slug: string): Promise<MangaWithChapters | null> {
-  const supabase = await createClient();
+  // Use admin client so RLS doesn't hide chapter_images rows from guest users.
+  // Without this, nested chapter_images can be silently filtered out by RLS,
+  // causing the manga detail page to fall back to stale thumbnail_url from DB
+  // (which may show cover/first page instead of the correct 5th-page thumbnail).
+  const adminSupabase = createAdminClient();
 
-  const { data, error } = await supabase
+  const { data, error } = await adminSupabase
     .from('manga')
     .select(`*, chapters(id, number, title, release_date, views, thumbnail_url, chapter_images(image_url, number)), uploader:users(username, email)`)
     .eq('slug', slug)
@@ -259,8 +263,8 @@ export async function getMangaBySlug(slug: string): Promise<MangaWithChapters | 
 
   const mangaId = (data as { id: string }).id;
   const [bRes, lRes] = await Promise.all([
-    supabase.from('bookmarks').select('id', { count: 'exact', head: true }).eq('manga_id', mangaId),
-    supabase.from('likes').select('id', { count: 'exact', head: true }).eq('manga_id', mangaId),
+    adminSupabase.from('bookmarks').select('id', { count: 'exact', head: true }).eq('manga_id', mangaId),
+    adminSupabase.from('likes').select('id', { count: 'exact', head: true }).eq('manga_id', mangaId),
   ]);
 
   return {

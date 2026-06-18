@@ -40,7 +40,6 @@ async function streamToBuffer(stream: Readable | ReadableStream | unknown): Prom
   if (typeof ReadableStream !== 'undefined' && stream instanceof ReadableStream) {
     const reader = (stream as ReadableStream).getReader();
     const chunks: Uint8Array[] = [];
-    // eslint-disable-next-line no-constant-condition
     while (true) {
       const { done, value } = await reader.read();
       if (done) break;

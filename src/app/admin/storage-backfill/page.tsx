@@ -490,6 +490,7 @@ export default function StorageBackfillPage() {
             Regenerate Chapter Thumbnails
           </h2>
           <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(99,102,241,0.1)', color: '#6366f1' }}>
+            {/* eslint-disable-next-line jsx-a11y/alt-text -- lucide icon, not an <img> */}
             <Image size={10} /> Thumbnail
           </span>
         </div>
