@@ -83,9 +83,24 @@ export function validateScraperUrl(rawUrl: string): string | null {
     return 'URL mengarah ke jaringan internal — tidak diizinkan';
   }
 
-  // Must be from a known manga source
+  // Must be from a known manga source OR a known image CDN
+  const ALLOWED_IMAGE_CDN_DOMAINS = [
+    'gmbr.pro',        // manhwaland image CDN (api-l.gmbr.pro, img-uwak.gmbr.pro, etc.)
+    'gmbar.xyz',       // alternate image CDN
+    'kambingjantan.cc',
+    'shinigami.asia',
+    'cdntapudehay.com',
+    'dotapovie.cc',
+  ];
+
   if (!detectMangaSource(rawUrl)) {
-    return 'Domain tidak didukung. Gunakan URL dari sumber yang terdaftar.';
+    // Check if it's an allowed image CDN
+    const isAllowedCdn = ALLOWED_IMAGE_CDN_DOMAINS.some(domain =>
+      hostname === domain || hostname.endsWith(`.${domain}`)
+    );
+    if (!isAllowedCdn) {
+      return 'Domain tidak didukung. Gunakan URL dari sumber yang terdaftar.';
+    }
   }
 
   return null;
