@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, BookOpen, FileText, Megaphone, BarChart2,
   Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag, Download, Crown, Globe, Ticket, HardDrive, LogOut, Image,
@@ -55,6 +56,23 @@ interface AdminSidebarProps {
 
 function SidebarContent({ onClose }: { onClose?: () => void }) {
   const pathname = usePathname();
+  const [badgeCounts, setBadgeCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    let cancelled = false;
+    const supabase = createClient();
+    Promise.all([
+      // chapter_reports: no status column, count all
+      supabase.from('chapter_reports').select('id', { count: 'exact', head: true }),
+      // manga_reports: status is 'pending' | 'reviewed' | 'resolved', count pending
+      supabase.from('manga_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+    ]).then(([chapterRes, mangaRes]) => {
+      if (cancelled) return;
+      const reports = (chapterRes.count ?? 0) + (mangaRes.count ?? 0);
+      setBadgeCounts({ '/admin/reports': reports });
+    }).catch(() => {});
+    return () => { cancelled = true; };
+  }, []);
 
   return (
     <div className="flex h-full flex-col">
@@ -98,6 +116,7 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
                 const isActive = item.href === '/admin'
                   ? pathname === '/admin'
                   : pathname.startsWith(item.href);
+                const badge = badgeCounts[item.href] ?? 0;
                 return (
                   <Link
                     key={item.href}
@@ -116,6 +135,17 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
                   >
                     <item.icon size={16} className="shrink-0" />
                     {item.label}
+                    {badge > 0 && (
+                      <span
+                        className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full px-1 text-[9px] font-bold tabular-nums"
+                        style={{
+                          background: isActive ? 'rgba(255,255,255,0.25)' : '#EF4444',
+                          color: 'white',
+                        }}
+                      >
+                        {badge > 99 ? '99+' : badge}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

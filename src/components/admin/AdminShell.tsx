@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { Toaster } from 'sonner';
 import { AdminSidebar } from './AdminSidebar';
 import { AdminHeader } from './AdminHeader';
 
@@ -30,6 +31,18 @@ export function AdminShell({ profile, children }: AdminShellProps) {
           {children}
         </main>
       </div>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'var(--bg-secondary)',
+            border: '1px solid var(--border-light)',
+            color: 'var(--text-primary)',
+          },
+        }}
+        closeButton
+        richColors
+      />
     </div>
   );
 }

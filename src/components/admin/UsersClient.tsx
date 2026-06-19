@@ -4,6 +4,9 @@ import { useState, useMemo } from 'react';
 import { Search, X, Users } from 'lucide-react';
 import { ChangeRoleButton } from '@/components/admin/ChangeRoleButton';
 import { SelectInput } from '@/components/ui/SelectInput';
+import { Pagination } from '@/components/ui/admin-table';
+
+const PAGE_SIZE = 25;
 
 interface UserRow {
   id: string;
@@ -17,6 +20,7 @@ interface UserRow {
 export function UsersClient({ users: initial, meId }: { users: UserRow[]; meId: string | undefined }) {
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('ALL');
+  const [page, setPage] = useState(1);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -26,6 +30,10 @@ export function UsersClient({ users: initial, meId }: { users: UserRow[]; meId: 
       return matchSearch && matchRole;
     });
   }, [initial, search, roleFilter]);
+
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
   return (
     <div className="w-full space-y-4">
@@ -37,10 +45,15 @@ export function UsersClient({ users: initial, meId }: { users: UserRow[]; meId: 
             style={{ background: 'rgba(255,107,53,0.12)', color: 'var(--color-primary)' }}>
             {filtered.length}{search || roleFilter !== 'ALL' ? ` / ${initial.length}` : ''}
           </span>
+          {totalPages > 1 && (
+            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              · Hal {currentPage}/{totalPages}
+            </span>
+          )}
         </div>
         <div className="relative flex-1 min-w-[200px]">
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-tertiary)' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)}
+          <input value={search} onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder="Cari username atau email…"
             className="w-full rounded-lg pl-8 pr-8 py-2 text-sm outline-none"
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }} />
@@ -50,7 +63,7 @@ export function UsersClient({ users: initial, meId }: { users: UserRow[]; meId: 
             </button>
           )}
         </div>
-        <SelectInput value={roleFilter} onChange={e => setRoleFilter(e.target.value)} className="max-w-[130px]">
+        <SelectInput value={roleFilter} onChange={e => { setRoleFilter(e.target.value); setPage(1); }} className="max-w-[130px]">
           <option value="ALL">Semua Role</option>
           <option value="USER">User</option>
           <option value="ADMIN">Admin</option>
@@ -75,7 +88,7 @@ export function UsersClient({ users: initial, meId }: { users: UserRow[]; meId: 
           </div>
         ) : (
           <div className="divide-y" style={{ borderColor: 'var(--border-light)' }}>
-            {filtered.map(u => (
+            {paged.map(u => (
               <div key={u.id} className="grid items-center px-4 py-2.5"
                 style={{ gridTemplateColumns: '1fr 80px 120px 80px' }}>
                 <div className="min-w-0 pr-3">
@@ -101,6 +114,16 @@ export function UsersClient({ users: initial, meId }: { users: UserRow[]; meId: 
           </div>
         )}
       </div>
+
+      {totalPages > 1 && (
+        <Pagination
+          page={currentPage}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          total={filtered.length}
+          pageSize={PAGE_SIZE}
+        />
+      )}
     </div>
   );
 }

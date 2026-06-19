@@ -3,6 +3,9 @@
 import { useState, useMemo } from 'react';
 import { Search, X, MessageCircle, Heart } from 'lucide-react';
 import { DeleteCommentButton } from '@/components/admin/DeleteCommentButton';
+import { Pagination } from '@/components/ui/admin-table';
+
+const PAGE_SIZE = 20;
 
 interface Comment {
   id: string;
@@ -20,6 +23,7 @@ export function CommentsClient({ comments: initial }: { comments: Comment[] }) {
   const [search, setSearch]         = useState('');
   const [comments, setComments]     = useState<Comment[]>(initial);
   const [typeFilter, setTypeFilter] = useState<'all' | 'manga' | 'chapter'>('all');
+  const [page, setPage]             = useState(1);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -34,6 +38,10 @@ export function CommentsClient({ comments: initial }: { comments: Comment[] }) {
     });
   }, [comments, search, typeFilter]);
 
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE) || 1;
+  const currentPage = Math.min(page, totalPages);
+  const paged = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   const onDelete = (id: string) => setComments(prev => prev.filter(c => c.id !== id));
 
   return (
@@ -46,11 +54,16 @@ export function CommentsClient({ comments: initial }: { comments: Comment[] }) {
             style={{ background: 'rgba(255,107,53,0.12)', color: 'var(--color-primary)' }}>
             {filtered.length}{search || typeFilter !== 'all' ? ` / ${comments.length}` : ''}
           </span>
+          {totalPages > 1 && (
+            <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+              · Hal {currentPage}/{totalPages}
+            </span>
+          )}
         </div>
         {/* Type tabs */}
         <div className="flex gap-1">
           {(['all', 'manga', 'chapter'] as const).map(t => (
-            <button key={t} onClick={() => setTypeFilter(t)}
+            <button key={t} onClick={() => { setTypeFilter(t); setPage(1); }}
               className="rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors"
               style={{
                 background: typeFilter === t ? 'var(--color-primary)' : 'var(--bg-tertiary)',
@@ -64,7 +77,7 @@ export function CommentsClient({ comments: initial }: { comments: Comment[] }) {
           <Search size={13} className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: 'var(--text-tertiary)' }} />
           <input
             value={search}
-            onChange={e => setSearch(e.target.value)}
+            onChange={e => { setSearch(e.target.value); setPage(1); }}
             placeholder="Cari user, manga, atau konten…"
             className="w-full rounded-lg pl-8 pr-8 py-2 text-sm outline-none"
             style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
@@ -85,53 +98,65 @@ export function CommentsClient({ comments: initial }: { comments: Comment[] }) {
           </p>
         </div>
       ) : (
-        <div className="rounded-xl overflow-hidden border divide-y"
-          style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
-          {filtered.map(c => {
-            const chapterManga = c.chapter?.manga;
-            const directManga = c.manga;
-            const mangaTitle = directManga?.title ?? chapterManga?.title;
-            const mangaSlug  = directManga?.slug  ?? chapterManga?.slug;
-            const href = c.chapter_id
-              ? `/manga/${mangaSlug}/chapter/${c.chapter_id}`
-              : mangaSlug ? `/manga/${mangaSlug}` : '#';
-            const label = c.chapter_id
-              ? `${mangaTitle} — Ch. ${c.chapter?.number}`
-              : mangaTitle ?? '—';
+        <>
+          <div className="rounded-xl overflow-hidden border divide-y"
+            style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}>
+            {paged.map(c => {
+              const chapterManga = c.chapter?.manga;
+              const directManga = c.manga;
+              const mangaTitle = directManga?.title ?? chapterManga?.title;
+              const mangaSlug  = directManga?.slug  ?? chapterManga?.slug;
+              const href = c.chapter_id
+                ? `/manga/${mangaSlug}/chapter/${c.chapter_id}`
+                : mangaSlug ? `/manga/${mangaSlug}` : '#';
+              const label = c.chapter_id
+                ? `${mangaTitle} — Ch. ${c.chapter?.number}`
+                : mangaTitle ?? '—';
 
-            return (
-              <div key={c.id} className="flex items-start gap-4 px-5 py-3.5">
-                <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
-                  style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
-                  {c.user?.username?.[0]?.toUpperCase() ?? 'U'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mb-1">
-                    <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      {c.user?.username ?? c.user?.email ?? 'anonymous'}
-                    </span>
-                    <a href={href} target="_blank" rel="noreferrer"
-                      className="text-xs hover:underline" style={{ color: 'var(--color-primary)' }}>
-                      {label}
-                    </a>
-                    <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                      {new Date(c.created_at).toLocaleDateString('id-ID')}
-                    </span>
-                    {c.likes_count > 0 && (
-                      <span className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--text-tertiary)' }}>
-                        <Heart size={10} className="fill-current text-pink-400" />{c.likes_count}
-                      </span>
-                    )}
+              return (
+                <div key={c.id} className="flex items-start gap-4 px-5 py-3.5">
+                  <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-full text-xs font-bold"
+                    style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--text-secondary)' }}>
+                    {c.user?.username?.[0]?.toUpperCase() ?? 'U'}
                   </div>
-                  <p className="text-sm line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
-                    {c.content}
-                  </p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 mb-1">
+                      <span className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                        {c.user?.username ?? c.user?.email ?? 'anonymous'}
+                      </span>
+                      <a href={href} target="_blank" rel="noreferrer"
+                        className="text-xs hover:underline" style={{ color: 'var(--color-primary)' }}>
+                        {label}
+                      </a>
+                      <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                        {new Date(c.created_at).toLocaleDateString('id-ID')}
+                      </span>
+                      {c.likes_count > 0 && (
+                        <span className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--text-tertiary)' }}>
+                          <Heart size={10} className="fill-current text-pink-400" />{c.likes_count}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-sm line-clamp-3" style={{ color: 'var(--text-secondary)' }}>
+                      {c.content}
+                    </p>
+                  </div>
+                  <DeleteCommentButton id={c.id} onDelete={() => onDelete(c.id)} />
                 </div>
-                <DeleteCommentButton id={c.id} onDelete={() => onDelete(c.id)} />
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+
+          {totalPages > 1 && (
+            <Pagination
+              page={currentPage}
+              totalPages={totalPages}
+              onPageChange={setPage}
+              total={filtered.length}
+              pageSize={PAGE_SIZE}
+            />
+          )}
+        </>
       )}
     </div>
   );
