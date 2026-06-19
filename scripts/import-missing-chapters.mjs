@@ -1,15 +1,18 @@
 /**
- * Import chapters for manga that have NO chapters at all.
+ * FAST PARALLEL Import chapters for manga that have NO chapters at all.
  *
- * This script runs locally with the SERVICE ROLE key, bypassing RLS.
- * It fixes the problem where the dashboard "Import Chapter Semua Manga"
- * button creates jobs that look successful ("50 manga diperbarui") but
- * actually insert 0 chapters (because after() loses auth context on Vercel).
+ * Improvements:
+ * - Parallel batch processing (10+ concurrent) instead of sequential
+ * - Auto-resume (skips manga that already have chapters)
+ * - Retry logic (3x with backoff)
+ * - Progress checkpoint (saves to JSON file, can resume if interrupted)
+ * - PAGINATED queries (bypasses Supabase 1000-row default limit)
  *
  * Usage:
  *   node scripts/import-missing-chapters.mjs              # all manga without chapters
  *   node scripts/import-missing-chapters.mjs --limit 50   # first 50 only
  *   node scripts/import-missing-chapters.mjs --slug xxx   # specific manga slug
+ *   node scripts/import-missing-chapters.mjs --concurrency 20  # more aggressive
  */
 import { createClient } from '@supabase/supabase-js';
 import fs from 'fs';
@@ -39,7 +42,42 @@ const sb = createClient(SUPABASE_URL, SERVICE_KEY, {
   auth: { persistSession: false, autoRefreshToken: false },
 });
 
+// ── Config ───────────────────────────────────────────────────────
+const CONCURRENCY = parseInt(process.argv[process.argv.indexOf('--concurrency') + 1] || '10', 10);
+const PROGRESS_FILE = path.resolve(process.cwd(), 'scripts/.import-progress.json');
+
 // ── Helpers ──────────────────────────────────────────────────────
+
+/**
+ * Paginate through ALL rows of a Supabase query (bypasses 1000-row default limit).
+ */
+async function fetchAll(table, select, filters = {}) {
+  const PAGE = 1000;
+  let all = [];
+  let offset = 0;
+  while (true) {
+    let q = sb.from(table).select(select).range(offset, offset + PAGE - 1);
+    for (const [key, val] of Object.entries(filters)) {
+      if (val === null) {
+        q = q.is(key, null);
+      } else if (val === 'not-null') {
+        q = q.not(key, 'is', null);
+      } else if (Array.isArray(val)) {
+        q = q.in(key, val);
+      } else {
+        q = q.eq(key, val);
+      }
+    }
+    const { data, error } = await q;
+    if (error) throw new Error(`fetchAll(${table}): ${error.message}`);
+    if (!data || data.length === 0) break;
+    all = all.concat(data);
+    if (data.length < PAGE) break;
+    offset += PAGE;
+  }
+  return all;
+}
+
 function normalizeIndonesianDate(raw) {
   return raw
     .replace(/Januari/i, 'January')
@@ -55,11 +93,11 @@ function normalizeIndonesianDate(raw) {
 
 /**
  * Parse chapter list from manhwaland.land HTML.
- * Ported from src/lib/scrapers/manga-scraper.ts → parseChapterListFromHtml
  */
 function parseChapterListFromHtml(html) {
   const chapters = [];
 
+  // Path 1: Madara theme with #chapterlist / .eplister
   if (html.includes('id="chapterlist"') || html.includes('class="eplister"')) {
     const liRe = /<li[^>]+data-num="(\d+(?:\.\d+)?)"[^>]*>([\s\S]*?)<\/li>/gi;
     let liMatch;
@@ -74,7 +112,7 @@ function parseChapterListFromHtml(html) {
       const numMatch = block.match(/<span[^>]+class="chapternum"[^>]*>\s*(?:Chapter\s*)?(\d+(?:\.\d+)?)/i);
       const number = numMatch ? parseFloat(numMatch[1]) : dataNum;
 
-      // Always use "Chapter N" — manhwaland prepends manga title (e.g. "Manga X Chapter 1")
+      // Always use "Chapter N" — manhwaland prepends manga title
       const title = `Chapter ${number}`;
 
       const dateRaw = block.match(/<span[^>]+class="chapterdate"[^>]*>([^<]+)/i)?.[1]?.trim() ?? null;
@@ -88,11 +126,11 @@ function parseChapterListFromHtml(html) {
     if (chapters.length > 0) return chapters.sort((a, b) => a.number - b.number);
   }
 
-  // Fallback: Madara wp-manga-chapter
-  const liRe = /<li[^>]+class="[^"]*wp-manga-chapter[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
-  let liMatch;
-  while ((liMatch = liRe.exec(html)) !== null) {
-    const block = liMatch[1];
+  // Path 2: Madara wp-manga-chapter fallback
+  const liRe2 = /<li[^>]+class="[^"]*wp-manga-chapter[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
+  let liMatch2;
+  while ((liMatch2 = liRe2.exec(html)) !== null) {
+    const block = liMatch2[1];
     const aMatch = block.match(/<a[^>]+href=["']([^"']+)["'][^>]*>\s*([\s\S]*?)\s*<\/a>/i);
     if (!aMatch) continue;
     const url = aMatch[1].trim();
@@ -107,7 +145,6 @@ function parseChapterListFromHtml(html) {
     if (dateRaw) {
       try { releasedAt = new Date(normalizeIndonesianDate(dateRaw)).toISOString(); } catch { /* ignore */ }
     }
-    // Always use "Chapter N" — avoid manga title in chapter title
     chapters.push({ number, title: `Chapter ${number}`, url, releasedAt });
   }
 
@@ -131,6 +168,103 @@ function sleep(ms) {
   return new Promise(r => setTimeout(r, ms));
 }
 
+// ── Fetch with retry ─────────────────────────────────────────────
+async function fetchWithRetry(url, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const res = await fetch(url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+          'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
+        },
+        signal: AbortSignal.timeout(15_000),
+      });
+
+      if (!res.ok) {
+        if (attempt < maxRetries - 1) {
+          await sleep(1000 * (attempt + 1));
+          continue;
+        }
+        return { error: `HTTP ${res.status}` };
+      }
+
+      const html = await res.text();
+
+      if (isBlockedPage(html)) {
+        if (attempt < maxRetries - 1) {
+          await sleep(2000 * (attempt + 1));
+          continue;
+        }
+        return { error: 'CloudFlare blocked' };
+      }
+
+      return { html };
+    } catch (err) {
+      if (attempt < maxRetries - 1) {
+        await sleep(1000 * (attempt + 1));
+        continue;
+      }
+      return { error: err.message };
+    }
+  }
+  return { error: 'Max retries exceeded' };
+}
+
+// ── Process single manga ─────────────────────────────────────────
+async function processManga(manga) {
+  const { html, error } = await fetchWithRetry(manga.source_url);
+  if (error) return { status: 'failed', error, chapters: 0 };
+
+  const chapters = parseChapterListFromHtml(html);
+  if (chapters.length === 0) return { status: 'skipped', error: 'No chapters', chapters: 0 };
+
+  // Deduplicate by number
+  const seen = new Set();
+  const rows = [];
+  for (const ch of chapters) {
+    const key = ch.number;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    rows.push({
+      manga_id: manga.id,
+      number: ch.number,
+      title: ch.title || `Chapter ${ch.number}`,
+      deleted_at: null,
+      ...(ch.releasedAt ? { release_date: ch.releasedAt } : {}),
+    });
+  }
+
+  let insertedCount = 0;
+  for (let i = 0; i < rows.length; i += 50) {
+    const { data, error: upsertErr } = await sb
+      .from('chapters')
+      .upsert(rows.slice(i, i + 50), { onConflict: 'manga_id,number' })
+      .select('id');
+
+    if (!upsertErr) {
+      insertedCount += (data?.length ?? 0);
+    }
+  }
+
+  return { status: 'ok', chapters: insertedCount };
+}
+
+// ── Progress checkpoint ──────────────────────────────────────────
+function loadProgress() {
+  try {
+    if (fs.existsSync(PROGRESS_FILE)) {
+      return JSON.parse(fs.readFileSync(PROGRESS_FILE, 'utf-8'));
+    }
+  } catch { /* ignore */ }
+  return { completed: [], failed: [], lastRun: null };
+}
+
+function saveProgress(progress) {
+  progress.lastRun = new Date().toISOString();
+  fs.writeFileSync(PROGRESS_FILE, JSON.stringify(progress, null, 2));
+}
+
 // ── Main ─────────────────────────────────────────────────────────
 async function main() {
   const args = process.argv.slice(2);
@@ -140,150 +274,100 @@ async function main() {
   const specificSlug = slugIdx !== -1 ? args[slugIdx + 1] : null;
 
   console.log('━'.repeat(60));
-  console.log('📦 IMPORT MISSING CHAPTERS — Local Script');
+  console.log('🚀 FAST PARALLEL IMPORT — Missing Chapters');
+  console.log(`   Concurrency: ${CONCURRENCY}`);
   console.log('━'.repeat(60));
 
-  // 1. Get all manga IDs that already have chapters
-  const { data: existingChapters } = await sb
-    .from('chapters')
-    .select('manga_id')
-    .is('deleted_at', null);
-
-  const mangaWithChapters = new Set((existingChapters ?? []).map(c => c.manga_id));
+  // 1. Get all manga IDs that already have chapters (PAGINATED)
+  console.log('📥 Fetching existing chapters (paginated)...');
+  const existingChapters = await fetchAll('chapters', 'manga_id', { deleted_at: null });
+  const mangaWithChapters = new Set(existingChapters.map(c => c.manga_id));
   console.log(`📊 Manga WITH chapters: ${mangaWithChapters.size}`);
 
-  // 2. Get all manga with source_url
-  let query = sb
-    .from('manga')
-    .select('id, slug, title, source_url')
-    .not('source_url', 'is', null)
-    .is('deleted_at', null)
-    .order('title', { ascending: true });
-
+  // 2. Get all manga with source_url (PAGINATED)
+  console.log('📥 Fetching all manga (paginated)...');
+  let allManga = await fetchAll('manga', 'id, slug, title, source_url', { deleted_at: null });
+  allManga = allManga.filter(m => m.source_url != null);
   if (specificSlug) {
-    query = query.eq('slug', specificSlug);
+    allManga = allManga.filter(m => m.slug === specificSlug);
   }
-
-  const { data: allManga, error: mangaErr } = await query;
-  if (mangaErr) {
-    console.error('❌ Error fetching manga:', mangaErr.message);
-    process.exit(1);
-  }
+  // Sort by title for consistent ordering
+  allManga.sort((a, b) => (a.title || '').localeCompare(b.title || ''));
+  console.log(`📊 Total manga with source_url: ${allManga.length}`);
 
   // 3. Filter manga without chapters
-  const mangaWithoutChapters = (allManga ?? []).filter(m => !mangaWithChapters.has(m.id));
-  console.log(`📊 Manga WITHOUT chapters: ${mangaWithoutChapters.length}`);
+  let targets = allManga.filter(m => !mangaWithChapters.has(m.id));
+  console.log(`📊 Manga WITHOUT chapters: ${targets.length}`);
 
-  if (mangaWithoutChapters.length === 0) {
+  if (targets.length === 0) {
     console.log('✅ All manga already have chapters!');
     return;
   }
 
-  const targets = limit > 0 ? mangaWithoutChapters.slice(0, limit) : mangaWithoutChapters;
+  // 4. Load progress (skip already completed from previous runs)
+  const progress = loadProgress();
+  const completedSet = new Set(progress.completed);
+  const beforeSkip = targets.length;
+  targets = targets.filter(m => !completedSet.has(m.id));
+  if (beforeSkip > targets.length) {
+    console.log(`⏭️  Skipping ${beforeSkip - targets.length} already completed (from checkpoint)`);
+  }
+
+  if (limit > 0) {
+    targets = targets.slice(0, limit);
+  }
+
   console.log(`🎯 Will process: ${targets.length} manga`);
   console.log('━'.repeat(60));
   console.log('');
 
+  // 5. Process in parallel batches
   let processed = 0;
   let totalChaptersAdded = 0;
   let failed = 0;
   let skipped = 0;
+  const startTime = Date.now();
 
-  for (const manga of targets) {
-    processed++;
-    const prefix = `[${processed}/${targets.length}]`;
+  for (let i = 0; i < targets.length; i += CONCURRENCY) {
+    const batch = targets.slice(i, i + CONCURRENCY);
 
-    try {
-      // Fetch manga page
-      const res = await fetch(manga.source_url, {
-        headers: {
-          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36',
-          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
-          'Accept-Language': 'en-US,en;q=0.9,id;q=0.8',
-          'Referer': manga.source_url,
-        },
-        signal: AbortSignal.timeout(20_000),
-      });
+    const results = await Promise.all(
+      batch.map(async (manga) => {
+        const result = await processManga(manga);
+        return { manga, ...result };
+      })
+    );
 
-      if (!res.ok) {
-        console.log(`${prefix} ❌ ${manga.title?.slice(0, 40)} — HTTP ${res.status}`);
-        failed++;
-        await sleep(500);
-        continue;
-      }
+    for (const r of results) {
+      processed++;
+      const prefix = `[${processed}/${targets.length}]`;
+      const title = r.manga.title?.slice(0, 35) ?? r.manga.slug;
 
-      const html = await res.text();
-
-      if (isBlockedPage(html)) {
-        console.log(`${prefix} 🚫 ${manga.title?.slice(0, 40)} — CloudFlare blocked`);
-        failed++;
-        await sleep(2000 + Math.random() * 1000);
-        continue;
-      }
-
-      const chapters = parseChapterListFromHtml(html);
-
-      if (chapters.length === 0) {
-        console.log(`${prefix} ⚠️  ${manga.title?.slice(0, 40)} — No chapters found`);
+      if (r.status === 'ok') {
+        totalChaptersAdded += r.chapters;
+        progress.completed.push(r.manga.id);
+        console.log(`${prefix} ✅ ${title} — ${r.chapters} chapters`);
+      } else if (r.status === 'skipped') {
         skipped++;
-        await sleep(300);
-        continue;
+        progress.completed.push(r.manga.id);
+        console.log(`${prefix} ⚠️  ${title} — ${r.error}`);
+      } else {
+        failed++;
+        progress.failed.push({ id: r.manga.id, slug: r.manga.slug, error: r.error });
+        console.log(`${prefix} ❌ ${title} — ${r.error}`);
       }
-
-      // Upsert chapters (metadata only — images fetched lazily later)
-      // Include deleted_at: null to "un-delete" any soft-deleted chapters
-      // Deduplicate by number to avoid "affect row a second time" error
-      const seen = new Set();
-      const rows = [];
-      for (const ch of chapters) {
-        const key = `${manga.id}:${ch.number}`;
-        if (seen.has(key)) continue;
-        seen.add(key);
-        rows.push({
-          manga_id: manga.id,
-          number: ch.number,
-          title: ch.title || `Chapter ${ch.number}`,
-          deleted_at: null,
-          ...(ch.releasedAt ? { release_date: ch.releasedAt } : {}),
-        });
-      }
-
-      let insertedCount = 0;
-      // Batch upsert in groups of 50
-      // Use merge (NOT ignoreDuplicates) to "un-delete" soft-deleted chapters
-      for (let i = 0; i < rows.length; i += 50) {
-        const { data: upsertData, error: upsertErr } = await sb
-          .from('chapters')
-          .upsert(rows.slice(i, i + 50), {
-            onConflict: 'manga_id,number',
-          })
-          .select('id');
-
-        if (upsertErr) {
-          console.error(`${prefix}   ❌ Upsert error:`, upsertErr.message);
-        } else {
-          insertedCount += (upsertData?.length ?? 0);
-        }
-      }
-
-      totalChaptersAdded += insertedCount;
-      console.log(`${prefix} ✅ ${manga.title?.slice(0, 40)} — ${insertedCount}/${chapters.length} chapters`);
-
-      // Rate limit: wait between manga
-      await sleep(800 + Math.random() * 500);
-
-    } catch (err) {
-      console.error(`${prefix} ❌ ${manga.title?.slice(0, 40)} — ${err.message}`);
-      failed++;
-      await sleep(1000);
     }
 
-    // Progress update every 10 manga
-    if (processed % 10 === 0) {
-      console.log('');
-      console.log(`  📈 Progress: ${processed}/${targets.length} | Added: ${totalChaptersAdded} chapters | Failed: ${failed}`);
-      console.log('');
+    saveProgress(progress);
+
+    if (processed % CONCURRENCY === 0 || processed === targets.length) {
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(0);
+      const rate = (processed / (elapsed || 1)).toFixed(1);
+      const eta = Math.ceil((targets.length - processed) / (rate || 1));
+      console.log(`  📈 ${processed}/${targets.length} (${rate}/s) | Ch: ${totalChaptersAdded} | Fail: ${failed} | ETA: ${eta}s`);
     }
+
+    await sleep(200);
   }
 
   console.log('');
@@ -294,7 +378,12 @@ async function main() {
   console.log(`  Chapters    : ${totalChaptersAdded} added`);
   console.log(`  Skipped     : ${skipped} (no chapters on source)`);
   console.log(`  Failed      : ${failed}`);
+  console.log(`  Time        : ${((Date.now() - startTime) / 1000).toFixed(1)}s`);
   console.log('━'.repeat(60));
+
+  if (failed > 0) {
+    console.log(`\n💡 ${failed} manga failed. Run script again to retry — it will auto-skip completed ones.`);
+  }
 }
 
 main().catch(err => {
