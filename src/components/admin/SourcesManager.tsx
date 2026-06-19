@@ -233,7 +233,7 @@ export function SourcesManager() {
             onClick={fetchSources}
             disabled={loading}
             className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-xs transition-colors"
-            style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
           >
             <RefreshCw size={12} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -268,7 +268,7 @@ export function SourcesManager() {
         <form
           onSubmit={handleAdd}
           className="rounded-xl p-4 space-y-3"
-          style={{ background: 'var(--bg-card)', border: `1px solid ${editingId ? 'rgba(59,130,246,0.4)' : 'var(--color-primary)'}` }}
+          style={{ background: 'var(--bg-secondary)', border: `1px solid ${editingId ? 'rgba(59,130,246,0.4)' : 'var(--color-primary)'}` }}
         >
           <h3 className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
             {editingId ? `Edit Sumber — ${form.name || '...'}` : 'Tambah Sumber Baru'}
@@ -282,7 +282,7 @@ export function SourcesManager() {
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 placeholder="ManhwaLand"
                 className="w-full rounded-lg px-3 py-2 text-xs"
-                style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
               />
             </FormField>
             <FormField label="Base URL">
@@ -293,7 +293,7 @@ export function SourcesManager() {
                 onChange={e => setForm(f => ({ ...f, base_url: e.target.value }))}
                 placeholder="https://example.com"
                 className="w-full rounded-lg px-3 py-2 text-xs"
-                style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
               />
             </FormField>
           </div>
@@ -309,7 +309,7 @@ export function SourcesManager() {
                     onChange={e => setSitemapEntries(prev => prev.map((en, i) => i === idx ? { ...en, url: e.target.value } : en))}
                     placeholder="https://example.com/sitemap.xml"
                     className="flex-1 rounded-lg px-3 py-2 text-xs font-mono"
-                    style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                    style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
                   />
                   {/* Toggle rating per-sitemap */}
                   <button
@@ -344,7 +344,7 @@ export function SourcesManager() {
                 type="button"
                 onClick={() => setSitemapEntries(prev => [...prev, { url: '', rating: form.content_rating }])}
                 className="flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-[11px] transition-colors hover:opacity-80"
-                style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+                style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
               >
                 <Plus size={11} />
                 Tambah URL sitemap
@@ -362,7 +362,7 @@ export function SourcesManager() {
                   value={form.type}
                   onChange={e => setForm(f => ({ ...f, type: e.target.value as MangaSource['type'] }))}
                   className="w-full appearance-none rounded-lg px-3 py-2 pr-8 text-xs"
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                  style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
                 >
                   <option value="MANHWA">MANHWA</option>
                   <option value="MANGA">MANGA</option>
@@ -378,7 +378,7 @@ export function SourcesManager() {
                   value={form.content_rating}
                   onChange={e => setForm(f => ({ ...f, content_rating: e.target.value as MangaSource['content_rating'] }))}
                   className="w-full appearance-none rounded-lg px-3 py-2 pr-8 text-xs"
-                  style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+                  style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
                 >
                   <option value="general">General (SFW)</option>
                   <option value="mature">Mature (18+)</option>
@@ -394,7 +394,7 @@ export function SourcesManager() {
               onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
               placeholder="Keterangan singkat"
               className="w-full rounded-lg px-3 py-2 text-xs"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
+              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-primary)', border: '1px solid var(--border-light)' }}
             />
           </FormField>
 
@@ -409,7 +409,7 @@ export function SourcesManager() {
               type="button"
               onClick={resetForm}
               className="rounded-lg px-3 py-1.5 text-xs"
-              style={{ background: 'var(--bg-elevated)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
             >
               Batal
             </button>
@@ -430,11 +430,11 @@ export function SourcesManager() {
       {loading ? (
         <div className="space-y-2">
           {[1, 2].map(i => (
-            <div key={i} className="h-16 animate-pulse rounded-xl" style={{ background: 'var(--bg-card)' }} />
+            <div key={i} className="h-16 animate-pulse rounded-xl" style={{ background: 'var(--bg-secondary)' }} />
           ))}
         </div>
       ) : sources.length === 0 ? (
-        <div className="rounded-xl py-10 text-center text-xs" style={{ background: 'var(--bg-card)', color: 'var(--text-tertiary)', border: '1px solid var(--border-light)' }}>
+        <div className="rounded-xl py-10 text-center text-xs" style={{ background: 'var(--bg-secondary)', color: 'var(--text-tertiary)', border: '1px solid var(--border-light)' }}>
           Belum ada sumber manga. Klik &quot;Tambah Sumber&quot; untuk mulai.
         </div>
       ) : (
@@ -443,7 +443,7 @@ export function SourcesManager() {
             <div
               key={source.id}
               className="rounded-xl overflow-hidden"
-              style={{ background: 'var(--bg-card)', border: `1px solid ${source.is_active ? 'var(--border-light)' : 'rgba(156,163,175,0.2)'}` }}
+              style={{ background: 'var(--bg-secondary)', border: `1px solid ${source.is_active ? 'var(--border-light)' : 'rgba(156,163,175,0.2)'}` }}
             >
               {/* Row utama */}
               <div className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3">

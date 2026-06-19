@@ -149,7 +149,7 @@ export function ImportDashboard() {
           onClick={handleRefresh}
           disabled={isRefreshing}
           className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-colors disabled:opacity-60"
-          style={{ background: 'var(--bg-card)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+          style={{ background: 'var(--bg-secondary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
         >
           <RefreshCw size={13} className={isRefreshing ? 'animate-spin' : ''} />
           Refresh
@@ -160,7 +160,7 @@ export function ImportDashboard() {
       {loading ? (
         <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
           {Array.from({ length: 4 }).map((_, i) => (
-            <div key={i} className="h-20 animate-pulse rounded-xl" style={{ background: 'var(--bg-card)' }} />
+            <div key={i} className="h-20 animate-pulse rounded-xl" style={{ background: 'var(--bg-secondary)' }} />
           ))}
         </div>
       ) : stats ? (
@@ -173,7 +173,7 @@ export function ImportDashboard() {
       ) : null}
 
       {/* Aksi cepat */}
-      <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
+      <div className="rounded-xl p-4" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
         <div className="mb-3 flex items-center justify-between">
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Aksi Cepat</h2>
 
@@ -241,7 +241,7 @@ export function ImportDashboard() {
       </div>
 
       {/* Riwayat import jobs */}
-      <div className="rounded-xl" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
+      <div className="rounded-xl" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
         <div className="flex items-center justify-between border-b px-4 py-3" style={{ borderColor: 'var(--border-light)' }}>
           <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Riwayat Import Job</h2>
           {stats && stats.recentJobs.length > 0 && (
@@ -386,7 +386,7 @@ function StatCard({ icon, label, value, color }: {
   }[color];
 
   return (
-    <div className="rounded-xl p-4" style={{ background: 'var(--bg-card)', border: '1px solid var(--border-light)' }}>
+    <div className="rounded-xl p-4" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
       <div className="mb-2 flex size-7 items-center justify-center rounded-lg" style={{ background: colors.bg, color: colors.text }}>
         {icon}
       </div>
@@ -406,8 +406,8 @@ function ActionButton({ icon, label, description, color, loading, onClick }: {
       onClick={onClick}
       disabled={loading}
       className="flex items-start gap-2.5 rounded-xl p-3 text-left transition-opacity disabled:opacity-60"
-      style={{
-        background: isPrimary ? 'var(--color-primary)' : 'var(--bg-elevated)',
+        style={{
+        background: isPrimary ? 'var(--color-primary)' : 'var(--bg-tertiary)',
         border: isPrimary ? 'none' : '1px solid var(--border-light)',
         minWidth: 220,
       }}

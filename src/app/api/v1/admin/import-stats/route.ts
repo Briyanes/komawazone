@@ -4,6 +4,9 @@ import { createClient } from '@/lib/supabase/server';
 /**
  * GET /api/v1/admin/import-stats
  * Data untuk Import Dashboard: total manga, chapter, jobs terbaru
+ *
+ * Uses `get_import_stats()` RPC (migration 034) for O(1) performance.
+ * Falls back to pagination-based counting if RPC doesn't exist yet.
  */
 export async function GET() {
   const supabase = await createClient();
@@ -17,23 +20,47 @@ export async function GET() {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
   }
 
+  // Fetch recent jobs (cheap query)
+  const { data: recentJobs } = await supabase
+    .from('import_jobs')
+    .select('*')
+    .order('started_at', { ascending: false })
+    .limit(50);
+
+  // ── Fast path: use RPC function (migration 034) ─────────────────────────
+  // Cast to any because generated types don't include get_import_stats yet
+  const { data: rpcData, error: rpcErr } = await (supabase as any)
+    .rpc('get_import_stats')
+    .maybeSingle() as { data: Record<string, number> | null; error: { message: string } | null };
+
+  if (!rpcErr && rpcData) {
+    return NextResponse.json({
+      status: 'success',
+      data: {
+        totalManga: rpcData.total_manga ?? 0,
+        mangaWithSource: rpcData.manga_with_source ?? 0,
+        totalChapters: rpcData.total_chapters ?? 0,
+        mangaWithoutChapters: rpcData.manga_without_chapters ?? 0,
+        recentJobs: recentJobs ?? [],
+      },
+    });
+  }
+
+  // ── Fallback: pagination-based counting (legacy) ────────────────────────
   const [
     { count: totalManga },
     { count: mangaWithSource },
-    { data: recentJobs },
   ] = await Promise.all([
     supabase.from('manga').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('manga').select('id', { count: 'exact', head: true })
       .not('source_url', 'is', null).is('deleted_at', null),
-    supabase.from('import_jobs').select('*').order('started_at', { ascending: false }).limit(50),
   ]);
 
-  // Fetch all active (non-soft-deleted) manga IDs so we only count chapters
-  // belonging to active manga — prevents negative counts after soft-deletes
+  // Fetch all active manga IDs — prevents negative counts after soft-deletes
   const activeMangaIds = new Set<string>();
   let mangaPage = 0;
   const MANGA_PAGE_SIZE = 1000;
-   
+
   while (true) {
     const { data: mPage } = await supabase
       .from('manga')
@@ -46,13 +73,11 @@ export async function GET() {
     mangaPage++;
   }
 
-  // Count active manga WITH chapters + total active chapters
-  // using pagination-aware approach
   const mangaWithChaptersSet = new Set<string>();
   let activeChapterCount = 0;
   let chapPage = 0;
   const PAGE_SIZE = 1000;
-   
+
   while (true) {
     const { data: page } = await supabase
       .from('chapters')
@@ -61,7 +86,6 @@ export async function GET() {
       .range(chapPage * PAGE_SIZE, (chapPage + 1) * PAGE_SIZE - 1);
     if (!page || page.length === 0) break;
     for (const c of page) {
-      // Only count if the manga is still active (not soft-deleted)
       if (activeMangaIds.has(c.manga_id)) {
         mangaWithChaptersSet.add(c.manga_id);
         activeChapterCount++;
@@ -71,7 +95,6 @@ export async function GET() {
     chapPage++;
   }
 
-  // Count manga WITHOUT chapters — only among active manga
   const mangaWithoutChapters = (totalManga ?? 0) - mangaWithChaptersSet.size;
 
   return NextResponse.json({

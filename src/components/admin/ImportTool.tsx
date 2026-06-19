@@ -625,7 +625,7 @@ function ChapterImportTab() {
           <div className="flex items-start gap-2 rounded-xl px-4 py-3 text-xs mb-5"
             style={{ background: 'rgba(245,158,11,0.1)', color: '#f59e0b' }}>
             <ExternalLink size={13} className="mt-0.5 shrink-0" />
-            <span>Gambar akan disimpan sebagai URL eksternal (CDN jablay.gmbr.pro). Pastikan URL stabil dan tidak kedaluwarsa.</span>
+            <span>Gambar akan disimpan sebagai URL eksternal (CDN sumber). Pastikan URL stabil dan tidak kedaluwarsa.</span>
           </div>
 
           {saveErr && (
