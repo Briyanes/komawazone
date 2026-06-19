@@ -155,5 +155,17 @@ export function parseChapterImages(html: string): string[] {
     }
   }
 
-  return urls;
+  // Upgrade HTTP → HTTPS for CDNs that block plain HTTP (gmbr.pro returns 403 on HTTP)
+  return urls.map(u => {
+    try {
+      const parsed = new URL(u);
+      if (parsed.protocol === 'http:' && parsed.hostname.includes('gmbr.pro')) {
+        parsed.protocol = 'https:';
+        return parsed.toString();
+      }
+      return u;
+    } catch {
+      return u;
+    }
+  });
 }

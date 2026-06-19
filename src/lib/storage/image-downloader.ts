@@ -9,6 +9,23 @@ export interface DownloadedImage {
 }
 
 /**
+ * Upgrade HTTP → HTTPS for CDNs that block plain HTTP (403).
+ * gmbr.pro / gmbar.xyz return 403 for HTTP requests but 200 for HTTPS.
+ */
+function upgradeToHttps(url: string): string {
+  try {
+    const parsed = new URL(url);
+    if (parsed.protocol === 'http:' && parsed.hostname.includes('gmbr.pro')) {
+      parsed.protocol = 'https:';
+      return parsed.toString();
+    }
+    return url;
+  } catch {
+    return url;
+  }
+}
+
+/**
  * Sleep helper for retry delays
  */
 function sleep(ms: number) {
@@ -37,6 +54,9 @@ export async function downloadImageWithRetry(
     throw new Error(`URL validation failed: ${ssrfError}`);
   }
 
+  // Upgrade HTTP → HTTPS for CDNs that block plain HTTP (gmbr.pro returns 403 on HTTP)
+  const fetchUrl = upgradeToHttps(url);
+
   let lastError: Error | null = null;
 
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -52,12 +72,12 @@ export async function downloadImageWithRetry(
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
         'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
         'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
-        'Referer': new URL(url).origin + '/',
+        'Referer': new URL(fetchUrl).origin + '/',
         'sec-fetch-dest': 'image',
         'sec-fetch-mode': 'no-cors',
         'sec-fetch-site': 'cross-site',
       };
-      const response = await fetch(url, {
+      const response = await fetch(fetchUrl, {
         headers: imageHeaders,
         signal: AbortSignal.timeout(timeout),
       });

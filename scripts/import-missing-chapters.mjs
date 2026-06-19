@@ -74,8 +74,8 @@ function parseChapterListFromHtml(html) {
       const numMatch = block.match(/<span[^>]+class="chapternum"[^>]*>\s*(?:Chapter\s*)?(\d+(?:\.\d+)?)/i);
       const number = numMatch ? parseFloat(numMatch[1]) : dataNum;
 
-      const titleMatch = block.match(/<span[^>]+class="chapternum"[^>]*>([^<]+)/i);
-      const title = titleMatch ? titleMatch[1].trim() : `Chapter ${number}`;
+      // Always use "Chapter N" — manhwaland prepends manga title (e.g. "Manga X Chapter 1")
+      const title = `Chapter ${number}`;
 
       const dateRaw = block.match(/<span[^>]+class="chapterdate"[^>]*>([^<]+)/i)?.[1]?.trim() ?? null;
       let releasedAt = null;
@@ -107,7 +107,8 @@ function parseChapterListFromHtml(html) {
     if (dateRaw) {
       try { releasedAt = new Date(normalizeIndonesianDate(dateRaw)).toISOString(); } catch { /* ignore */ }
     }
-    chapters.push({ number, title: rawTitle, url, releasedAt });
+    // Always use "Chapter N" — avoid manga title in chapter title
+    chapters.push({ number, title: `Chapter ${number}`, url, releasedAt });
   }
 
   return chapters.sort((a, b) => a.number - b.number);

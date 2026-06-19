@@ -90,17 +90,20 @@ export default async function MangaDetailPage({ params }: Props) {
     return DEAD_DOMAINS.some(d => url.includes(d));
   };
 
-  const chapters = manga.chapters.slice().sort((a, b) => b.number - a.number).map(ch => {
+  const chapters = manga.chapters.slice().sort((a, b) => b.number - b.number).map(ch => {
+    // DB thumbnail_url is already the correct 5th image (or curated best image),
+    // stored in R2 CDN. Use it FIRST — only fall back to chapter_images if DB is null/dead.
+    // Dead domains like gmbr.pro/gmbar.xyz return 403, so skip them.
+    if (!isDeadUrl(ch.thumbnail_url)) {
+      return { ...ch };
+    }
     const imgs = (ch.chapter_images ?? []).slice().sort((a, b) => a.number - b.number);
-    // Use the 5th image (index 4) as thumbnail, but ONLY if it's from a working domain.
-    // Dead domains like gmbr.pro return 403, so skip them to avoid broken thumbnails.
     const fifth = imgs[4]?.image_url;
     const first = imgs[0]?.image_url;
     return {
       ...ch,
       thumbnail_url: !isDeadUrl(fifth) ? fifth
                      : !isDeadUrl(first) ? first
-                     : !isDeadUrl(ch.thumbnail_url) ? ch.thumbnail_url
                      : null,
     };
   });
