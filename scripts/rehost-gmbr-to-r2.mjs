@@ -155,49 +155,37 @@ function printStats() {
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 async function getChaptersToProcess() {
-  // Step 1: Get distinct chapter_ids that have gmbr.pro images (single query)
-  console.log('  Querying chapter_images for gmbr.pro chapter IDs...');
-  const { data: gmbrChapters, error: e1 } = await sb.from('chapter_images')
-    .select('chapter_id')
-    .like('image_url', '%gmbr.pro%')
-    .limit(100000);
+  // Strategy: Fetch ALL chapters (only ~20K rows, fast) then check each one
+  // individually for gmbr.pro images. This avoids the expensive LIKE query on
+  // the 545K-row chapter_images table which causes statement timeouts.
 
-  if (e1) throw new Error(`Failed to fetch gmbr chapter_images: ${e1.message}`);
+  console.log('  Fetching ALL chapters from chapters table...');
+  let allChapters = [];
+  let offset = 0;
+  const PAGE_SIZE = 1000;
 
-  // Extract unique chapter IDs with count
-  const chapterIdCounts = new Map();
-  for (const row of gmbrChapters || []) {
-    const id = row.chapter_id;
-    chapterIdCounts.set(id, (chapterIdCounts.get(id) || 0) + 1);
-  }
-  console.log(`  Found ${chapterIdCounts.size} unique chapters with gmbr.pro images`);
-
-  if (chapterIdCounts.size === 0) return [];
-
-  // Step 2: Fetch chapter details for these IDs
-  const chapterIds = [...chapterIdCounts.keys()];
-  let chapters = [];
-  const BATCH_SIZE = 500;
-  for (let i = 0; i < chapterIds.length; i += BATCH_SIZE) {
-    const batch = chapterIds.slice(i, i + BATCH_SIZE);
-    const { data, error } = await sb.from('chapters')
+  while (true) {
+    const { data: page, error } = await sb.from('chapters')
       .select(`
         id, number, source_url, thumbnail_url,
         manga:manga_id(slug, title)
       `)
-      .in('id', batch)
-      .order('number', { ascending: true });
+      .order('number', { ascending: true })
+      .range(offset, offset + PAGE_SIZE - 1);
 
     if (error) throw new Error(`Failed to fetch chapters: ${error.message}`);
-    chapters.push(...(data || []));
+    if (!page || page.length === 0) break;
+
+    allChapters.push(...page);
+    offset += PAGE_SIZE;
+
+    if (page.length < PAGE_SIZE) break;
   }
 
-  // Step 3: Apply filters and attach gmbrImageCount
-  let result = chapters.map(ch => ({
-    ...ch,
-    gmbrImageCount: chapterIdCounts.get(ch.id) || 0,
-  }));
+  console.log(`  Found ${allChapters.length} total chapters`);
 
+  // Apply manga/chapter filter early to reduce work
+  let result = allChapters;
   if (MANGA_FILTER) {
     result = result.filter(ch => ch.manga?.slug?.includes(MANGA_FILTER));
   }
@@ -208,14 +196,19 @@ async function getChaptersToProcess() {
     result = result.slice(0, LIMIT);
   }
 
+  // gmbrImageCount will be determined per-chapter in processChapter
+  result = result.map(ch => ({
+    ...ch,
+    gmbrImageCount: 0, // checked dynamically per-chapter
+  }));
+
   return result;
 }
 
 async function processChapter(browser, chapter) {
   const mangaName = chapter.manga?.title || chapter.manga?.slug || 'unknown';
-  console.log(`\n📖 Chapter ${chapter.number} — ${mangaName} (${chapter.gmbrImageCount} images)`);
 
-  // Get all gmbr.pro images for this chapter
+  // Quick check: does this chapter have gmbr.pro images?
   const { data: images, error } = await sb.from('chapter_images')
     .select('id, number, image_url')
     .eq('chapter_id', chapter.id)
@@ -223,15 +216,18 @@ async function processChapter(browser, chapter) {
     .order('number', { ascending: true });
 
   if (error) {
-    console.log(`  ❌ Failed to fetch images: ${error.message}`);
-    stats.imagesFailed += chapter.gmbrImageCount;
+    console.log(`  ❌ Failed to fetch images for ch ${chapter.number}: ${error.message}`);
     return;
   }
 
+  // Skip silently if no gmbr.pro images
   if (!images || images.length === 0) {
-    console.log('  ⏭️  No gmbr.pro images found');
+    stats.chaptersProcessed++;
     return;
   }
+
+  chapter.gmbrImageCount = images.length;
+  console.log(`\n📖 Chapter ${chapter.number} — ${mangaName} (${images.length} gmbr.pro images)`);
 
   // Process images in parallel batches
   const context = await browser.newContext({ userAgent: UA });
