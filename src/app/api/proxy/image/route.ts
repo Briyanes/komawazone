@@ -3,15 +3,17 @@ import { fetchBufferWithProxy } from '@/lib/proxy';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
+// Vercel Hobby: max 10s. Pro: 60s. Set 60s in case we're on Pro.
+export const maxDuration = 60;
 
 /**
  * GET /api/proxy/image
  * Proxy external manga images through our server.
  *
- * Strategy:
- * 1. Try DIRECT fetch first (fast — works for hosts that don't block Vercel IPs).
- * 2. If direct fails, route through Webshare proxy pool (bypasses IP blocks).
- * 3. If both fail, return a lightweight SVG placeholder (not a broken icon).
+ * Strategy (optimized for Vercel timeout limits):
+ * 1. Try DIRECT fetch first (5s timeout — fast path).
+ * 2. If direct fails, try ONE proxy attempt (4s timeout).
+ * 3. If both fail, return SVG placeholder immediately.
  *
  * Usage: /api/proxy/image?url=https://img-uwak.gmbr.pro/path/to/image.jpg
  */
@@ -37,7 +39,6 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    // Validate URL to prevent SSRF attacks
     let url: URL;
     try {
       url = new URL(imageUrl);
@@ -72,7 +73,6 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Host not allowed' }, { status: 403 });
     }
 
-    // Build browser-like headers with DYNAMIC referer
     const referer = url.origin + '/';
     const headers: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -87,13 +87,11 @@ export async function GET(req: NextRequest) {
     let buffer: Buffer | null = null;
     let contentType: string | null = null;
 
-    // ─── Step 1: Direct fetch (no proxy) ───
-    // Fast path — works for hosts that don't block Vercel/datacenter IPs.
-    // This ensures images still load even if the proxy subscription expires.
+    // ─── Step 1: Direct fetch (5s timeout) ───
     try {
       const directResp = await fetch(imageUrl, {
         headers,
-        signal: AbortSignal.timeout(12_000),
+        signal: AbortSignal.timeout(5_000),
         redirect: 'follow',
       });
       if (directResp.ok && directResp.body) {
@@ -107,33 +105,31 @@ export async function GET(req: NextRequest) {
         }
       }
     } catch {
-      // Direct fetch failed (timeout, IP block, DNS, etc.) — fall through to proxy
+      // Direct failed — fall through to proxy
     }
 
-    // ─── Step 2: Proxy fetch (Webshare pool) ───
-    // Only used if direct fetch failed. Bypasses IP-based blocks.
+    // ─── Step 2: Single proxy attempt (4s timeout) ───
     if (!buffer) {
       try {
         const result = await fetchBufferWithProxy(imageUrl, {
           headers,
-          timeoutMs: 20_000,
-          maxAttempts: 4,
+          timeoutMs: 4_000,
+          maxAttempts: 1, // Single attempt to stay within timeout
         });
         buffer = result.buffer;
         contentType = result.contentType;
       } catch (proxyErr) {
-        const msg = proxyErr instanceof Error ? proxyErr.message : String(proxyErr);
-        console.error('[proxy/image] both direct and proxy failed for', imageUrl, msg);
+        // Both failed — return placeholder
         return svgResponse();
       }
     }
 
-    // Guard: invalid content type → SVG placeholder
+    // Guard: invalid content type
     if (!contentType!.startsWith('image/') && !contentType!.includes('octet-stream')) {
       return svgResponse();
     }
 
-    // ─── Success: return the real image ───
+    // ─── Success ───
     const finalContentType = contentType!.startsWith('image/') ? contentType! : 'image/jpeg';
     const blob = new Blob([new Uint8Array(buffer!)], { type: finalContentType });
 
@@ -145,8 +141,7 @@ export async function GET(req: NextRequest) {
       },
     });
 
-  } catch (error) {
-    console.error('Image proxy error:', error);
+  } catch {
     return svgResponse();
   }
 }
