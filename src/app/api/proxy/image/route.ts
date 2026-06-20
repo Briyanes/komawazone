@@ -6,15 +6,28 @@ export const dynamic = 'force-dynamic';
 
 /**
  * GET /api/proxy/image
- * Proxy external manga images through our server + Webshare proxy pool.
+ * Proxy external manga images through our server.
  *
- * CRITICAL FIXES vs previous version:
- * 1. Route fetches through the Webshare proxy pool to avoid Vercel IP blocks.
- * 2. Referer is derived dynamically from the target URL's origin (not hardcoded).
- * 3. Proper error handling for proxy exhaustion.
+ * Strategy:
+ * 1. Try DIRECT fetch first (fast — works for hosts that don't block Vercel IPs).
+ * 2. If direct fails, route through Webshare proxy pool (bypasses IP blocks).
+ * 3. If both fail, return a lightweight SVG placeholder (not a broken icon).
  *
  * Usage: /api/proxy/image?url=https://img-uwak.gmbr.pro/path/to/image.jpg
  */
+
+const SVG_PLACEHOLDER = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="280" font-size="48" text-anchor="middle" fill="#4a4a6a">📖</text><text x="200" y="340" font-size="14" text-anchor="middle" fill="#4a4a6a" font-family="sans-serif">Gambar gagal dimuat</text><text x="200" y="365" font-size="11" text-anchor="middle" fill="#3a3a5a" font-family="sans-serif">Sedang migrasi ke R2</text></svg>`;
+
+function svgResponse() {
+  return new NextResponse(SVG_PLACEHOLDER, {
+    status: 200,
+    headers: {
+      'Content-Type': 'image/svg+xml',
+      'Cache-Control': 'public, max-age=300, s-maxage=300',
+    },
+  });
+}
+
 export async function GET(req: NextRequest) {
   const searchParams = await req.nextUrl.searchParams;
   const imageUrl = searchParams.get('url');
@@ -59,7 +72,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Host not allowed' }, { status: 403 });
     }
 
-    // Build browser-like headers with DYNAMIC referer (not hardcoded).
+    // Build browser-like headers with DYNAMIC referer
     const referer = url.origin + '/';
     const headers: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
@@ -71,64 +84,69 @@ export async function GET(req: NextRequest) {
       'sec-fetch-site': 'cross-site',
     };
 
-    // Route through the Webshare proxy pool — bypasses Vercel/datacenter IP blocks.
-    let buffer: Buffer;
-    let contentType: string;
+    let buffer: Buffer | null = null;
+    let contentType: string | null = null;
 
+    // ─── Step 1: Direct fetch (no proxy) ───
+    // Fast path — works for hosts that don't block Vercel/datacenter IPs.
+    // This ensures images still load even if the proxy subscription expires.
     try {
-      const result = await fetchBufferWithProxy(imageUrl, {
+      const directResp = await fetch(imageUrl, {
         headers,
-        timeoutMs: 20_000,
-        maxAttempts: 4,
+        signal: AbortSignal.timeout(12_000),
+        redirect: 'follow',
       });
-      buffer = result.buffer;
-      contentType = result.contentType;
-    } catch (proxyErr) {
-      const msg = proxyErr instanceof Error ? proxyErr.message : String(proxyErr);
-      console.error('[proxy/image] fetch failed for', imageUrl, msg);
-      // Return a lightweight SVG placeholder instead of JSON error.
-      // This prevents "broken image" icons — browser sees a valid image.
-      // Cache for only 5 minutes so we can retry later.
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="280" font-size="48" text-anchor="middle" fill="#4a4a6a">📖</text><text x="200" y="340" font-size="14" text-anchor="middle" fill="#4a4a6a" font-family="sans-serif">Gambar gagal dimuat</text><text x="200" y="365" font-size="11" text-anchor="middle" fill="#3a3a5a" font-family="sans-serif">Sedang migrasi ke R2</text></svg>`;
-      return new NextResponse(svg, {
-        status: 200,
-        headers: {
-          'Content-Type': 'image/svg+xml',
-          'Cache-Control': 'public, max-age=300, s-maxage=300',
-        },
-      });
+      if (directResp.ok && directResp.body) {
+        const ct = directResp.headers.get('content-type') || '';
+        if (ct.startsWith('image/') || ct.includes('octet-stream')) {
+          const buf = new Uint8Array(await directResp.arrayBuffer());
+          if (buf.byteLength > 1024) {
+            buffer = Buffer.from(buf);
+            contentType = ct;
+          }
+        }
+      }
+    } catch {
+      // Direct fetch failed (timeout, IP block, DNS, etc.) — fall through to proxy
     }
 
-    // Basic content-type guard (allow all image/*; some CDNs mislabel as octet-stream)
-    if (!contentType.startsWith('image/') && !contentType.includes('octet-stream')) {
-      // Return SVG placeholder for invalid content type too
-      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="300" font-size="48" text-anchor="middle" fill="#4a4a6a">📖</text></svg>`;
-      return new NextResponse(svg, {
-        status: 200,
-        headers: {
-          'Content-Type': 'image/svg+xml',
-          'Cache-Control': 'public, max-age=300',
-        },
-      });
+    // ─── Step 2: Proxy fetch (Webshare pool) ───
+    // Only used if direct fetch failed. Bypasses IP-based blocks.
+    if (!buffer) {
+      try {
+        const result = await fetchBufferWithProxy(imageUrl, {
+          headers,
+          timeoutMs: 20_000,
+          maxAttempts: 4,
+        });
+        buffer = result.buffer;
+        contentType = result.contentType;
+      } catch (proxyErr) {
+        const msg = proxyErr instanceof Error ? proxyErr.message : String(proxyErr);
+        console.error('[proxy/image] both direct and proxy failed for', imageUrl, msg);
+        return svgResponse();
+      }
     }
 
-    // Wrap buffer in a Blob for correct BodyInit typing in Next 16 / Web Streams.
-    const finalContentType = contentType.startsWith('image/') ? contentType : 'image/jpeg';
-    const blob = new Blob([new Uint8Array(buffer)], { type: finalContentType });
+    // Guard: invalid content type → SVG placeholder
+    if (!contentType!.startsWith('image/') && !contentType!.includes('octet-stream')) {
+      return svgResponse();
+    }
+
+    // ─── Success: return the real image ───
+    const finalContentType = contentType!.startsWith('image/') ? contentType! : 'image/jpeg';
+    const blob = new Blob([new Uint8Array(buffer!)], { type: finalContentType });
 
     return new NextResponse(blob, {
       status: 200,
       headers: {
         'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
-        'Content-Length': buffer.byteLength.toString(),
+        'Content-Length': buffer!.byteLength.toString(),
       },
     });
 
   } catch (error) {
     console.error('Image proxy error:', error);
-    return NextResponse.json(
-      { error: 'Failed to proxy image' },
-      { status: 500 }
-    );
+    return svgResponse();
   }
 }
