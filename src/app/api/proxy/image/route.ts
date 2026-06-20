@@ -3,8 +3,8 @@ import { fetchBufferWithProxy } from '@/lib/proxy';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-// Vercel Hobby: max 10s. Pro: 60s. Set 60s in case we're on Pro.
-export const maxDuration = 60;
+// Vercel Hobby: max 10s. Keep at 10 to avoid build errors.
+export const maxDuration = 10;
 
 /**
  * GET /api/proxy/image
