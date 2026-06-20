@@ -7,6 +7,11 @@ import { ReaderClient } from '@/components/reader/ReaderClient';
 import { AdZone } from '@/components/ads/AdZone';
 import { createClient } from '@/lib/supabase/server';
 
+// Force dynamic rendering — lazy-load image scraping must run on every request,
+// not at build time. Without this, Next.js may statically generate the page
+// and the lazy-load (getChapterWithImages) never fires for new chapters.
+export const dynamic = 'force-dynamic';
+
 // Deduplicate: generateMetadata and the page both call this — use React cache
 const getChapter = cache((id: string) => getChapterWithImages(id));
 

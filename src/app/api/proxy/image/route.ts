@@ -85,21 +85,31 @@ export async function GET(req: NextRequest) {
       contentType = result.contentType;
     } catch (proxyErr) {
       const msg = proxyErr instanceof Error ? proxyErr.message : String(proxyErr);
-      // Proxy failed entirely — return a descriptive status to the client.
-      // The <img onError> handler will show the placeholder fallback.
       console.error('[proxy/image] fetch failed for', imageUrl, msg);
-      return NextResponse.json(
-        { error: `Proxy fetch failed: ${msg}` },
-        { status: 502 }
-      );
+      // Return a lightweight SVG placeholder instead of JSON error.
+      // This prevents "broken image" icons — browser sees a valid image.
+      // Cache for only 5 minutes so we can retry later.
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="280" font-size="48" text-anchor="middle" fill="#4a4a6a">📖</text><text x="200" y="340" font-size="14" text-anchor="middle" fill="#4a4a6a" font-family="sans-serif">Gambar gagal dimuat</text><text x="200" y="365" font-size="11" text-anchor="middle" fill="#3a3a5a" font-family="sans-serif">Sedang migrasi ke R2</text></svg>`;
+      return new NextResponse(svg, {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/svg+xml',
+          'Cache-Control': 'public, max-age=300, s-maxage=300',
+        },
+      });
     }
 
     // Basic content-type guard (allow all image/*; some CDNs mislabel as octet-stream)
     if (!contentType.startsWith('image/') && !contentType.includes('octet-stream')) {
-      return NextResponse.json(
-        { error: `Invalid content type: ${contentType}` },
-        { status: 502 }
-      );
+      // Return SVG placeholder for invalid content type too
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="300" font-size="48" text-anchor="middle" fill="#4a4a6a">📖</text></svg>`;
+      return new NextResponse(svg, {
+        status: 200,
+        headers: {
+          'Content-Type': 'image/svg+xml',
+          'Cache-Control': 'public, max-age=300',
+        },
+      });
     }
 
     // Wrap buffer in a Blob for correct BodyInit typing in Next 16 / Web Streams.

@@ -43,22 +43,10 @@
   "crons": [
     {
       "path": "/api/cron/revalidate",
-      "schedule": "0 0 * * *"
+      "schedule": "0 * * * *"
     },
     {
-      "path": "/api/cron/import-advance",
-      "schedule": "0 0 * * *"
-    },
-    {
-      "path": "/api/cron/auto-import",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/check-new-chapters",
-      "schedule": "0 3 * * *"
-    },
-    {
-      "path": "/api/cron/expire-subscriptions",
+      "path": "/api/cron/daily",
       "schedule": "0 1 * * *"
     }
   ]

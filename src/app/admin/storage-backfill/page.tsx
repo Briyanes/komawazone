@@ -1,12 +1,19 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Play, RefreshCw, Info, AlertTriangle, CheckCircle, Image, DownloadCloud } from 'lucide-react';
+import { Play, RefreshCw, Info, AlertTriangle, CheckCircle, Image, DownloadCloud, HardDrive, ExternalLink } from 'lucide-react';
 
 export default function StorageBackfillPage() {
   const [status, setStatus] = useState<string>('idle');
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [limit, setLimit] = useState(50);
+
+  // R2 migration stats
+  const [migrateStats, setMigrateStats] = useState<{
+    chapter_images: { total: number; inR2: number; external: number; migrationProgress: string };
+    estimate: { imagesRemaining: number; estimatedMinutes: number };
+    script: string;
+  } | null>(null);
 
   // Retry images state
   const [retryStatus, setRetryStatus] = useState<string>('idle');
@@ -207,6 +214,22 @@ export default function StorageBackfillPage() {
     return () => clearInterval(interval);
   }, [batchJobId, checkBatchStatus]);
 
+  // Load R2 migration stats on mount
+  const loadMigrateStats = useCallback(async () => {
+    try {
+      const res = await fetch('/api/v1/admin/storage/migrate-stats');
+      if (res.ok) {
+        setMigrateStats(await res.json());
+      }
+    } catch {
+      // non-critical
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMigrateStats();
+  }, [loadMigrateStats]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -216,6 +239,112 @@ export default function StorageBackfillPage() {
         <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
           Migrasi cover & repair chapter images ke Cloudflare R2
         </p>
+      </div>
+
+      {/* ── R2 Migration Status ── */}
+      <div
+        className="rounded-xl p-5 space-y-4"
+        style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
+      >
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+              R2 Migration Status
+            </h2>
+            <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(34,197,94,0.1)', color: '#22c55e' }}>
+              <HardDrive size={10} /> Storage
+            </span>
+          </div>
+          <button
+            onClick={loadMigrateStats}
+            className="flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-medium transition-opacity hover:opacity-80"
+            style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+          >
+            <RefreshCw size={10} /> Refresh
+          </button>
+        </div>
+
+        {migrateStats ? (
+          <>
+            {/* Progress bar */}
+            <div>
+              <div className="flex justify-between text-xs mb-1">
+                <span style={{ color: 'var(--text-secondary)' }}>
+                  {migrateStats.chapter_images.inR2.toLocaleString()} / {migrateStats.chapter_images.total.toLocaleString()} images in R2
+                </span>
+                <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {migrateStats.chapter_images.migrationProgress}%
+                </span>
+              </div>
+              <div className="w-full h-2.5 rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
+                <div
+                  className="h-full rounded-full transition-all duration-500"
+                  style={{ width: `${migrateStats.chapter_images.migrationProgress}%`, background: 'linear-gradient(90deg, #22c55e, #10b981)' }}
+                />
+              </div>
+            </div>
+
+            {/* Stats grid */}
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-lg p-3 text-center" style={{ background: 'var(--bg-tertiary)' }}>
+                <p className="text-lg font-bold" style={{ color: '#22c55e' }}>
+                  {migrateStats.chapter_images.inR2.toLocaleString()}
+                </p>
+                <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>In R2</p>
+              </div>
+              <div className="rounded-lg p-3 text-center" style={{ background: 'var(--bg-tertiary)' }}>
+                <p className="text-lg font-bold" style={{ color: '#f59e0b' }}>
+                  {migrateStats.chapter_images.external.toLocaleString()}
+                </p>
+                <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>External CDN</p>
+              </div>
+              <div className="rounded-lg p-3 text-center" style={{ background: 'var(--bg-tertiary)' }}>
+                <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>
+                  {migrateStats.estimate.estimatedMinutes > 0 ? `~${Math.ceil(migrateStats.estimate.estimatedMinutes / 60)}h` : '✅'}
+                </p>
+                <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Est. Time</p>
+              </div>
+            </div>
+
+            {/* Run script instruction */}
+            {migrateStats.chapter_images.external > 0 && (
+              <div
+                className="rounded-lg p-3 space-y-2"
+                style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}
+              >
+                <p className="text-xs font-semibold" style={{ color: '#f59e0b' }}>
+                  ⚠️ {migrateStats.chapter_images.external.toLocaleString()} images still on external CDNs
+                </p>
+                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                  Jalankan script ini di terminal lokal untuk download semua:
+                </p>
+                <div className="flex items-center gap-2">
+                  <code
+                    className="flex-1 text-xs font-mono px-3 py-2 rounded"
+                    style={{ background: 'var(--bg-primary)', color: '#22c55e' }}
+                  >
+                    {migrateStats.script}
+                  </code>
+                  <button
+                    onClick={() => navigator.clipboard.writeText(migrateStats.script)}
+                    className="rounded px-2 py-2 text-xs"
+                    style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
+                    title="Copy command"
+                  >
+                    <ExternalLink size={12} />
+                  </button>
+                </div>
+                <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
+                  Butuh: PROXY_LIST di .env.local (Webshare 100 proxies recommended)
+                </p>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-tertiary)' }}>
+            <RefreshCw size={14} className="animate-spin" /> Loading stats...
+          </div>
+        )}
       </div>
 
       {/* ── Download All Missing ── */}
