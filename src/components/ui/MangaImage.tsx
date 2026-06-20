@@ -36,6 +36,13 @@ const EXTERNAL_HOSTS = [
 
 function isExternalUrl(src: ImageProps['src']): boolean {
   if (typeof src !== 'string') return false;
+  // Internal proxy URLs (relative paths) → bypass Next.js image optimizer
+  // Fixes Next.js 16 regression: _next/image returns 400 for /api/r2/image/** URLs
+  // even when listed in localPatterns. Direct browser fetch to R2 proxy is faster
+  // (no Vercel CPU cost) and R2 already serves WebP + 1-year immutable cache.
+  if (src.startsWith('/api/r2/image/') || src.startsWith('/api/proxy/image')) {
+    return true;
+  }
   try {
     const url = new URL(src);
     // R2 dev URLs: route through our proxy (they return 403 from browser)

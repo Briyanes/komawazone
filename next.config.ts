@@ -4,9 +4,13 @@ const nextConfig: NextConfig = {
   // Allow images from Supabase Storage and common CDNs
   images: {
     // Local patterns for proxy API (supports query strings)
+    // Next.js 16 requires explicit registration for dynamic API image routes
     localPatterns: [
       {
         pathname: '/api/proxy/image/**',
+      },
+      {
+        pathname: '/api/r2/image/**',
       },
     ],
     remotePatterns: [
