@@ -62,6 +62,28 @@ export type MangaWithChapters = {
 /** Number of free preview chapters for mature manga */
 export const MATURE_PREVIEW_CHAPTERS = 3;
 
+/** Dead CDN domains that no longer serve images (404). */
+const DEAD_CDN_PATTERNS = [
+  'gmbr.pro',
+  'manhwaland.land',
+  'uwakjawa.xyz',
+];
+
+/**
+ * Check if an image URL points to a known-dead CDN.
+ * Returns true if the URL will likely 404.
+ */
+export function isDeadCdnUrl(url: string): boolean {
+  try {
+    const hostname = new URL(url).hostname.toLowerCase();
+    return DEAD_CDN_PATTERNS.some(pattern =>
+      hostname === pattern || hostname.endsWith(`.${pattern}`)
+    );
+  } catch {
+    return false;
+  }
+}
+
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
 
 /**
@@ -291,9 +313,12 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
 
   const chapter = data as unknown as ChapterDetail;
 
-  // Lazy-load images: if chapter was imported as metadata-only (no images yet),
-  // scrape, download to R2, and save them now on first read.
-  if (chapter.chapter_images.length === 0 && chapter.manga?.slug) {
+  // Lazy-load images: if chapter has no images OR all images point to dead CDNs
+  // (gmbr.pro, manhwaland, etc.), scrape, download to R2, and save them now.
+  const hasImages = chapter.chapter_images.length > 0;
+  const allDead = hasImages && chapter.chapter_images.every(img => isDeadCdnUrl(img.image_url));
+
+  if ((!hasImages || allDead) && chapter.manga?.slug) {
     try {
       const { scrapeChapterImages } = await import('@/lib/scrapers/manga-scraper');
       const { batchDownloadAndUploadToR2 } = await import('@/lib/storage/r2');
@@ -356,7 +381,7 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
         // Uses r2Results (not filtered) so the index matches the source order.
         const lazyThumb = r2Results.length >= 5
           ? r2Results[4].url
-          : r2Results[0]?.url;
+          : r2Results[r2Results.length - 1]?.url;
         await adminClient
           .from('chapters')
           .update({ thumbnail_url: lazyThumb })

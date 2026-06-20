@@ -319,10 +319,10 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         // thumbnail (index 4) stays correct and no pages go "missing" from DB.
         const finalImages = r2Results.map(r => r.url);
 
-        // Thumbnail: 5th page (index 4) by ORIGINAL order, not filtered order.
+        // Thumbnail: 5th page (index 4) by ORIGINAL order, fallback to LAST image.
         const thumbnailUrl = r2Results.length >= 5
           ? r2Results[4].url
-          : r2Results[0]?.url;
+          : r2Results[r2Results.length - 1]?.url;
 
         const { data: chapterRecord, error: chapterErr } = await supabase
           .from('chapters')
@@ -422,10 +422,10 @@ export async function importAllChapters(mangaId: string, slug: string, sourceUrl
         );
 
         // Update thumbnail_url on chapter record.
-        // ALWAYS use the 5th page (index 4) by ORIGINAL order, not filtered order.
+        // ALWAYS use the 5th page (index 4) by ORIGINAL order, fallback to LAST image.
         const backfillThumb = r2Results.length >= 5
           ? r2Results[4].url
-          : r2Results[0]?.url;
+          : r2Results[r2Results.length - 1]?.url;
         await supabase.from('chapters')
           .update({ thumbnail_url: backfillThumb })
           .eq('id', ch.id);

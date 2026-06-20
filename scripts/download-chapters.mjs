@@ -117,7 +117,13 @@ const s3 = new S3Client({
   },
 });
 
+// Guard: detect env-leak corruption (e.g. missing newline between .env entries)
 const R2_BASE   = (env.R2_PUBLIC_BASE_URL ?? '').replace(/\/$/, '');
+if (R2_BASE.includes('NEXT_PUBLIC') || R2_BASE.includes('=')) {
+  console.error('❌ R2_PUBLIC_BASE_URL looks corrupted (contains NEXT_PUBLIC or =):', R2_BASE);
+  console.error('   Check .env.local for missing newlines between entries.');
+  process.exit(1);
+}
 const R2_BUCKET = env.R2_BUCKET;
 
 function buildR2Url(key) {
@@ -815,12 +821,12 @@ async function downloadImagesForChapters(manga, chapters, gotScraping, stats, pr
           console.log(`          ✅ Ch.${chapter.number}: ${imageRecords.length} images uploaded & saved`);
         }
 
-        // Update chapter thumbnail — use 5th image (index 4), fallback to 1st
+        // Update chapter thumbnail — use 5th image (index 4), fallback to LAST image
         // Sort by page number first — failed downloads leave gaps in the array
         const sortedRecords = imageRecords.slice().sort((a, b) => a.number - b.number);
         const thumbRecord = sortedRecords.length >= 5
           ? sortedRecords[4]
-          : sortedRecords[0];
+          : sortedRecords[sortedRecords.length - 1];
         if (thumbRecord?.image_url) {
           await supabase
             .from('chapters')

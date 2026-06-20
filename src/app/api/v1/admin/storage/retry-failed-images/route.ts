@@ -289,8 +289,8 @@ async function runRetry(jobId: string | null, chapters: Array<{ id: string; numb
             .from('chapter_images')
             .upsert(imageRecords, { onConflict: 'chapter_id,number' });
 
-          // Update thumbnail: 5th page (index 4) by ORIGINAL order, not filtered.
-          const thumb = imageRecords.length >= 5 ? imageRecords[4] : imageRecords[0];
+          // Update thumbnail: 5th page (index 4) by ORIGINAL order, fallback to LAST.
+          const thumb = imageRecords.length >= 5 ? imageRecords[4] : imageRecords[imageRecords.length - 1];
           await adminSupabase
             .from('chapters')
             .update({ thumbnail_url: thumb.image_url })

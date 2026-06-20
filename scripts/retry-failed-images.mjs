@@ -237,7 +237,8 @@ async function retryChapter(chapter, manga) {
     }
 
     // Update thumbnail
-    const thumb = imageRecords.length >= 5 ? imageRecords[4] : imageRecords[0];
+    // Thumbnail: 5th page (index 4) by ORIGINAL order, fallback to LAST image
+    const thumb = imageRecords.length >= 5 ? imageRecords[4] : imageRecords[imageRecords.length - 1];
     if (thumb?.image_url) {
       await supabase.from('chapters').update({ thumbnail_url: thumb.image_url }).eq('id', chapter.id);
     }

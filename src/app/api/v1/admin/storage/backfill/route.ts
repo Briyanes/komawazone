@@ -293,8 +293,9 @@ async function runBackfill(
           // order (sorted by `number`), NOT by filtered array index.
           // The previous code used successfulResults[4] which shifted index when
           // some uploads failed — causing the wrong image to be used as thumbnail.
+          // Fallback: use the LAST image (consistent with manga-chapters & retry-failed routes).
           const sortedImgs = imgs.slice().sort((a, b) => a.number - b.number);
-          const thumbImg = sortedImgs.length >= 5 ? sortedImgs[4] : sortedImgs[0];
+          const thumbImg = sortedImgs.length >= 5 ? sortedImgs[4] : sortedImgs[sortedImgs.length - 1];
           if (thumbImg) {
             // If the 5th image was re-uploaded just now, use the new R2 URL
             const reuploaded = r2Results.find(r => r.key && r.originalUrl === thumbImg.image_url);

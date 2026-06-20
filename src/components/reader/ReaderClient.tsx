@@ -611,8 +611,54 @@ export function ReaderClient({
         </div>
       </div>
 
+      {/* EMPTY CHAPTER — no images available */}
+      {images.length === 0 && (
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 pt-16 text-center">
+          <div
+            className="flex size-20 items-center justify-center rounded-full"
+            style={{ background: 'rgba(255,107,53,0.12)' }}
+          >
+            <ImageOff size={36} style={{ color: 'var(--color-primary)' }} />
+          </div>
+          <div>
+            <p className="text-lg font-bold text-white">Chapter Belum Tersedia</p>
+            <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              Gambar untuk chapter ini sedang diproses atau sumber sedang tidak tersedia.
+              Silakan coba lagi nanti atau lanjut ke chapter berikutnya.
+            </p>
+          </div>
+          <div className="flex w-full max-w-md gap-2">
+            {prevChapterId ? (
+              <Link
+                href={`/manga/${mangaSlug}/chapter/${prevChapterId}`}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
+                style={{ background: 'rgba(255,255,255,.1)' }}
+              >
+                <ChevronLeft size={16} />Sebelumnya
+              </Link>
+            ) : <div className="flex-1" />}
+            {nextChapterId ? (
+              <Link
+                href={`/manga/${mangaSlug}/chapter/${nextChapterId}`}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-bold text-white hover:opacity-80"
+                style={{ background: 'var(--color-primary)' }}
+              >
+                Berikutnya<ChevronRight size={16} />
+              </Link>
+            ) : <div className="flex-1" />}
+          </div>
+          <Link
+            href={`/manga/${mangaSlug}`}
+            className="flex w-full max-w-md items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
+            style={{ background: 'rgba(255,255,255,.07)' }}
+          >
+            <List size={16} />Daftar Chapter
+          </Link>
+        </div>
+      )}
+
       {/* WEBTOON MODE */}
-      {readMode === 'webtoon' && (
+      {readMode === 'webtoon' && images.length > 0 && (
         <div className="flex flex-col items-center pt-[65px] md:pt-12">
           {/* Auto-advance banner */}
           {autoAdvance !== null && nextChapterId && (
@@ -799,7 +845,8 @@ export function ReaderClient({
         </div>
       )}
 
-      {/* ── BOTTOM NAV ── */}
+      {/* ── BOTTOM NAV (hidden for empty chapters) ── */}
+      {images.length > 0 && (
       <div
         className="fixed bottom-0 inset-x-0 z-50 flex items-center gap-3 px-4 py-3"
         style={{
@@ -862,6 +909,7 @@ export function ReaderClient({
           </>
         )}
       </div>
+      )}
     </div>
   );
 }

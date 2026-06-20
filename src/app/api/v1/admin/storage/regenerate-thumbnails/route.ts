@@ -144,8 +144,8 @@ async function runRegenerate(
           continue;
         }
 
-        // Use 5th image (index 4) as thumbnail, fallback to first
-        const thumbnailUrl = images.length >= 5 ? images[4].image_url : images[0].image_url;
+        // Use 5th image (index 4) as thumbnail, fallback to LAST image
+        const thumbnailUrl = images.length >= 5 ? images[4].image_url : images[images.length - 1].image_url;
 
         const { error: updateErr } = await adminSupabase
           .from('chapters')
@@ -287,7 +287,7 @@ export async function GET(request: NextRequest) {
 
       for (const ch of chaptersSample) {
         const imgs = imagesByChapter.get(ch.id) ?? [];
-        const expected = imgs.length >= 5 ? imgs[4].image_url : imgs[0]?.image_url ?? null;
+        const expected = imgs.length >= 5 ? imgs[4].image_url : imgs[imgs.length - 1]?.image_url ?? null;
         const current = ch.thumbnail_url;
         const isNull = !current;
         // "Wrong" = has a thumbnail but it doesn't match the expected 5th (or 1st if <5 imgs)
