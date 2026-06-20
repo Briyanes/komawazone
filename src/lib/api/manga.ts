@@ -14,6 +14,7 @@ export type ChapterDetail = {
   number: number;
   title: string | null;
   manga_id: string;
+  source_url: string | null;
   chapter_images: ChapterImage[];
   manga: { id: string; slug: string; title: string; content_rating: 'general' | 'mature'; source_url: string | null; cover_url: string | null } | null;
 };
@@ -302,7 +303,7 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
   const { data, error } = await adminClient
     .from('chapters')
     .select(`
-      id, number, title, manga_id,
+      id, number, title, manga_id, source_url,
       chapter_images(id, number, image_url, width, height),
       manga(id, slug, title, content_rating, source_url, cover_url)
     `)
@@ -325,25 +326,40 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
       const mangaSlug = chapter.manga.slug;
       const chapterNum = chapter.number;
       const intNum = Math.floor(chapterNum);
-      // Chapter URL format: {origin}/{manga-slug}-chapter-{N}/
-      // Some sources zero-pad single digits (chapter-02, chapter-09) but not
-      // chapter-1 or chapter-10+. Try multiple formats to handle this.
+
+      // Build candidate chapter URLs. Priority:
+      //   1. chapter.source_url (stored at import time — most reliable)
+      //   2. Guess from manga.source_url origin + slug + chapter number
       const origin = chapter.manga.source_url
         ? new URL(chapter.manga.source_url).origin
         : 'https://04x.manhwaland.land';
       const paddedNum = String(intNum).padStart(2, '0');
-      const candidateUrls = intNum !== chapterNum
-        // Decimal chapters (e.g. 10.5): only try the exact number
-        ? [`${origin}/${mangaSlug}-chapter-${chapterNum}/`]
-        // Integer chapters: try plain, zero-padded, then 3-digit padded
-        : intNum < 100
-          ? [`${origin}/${mangaSlug}-chapter-${intNum}/`, `${origin}/${mangaSlug}-chapter-${paddedNum}/`]
-          : [`${origin}/${mangaSlug}-chapter-${intNum}/`];
+
+      const candidateUrls: string[] = [];
+      if (chapter.source_url) {
+        candidateUrls.push(chapter.source_url);
+      }
+      if (intNum !== chapterNum) {
+        candidateUrls.push(`${origin}/${mangaSlug}-chapter-${chapterNum}/`);
+      } else if (intNum < 100) {
+        candidateUrls.push(`${origin}/${mangaSlug}-chapter-${intNum}/`);
+        candidateUrls.push(`${origin}/${mangaSlug}-chapter-${paddedNum}/`);
+      } else {
+        candidateUrls.push(`${origin}/${mangaSlug}-chapter-${intNum}/`);
+      }
 
       let sourceImageUrls: string[] = [];
+      let matchedUrl: string | null = null;
       for (const url of candidateUrls) {
-        sourceImageUrls = await scrapeChapterImages(url);
-        if (sourceImageUrls.length > 0) break;
+        try {
+          sourceImageUrls = await scrapeChapterImages(url);
+          if (sourceImageUrls.length > 0) {
+            matchedUrl = url;
+            break;
+          }
+        } catch {
+          // continue to next candidate
+        }
       }
       if (sourceImageUrls.length > 0) {
         // Download and upload images to R2 so we control the CDN URL.
@@ -382,12 +398,24 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
         const lazyThumb = r2Results.length >= 5
           ? r2Results[4].url
           : r2Results[r2Results.length - 1]?.url;
+
+        // Persist thumbnail + source_url so future lazy-loads skip URL guessing.
+        // Cast to never because supabase gen types haven't been refreshed yet
+        // (the `source_url` column is added by migration 035 and isn't in the
+        // auto-generated Database type yet).
+        const chapterUpdate: Record<string, string | null> = {
+          thumbnail_url: lazyThumb ?? null,
+        };
+        if (matchedUrl) chapterUpdate.source_url = matchedUrl;
+
         await adminClient
           .from('chapters')
-          .update({ thumbnail_url: lazyThumb })
+          .update(chapterUpdate as never)
           .eq('id', chapter.id);
 
         chapter.chapter_images = (inserted ?? []) as ChapterImage[];
+      } else {
+        console.warn(`[LazyImages] No images found for chapter ${chapterId} from ${candidateUrls.length} candidate URLs`);
       }
     } catch (err) {
       console.error('[LazyImages] Failed to scrape images for chapter', chapterId, err);

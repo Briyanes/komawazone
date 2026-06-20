@@ -23,9 +23,20 @@
 # Script progress & log files
 scripts/.r2-migrate-progress.json
 scripts/.chapter-download-progress.json
+scripts/.import-progress.json
+scripts/.fix-dead-images-progress.json
 scripts/failed-covers.jsonl
 scripts/failed-chapters.jsonl
+scripts/failed-null-thumbnails.jsonl
+scripts/failed-gmbr-fix.jsonl
+scripts/fix-dead-images-failures.jsonl
 scripts/*.log
+scripts/*-progress.json
+
+# Proxy & credentials (NEVER commit)
+docs/Webshare*.txt
+docs/listproxcy
+docs/*proxies*
 
 # misc
 .DS_Store

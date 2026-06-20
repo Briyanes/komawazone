@@ -276,14 +276,38 @@ async function runBackfill(
             `${toDownload[0].manga?.slug || 'manga'}-ch${chapterId}`
           );
 
-          // Update successful uploads
+          // CRITICAL FIX: Update by composite key (chapter_id + number), NOT by image_url.
+          // Updating by image_url alone is unsafe:
+          //   - If the same URL appears in multiple chapters, ALL get overwritten (duplicate).
+          //   - If the URL has a query string or casing difference, the update is a no-op,
+          //     silently leaving the row pointing to the dead CDN URL. This is the root
+          //     cause of "chapter list shows but reader images are missing/partial".
+          //
+          // We match each successful download back to its source image row by originalUrl,
+          // then update that specific row by its (chapter_id, number) composite key.
+          const urlToImg = new Map<string, { chapter_id: string; number: number }>();
+          for (const img of toDownload) {
+            urlToImg.set(img.image_url, { chapter_id: img.chapter_id, number: img.number });
+          }
+
           for (const result of r2Results) {
             if (result.key) {
-              await adminSupabase
+              const loc = urlToImg.get(result.originalUrl);
+              if (!loc) {
+                failed++;
+                continue;
+              }
+              const { error: updateError } = await adminSupabase
                 .from('chapter_images')
                 .update({ image_url: result.url })
-                .eq('image_url', result.originalUrl);
-              success++;
+                .eq('chapter_id', loc.chapter_id)
+                .eq('number', loc.number);
+              if (updateError) {
+                console.error(`[Backfill] update failed ch ${loc.chapter_id} #${loc.number}:`, updateError.message);
+                failed++;
+              } else {
+                success++;
+              }
             } else {
               failed++;
             }

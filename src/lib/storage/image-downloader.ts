@@ -1,4 +1,5 @@
 import { validateScraperUrl } from '@/lib/scrapers/scraper-utils';
+import { fetchBufferWithProxy } from '@/lib/proxy';
 
 const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10 MB
 const DEFAULT_TIMEOUT = 30000; // 30 seconds
@@ -40,7 +41,51 @@ function isValidImageContentType(contentType: string): boolean {
 }
 
 /**
- * Download image from URL with retry logic and SSRF protection
+ * Check whether a URL points to a manga CDN that requires proxy rotation.
+ * We only proxy external manga CDN URLs; R2 and our own /api routes are direct.
+ */
+function shouldUseProxy(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const host = parsed.hostname;
+    // Manga CDNs that block datacenter IPs
+    const CDN_PATTERNS = [
+      'gmbr.pro',
+      'gmbar.xyz',
+      'manhwaland',
+      'kambingjantan',
+      'cdn.scroller',
+      'i0.wp.com',
+    ];
+    return CDN_PATTERNS.some(p => host.includes(p));
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Build browser-like headers for CDN requests, with dynamic Referer.
+ */
+function buildImageHeaders(url: string): Record<string, string> {
+  const origin = (() => {
+    try { return new URL(url).origin + '/'; } catch { return 'https://04x.manhwaland.land/'; }
+  })();
+  return {
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
+    'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
+    'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
+    'Referer': origin,
+    'sec-fetch-dest': 'image',
+    'sec-fetch-mode': 'no-cors',
+    'sec-fetch-site': 'cross-site',
+  };
+}
+
+/**
+ * Download image from URL with retry logic and SSRF protection.
+ *
+ * CRITICAL FIX: Now routes through the Webshare proxy pool when the URL points
+ * to a manga CDN (gmbr.pro, manhwaland, etc.) to avoid 403/429 IP blocks.
  */
 export async function downloadImageWithRetry(
   url: string,
@@ -56,6 +101,8 @@ export async function downloadImageWithRetry(
 
   // Upgrade HTTP → HTTPS for CDNs that block plain HTTP (gmbr.pro returns 403 on HTTP)
   const fetchUrl = upgradeToHttps(url);
+  const useProxy = shouldUseProxy(fetchUrl);
+  const headers = buildImageHeaders(fetchUrl);
 
   let lastError: Error | null = null;
 
@@ -68,17 +115,30 @@ export async function downloadImageWithRetry(
     }
 
     try {
-      const imageHeaders: HeadersInit = {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-        'Accept': 'image/avif,image/webp,image/apng,image/*,*/*;q=0.8',
-        'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
-        'Referer': new URL(fetchUrl).origin + '/',
-        'sec-fetch-dest': 'image',
-        'sec-fetch-mode': 'no-cors',
-        'sec-fetch-site': 'cross-site',
-      };
+      if (useProxy) {
+        // Route through proxy pool — avoids Vercel IP blocks from CDNs.
+        const { buffer, contentType, status } = await fetchBufferWithProxy(fetchUrl, {
+          headers,
+          timeoutMs: timeout,
+          maxAttempts: 3,
+        });
+
+        if (!isValidImageContentType(contentType)) {
+          throw new Error(`Invalid content type: ${contentType}`);
+        }
+        if (buffer.length > MAX_IMAGE_SIZE) {
+          throw new Error(`Image too large: ${buffer.length} bytes`);
+        }
+        if (buffer.length === 0) {
+          throw new Error('Downloaded image is empty');
+        }
+
+        return { buffer, contentType };
+      }
+
+      // Direct fetch for non-CDN URLs (R2, our own API, etc.)
       const response = await fetch(fetchUrl, {
-        headers: imageHeaders,
+        headers,
         signal: AbortSignal.timeout(timeout),
       });
 
@@ -119,7 +179,6 @@ export async function downloadImageWithRetry(
       }
 
       return { buffer, contentType };
-
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
 

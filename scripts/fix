@@ -1,0 +1,99 @@
+/**
+ * Fast Ghost Thumbnail Nullifier (with proper pagination)
+ *
+ * Supabase REST API returns max 1000 rows per request.
+ * This script properly paginates through ALL chapters.
+ *
+ * Usage: node scripts/fix-ghost-thumbnails-fast.mjs
+ */
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+dotenv.config({ path: '.env.local' });
+
+const sb = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY,
+);
+
+const PAGE_SIZE = 1000;
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+async function main() {
+  console.log('\n⚡ Fast Ghost Thumbnail Nullifier\n');
+
+  // Step 1: Build a Set of all chapter_ids that have images
+  console.log('Step 1: Fetching all chapter_ids with images...');
+  const chaptersWithImages = new Set();
+  let offset = 0;
+  while (true) {
+    const { data: imgs, error } = await sb.from('chapter_images')
+      .select('chapter_id')
+      .range(offset, offset + PAGE_SIZE - 1);
+    if (error) { console.error('Error fetching images:', error.message); break; }
+    if (!imgs || imgs.length === 0) break;
+    for (const img of imgs) chaptersWithImages.add(img.chapter_id);
+    offset += PAGE_SIZE;
+    if (offset % 50000 === 0) console.log(`  ...${offset} image rows fetched`);
+  }
+  console.log(`  Total distinct chapters with images: ${chaptersWithImages.size}\n`);
+
+  // Step 2: Paginate through ALL chapters with thumbnail_url
+  console.log('Step 2: Finding ghost chapters (thumbnail but no images)...');
+  let chapterOffset = 0;
+  let totalGhost = 0;
+  let totalChecked = 0;
+  const startTime = Date.now();
+
+  while (true) {
+    const { data: chapters, error } = await sb.from('chapters')
+      .select('id, number')
+      .is('deleted_at', null)
+      .not('thumbnail_url', 'is', null)
+      .range(chapterOffset, chapterOffset + PAGE_SIZE - 1);
+
+    if (error) { console.error('Error fetching chapters:', error.message); break; }
+    if (!chapters || chapters.length === 0) break;
+
+    // Find ghost chapters in this batch
+    const ghostIds = chapters
+      .filter(ch => !chaptersWithImages.has(ch.id))
+      .map(ch => ch.id);
+
+    if (ghostIds.length > 0) {
+      const { error: nullErr } = await sb.from('chapters')
+        .update({ thumbnail_url: null })
+        .in('id', ghostIds);
+      if (nullErr) {
+        console.error(`  Nullify error:`, nullErr.message);
+      } else {
+        totalGhost += ghostIds.length;
+      }
+    }
+
+    totalChecked += chapters.length;
+    chapterOffset += PAGE_SIZE;
+    console.log(`  Batch at offset ${chapterOffset - PAGE_SIZE}: ${chapters.length} chapters, ${ghostIds.length} ghosts`);
+
+    if (chapters.length < PAGE_SIZE) break;
+    await sleep(50);
+  }
+
+  const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+  console.log(`\n=== DONE ===`);
+  console.log(`  Total checked:        ${totalChecked}`);
+  console.log(`  Ghosts nullified:     ${totalGhost}`);
+  console.log(`  Time:                 ${elapsed}s`);
+
+  // Verify
+  const { count: remaining } = await sb.from('chapters')
+    .select('*', { count: 'exact', head: true })
+    .is('deleted_at', null)
+    .not('thumbnail_url', 'is', null);
+  console.log(`  Remaining with thumb: ${remaining}`);
+}
+
+main().catch(err => {
+  console.error('Fatal:', err);
+  process.exit(1);
+});

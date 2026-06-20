@@ -1,0 +1,1648 @@
+{
+  "timestamp": "2026-06-20T14:06:49.795Z",
+  "summary": {
+    "totalManga": 3485,
+    "totalChapters": 43061,
+    "totalImages": 44
+  },
+  "results": {
+    "correct5th": 13,
+    "correctLast": 2,
+    "wrong": 29,
+    "nullThumb": 0,
+    "noImages": 43017,
+    "total": 43061,
+    "pct": "0.03"
+  },
+  "issues": [
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Taming A Female Bully",
+      "slug": "taming-a-female-bully",
+      "chapter": 12,
+      "chapterId": "0002a3cd-5b7a-4b3c-aae6-9bbd69c2abb8",
+      "imageCount": 10,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "My Students Who Became Parents",
+      "slug": "my-students-who-became-parents",
+      "chapter": 43,
+      "chapterId": "000715a4-2b6e-4ffd-be5c-fe76c6924a34",
+      "imageCount": 28,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "ZZIN Protect Bahasa Indonesia",
+      "slug": "zzin-protect-bahasa-indonesia",
+      "chapter": 46,
+      "chapterId": "00083c1b-c56b-4873-a285-192ae3fbdf0e",
+      "imageCount": 9,
+      "current": "1781897323367-dfd8da6b-bf6e-4eb5-9c3b-d8a7e2182162.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Romantic Camping",
+      "slug": "romantic-camping",
+      "chapter": 12,
+      "chapterId": "000ad27b-8836-43e5-974f-68477faa0fd6",
+      "imageCount": 32,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Set It!",
+      "slug": "set-it",
+      "chapter": 64,
+      "chapterId": "000fbd92-6761-4301-a83f-f212ade91d79",
+      "imageCount": 10,
+      "current": "1781897522728-0b3dd03f-abac-4760-9d81-d65d9b351e74.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Pleasure up!",
+      "slug": "pleasure-up",
+      "chapter": 60,
+      "chapterId": "0014d47f-a28b-4fa3-816d-4fff82c43552",
+      "imageCount": 24,
+      "current": "1781897524700-75e648f2-4466-4121-8b92-e5a2738cfe81.webp"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Solo Camp Debut",
+      "slug": "solo-camp-debut",
+      "chapter": 1,
+      "chapterId": "001506db-5dd7-4194-ac25-3616daf5e770",
+      "imageCount": 29,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Sextudy Group",
+      "slug": "sextudy-group",
+      "chapter": 58,
+      "chapterId": "00176ff4-a02f-4adc-aefb-ab4c58ac4915",
+      "imageCount": 21,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Young Boss",
+      "slug": "young-boss",
+      "chapter": 61,
+      "chapterId": "0017e792-67e8-44eb-a4f5-d647978b48f9",
+      "imageCount": 13,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Stolen",
+      "slug": "stolen",
+      "chapter": 48,
+      "chapterId": "0019c51f-3043-4dcd-8b6a-def716542926",
+      "imageCount": 25,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Mother-In-Law Bends to My Will",
+      "slug": "mother-in-law-bends-to-my-will",
+      "chapter": 7,
+      "chapterId": "001c38ce-585b-407d-afc2-d4c8baf31308",
+      "imageCount": 14,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "The Unforeseen Guest",
+      "slug": "the-unforeseen-guest",
+      "chapter": 51,
+      "chapterId": "001d0f4a-bd75-42b4-a720-7b1d6d1fdc2b",
+      "imageCount": 13,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "With Yumi",
+      "slug": "with-yumi",
+      "chapter": 5,
+      "chapterId": "001ed9e0-5c7a-4549-996a-3b50c6434c16",
+      "imageCount": 228,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "The Unforeseen Guest",
+      "slug": "the-unforeseen-guest",
+      "chapter": 118,
+      "chapterId": "0022af67-ddee-4365-ba9c-85ae5f67039c",
+      "imageCount": 17,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Queen Bee (Andrew)",
+      "slug": "queen-bee-andrew",
+      "chapter": 210,
+      "chapterId": "00259c8f-e191-4f46-a749-f67c2fc47339",
+      "imageCount": 8,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Love Limit Exceeded",
+      "slug": "love-limit-exceeded",
+      "chapter": 20,
+      "chapterId": "0029fdc5-1de5-448b-bec6-fe0db08b8eef",
+      "imageCount": 37,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Panty Note",
+      "slug": "panty-note",
+      "chapter": 35,
+      "chapterId": "002b3d8d-3b9b-4a19-9f7d-3b5f874d97a4",
+      "imageCount": 10,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Ichioku-nen Button O Renda Shita Ore Wa, Kizuitara Saikyou Ni Natteita",
+      "slug": "ichioku-nen-button-o-renda-shita-ore-wa-kizuitara-saikyou-ni-natteita",
+      "chapter": 26.2,
+      "chapterId": "002cf8c0-a9db-4cb0-ac44-fa9b51f36486",
+      "imageCount": 31,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Open Talk",
+      "slug": "open-talk",
+      "chapter": 29,
+      "chapterId": "002e6739-a8d0-4754-b2c0-9f05e92b1dbb",
+      "imageCount": 7,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Yumeochi: Dreaming of Falling For You",
+      "slug": "yumeochi-dreaming-of-falling-for-you",
+      "chapter": 22,
+      "chapterId": "002fe1d9-54a8-428b-8cd0-7774a239ab7b",
+      "imageCount": 18,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Obscene Private Lesson",
+      "slug": "obscene-private-lesson",
+      "chapter": 64,
+      "chapterId": "002fe2b8-4ae1-48fb-941e-ea9411c0271d",
+      "imageCount": 5,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Isekai Pornstar",
+      "slug": "isekai-pornstar",
+      "chapter": 2,
+      "chapterId": "0030b443-f78a-404e-be9e-d8fab566c643",
+      "imageCount": 15,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Miss Mystic",
+      "slug": "miss-mystic",
+      "chapter": 57,
+      "chapterId": "0032bb78-a973-40c2-b85c-cdedf1f20287",
+      "imageCount": 20,
+      "current": "1781897567819-d7e35123-13eb-4617-8c94-7a25fcfcaa71.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "The Ladies' Associate",
+      "slug": "the-ladies-associate",
+      "chapter": 135,
+      "chapterId": "0037a351-d58a-476a-b5c6-dc5af4fd4b62",
+      "imageCount": 13,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "The Father-In-Law Fucks Them All",
+      "slug": "the-father-in-law-fucks-them-all",
+      "chapter": 20,
+      "chapterId": "0038c6fc-5ddb-42d3-8d06-2ebed282d8e6",
+      "imageCount": 12,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "MILF Hunting In Another World",
+      "slug": "milf-hunting-in-another-world",
+      "chapter": 33,
+      "chapterId": "0038ed87-cd55-4c47-ad46-67bc37eb648d",
+      "imageCount": 21,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Suspicious Boarding House",
+      "slug": "suspicious-boarding-house",
+      "chapter": 9,
+      "chapterId": "004438e9-61f5-4c17-baf0-ac6772a98e07",
+      "imageCount": 24,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "Switch On",
+      "slug": "switch-on",
+      "chapter": 28,
+      "chapterId": "00465d68-4b09-464a-b537-3ba996dc3713",
+      "imageCount": 11,
+      "current": "005.jpg"
+    },
+    {
+      "type": "WRONG_THUMB",
+      "manga": "My First Time",
+      "slug": "my-first-time",
+      "chapter": 41,
+      "chapterId": "00476dab-f7f8-42b6-8a9d-44771a624824",
+      "imageCount": 32,
+      "current": "005.jpg"
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Tokidoki Bosotto Roshiago de Dereru Tonari no Alya-san",
+      "slug": "tokidoki-bosotto-roshiago-de-dereru-tonari-no-alya-san",
+      "chapter": 6,
+      "chapterId": "0049de8d-e4ca-46bd-9ef7-a77f327c39a9",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A CROWN OF THORNS [ UNSENSOR ]",
+      "slug": "a-crown-of-thorns-unsensor",
+      "chapter": 23,
+      "chapterId": "004d9592-9f21-4f7e-8ea5-333aa3044ed0",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Between Us (Goinmul)",
+      "slug": "between-us-goinmul",
+      "chapter": 3,
+      "chapterId": "00524b3e-7fad-4949-af17-e30f596531dc",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "MILF Hunting In Another World",
+      "slug": "milf-hunting-in-another-world",
+      "chapter": 34,
+      "chapterId": "0052d200-cf2d-42c7-abcc-76697a8ebaf7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Blueming",
+      "slug": "blueming",
+      "chapter": 10,
+      "chapterId": "0056c2b4-3c7e-4426-a41e-0d3b32f2653e",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Absolute Smartwatch",
+      "slug": "absolute-smartwatch",
+      "chapter": 7,
+      "chapterId": "0056e645-24f0-4f0f-bbae-e6f620736470",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "No More, No Less",
+      "slug": "no-more-no-less",
+      "chapter": 34,
+      "chapterId": "0056f548-e7f1-48c3-9706-c38f066b8f14",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "No Man’s Land",
+      "slug": "no-mans-land",
+      "chapter": 39,
+      "chapterId": "0058d587-05bd-4e01-8ffc-68152afee929",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Wireless Onahole",
+      "slug": "wireless-onahole",
+      "chapter": 40,
+      "chapterId": "005b0fc5-7493-4d9b-bda3-01b22646e53e",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Ark Is Me",
+      "slug": "the-ark-is-me",
+      "chapter": 79,
+      "chapterId": "005b9bbe-a96a-4a1e-bae9-d60476a084f1",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Boku no Kokoro no Yabai Yatsu",
+      "slug": "boku-no-kokoro-no-yabai-yatsu",
+      "chapter": 62,
+      "chapterId": "005c06cc-423a-4fee-bcaf-d00a1458a3c3",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "That Mans Epilepsy",
+      "slug": "that-mans-epilepsy",
+      "chapter": 91,
+      "chapterId": "005d7827-8768-4a95-a2cb-58a98aef35ad",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Secret Class Uncensored",
+      "slug": "secret-class-uncensored",
+      "chapter": 96,
+      "chapterId": "005ffe2e-267a-4b2e-beeb-20d32997a2d9",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Kangsae the Strong",
+      "slug": "kangsae-the-strong",
+      "chapter": 43,
+      "chapterId": "00620880-39cb-4bc4-a8d3-1e283c913d71",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Itomusubi",
+      "slug": "itomusubi",
+      "chapter": 5,
+      "chapterId": "00627e67-dc33-4b4d-8f2a-5570b066f02b",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Emperor of The Night",
+      "slug": "the-emperor-of-the-night",
+      "chapter": 105,
+      "chapterId": "00655cda-da3a-46b4-ae57-9071309f7033",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Lingua Franca!!",
+      "slug": "lingua-franca",
+      "chapter": 4,
+      "chapterId": "006cea83-3c63-4332-b041-2a310eaef14c",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Wife for 1000 Days",
+      "slug": "wife-for-1000-days",
+      "chapter": 23,
+      "chapterId": "006d220d-eaa6-4c40-962c-b50cfb7562d2",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Onee-chan ni wa Kanawanai",
+      "slug": "onee-chan-ni-wa-kanawanai",
+      "chapter": 1,
+      "chapterId": "006e558f-4d3b-46c6-8d0b-51db69ef2771",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "I’m the Only Man on the Military Base",
+      "slug": "im-the-only-man-on-the-military-base",
+      "chapter": 25,
+      "chapterId": "006fc2f3-3180-495a-83fa-1e3d0c4a202a",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Rainbow",
+      "slug": "rainbow",
+      "chapter": 45,
+      "chapterId": "0071700a-39e5-4dc3-a3ef-97b19bc70f76",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Daseiism",
+      "slug": "daseiism",
+      "chapter": 3,
+      "chapterId": "0071b7ad-0a78-4695-9fa1-9230787b7b70",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Milftoon Random",
+      "slug": "milftoon-random",
+      "chapter": 5,
+      "chapterId": "00730b39-b858-4d13-8c1f-b2520977e356",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Twin Slaves",
+      "slug": "twin-slaves",
+      "chapter": 71,
+      "chapterId": "007454d6-8b07-4a3d-b153-7036ca0bb0fc",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Reborn with Big Rizz Energy ( Reborn with big dick )",
+      "slug": "reborn-with-big-rizz-energy-reborn-with-big-dick",
+      "chapter": 57,
+      "chapterId": "00749949-28eb-4cde-870d-43b028929c50",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "I Became an Apartment Security Manager",
+      "slug": "i-became-an-apartment-security-manager",
+      "chapter": 3,
+      "chapterId": "0075adc3-01fe-4703-bd50-b31906f75018",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Hitozuma A-san to Musuko no Yuujin N-kun",
+      "slug": "hitozuma-a-san-to-musuko-no-yuujin-n-kun",
+      "chapter": 2,
+      "chapterId": "0078168c-2b2c-483c-ba52-ad7f36a75265",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Shall We Go to the Ryokan Together?",
+      "slug": "shall-we-go-to-the-ryokan-together",
+      "chapter": 23,
+      "chapterId": "00799ff8-a529-40cf-859f-df5613df3f12",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Backseat Trip with my Stepmother",
+      "slug": "backseat-trip-with-my-stepmother",
+      "chapter": 6,
+      "chapterId": "007b7a96-3188-4cd0-a39e-309c38970e5f",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Rei no Kami",
+      "slug": "rei-no-kami",
+      "chapter": 1,
+      "chapterId": "007e9cce-bea7-47da-8a9f-2b1f7b3f7fa6",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Shinobi Koishitau",
+      "slug": "shinobi-koishitau",
+      "chapter": 0,
+      "chapterId": "007f7a41-718b-484f-89e2-f2c90cd44f4e",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Matrimoney Game",
+      "slug": "matrimoney-game",
+      "chapter": 10,
+      "chapterId": "0081472a-f00d-4687-9e98-392736cfd941",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Dra. Sexual",
+      "slug": "dra-sexual",
+      "chapter": 14,
+      "chapterId": "0083608a-ca23-4021-ae96-0fdfb469df01",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Administrator Privileges",
+      "slug": "administrator-privileges",
+      "chapter": 81,
+      "chapterId": "00836801-4446-474c-926d-6266e1e96ea5",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Brothel",
+      "slug": "brothel",
+      "chapter": 22,
+      "chapterId": "008387f9-c14b-44d7-80f2-c4aa0f0dfb4a",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Boss’s Daughter",
+      "slug": "bosss-daughter",
+      "chapter": 67,
+      "chapterId": "008391a2-bb8b-4176-b481-2c64a8af0e40",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Berry Fans",
+      "slug": "berry-fans",
+      "chapter": 33,
+      "chapterId": "0083edaa-b3ac-418d-b403-501a434aa161",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "I Became an Apartment Security Manager",
+      "slug": "i-became-an-apartment-security-manager",
+      "chapter": 21,
+      "chapterId": "0083fe24-7d2b-44c7-9cf7-df1c596796b9",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "As If Daughter",
+      "slug": "as-if-daughter",
+      "chapter": 41,
+      "chapterId": "008519d3-7625-4ad2-9d87-45b21696edae",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Urban God of Medicine",
+      "slug": "urban-god-of-medicine",
+      "chapter": 40,
+      "chapterId": "0087dca8-f730-4375-919d-1afd6e0fa958",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Family Control",
+      "slug": "family-control",
+      "chapter": 4,
+      "chapterId": "0088c55c-cdba-4495-a00e-35cf2b92d574",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Black Moon Prophecy",
+      "slug": "black-moon-prophecy",
+      "chapter": 5,
+      "chapterId": "0088e6dc-ae4f-4052-934d-f08477b0e99b",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Bullied One Is Too Good at Fighting",
+      "slug": "the-bullied-one-is-too-good-at-fighting",
+      "chapter": 19,
+      "chapterId": "008abad7-652e-430e-a9bb-4607c2336390",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Ashitaba-san Chi no Muko Kurashi",
+      "slug": "ashitaba-san-chi-no-muko-kurashi",
+      "chapter": 10,
+      "chapterId": "008cf5f4-6a29-4812-8a89-6a3c6e1fdca2",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Friends With Secrets",
+      "slug": "friends-with-secrets",
+      "chapter": 20,
+      "chapterId": "008d4213-8191-4f8f-b8ed-28d7da4d40b7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A Dangerous Deal, and the Woman Next Door",
+      "slug": "a-dangerous-deal-and-the-woman-next-door",
+      "chapter": 13,
+      "chapterId": "008d57d4-34bd-4e9f-ba18-494c70e98f61",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Brothel",
+      "slug": "brothel",
+      "chapter": 69,
+      "chapterId": "008da2fe-0419-40f9-8e9c-0145d283fc66",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Paying My Landlord Rent Through Sex",
+      "slug": "paying-my-landlord-rent-through-sex",
+      "chapter": 0,
+      "chapterId": "008e320c-c042-4647-81bc-9c8fc9b697ba",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Not the Daughter, but the Mother",
+      "slug": "not-the-daughter-but-the-mother",
+      "chapter": 3,
+      "chapterId": "00905d69-9784-4590-9cb6-f133b876e45d",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Share Girlfriend",
+      "slug": "share-girlfriend",
+      "chapter": 17,
+      "chapterId": "00922ca0-3093-4794-9203-9e8a242b0ef2",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Boku no Kokoro no Yabai Yatsu",
+      "slug": "boku-no-kokoro-no-yabai-yatsu",
+      "chapter": 3,
+      "chapterId": "00934be0-17ad-452b-8449-404d42f2dd06",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Ookiku Nattara Kekkon Suru!",
+      "slug": "ookiku-nattara-kekkon-suru",
+      "chapter": 21,
+      "chapterId": "0093eb58-2f70-483d-8680-43fa69a29658",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "No More, No Less",
+      "slug": "no-more-no-less",
+      "chapter": 12,
+      "chapterId": "0094dd75-4d89-4774-b8f9-6204e16be134",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Trap (Park Min)",
+      "slug": "trap-park-min",
+      "chapter": 68,
+      "chapterId": "0094f9e7-e5fd-4c99-bb33-dd22430c34bd",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Boss’s Daughter",
+      "slug": "bosss-daughter",
+      "chapter": 16,
+      "chapterId": "009618ca-854f-43e7-8f37-7c58a5c197dd",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Reborn with Big Rizz Energy ( Reborn with big dick )",
+      "slug": "reborn-with-big-rizz-energy-reborn-with-big-dick",
+      "chapter": 73,
+      "chapterId": "009a96bc-d044-414c-987b-606e53f00047",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Breaking A Romantic Fantasy Villain",
+      "slug": "breaking-a-romantic-fantasy-villain",
+      "chapter": 77,
+      "chapterId": "009aa113-5a12-4da5-9e83-088528f066be",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "RE: Twenty-Three",
+      "slug": "re-twenty-three",
+      "chapter": 6,
+      "chapterId": "009abb82-6978-4eb1-92b3-baa53ce3b2f1",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Shall We Ride?",
+      "slug": "shall-we-ride",
+      "chapter": 10,
+      "chapterId": "009b139a-a7c0-45a5-a1c1-3b54ec7d972c",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Watashi no kareshi no okāsan wa yumenonakade sore o te ni iremashita",
+      "slug": "watashi-no-kareshi-no-okasan-wa-yumenonakade-sore-o-te-ni-iremashita",
+      "chapter": 1,
+      "chapterId": "009d7e0a-66fd-49b8-9ab0-bae0f787b381",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Understanding Of Flirting",
+      "slug": "understanding-of-flirting",
+      "chapter": 9,
+      "chapterId": "009db408-392e-447c-9710-4ee06ebfb2f8",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Man of The House",
+      "slug": "man-of-the-house",
+      "chapter": 21,
+      "chapterId": "009f0e67-19b6-4c08-b723-5887319e37f8",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Affair Trade",
+      "slug": "affair-trade",
+      "chapter": 18,
+      "chapterId": "009f5e4c-6039-41cf-bf9c-f04c86b948e4",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "PC Cafe Goddess",
+      "slug": "pc-cafe-goddess",
+      "chapter": 3,
+      "chapterId": "009f6f62-df6b-4238-a4fe-d1501d4e9bd6",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Hana's Demons of Lust",
+      "slug": "hanas-demons-of-lust",
+      "chapter": 56,
+      "chapterId": "00a02adf-50bd-48a6-bbd4-bf01fd165c50",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Now That We Draw",
+      "slug": "now-that-we-draw",
+      "chapter": 7,
+      "chapterId": "00a0c1b6-9915-4d67-acc5-cfcf58fa03ce",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Imouto wa Juken ni Ochita",
+      "slug": "imouto-wa-juken-ni-ochita",
+      "chapter": 1,
+      "chapterId": "00a274e0-55b1-4548-b5ff-5683fbd08255",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Bride Training",
+      "slug": "bride-training",
+      "chapter": 21,
+      "chapterId": "00a319ac-1a39-4212-bc16-4b44b7f8e535",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Your Situation",
+      "slug": "your-situation",
+      "chapter": 42,
+      "chapterId": "00a4c829-6edf-45e3-806b-b5addc281ecf",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Pleasure up!",
+      "slug": "pleasure-up",
+      "chapter": 63,
+      "chapterId": "00a54213-e5ec-4480-82a5-5fc64a3191ef",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Secret Friend",
+      "slug": "secret-friend",
+      "chapter": 17,
+      "chapterId": "00a57fbf-613e-4a74-b612-e0347b71767c",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Harem King",
+      "slug": "harem-king",
+      "chapter": 35,
+      "chapterId": "00a72d1f-14dc-4773-b5c4-eee481276a01",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Herbal Love Story",
+      "slug": "herbal-love-story",
+      "chapter": 56,
+      "chapterId": "00a73882-c01b-4a04-8e15-c81cb4b05df9",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Live With: Do You Want to Do It?",
+      "slug": "live-with-do-you-want-to-do-it",
+      "chapter": 16,
+      "chapterId": "00a740ed-f0d8-4bf8-9a52-6d6780d34c61",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Staying at The Sisters House",
+      "slug": "staying-at-the-sisters-house",
+      "chapter": 34,
+      "chapterId": "00a759a9-885a-4f14-b88c-2df92ace206e",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Bad Thinking Diary",
+      "slug": "bad-thinking-diary",
+      "chapter": 40,
+      "chapterId": "00a7943a-1eca-45a8-bd6c-53c71ca39c39",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Kangcheol’s Bosses",
+      "slug": "kangcheols-bosses",
+      "chapter": 6,
+      "chapterId": "00a8225f-10f0-45c8-aeb3-0513f8791927",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Living with Two Households",
+      "slug": "living-with-two-households",
+      "chapter": 8,
+      "chapterId": "00b0b932-189f-45a0-8c27-3d6ed42ce832",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Young Boss",
+      "slug": "young-boss",
+      "chapter": 28,
+      "chapterId": "00b0cf8e-cee9-4d4f-acf9-e83913716e62",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Hyeonjung’s Residence",
+      "slug": "hyeonjungs-residence",
+      "chapter": 9,
+      "chapterId": "00b1ff7e-8a33-4449-8916-dc8eab4b72a7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "12 Years Apart",
+      "slug": "12-years-apart",
+      "chapter": 6,
+      "chapterId": "00b30cab-980c-4828-84d8-212e60909085",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Addicted Once",
+      "slug": "addicted-once",
+      "chapter": 15,
+      "chapterId": "00b5182f-4226-4032-9a1c-25dd37107042",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Not To Be Missed",
+      "slug": "not-to-be-missed",
+      "chapter": 18,
+      "chapterId": "00b63a9c-4be8-46f5-9917-5c434522939c",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Warrior Dissatisfied With Everyone",
+      "slug": "the-warrior-dissatisfied-with-everyone",
+      "chapter": 27,
+      "chapterId": "00b6bd30-1531-45c4-af3f-a75e117e137f",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "How to Train Your Little Aunt",
+      "slug": "how-to-train-your-little-aunt",
+      "chapter": 15,
+      "chapterId": "00bab6c1-5e9a-46c7-bac7-5f8c1bac2273",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A Mean Guy",
+      "slug": "a-mean-guy",
+      "chapter": 1,
+      "chapterId": "00bbfffd-c2a5-4020-bf26-de4ee67a85c8",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Fruitless",
+      "slug": "fruitless",
+      "chapter": 16,
+      "chapterId": "00bc9d36-b5d0-404d-ad53-92d234ac4878",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Sekkusu and danjon!",
+      "slug": "sekkusu-and-danjon",
+      "chapter": 2,
+      "chapterId": "00be33d5-889b-4929-9151-4fcb5de9b43e",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Friends With Secrets",
+      "slug": "friends-with-secrets",
+      "chapter": 27,
+      "chapterId": "00bfeb02-8f14-47b6-9301-208cc8cc1577",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Kuro Gyarumama ni Koishiteru",
+      "slug": "kuro-gyarumama-ni-koishiteru",
+      "chapter": 1,
+      "chapterId": "00c0b51e-3465-4afa-9558-bf35c497e3b1",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Office Lady's Secret Account",
+      "slug": "the-office-ladys-secret-account",
+      "chapter": 14,
+      "chapterId": "00c35434-d96d-4f31-bca2-768c64dbf0a8",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Haruno Tameni Hadao Nugimasu",
+      "slug": "haruno-tameni-hadao-nugimasu",
+      "chapter": 0,
+      "chapterId": "00c3f04e-88b5-4c6c-8ad3-fc82275e1e56",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Runner’s High",
+      "slug": "runners-high",
+      "chapter": 11,
+      "chapterId": "00c602f0-ee72-4848-8d37-e36f953c7b64",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Unforeseen Guest",
+      "slug": "the-unforeseen-guest",
+      "chapter": 11,
+      "chapterId": "00c65b01-bed5-430b-8b63-04c90a68947f",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Queen Bee (Andrew)",
+      "slug": "queen-bee-andrew",
+      "chapter": 83,
+      "chapterId": "00c7ed21-56e6-4a3a-9511-2be9e4a56542",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Housemaid",
+      "slug": "the-housemaid",
+      "chapter": 66,
+      "chapterId": "00c8549c-ee43-4878-9ffe-172f03e1eb12",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Girl That Wet the Wall",
+      "slug": "the-girl-that-wet-the-wall",
+      "chapter": 3,
+      "chapterId": "00c88409-fcc2-47f6-972e-e180002b5ae4",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Sex Stopwatch",
+      "slug": "sex-stopwatch",
+      "chapter": 8,
+      "chapterId": "00cb42e8-433e-48f4-b124-28e571bc0d11",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Scarlet Desire EX",
+      "slug": "scarlet-desire-ex",
+      "chapter": 1,
+      "chapterId": "00cccb3d-46d7-4978-b780-5a54d3dfeba4",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A Bachelor in the Country",
+      "slug": "a-bachelor-in-the-country",
+      "chapter": 43,
+      "chapterId": "00cf8981-5f62-4feb-899b-a2fa3b0cb389",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Trophy Wives",
+      "slug": "trophy-wives",
+      "chapter": 20,
+      "chapterId": "00d4d4cf-5bd6-4b15-9aaf-49f077f23e51",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Suspicious Boarding House",
+      "slug": "suspicious-boarding-house",
+      "chapter": 6,
+      "chapterId": "00d7fc94-f8ce-4a0e-bc29-1e4af04b3762",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Zangyaku Sugiru Isekai demo Suzuki wa Kawaii",
+      "slug": "zangyaku-sugiru-isekai-demo-suzuki-wa-kawaii",
+      "chapter": 8,
+      "chapterId": "00dd35cd-f09c-42e5-9554-3c00510f2f79",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Ore no Genjitsu wa Renai Game?? ka to Omottara Inochigake no Game datta",
+      "slug": "ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta",
+      "chapter": 39,
+      "chapterId": "00ddbb5b-deb3-412e-ae18-1e7631629ab7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "My students",
+      "slug": "my-students",
+      "chapter": 39,
+      "chapterId": "00de7ab1-4671-429f-8214-ce27b5d8fd85",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "In at the Deep End",
+      "slug": "in-at-the-deep-end",
+      "chapter": 3,
+      "chapterId": "00debd2d-8cbd-4729-b2f2-5382d4b283b7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Female Professor's Secret Account",
+      "slug": "the-female-professors-secret-account",
+      "chapter": 13,
+      "chapterId": "00e085c1-6f60-4dc0-b13a-2ecb11d2b688",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Gamers",
+      "slug": "gamers",
+      "chapter": 21,
+      "chapterId": "00e3ecfb-83c1-4687-8dfb-09a5ecc36fbb",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Shiotaiou no Sato-san ga Ore ni dake Amai",
+      "slug": "shiotaiou-no-sato-san-ga-ore-ni-dake-amai",
+      "chapter": 7,
+      "chapterId": "00e59319-037e-4aab-bb1d-bc667d18b312",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Ivory Hot Spring",
+      "slug": "ivory-hot-spring",
+      "chapter": 1,
+      "chapterId": "00ea28ca-92e8-4a32-b12a-2d093125e8d2",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Grade 3 Class 5",
+      "slug": "grade-3-class-5",
+      "chapter": 80,
+      "chapterId": "00eb88a5-e03a-488b-86a1-e7f7f48b45f4",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Got a Room? UNCENSORED",
+      "slug": "got-a-room-uncensored",
+      "chapter": 64,
+      "chapterId": "00ed4477-7b94-450b-bfb8-7a7a1c1a0449",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Dance Department’s Female Sunbaes",
+      "slug": "dance-departments-female-sunbaes",
+      "chapter": 7,
+      "chapterId": "00f0c4d9-6013-4d1f-ab85-70c4f1b30436",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Sponsor Me Please",
+      "slug": "sponsor-me-please",
+      "chapter": 67,
+      "chapterId": "00f39027-b739-4753-bdb1-7b5d7b539999",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Massage Club",
+      "slug": "the-massage-club",
+      "chapter": 1,
+      "chapterId": "00f4b24d-d234-4b6e-8f20-efe13207c27d",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Rain Curtain",
+      "slug": "rain-curtain",
+      "chapter": 4,
+      "chapterId": "00fb4368-f53e-46fe-b459-330632a4d384",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Kemonokko Tsuushin",
+      "slug": "kemonokko-tsuushin",
+      "chapter": 1,
+      "chapterId": "00fb9f9f-731a-4fb9-889a-74ad9e8c8ec9",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Bocchama, Seishidou ni Mairimashita",
+      "slug": "bocchama-seishidou-ni-mairimashita",
+      "chapter": 1,
+      "chapterId": "00fbc2ed-68eb-49fa-987a-00a24b069d27",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "My Brother’s Secretary",
+      "slug": "my-brothers-secretary",
+      "chapter": 1,
+      "chapterId": "00fc57b3-6346-4e0c-bd37-425220da190f",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Himegasaki Sakurako wa Kyoumo Fubin Kawaii!",
+      "slug": "himegasaki-sakurako-wa-kyoumo-fubin-kawaii",
+      "chapter": 8,
+      "chapterId": "00fe67a2-6114-4ac2-932c-1b5528ca16f9",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Girl That Wet the Wall",
+      "slug": "the-girl-that-wet-the-wall",
+      "chapter": 23,
+      "chapterId": "00ff608c-b632-4fd1-928f-e24f56efeacd",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Stepmothers Friends",
+      "slug": "stepmothers-friends",
+      "chapter": 8,
+      "chapterId": "01006fc5-7934-4896-999b-8835af196e66",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "I Became an Apartment Security Manager",
+      "slug": "i-became-an-apartment-security-manager",
+      "chapter": 10,
+      "chapterId": "0101eb25-3fd1-4948-89bc-d088e328a2c4",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Sextertainment",
+      "slug": "sextertainment",
+      "chapter": 14,
+      "chapterId": "0102812b-0424-41b7-b6ef-17d59cba33ac",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Unforeseen Guest",
+      "slug": "the-unforeseen-guest",
+      "chapter": 129,
+      "chapterId": "010762e2-634a-4e85-9cf9-edf9abd81489",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Female Professor's Secret Account",
+      "slug": "the-female-professors-secret-account",
+      "chapter": 16,
+      "chapterId": "0108e67f-acb4-4af7-b1f9-809deeeefca7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Never Die Extra",
+      "slug": "never-die-extra",
+      "chapter": 40,
+      "chapterId": "0109ce61-edfe-49f6-85b4-6d8f7f1d21cd",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Glorious Homecoming (Naru)",
+      "slug": "glorious-homecoming-naru",
+      "chapter": 50,
+      "chapterId": "010c0a6e-ceaa-4fee-a55d-1f16046db8b7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Mama to Sensei ~Tsukuzuku Onna Genashi~",
+      "slug": "mama-to-sensei-tsukuzuku-onna-genashi",
+      "chapter": 4,
+      "chapterId": "010c7208-2ef7-4992-8b40-7ef59af3572e",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Greed Game",
+      "slug": "greed-game",
+      "chapter": 17,
+      "chapterId": "010e8925-2219-4f19-a82a-eed1544c0725",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Isekai Pornstar",
+      "slug": "isekai-pornstar",
+      "chapter": 3,
+      "chapterId": "0112d256-50ff-4c87-a8a1-040e59a609b5",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Loveinverse",
+      "slug": "loveinverse",
+      "chapter": 19,
+      "chapterId": "0114d733-e562-4038-9f35-2627661e4541",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Aqua",
+      "slug": "aqua",
+      "chapter": 37,
+      "chapterId": "011624ce-bde2-4bda-91c5-8780c7d5edf2",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Since When Did We Start Dating?",
+      "slug": "since-when-did-we-start-dating",
+      "chapter": 6,
+      "chapterId": "0116c85b-c72b-47bf-a756-68de63ca6983",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "I Want To Work Quietly",
+      "slug": "i-want-to-work-quietly",
+      "chapter": 18,
+      "chapterId": "0119e941-e4de-452d-91ce-22d8fbd793d1",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Main Character is the Villain",
+      "slug": "the-main-character-is-the-villain",
+      "chapter": 8,
+      "chapterId": "011bf249-da63-4f04-a9ea-2d98a3885fe2",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Athletes Village: The Trap",
+      "slug": "athletes-village-the-trap",
+      "chapter": 26,
+      "chapterId": "011c59a3-acc0-47e2-8de2-5273465bb763",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A Mean Guy",
+      "slug": "a-mean-guy",
+      "chapter": 72,
+      "chapterId": "012364b0-378f-425c-9918-46544d0f7290",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "One-Room Hero",
+      "slug": "one-room-hero",
+      "chapter": 61,
+      "chapterId": "01254dbb-4782-4e4e-a256-9d126dd38935",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Slaves of the Shelter",
+      "slug": "slaves-of-the-shelter",
+      "chapter": 29,
+      "chapterId": "0125dfee-ac95-405b-a357-7a410d6639fa",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Immortal Swordsman in the Reverse World",
+      "slug": "immortal-swordsman-in-the-reverse-world",
+      "chapter": 7,
+      "chapterId": "01263d0f-668b-4995-bdd8-4327fbe26e2f",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Wireless Onahole",
+      "slug": "wireless-onahole",
+      "chapter": 82,
+      "chapterId": "0126a23f-ea74-46d9-9f39-0d77fd6a2eab",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "THROUGH THE WALLL",
+      "slug": "through-the-walll",
+      "chapter": 1,
+      "chapterId": "012728e6-8f94-4a46-ba0d-3de9d23edfed",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Teacher, Long Time No See",
+      "slug": "teacher-long-time-no-see",
+      "chapter": 11,
+      "chapterId": "0129ed64-58eb-4b9f-9bca-91fc26aeabda",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Boss Around",
+      "slug": "boss-around",
+      "chapter": 17,
+      "chapterId": "012a5a94-6c35-4aec-b09a-23717841d322",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Izure Saikyou no Renkinjutsu Shi?",
+      "slug": "izure-saikyou-no-renkinjutsu-shi",
+      "chapter": 32.2,
+      "chapterId": "012b143c-2a66-45ec-8d70-3876b2331e1b",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "The Little Master",
+      "slug": "the-little-master",
+      "chapter": 76,
+      "chapterId": "01308467-7c28-4ab6-b41a-51929f02e370",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A Situation Full of Erections",
+      "slug": "a-situation-full-of-erections",
+      "chapter": 55,
+      "chapterId": "01309eb3-54f0-409c-8f5e-1506a429ba07",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Onnanoko no Tamago",
+      "slug": "onnanoko-no-tamago",
+      "chapter": 1,
+      "chapterId": "0131c5f9-923b-4d66-825f-818fd6e76daa",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Yankee Musume ni Natsukarete Kotoshi mo Juken ni Shippai Shisou Desu",
+      "slug": "yankee-musume-ni-natsukarete-kotoshi-mo-juken-ni-shippai-shisou-desu",
+      "chapter": 7,
+      "chapterId": "01336a46-41c1-4469-9cb5-7362c4f20781",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A Wise Driver’s Life",
+      "slug": "a-wise-drivers-life",
+      "chapter": 5,
+      "chapterId": "0138dce6-ed5e-46b6-8639-5ffc68b597bd",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Secret Friend",
+      "slug": "secret-friend",
+      "chapter": 44,
+      "chapterId": "013a1aad-ce3a-4d6c-b16e-2c181cc3cb70",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "My Bride is the Demon Lord!?",
+      "slug": "my-bride-is-the-demon-lord",
+      "chapter": 6,
+      "chapterId": "013d441d-556c-4470-bbea-ffd6656bdd59",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "My Stepmother’s Friends Uncen",
+      "slug": "my-stepmothers-friends-uncen",
+      "chapter": 65,
+      "chapterId": "013db716-820e-4c0d-9c71-c10ce8685c76",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Boss Reverse",
+      "slug": "boss-reverse",
+      "chapter": 18,
+      "chapterId": "013e63b7-64cd-4178-953b-97d4891b30c7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Brothel",
+      "slug": "brothel",
+      "chapter": 17,
+      "chapterId": "013f9e55-8eaf-4a31-beb7-d663af20f499",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "By Chance",
+      "slug": "by-chance",
+      "chapter": 11,
+      "chapterId": "0140a785-4f70-436c-b29a-6a1f196382ab",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A Secret Lesson With My Younger Sister",
+      "slug": "a-secret-lesson-with-my-younger-sister",
+      "chapter": 98,
+      "chapterId": "0142b0ca-b013-4b6e-b609-b0265b0bd3b7",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Doutei kara Hajimeru Dekamara Seikatsu",
+      "slug": "doutei-kara-hajimeru-dekamara-seikatsu",
+      "chapter": 2,
+      "chapterId": "0142dc2b-d14b-461f-9764-a02def2b1137",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Sexy Wife",
+      "slug": "sexy-wife",
+      "chapter": 34,
+      "chapterId": "0143ea63-fdde-461b-a621-2a82acbc83cf",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Houshi Iin no Oshigoto",
+      "slug": "houshi-iin-no-oshigoto",
+      "chapter": 2,
+      "chapterId": "0146451f-e81d-4cd3-8ca7-f315a2c87a37",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "A Mean Guy",
+      "slug": "a-mean-guy",
+      "chapter": 61,
+      "chapterId": "0148d254-aa0b-4d72-b2e9-522f4da58777",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Troublesome Sister",
+      "slug": "troublesome-sister",
+      "chapter": 58,
+      "chapterId": "014bafe1-914d-4f9b-a6b5-01ac91e60d07",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Panty Note",
+      "slug": "panty-note",
+      "chapter": 165,
+      "chapterId": "014d266f-014d-4091-91b4-2bc230312cfb",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Addicted Once",
+      "slug": "addicted-once",
+      "chapter": 39,
+      "chapterId": "0151f19c-8af9-442d-afac-627cddf39ae1",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Nise Seijo Kuso of the Year: Risou no Seijo? Zannen, Nise Seijo deshita!",
+      "slug": "nise-seijo-kuso-of-the-year-risou-no-seijo-zannen-nise-seijo-deshita",
+      "chapter": 10.2,
+      "chapterId": "0152d826-6ed9-4ffc-a362-e674ee219c59",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Should I Study at Noryangjin",
+      "slug": "should-i-study-at-noryangjin",
+      "chapter": 4,
+      "chapterId": "0154b76b-c1ed-4f8b-a885-87c45d37192d",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Wild Eyes",
+      "slug": "wild-eyes",
+      "chapter": 3,
+      "chapterId": "01556aee-0170-40ff-aaad-e635d2a10500",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Wonderful New World",
+      "slug": "wonderful-new-world",
+      "chapter": 7,
+      "chapterId": "01591eec-c0d6-4a76-8713-2e53d68b1280",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Trap (Park Min)",
+      "slug": "trap-park-min",
+      "chapter": 24,
+      "chapterId": "015977d6-9e8d-43cd-a2f0-4853d204abb6",
+      "imageCount": 0
+    },
+    {
+      "type": "NO_IMAGES",
+      "manga": "Shiotaiou no Sato-san ga Ore ni dake Amai",
+      "slug": "shiotaiou-no-sato-san-ga-ore-ni-dake-amai",
+      "chapter": 0,
+      "chapterId": "015b748f-a827-445b-a5c9-569c274b8e52",
+      "imageCount": 0
+    }
+  ]
+}

@@ -107,19 +107,30 @@ export async function GET(
       },
     });
   } catch (error) {
+    // Check if it's a NoSuchKey error (object doesn't exist in R2)
+    const err = error as { name?: string; $metadata?: { httpStatusCode?: number } };
+    const isNotFound =
+      err?.name === 'NoSuchKey' ||
+      err?.$metadata?.httpStatusCode === 404;
+
+    if (isNotFound) {
+      // Return 404 so the frontend can show a proper fallback
+      return new NextResponse('Image not found', {
+        status: 404,
+        headers: {
+          'Content-Type': 'text/plain',
+          'Cache-Control': 'no-store',
+        },
+      });
+    }
+
     console.error('[R2 Proxy] Error fetching:', key, error instanceof Error ? error.message : error);
 
-    // Return a 1x1 transparent pixel as fallback instead of error JSON
-    // This prevents broken image icons in the browser
-    const transparentPixel = Buffer.from(
-      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=',
-      'base64'
-    );
-
-    return new NextResponse(new Uint8Array(transparentPixel), {
-      status: 200, // Return 200 with transparent pixel to avoid breaking UI
+    // For other errors, return 500
+    return new NextResponse('Internal error', {
+      status: 500,
       headers: {
-        'Content-Type': 'image/png',
+        'Content-Type': 'text/plain',
         'Cache-Control': 'no-store',
       },
     });

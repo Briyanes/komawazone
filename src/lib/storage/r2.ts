@@ -70,17 +70,22 @@ function inferExtension(fileName: string, contentType: string): string {
 }
 
 export function buildR2PublicUrl(key: string): string {
+  // CRITICAL: Cloudflare R2 public dev URLs (pub-*.r2.dev) are UNRELIABLE and
+  // frequently return 403/404. The S3 API endpoint is NOT publicly accessible.
+  //
+  // We serve ALL R2 images through our own Next.js proxy route which reads
+  // from R2 via the S3 API server-side. This is 100% reliable.
+  //
+  // Route: /api/r2/image/[...key]  →  reads from R2 → serves image with caching
+  //
+  // R2_PUBLIC_BASE_URL is still respected for backward compatibility (e.g.
+  // if a custom domain is configured in future), but defaults to our proxy.
   const config = getR2Config();
-  // ALWAYS use the public base URL (r2.dev or custom domain).
-  // The S3 API endpoint ({bucket}.{accountId}.r2.cloudflarestorage.com) is NOT publicly accessible.
   if (config.publicBaseUrl) {
     return `${config.publicBaseUrl.replace(/\/$/, '')}/${key}`;
   }
-  // Fallback: construct r2.dev URL from account ID if public base URL not set
-  // Format: https://pub-{hash}.r2.dev/{key}
-  // But we don't have the hash without R2_PUBLIC_BASE_URL, so warn loudly
-  console.warn('[R2] R2_PUBLIC_BASE_URL not set! Falling back to S3 API endpoint which is NOT publicly accessible.');
-  return `https://${config.bucket}.${config.accountId}.r2.cloudflarestorage.com/${key}`;
+  // Default: serve through our own API proxy route (works everywhere)
+  return `/api/r2/image/${key}`;
 }
 
 export async function uploadBufferToR2(input: {
@@ -127,6 +132,11 @@ export function extractR2ObjectKey(url: string): string | null {
     }
   }
 
+  // Our proxy route: /api/r2/image/{key}
+  if (url.startsWith('/api/r2/image/')) {
+    return url.slice('/api/r2/image/'.length);
+  }
+
   try {
     const parsed = new URL(url);
     const path = parsed.pathname.replace(/^\//, '');
@@ -151,6 +161,8 @@ export function isR2Url(url: string): boolean {
   if (config.publicBaseUrl && url.startsWith(config.publicBaseUrl)) {
     return true;
   }
+  // Our proxy route = R2
+  if (url.startsWith('/api/r2/image/')) return true;
   return url.includes('.r2.cloudflarestorage.com');
 }
 

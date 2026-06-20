@@ -4,17 +4,20 @@
  * MangaImage — Smart image component that handles external manga images with fallback
  *
  * Strategy:
- * 1. For external manga CDN images → use regular <img> tag with onError fallback
+ * 1. For external manga CDN images (gmbr.pro, manhwaland, R2 dev) → use regular
+ *    <img> tag with onError fallback AND route through our smart proxy.
  * 2. For local/Supabase images → use Next.js Image (with optimization)
  * 3. If external image fails → show placeholder emoji
  *
- * External CDNs have aggressive hotlink protection that may block requests.
- * We provide graceful fallback to placeholder images when loading fails.
+ * CRITICAL FIX: Previously, external CDN URLs (gmbr.pro) were passed directly to
+ * the <img> tag without proxying. This caused broken images in the reader because
+ * of hotlink protection (403 from browser). Now we use proxyImageUrl() which
+ * routes BOTH R2 URLs and external CDN URLs through our server-side proxy.
  */
 
 import NextImage, { type ImageProps } from 'next/image';
 import { forwardRef, useState } from 'react';
-import { proxyR2Url } from '@/lib/image-proxy';
+import { proxyImageUrl } from '@/lib/image-proxy';
 
 // External manga image hosts that block hotlinking (use regular img tag)
 // R2 URLs are NOT here — they go through next/image for WebP/AVIF optimization
@@ -67,7 +70,9 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
       priority,
       ...rest
     } = props;
-    const src = proxyR2Url(rawSrc as string);
+    // CRITICAL: use smart proxy that handles BOTH R2 URLs and external CDN URLs
+    // (gmbr.pro, manhwaland, etc.) — prevents hotlink-protection broken images.
+    const src = proxyImageUrl(rawSrc as string) ?? (rawSrc as string);
 
     // Show placeholder if image failed to load
     if (imageError) {
