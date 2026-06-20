@@ -1,19 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchBufferWithProxy } from '@/lib/proxy';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
-// Vercel Hobby: max 10s. Keep at 10 to avoid build errors.
 export const maxDuration = 10;
 
 /**
  * GET /api/proxy/image
  * Proxy external manga images through our server.
  *
- * Strategy (optimized for Vercel timeout limits):
- * 1. Try DIRECT fetch first (5s timeout — fast path).
- * 2. If direct fails, try ONE proxy attempt (4s timeout).
- * 3. If both fail, return SVG placeholder immediately.
+ * Strategy (Vercel Hobby 10s limit):
+ * 1. Try DIRECT fetch (5s timeout) — works when host doesn't block Vercel IPs.
+ * 2. If direct fails → return SVG placeholder immediately (no proxy needed).
  *
  * Usage: /api/proxy/image?url=https://img-uwak.gmbr.pro/path/to/image.jpg
  */
@@ -46,7 +43,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid URL' }, { status: 400 });
     }
 
-    // Only allow known manga image hosts
+    // Allow known manga image hosts
     const allowedHosts = [
       'img-uwak.gmbr.pro',
       'api-l.gmbr.pro',
@@ -73,74 +70,47 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Host not allowed' }, { status: 403 });
     }
 
-    const referer = url.origin + '/';
     const headers: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
-      'Accept': 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
+      Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
       'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
-      'Referer': referer,
+      Referer: url.origin + '/',
       'sec-fetch-dest': 'image',
       'sec-fetch-mode': 'no-cors',
       'sec-fetch-site': 'cross-site',
     };
 
-    let buffer: Buffer | null = null;
-    let contentType: string | null = null;
-
-    // ─── Step 1: Direct fetch (5s timeout) ───
+    // ─── Direct fetch only (5s timeout) ───
     try {
       const directResp = await fetch(imageUrl, {
         headers,
         signal: AbortSignal.timeout(5_000),
         redirect: 'follow',
       });
+
       if (directResp.ok && directResp.body) {
         const ct = directResp.headers.get('content-type') || '';
         if (ct.startsWith('image/') || ct.includes('octet-stream')) {
           const buf = new Uint8Array(await directResp.arrayBuffer());
           if (buf.byteLength > 1024) {
-            buffer = Buffer.from(buf);
-            contentType = ct;
+            const finalCt = ct.startsWith('image/') ? ct : 'image/jpeg';
+            const blob = new Blob([buf], { type: finalCt });
+            return new NextResponse(blob, {
+              status: 200,
+              headers: {
+                'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
+                'Content-Length': buf.byteLength.toString(),
+              },
+            });
           }
         }
       }
     } catch {
-      // Direct failed — fall through to proxy
+      // Direct failed — fall through to placeholder
     }
 
-    // ─── Step 2: Single proxy attempt (4s timeout) ───
-    if (!buffer) {
-      try {
-        const result = await fetchBufferWithProxy(imageUrl, {
-          headers,
-          timeoutMs: 4_000,
-          maxAttempts: 1, // Single attempt to stay within timeout
-        });
-        buffer = result.buffer;
-        contentType = result.contentType;
-      } catch (proxyErr) {
-        // Both failed — return placeholder
-        return svgResponse();
-      }
-    }
-
-    // Guard: invalid content type
-    if (!contentType!.startsWith('image/') && !contentType!.includes('octet-stream')) {
-      return svgResponse();
-    }
-
-    // ─── Success ───
-    const finalContentType = contentType!.startsWith('image/') ? contentType! : 'image/jpeg';
-    const blob = new Blob([new Uint8Array(buffer!)], { type: finalContentType });
-
-    return new NextResponse(blob, {
-      status: 200,
-      headers: {
-        'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
-        'Content-Length': buffer!.byteLength.toString(),
-      },
-    });
-
+    // ─── Fallback: SVG placeholder ───
+    return svgResponse();
   } catch {
     return svgResponse();
   }
