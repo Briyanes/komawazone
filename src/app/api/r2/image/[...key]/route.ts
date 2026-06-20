@@ -114,12 +114,14 @@ export async function GET(
       err?.$metadata?.httpStatusCode === 404;
 
     if (isNotFound) {
-      // Return 404 so the frontend can show a proper fallback
-      return new NextResponse('Image not found', {
-        status: 404,
+      // Return a lightweight SVG placeholder instead of 404.
+      // Browser sees a valid image → no broken icon. Cache 5 min so we can retry.
+      const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="280" font-size="48" text-anchor="middle" fill="#4a4a6a">📖</text><text x="200" y="340" font-size="14" text-anchor="middle" fill="#4a4a6a" font-family="sans-serif">Gambar belum tersedia</text><text x="200" y="365" font-size="11" text-anchor="middle" fill="#3a3a5a" font-family="sans-serif">Sedang migrasi ke R2</text></svg>`;
+      return new NextResponse(svg, {
+        status: 200,
         headers: {
-          'Content-Type': 'text/plain',
-          'Cache-Control': 'no-store',
+          'Content-Type': 'image/svg+xml',
+          'Cache-Control': 'public, max-age=300, s-maxage=300',
         },
       });
     }
