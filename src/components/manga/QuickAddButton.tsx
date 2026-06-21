@@ -40,7 +40,7 @@ export function QuickAddButton({ mangaId, className }: QuickAddButtonProps) {
       onClick={handleClick}
       title={added ? 'Sudah ditambahkan' : 'Tambah ke Daftar Baca'}
       className={cn(
-        'absolute top-1.5 right-1.5 z-10',
+        'absolute bottom-1.5 right-1.5 z-20',
         'flex size-7 items-center justify-center rounded-full',
         'md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-150',
         'shadow-md backdrop-blur-sm',

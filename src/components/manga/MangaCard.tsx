@@ -1,7 +1,6 @@
 import Link from 'next/link';
 import MangaImage from '@/components/ui/MangaImage';
 import { Star, Eye } from 'lucide-react';
-import { Badge } from '@/components/ui/Badge';
 import { QuickAddButton } from '@/components/manga/QuickAddButton';
 import { cn, decodeHtml } from '@/lib/cn';
 import type { MangaStatus } from '@/types';
@@ -20,11 +19,11 @@ interface MangaCardProps {
   contentRating?: 'general' | 'mature';
 }
 
-const statusVariantMap: Record<MangaStatus, 'ongoing' | 'completed' | 'hiatus' | 'dropped'> = {
-  ONGOING: 'ongoing',
-  COMPLETED: 'completed',
-  HIATUS: 'hiatus',
-  DROPPED: 'dropped',
+const statusDotColorMap: Record<MangaStatus, string> = {
+  ONGOING: '#10B981',
+  COMPLETED: '#3B82F6',
+  HIATUS: '#F59E0B',
+  DROPPED: '#EF4444',
 };
 
 const statusLabelMap: Record<MangaStatus, string> = {
@@ -108,23 +107,33 @@ export function MangaCard({
           </div>
         )}
 
-        {/* Status badge overlay */}
-        <div className="absolute top-1.5 left-1.5 flex items-center gap-1">
-          <Badge variant={statusVariantMap[status]} className="text-[10px] px-1.5 py-0">
+        {/* ── Top-left: Status badge (solid dark pill, high-contrast on any cover) ── */}
+        <div className="absolute top-1.5 left-1.5 z-10 flex flex-wrap items-center gap-1 max-w-[calc(100%-2.5rem)]">
+          <span
+            className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm backdrop-blur-sm"
+            style={{ background: 'rgba(0,0,0,0.72)' }}
+          >
+            <span
+              className={cn('size-1.5 rounded-full shrink-0', isHot && 'animate-pulse')}
+              style={{ background: isHot ? '#ef4444' : statusDotColorMap[status] }}
+            />
             {statusLabelMap[status]}
-          </Badge>
+          </span>
           {isNew && (
-            <span className="rounded-full px-1.5 py-0 text-[9px] font-bold text-white" style={{ background: '#ef4444' }}>
+            <span
+              className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm"
+              style={{ background: '#ef4444' }}
+            >
               BARU
             </span>
           )}
         </div>
 
-        {/* 18+ badge */}
+        {/* ── Top-right: 18+ badge (z-20, always above other elements) ── */}
         {contentRating === 'mature' && (
-          <div className="absolute top-1.5 right-1.5">
+          <div className="absolute top-1.5 right-1.5 z-20">
             <span
-              className="flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-extrabold text-white"
+              className="flex items-center rounded-md px-1.5 py-0.5 text-[9px] font-extrabold text-white shadow-sm"
               style={{ background: '#ef4444' }}
             >
               18+
@@ -132,22 +141,13 @@ export function MangaCard({
           </div>
         )}
 
-        {/* UP dot — updated < 3h ago (hidden if 18+ badge is already occupying that corner) */}
-        {isHot && contentRating !== 'mature' && (
-          <span
-            className="absolute top-1.5 right-1.5 size-2.5 rounded-full ring-2 ring-black/30"
-            style={{ background: '#FF6B35' }}
-            title="Baru diupdate"
-          />
-        )}
-
-        {/* Quick add to reading list */}
+        {/* ── Quick add to reading list (positioned bottom-right via its own default) ── */}
         <QuickAddButton mangaId={id} />
 
-        {/* Latest chapter overlay */}
+        {/* Latest chapter overlay (pr-9 reserves space for QuickAddButton) */}
         {latestChapter && (
           <div
-            className="absolute bottom-0 inset-x-0 px-2 py-2"
+            className="absolute bottom-0 inset-x-0 px-2 py-2 pr-9"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.4) 70%, transparent 100%)' }}
           >
             <p className="text-[10px] font-bold text-white leading-none tracking-wide">Ch.{latestChapter.number}</p>
