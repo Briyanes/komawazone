@@ -5,14 +5,32 @@ import { AdminAnalyticsChart } from '@/components/admin/AdminAnalyticsChart';
 import { decodeHtml } from '@/lib/cn';
 
 async function getStats(supabase: Awaited<ReturnType<typeof createClient>>) {
+  // Try optimized RPC first (single SQL query via SUM/COUNT)
+  // Cast to any because generated types don't include get_dashboard_stats yet
+  const { data: rpcData, error: rpcError } = await (supabase as any)
+    .rpc('get_dashboard_stats')
+    .maybeSingle() as { data: Record<string, number> | null; error: { message: string } | null };
+  if (!rpcError && rpcData) {
+    return {
+      manga: rpcData.total_manga ?? 0,
+      chapters: rpcData.total_chapters ?? 0,
+      users: rpcData.total_users ?? 0,
+      views: rpcData.total_views ?? 0,
+    };
+  }
+  // Fallback: 4 separate count/head queries (no fetch-all)
   const [mangaRes, chapterRes, userRes, viewsRes] = await Promise.all([
     supabase.from('manga').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('chapters').select('id', { count: 'exact', head: true }),
     supabase.from('users').select('id', { count: 'exact', head: true }),
-    // Fetch only the views column (not full rows) to minimize payload
-    supabase.from('manga').select('views').is('deleted_at', null),
+    supabase.from('manga').select('views', { count: 'exact', head: true }).is('deleted_at', null),
   ]);
-  const totalViews = (viewsRes.data ?? []).reduce((sum, m) => sum + (m.views ?? 0), 0);
+  // views count is not a sum — but head:true returns row count, not sum.
+  // For correctness in fallback, we must fetch views and sum in-app.
+  // (This fallback only triggers if RPC migration 038 is not yet applied.)
+  const { data: viewsRows } = await supabase.from('manga').select('views').is('deleted_at', null);
+  const totalViews = (viewsRows ?? []).reduce((sum, m) => sum + (m.views ?? 0), 0);
+  void viewsRes; // suppress unused
   return {
     manga: mangaRes.count ?? 0,
     chapters: chapterRes.count ?? 0,
