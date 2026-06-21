@@ -42,6 +42,13 @@ interface ReaderClientProps {
   chapterList?: ChapterListItem[];
 }
 
+// Dead CDN domains that are completely offline — no retry will help
+const DEAD_CDN_PATTERNS = ['gmbr.pro', 'kambingjantan.cc'];
+
+function isDeadCDN(url: string): boolean {
+  return DEAD_CDN_PATTERNS.some(p => url.includes(p));
+}
+
 type ReadMode  = 'webtoon' | 'paged';
 type FitMode   = 'full' | 'centered';
 type Direction = 'ltr' | 'rtl';
@@ -288,8 +295,11 @@ export function ReaderClient({
     return () => window.removeEventListener('keydown', handler);
   }, [readMode, images.length, nextChapterId, prevChapterId, mangaSlug, router]);
 
+  // Detect dead CDN chapters: if ALL images point to a dead CDN, show a clear
+  // message instead of rendering dozens of broken image placeholders.
   const sorted      = images.slice().sort((a, b) => a.number - b.number);
   const pagedImages = direction === 'rtl' ? [...sorted].reverse() : sorted;
+  const deadChapter = images.length > 0 && images.every(img => isDeadCDN(img.image_url));
   const currentImage = pagedImages[currentPage - 1];
   const progress    = readMode === 'webtoon'
     ? scrollProgress
@@ -657,8 +667,55 @@ export function ReaderClient({
         </div>
       )}
 
+      {/* DEAD CDN CHAPTER — all images are on a permanently-dead CDN */}
+      {deadChapter && (
+        <div className="flex min-h-dvh flex-col items-center justify-center gap-6 px-6 pt-16 text-center">
+          <div
+            className="flex size-20 items-center justify-center rounded-full"
+            style={{ background: 'rgba(239, 68, 68, 0.12)' }}
+          >
+            <ImageOff size={36} style={{ color: '#ef4444' }} />
+          </div>
+          <div className="max-w-md">
+            <p className="text-lg font-bold text-white">Gambar Chapter Sedang Diperbaiki</p>
+            <p className="mt-1.5 text-sm" style={{ color: 'rgba(255,255,255,0.45)' }}>
+              Server gambar untuk chapter ini sedang mengalami gangguan.
+              Tim kami sedang memproses pemindahan ke server baru.
+              Silakan coba chapter lain atau kembali lagi nanti.
+            </p>
+          </div>
+          <div className="flex w-full max-w-md gap-2">
+            {prevChapterId ? (
+              <Link
+                href={`/manga/${mangaSlug}/chapter/${prevChapterId}`}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
+                style={{ background: 'rgba(255,255,255,.1)' }}
+              >
+                <ChevronLeft size={16} />Sebelumnya
+              </Link>
+            ) : <div className="flex-1" />}
+            {nextChapterId ? (
+              <Link
+                href={`/manga/${mangaSlug}/chapter/${nextChapterId}`}
+                className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-bold text-white hover:opacity-80"
+                style={{ background: 'var(--color-primary)' }}
+              >
+                Berikutnya<ChevronRight size={16} />
+              </Link>
+            ) : <div className="flex-1" />}
+          </div>
+          <Link
+            href={`/manga/${mangaSlug}`}
+            className="flex w-full max-w-md items-center justify-center gap-1.5 rounded-xl px-3 py-3 text-sm font-semibold text-white hover:opacity-80"
+            style={{ background: 'rgba(255,255,255,.07)' }}
+          >
+            <List size={16} />Daftar Chapter
+          </Link>
+        </div>
+      )}
+
       {/* WEBTOON MODE */}
-      {readMode === 'webtoon' && images.length > 0 && (
+      {readMode === 'webtoon' && images.length > 0 && !deadChapter && (
         <div className="flex flex-col items-center pt-[65px] md:pt-12">
           {/* Auto-advance banner */}
           {autoAdvance !== null && nextChapterId && (
@@ -737,7 +794,7 @@ export function ReaderClient({
       )}
 
       {/* PAGED MODE */}
-      {readMode === 'paged' && (
+      {readMode === 'paged' && !deadChapter && (
         <div className="flex min-h-dvh flex-col">
           {currentPage > images.length ? (
             /* ── End card ── */
@@ -845,8 +902,8 @@ export function ReaderClient({
         </div>
       )}
 
-      {/* ── BOTTOM NAV (hidden for empty chapters) ── */}
-      {images.length > 0 && (
+      {/* ── BOTTOM NAV (hidden for empty & dead chapters) ── */}
+      {images.length > 0 && !deadChapter && (
       <div
         className="fixed bottom-0 inset-x-0 z-50 flex items-center gap-3 px-4 py-3"
         style={{
