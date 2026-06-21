@@ -434,7 +434,7 @@ async function Recommendations({ genres, excludeId }: { genres: string[]; exclud
   // Show all manga (general + mature) — mature is gated at chapter level
   const { data } = await supabase
     .from('manga')
-    .select('id, slug, title, cover_url, status, rating, views, genres, content_rating')
+    .select('id, slug, title, cover_url, status, rating, views, genres, content_rating, updated_at')
     .is('deleted_at', null)
     .overlaps('genres', genres)
     .neq('id', excludeId)

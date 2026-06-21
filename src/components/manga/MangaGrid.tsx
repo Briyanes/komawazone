@@ -12,6 +12,7 @@ interface MangaItem {
   rating?: number;
   views?: number;
   chapters?: { number: number; release_date?: string }[];
+  updated_at?: string | null;
   content_rating?: 'general' | 'mature';
 }
 
@@ -71,6 +72,7 @@ export function MangaGrid({
                 rating={item.rating}
                 views={item.views}
                 latestChapter={latestChapter}
+                updatedAt={item.updated_at}
                 contentRating={item.content_rating}
               />
             );

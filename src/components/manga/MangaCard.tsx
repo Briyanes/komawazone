@@ -14,6 +14,7 @@ interface MangaCardProps {
   rating?: number;
   views?: number;
   latestChapter?: { number: number; release_date?: string } | null;
+  updatedAt?: string | null;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
   contentRating?: 'general' | 'mature';
@@ -60,16 +61,20 @@ export function MangaCard({
   rating,
   views,
   latestChapter,
+  updatedAt,
   size = 'md',
   className,
   contentRating,
 }: MangaCardProps) {
-  const isNew = latestChapter?.release_date
-    ? Date.now() - new Date(latestChapter.release_date).getTime() < 86400000
+  // Use latestChapter.release_date as primary source, fall back to updatedAt
+  const dateSource = latestChapter?.release_date ?? updatedAt ?? null;
+
+  const isNew = dateSource
+    ? Date.now() - new Date(dateSource).getTime() < 86400000
     : false;
 
-  const isHot = latestChapter?.release_date
-    ? Date.now() - new Date(latestChapter.release_date).getTime() < 3 * 3600000
+  const isHot = dateSource
+    ? Date.now() - new Date(dateSource).getTime() < 3 * 3600000
     : false;
 
   return (
@@ -144,16 +149,18 @@ export function MangaCard({
         {/* ── Quick add to reading list (positioned bottom-right via its own default) ── */}
         <QuickAddButton mangaId={id} />
 
-        {/* Latest chapter overlay (pr-9 reserves space for QuickAddButton) */}
-        {latestChapter && (
+        {/* Latest chapter / update overlay (pr-9 reserves space for QuickAddButton) */}
+        {(latestChapter || updatedAt) && (
           <div
             className="absolute bottom-0 inset-x-0 px-2 py-2 pr-9"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.4) 70%, transparent 100%)' }}
           >
-            <p className="text-[10px] font-bold text-white leading-none tracking-wide">Ch.{latestChapter.number}</p>
-            {latestChapter.release_date && (
-              <p className="text-[9px] mt-0.5 font-medium" style={{ color: 'rgba(255,255,255,0.5)' }}>
-                {timeAgo(latestChapter.release_date)}
+            {latestChapter && (
+              <p className="text-[10px] font-bold text-white leading-none tracking-wide">Ch.{latestChapter.number}</p>
+            )}
+            {dateSource && (
+              <p className={cn('font-medium', latestChapter ? 'mt-0.5 text-[9px]' : 'text-[9px]')} style={{ color: 'rgba(255,255,255,0.5)' }}>
+                {timeAgo(dateSource)}
               </p>
             )}
           </div>

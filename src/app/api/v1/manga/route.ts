@@ -33,9 +33,10 @@ export async function GET(request: NextRequest) {
 
     // All manga (general + mature) visible at search/browse level.
     // Mature gating is enforced in the reader (preview limit) and MangaCard (18+ badge).
+    // updated_at powers the BARU/HOT badge + time overlay (consistent with homepage).
     let query = supabase
       .from('manga')
-      .select('id, slug, title, cover_url, status, rating, views, content_rating', { count: 'exact' })
+      .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at', { count: 'exact' })
       .is('deleted_at', null)
       .range(from, to);
 

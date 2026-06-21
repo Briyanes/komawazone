@@ -35,6 +35,7 @@ interface SearchResult {
   status: string;
   rating?: number;
   views?: number;
+  updated_at?: string | null;
   content_rating?: 'general' | 'mature';
 }
 
