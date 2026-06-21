@@ -112,26 +112,18 @@ export function MangaCard({
           </div>
         )}
 
-        {/* ── Top-left: Status badge (solid dark pill, high-contrast on any cover) ── */}
-        <div className="absolute top-1.5 left-1.5 z-10 flex flex-wrap items-center gap-1 max-w-[calc(100%-2.5rem)]">
+        {/* ── Top-left: Single badge — shows "BARU" when new, otherwise status (no wrap/overlap) ── */}
+        <div className="absolute top-1.5 left-1.5 z-10">
           <span
             className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] font-bold text-white shadow-sm backdrop-blur-sm"
-            style={{ background: 'rgba(0,0,0,0.72)' }}
+            style={{ background: isNew ? '#ef4444' : 'rgba(0,0,0,0.72)' }}
           >
             <span
               className={cn('size-1.5 rounded-full shrink-0', isHot && 'animate-pulse')}
-              style={{ background: isHot ? '#ef4444' : statusDotColorMap[status] }}
+              style={{ background: isHot ? '#ef4444' : isNew ? '#fff' : statusDotColorMap[status] }}
             />
-            {statusLabelMap[status]}
+            {isNew ? 'BARU' : statusLabelMap[status]}
           </span>
-          {isNew && (
-            <span
-              className="rounded-full px-1.5 py-0.5 text-[9px] font-bold text-white shadow-sm"
-              style={{ background: '#ef4444' }}
-            >
-              BARU
-            </span>
-          )}
         </div>
 
         {/* ── Top-right: 18+ badge (z-20, always above other elements) ── */}
@@ -149,20 +141,23 @@ export function MangaCard({
         {/* ── Quick add to reading list (positioned bottom-right via its own default) ── */}
         <QuickAddButton mangaId={id} />
 
-        {/* Latest chapter / update overlay (pr-9 reserves space for QuickAddButton) */}
-        {(latestChapter || updatedAt) && (
+        {/* Latest chapter / update overlay (single-line, pr-9 reserves space for QuickAddButton) */}
+        {(latestChapter || dateSource) && (
           <div
-            className="absolute bottom-0 inset-x-0 px-2 py-2 pr-9"
+            className="absolute bottom-0 inset-x-0 px-2 py-1.5 pr-9"
             style={{ background: 'linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.4) 70%, transparent 100%)' }}
           >
-            {latestChapter && (
-              <p className="text-[10px] font-bold text-white leading-none tracking-wide">Ch.{latestChapter.number}</p>
-            )}
-            {dateSource && (
-              <p className={cn('font-medium', latestChapter ? 'mt-0.5 text-[9px]' : 'text-[9px]')} style={{ color: 'rgba(255,255,255,0.5)' }}>
-                {timeAgo(dateSource)}
-              </p>
-            )}
+            <div className="flex items-center gap-1 text-[10px] leading-none">
+              {latestChapter && (
+                <span className="font-bold text-white tracking-wide">Ch.{latestChapter.number}</span>
+              )}
+              {latestChapter && dateSource && (
+                <span className="text-white/40">·</span>
+              )}
+              {dateSource && (
+                <span className="font-medium text-white/60 truncate">{timeAgo(dateSource)}</span>
+              )}
+            </div>
           </div>
         )}
       </div>

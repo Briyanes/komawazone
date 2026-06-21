@@ -62,13 +62,13 @@ function SidebarContent({ onClose }: { onClose?: () => void }) {
     let cancelled = false;
     const supabase = createClient();
     Promise.all([
-      // chapter_reports: no status column, count all
-      supabase.from('chapter_reports').select('id', { count: 'exact', head: true }),
-      // manga_reports: status is 'pending' | 'reviewed' | 'resolved', count pending
+      // manga_reports: count only pending (status column exists)
       supabase.from('manga_reports').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
-    ]).then(([chapterRes, mangaRes]) => {
+      // chapter_reports: no status column — count recent (last 7 days) as actionable
+      supabase.from('chapter_reports').select('id', { count: 'exact', head: true }).gte('created_at', new Date(Date.now() - 7 * 86400000).toISOString()),
+    ]).then(([mangaRes, chapterRes]) => {
       if (cancelled) return;
-      const reports = (chapterRes.count ?? 0) + (mangaRes.count ?? 0);
+      const reports = (mangaRes.count ?? 0) + (chapterRes.count ?? 0);
       setBadgeCounts({ '/admin/reports': reports });
     }).catch(() => {});
     return () => { cancelled = true; };

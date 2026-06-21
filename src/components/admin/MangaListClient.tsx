@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useTransition, useEffect } from 'react';
+import { useState, useMemo, useTransition, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { Plus, Edit, ExternalLink, Search, X, Star, Trash2, RefreshCw, BookOpen } from 'lucide-react';
 import { DeleteMangaButton } from '@/components/admin/DeleteMangaButton';
@@ -47,16 +47,34 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
     newChapters: number;
     updatedChapters: number;
     failed: number;
+    completedAt: number | null;
   }>>({});
   const [page, setPage] = useState(1);
 
-  // Poll import job progress
+  // Track running job IDs in a ref so the interval doesn't restart on every state change
+  const runningJobIdsRef = useRef<Set<string>>(new Set());
+
+  // Keep ref in sync with importJobs state
   useEffect(() => {
-    const runningJobs = Object.entries(importJobs).filter(([, j]) => j.status === 'running');
-    if (runningJobs.length === 0) return;
+    const runningIds = new Set<string>();
+    for (const [id, job] of Object.entries(importJobs)) {
+      if (job.status === 'running') runningIds.add(id);
+    }
+    runningJobIdsRef.current = runningIds;
+  }, [importJobs]);
+
+  // Poll import job progress — single stable interval (no re-create on state change)
+  useEffect(() => {
+    const hasRunning = Object.values(importJobs).some(j => j.status === 'running');
+    if (!hasRunning) return;
 
     const interval = setInterval(async () => {
-      for (const [mangaId, job] of runningJobs) {
+      const runningIds = runningJobIdsRef.current;
+      if (runningIds.size === 0) return;
+
+      for (const mangaId of runningIds) {
+        const job = importJobs[mangaId];
+        if (!job) continue;
         try {
           const res = await fetch(`/api/v1/admin/import/jobs?id=${job.jobId}&limit=1`);
           if (!res.ok) continue;
@@ -74,6 +92,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
               newChapters: jobData.new_manga ?? 0,
               updatedChapters: jobData.updated_manga ?? 0,
               failed: jobData.skipped_items ?? 0,
+              completedAt: ['completed', 'failed', 'cancelled'].includes(jobData.status) ? Date.now() : prev[mangaId]?.completedAt ?? null,
             },
           }));
 
@@ -92,7 +111,8 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [importJobs]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [Object.values(importJobs).some(j => j.status === 'running')]);
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -187,6 +207,7 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
             newChapters: 0,
             updatedChapters: 0,
             failed: 0,
+            completedAt: null,
           },
         }));
       } else {
@@ -329,8 +350,12 @@ export function MangaListClient({ mangaList: initialList }: { mangaList: Manga[]
         </div>
       )}
 
-      {/* Import Progress Panel */}
-      {Object.entries(importJobs).filter(([, j]) => j.status === 'running' || (j.processed > 0 && j.status === 'completed' && Date.now() - Number(j.jobId?.split('-').pop()?.slice(0, 10) ?? 0) * 1000 < 10_000)).length > 0 && (
+      {/* Import Progress Panel — show running jobs + completed jobs for 10s */}
+      {Object.entries(importJobs).filter(([, j]) =>
+        j.status === 'running' ||
+        (j.status === 'completed' && j.completedAt && Date.now() - j.completedAt < 10_000) ||
+        j.status === 'failed'
+      ).length > 0 && (
         <div className="rounded-xl border p-3 space-y-2" style={{ background: 'var(--bg-tertiary)', borderColor: 'var(--color-primary)' }}>
           {Object.entries(importJobs).map(([mangaId, job]) => {
             const manga = mangaList.find(m => m.id === mangaId);

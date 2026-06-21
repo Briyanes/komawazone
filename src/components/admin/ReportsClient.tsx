@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { Search, X, Flag, BookOpen, CheckCircle2, Clock } from 'lucide-react';
 import { toast } from 'sonner';
 import { DismissReportButton } from '@/components/admin/DismissReportButton';
@@ -80,6 +80,11 @@ export function ReportsClient({
   const activeFiltered = tab === 'manga' ? filteredManga : filteredChapter;
   const totalPages = Math.ceil(activeFiltered.length / PAGE_SIZE) || 1;
   const currentPage = Math.min(page, totalPages);
+
+  // BUG FIX: Clamp page state when current page becomes empty (e.g., after dismissing/resolving reports)
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
   const pagedManga = filteredManga.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
   const pagedChapter = filteredChapter.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 

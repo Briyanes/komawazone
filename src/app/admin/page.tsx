@@ -4,12 +4,12 @@ import { BookOpen, Users, FileText, TrendingUp, Plus, Megaphone, ArrowRight, Clo
 import { AdminAnalyticsChart } from '@/components/admin/AdminAnalyticsChart';
 import { decodeHtml } from '@/lib/cn';
 
-async function getStats() {
-  const supabase = await createClient();
+async function getStats(supabase: Awaited<ReturnType<typeof createClient>>) {
   const [mangaRes, chapterRes, userRes, viewsRes] = await Promise.all([
     supabase.from('manga').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('chapters').select('id', { count: 'exact', head: true }),
     supabase.from('users').select('id', { count: 'exact', head: true }),
+    // Fetch only the views column (not full rows) to minimize payload
     supabase.from('manga').select('views').is('deleted_at', null),
   ]);
   const totalViews = (viewsRes.data ?? []).reduce((sum, m) => sum + (m.views ?? 0), 0);
@@ -21,8 +21,7 @@ async function getStats() {
   };
 }
 
-async function getRecentManga() {
-  const supabase = await createClient();
+async function getRecentManga(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data } = await supabase
     .from('manga')
     .select('id, slug, title, status, views, updated_at')
@@ -32,8 +31,7 @@ async function getRecentManga() {
   return data ?? [];
 }
 
-async function getRecentChapters() {
-  const supabase = await createClient();
+async function getRecentChapters(supabase: Awaited<ReturnType<typeof createClient>>) {
   const { data } = await supabase
     .from('chapters')
     .select('id, number, title, release_date, manga(title, slug)')
@@ -50,8 +48,10 @@ const statusColor: Record<string, string> = {
 };
 
 export default async function AdminDashboard() {
+  // Share a single Supabase client across all queries (was 3 separate clients)
+  const supabase = await createClient();
   const [stats, recentManga, recentChapters] = await Promise.all([
-    getStats(), getRecentManga(), getRecentChapters(),
+    getStats(supabase), getRecentManga(supabase), getRecentChapters(supabase),
   ]);
 
   const statCards = [
