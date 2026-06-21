@@ -32,6 +32,10 @@ const EXTERNAL_HOSTS = [
   'kambingjantan.cc',
   '*.gmbar.xyz',
   'gmbar.xyz',
+  '*.uwakjawa.xyz',
+  'uwakjawa.xyz',
+  '*.manhwaland.in',
+  'manhwaland.in',
 ];
 
 function isExternalUrl(src: ImageProps['src']): boolean {

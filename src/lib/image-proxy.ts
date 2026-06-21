@@ -56,6 +56,7 @@ export function proxyExternalUrl(url: string): string {
   const EXTERNAL_HOSTS = [
     'gmbr.pro',
     'gmbar.xyz',
+    'uwakjawa.xyz',
     'manhwaland.land',
     'manhwaland.in',
     'kambingjantan.cc',

@@ -2,18 +2,15 @@
 /**
  * fix-last-broken-images.mjs
  *
- * Handles the last ~20 broken images that lack source_url.
- * Constructs manhwaland.land URL from gmbr.pro URL pattern.
- * Uses Playwright intercept to bypass 403.
+ * Directly downloads gmbr.pro images using Playwright with spoofed Referer.
+ * No need for source_url or manhwaland page — just set the right headers.
  *
- * gmbr.pro URL pattern:
- *   https://api-l.gmbr.pro/manga/{slug}/ch-{num}/{page}.jpg
- * manhwaland URL:
- *   https://manhwaland.land/manga/{slug}/chapter-{num}/
+ * gmbr.pro checks Referer header. By using Playwright's route interception,
+ * we can set Referer to manhwaland.site and download directly.
  */
 
 import { createClient } from '@supabase/supabase-js';
-import { S3Client, PutObjectCommand, HeadObjectCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { chromium } from 'playwright';
 import dotenv from 'dotenv';
 
@@ -34,63 +31,97 @@ const UA = 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (
 
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-function pageNumFromUrl(url) {
-  const m = url.match(/(\d+)\.(jpg|jpeg|png|webp)/i);
-  return m ? parseInt(m[1], 10) : null;
-}
-
-/** Construct manhwaland URL from gmbr.pro URL */
-function constructSourceUrl(gmbrUrl) {
-  // https://api-l.gmbr.pro/manga/wait-im-a-married-woman/ch-30/018.jpg
-  const m = gmbrUrl.match(/gmbr\.pro\/manga\/([^\/]+)\/ch-(\d+)/i);
-  if (!m) return null;
-  const [, slug, chNum] = m;
-  return `https://manhwaland.land/manga/${slug}/chapter-${chNum}/`;
-}
-
-async function r2Exists(key) {
-  try {
-    await s3.send(new HeadObjectCommand({ Bucket: R2_BUCKET, Key: key }));
-    return true;
-  } catch { return false; }
-}
-
 async function uploadToR2(key, buffer, contentType) {
   await s3.send(new PutObjectCommand({
     Bucket: R2_BUCKET, Key: key, Body: buffer,
     ContentType: contentType || 'image/jpeg',
     CacheControl: 'public, max-age=31536000, immutable',
   }));
-  return `/api/r2/image/${key}`;
+}
+
+/** Download a single image via Playwright with spoofed referer */
+async function downloadImage(context, imageUrl) {
+  const page = await context.newPage();
+
+  let imageBuffer = null;
+  let contentType = 'image/jpeg';
+
+  // Intercept the response
+  page.on('response', async (resp) => {
+    if (resp.url() === imageUrl || resp.url().includes(imageUrl.split('/').pop())) {
+      if (resp.status() === 200) {
+        try {
+          contentType = resp.headers()['content-type'] || 'image/jpeg';
+          if (contentType.startsWith('image/')) {
+            imageBuffer = await resp.body();
+          }
+        } catch {}
+      }
+    }
+  });
+
+  try {
+    // Navigate directly to the image with spoofed referer
+    await page.goto(imageUrl, {
+      waitUntil: 'commit',
+      timeout: 15000,
+      referer: 'https://manhwaland.site/',
+    });
+    await sleep(1000);
+  } catch (e) {
+    // If goto fails (e.g. it's an image not a page), try alternative
+    try {
+      const resp = await page.request.get(imageUrl, {
+        headers: {
+          'Referer': 'https://manhwaland.site/',
+          'User-Agent': UA,
+        },
+        timeout: 15000,
+      });
+      if (resp.ok()) {
+        contentType = resp.headers()['content-type'] || 'image/jpeg';
+        if (contentType.startsWith('image/')) {
+          imageBuffer = await resp.body();
+        }
+      }
+    } catch (e2) {
+      // Failed
+    }
+  }
+
+  await page.close();
+  return imageBuffer ? { buffer: imageBuffer, contentType } : null;
 }
 
 async function main() {
-  console.log('╔══════════════════════════════════════════════╗');
-  console.log('║  🔧 Fix Last Broken Images (Playwright)     ║');
-  console.log('╚══════════════════════════════════════════════╝\n');
+  console.log('╔══════════════════════════════════════════════════╗');
+  console.log('║  🔧 Fix ALL Broken Images (Direct Download)      ║');
+  console.log('╚══════════════════════════════════════════════════╝\n');
 
-  // Get all non-R2 images
-  const { data: brokenImages, error } = await sb.from('chapter_images')
-    .select('id, number, image_url, chapter:chapters(id, number, manga:manga(slug, title))')
-    .not('image_url', 'like', '%/api/r2/%')
-    .limit(100);
-
-  if (error || !brokenImages?.length) {
-    console.log('No broken images found!');
-    return;
+  // Get ALL non-R2 images (paginate)
+  let allBroken = [];
+  let offset = 0;
+  while (true) {
+    const { data } = await sb.from('chapter_images')
+      .select('id, number, image_url, chapter:chapters(id, number, manga:manga(slug, title))')
+      .not('image_url', 'like', '%/api/r2/%')
+      .range(offset, offset + 999);
+    if (!data?.length) break;
+    allBroken.push(...data);
+    offset += 1000;
+    if (data.length < 1000) break;
   }
 
-  console.log(`Found ${brokenImages.length} broken images\n`);
+  console.log(`Found ${allBroken.length} broken images\n`);
 
   // Group by chapter
   const byChapter = {};
-  for (const img of brokenImages) {
+  for (const img of allBroken) {
     const chId = img.chapter?.id;
     if (!chId) continue;
     if (!byChapter[chId]) {
       byChapter[chId] = {
         mangaTitle: img.chapter?.manga?.title,
-        mangaSlug: img.chapter?.manga?.slug,
         chapterNumber: img.chapter?.number,
         images: [],
       };
@@ -98,128 +129,91 @@ async function main() {
     byChapter[chId].images.push(img);
   }
 
-  console.log(`Across ${Object.keys(byChapter).length} chapters:\n`);
-  for (const [, info] of Object.entries(byChapter)) {
-    const domain = info.images[0].image_url.includes('gmbr.pro') ? 'gmbr.pro' : info.images[0].image_url.includes('uwakjawa') ? 'uwakjawa' : 'other';
-    console.log(`  📖 ${info.mangaTitle} Ch${info.chapterNumber} — ${info.images.length} imgs (${domain})`);
-  }
-  console.log('');
+  const chapterIds = Object.keys(byChapter);
+  const chapterCount = chapterIds.length;
+  console.log(`Across ${chapterCount} chapters\n`);
 
-  // Launch browser
   const browser = await chromium.launch({ headless: true });
+  const context = await browser.newContext({
+    userAgent: UA,
+    viewport: { width: 1280, height: 720 },
+    locale: 'id-ID',
+    extraHTTPHeaders: {
+      'Referer': 'https://manhwaland.site/',
+    },
+  });
 
   let totalFixed = 0;
   let totalFailed = 0;
 
-  for (const [chapterId, info] of Object.entries(byChapter)) {
-    const firstUrl = info.images[0].image_url;
+  for (let chI = 0; chI < chapterCount; chI++) {
+    const chapterId = chapterIds[chI];
+    const info = byChapter[chapterId];
+    const imgCount = info.images.length;
 
-    // Only handle gmbr.pro (uwakjawa is likely dead)
-    if (!firstUrl.includes('gmbr.pro')) {
-      console.log(`⏭️  Skipping ${info.mangaTitle} Ch${info.chapterNumber} (non-gmbr domain, likely dead)`);
-      totalFailed += info.images.length;
-      continue;
-    }
+    console.log(`\n[${chI + 1}/${chapterCount}] 📖 ${info.mangaTitle} Ch${info.chapterNumber} (${imgCount} imgs)`);
 
-    const sourceUrl = constructSourceUrl(firstUrl);
-    if (!sourceUrl) {
-      console.log(`❌ Can't construct source URL for ${firstUrl}`);
-      totalFailed += info.images.length;
-      continue;
-    }
-
-    console.log(`\n📖 ${info.mangaTitle} Ch${info.chapterNumber} (${info.images.length} imgs)`);
-    console.log(`   Source: ${sourceUrl}`);
-
-    const context = await browser.newContext({
-      userAgent: UA,
-      viewport: { width: 1280, height: 720 },
-      locale: 'id-ID',
-    });
-
-    const page = await context.newPage();
-
-    // Intercept gmbr.pro responses
-    const captured = new Map();
-    page.on('response', async (resp) => {
-      const url = resp.url();
-      if (!url.includes('gmbr.pro')) return;
-      if (resp.status() !== 200) return;
-      try {
-        const ct = resp.headers()['content-type'] || '';
-        if (!ct.startsWith('image/')) return;
-        const body = await resp.body();
-        if (body.length < 1024) return;
-        const pageNum = pageNumFromUrl(url);
-        if (pageNum) {
-          captured.set(pageNum, { buffer: Buffer.from(body), contentType: ct });
-          process.stdout.write(`📥 p${pageNum} `);
-        }
-      } catch {}
-    });
-
-    try {
-      await page.goto(sourceUrl, { waitUntil: 'domcontentloaded', timeout: 30000 });
-    } catch (e) {
-      console.log(`  ⚠️ Navigation: ${e.message.substring(0, 60)}`);
-    }
-
-    await sleep(3000);
-
-    // Scroll to trigger lazy load
-    for (let i = 0; i < 40; i++) {
-      const atBottom = await page.evaluate(() => {
-        window.scrollBy(0, 600);
-        return (window.innerHeight + window.scrollY) >= document.body.scrollHeight - 100;
-      });
-      await sleep(400);
-      if (atBottom && i > 5) break;
-    }
-    await sleep(2000);
-
-    console.log(`\n   Captured: ${captured.size}/${info.images.length}`);
-
-    // Upload
     let fixed = 0;
-    for (const img of info.images) {
-      const data = captured.get(img.number);
-      if (!data) {
-        console.log(`  ❌ p${img.number} not captured`);
-        totalFailed++;
+    let failed = 0;
+
+    for (let i = 0; i < info.images.length; i++) {
+      const img = info.images[i];
+      const url = img.image_url;
+
+      if (!url.includes('gmbr.pro')) {
+        console.log(`  ⏭️  p${img.number} skip (non-gmbr)`);
+        failed++;
         continue;
       }
-      const r2Key = `chapters/${chapterId}/${img.number}.jpg`;
-      try {
-        await uploadToR2(r2Key, data.buffer, data.contentType);
-        await sb.from('chapter_images').update({ image_url: `/api/r2/image/${r2Key}` }).eq('id', img.id);
-        fixed++;
-        totalFixed++;
-      } catch (e) {
-        console.log(`  ❌ Upload p${img.number}: ${e.message.substring(0, 50)}`);
+
+      // Download
+      const result = await downloadImage(context, url);
+
+      if (result && result.buffer.length > 1024) {
+        const r2Key = `chapters/${chapterId}/${img.number}.jpg`;
+        try {
+          await uploadToR2(r2Key, result.buffer, result.contentType);
+          await sb.from('chapter_images').update({ image_url: `/api/r2/image/${r2Key}` }).eq('id', img.id);
+          fixed++;
+          totalFixed++;
+          process.stdout.write(`✅`);
+        } catch (e) {
+          failed++;
+          totalFailed++;
+          process.stdout.write(`❌`);
+        }
+      } else {
+        failed++;
         totalFailed++;
+        process.stdout.write(`💀`);
       }
+
+      // Progress every 10 images
+      if ((i + 1) % 10 === 0) process.stdout.write(` ${i + 1}/${imgCount} `);
     }
 
-    // Update chapter thumbnail
+    // Update chapter thumbnail if needed
     if (fixed > 0) {
-      const { data: ch } = await sb.from('chapters').select('thumbnail_url').eq('id', chapterId).single();
-      if (ch?.thumbnail_url?.includes('gmbr.pro') || !ch?.thumbnail_url) {
-        const thumbPage = info.images.find(i => i.number === 1) || info.images[0];
-        await sb.from('chapters').update({
-          thumbnail_url: `/api/r2/image/chapters/${chapterId}/${thumbPage.number}.jpg`
-        }).eq('id', chapterId);
-      }
+      try {
+        const { data: ch } = await sb.from('chapters').select('thumbnail_url').eq('id', chapterId).single();
+        if (ch?.thumbnail_url?.includes('gmbr.pro') || !ch?.thumbnail_url) {
+          const thumbPage = info.images.find(i => i.number === 1) || info.images[0];
+          const thumbKey = `chapters/${chapterId}/${thumbPage.number}.jpg`;
+          await sb.from('chapters').update({
+            thumbnail_url: `/api/r2/image/${thumbKey}`
+          }).eq('id', chapterId);
+        }
+      } catch {}
     }
 
-    console.log(`   ✅ ${fixed}/${info.images.length} fixed`);
-    await page.close();
-    await context.close();
+    console.log(`\n   ${fixed > 0 ? '✅' : '❌'} ${fixed}/${imgCount} fixed`);
   }
 
   await browser.close();
 
-  console.log(`\n📊 RESULTS: ${totalFixed} fixed | ${totalFailed} failed`);
-  console.log('✅ Done!');
+  console.log(`\n${'═'.repeat(50)}`);
+  console.log(`📊 TOTAL: ${totalFixed} fixed | ${totalFailed} failed`);
+  console.log(`${'═'.repeat(50)}`);
 }
 
 main().catch(e => { console.error('Fatal:', e); process.exit(1); });
