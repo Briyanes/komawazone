@@ -53,8 +53,10 @@ export function proxyExternalUrl(url: string): string {
     return url;
   }
 
+  // NOTE: gmbr.pro is NOT here — browser can load it directly with
+  // referrerPolicy="no-referrer" (which MangaImage sets). Server-side proxy
+  // fails because gmbr.pro blocks requests with manhwaland.site Referer.
   const EXTERNAL_HOSTS = [
-    'gmbr.pro',
     'gmbar.xyz',
     'uwakjawa.xyz',
     'manhwaland.land',

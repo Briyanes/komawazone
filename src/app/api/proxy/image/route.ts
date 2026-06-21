@@ -74,20 +74,22 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Host not allowed' }, { status: 403 });
     }
 
-    // gmbr.pro requires Referer from manhwaland.site or returns 403
+    // IMPORTANT: gmbr.pro blocks requests WITH Referer (403 Forbidden).
+    // It works only with NO Referer (like a browser with referrerPolicy=no-referrer).
+    // So we don't send Referer/Origin for these hosts.
     const isGmbr = url.hostname.includes('gmbr.pro') || url.hostname.includes('gmbar.xyz') || url.hostname.includes('uwakjawa.xyz');
-    const referer = isGmbr ? 'https://manhwaland.site/' : url.origin + '/';
 
     const headers: Record<string, string> = {
       'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36',
       Accept: 'image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8',
       'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
-      Referer: referer,
-      Origin: isGmbr ? 'https://manhwaland.site' : url.origin,
-      'sec-fetch-dest': 'image',
-      'sec-fetch-mode': 'no-cors',
-      'sec-fetch-site': 'cross-site',
     };
+
+    if (!isGmbr) {
+      headers.Referer = url.origin + '/';
+      headers.Origin = url.origin;
+    }
+    // For gmbr hosts: NO Referer, NO Origin — this is what makes it work!
 
     // ─── Direct fetch only (5s timeout) ───
     try {
