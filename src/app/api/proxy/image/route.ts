@@ -102,18 +102,17 @@ export async function GET(req: NextRequest) {
       if (directResp.ok && directResp.body) {
         const ct = directResp.headers.get('content-type') || '';
         if (ct.startsWith('image/') || ct.includes('octet-stream')) {
-          const buf = new Uint8Array(await directResp.arrayBuffer());
-          if (buf.byteLength > 1024) {
-            const finalCt = ct.startsWith('image/') ? ct : 'image/jpeg';
-            const blob = new Blob([buf], { type: finalCt });
-            return new NextResponse(blob, {
-              status: 200,
-              headers: {
-                'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
-                'Content-Length': buf.byteLength.toString(),
-              },
-            });
-          }
+          const finalCt = ct.startsWith('image/') ? ct : 'image/jpeg';
+          const contentLength = directResp.headers.get('content-length');
+          // STREAM directly: pipe fetch body → response (no buffer, lower memory)
+          return new NextResponse(directResp.body, {
+            status: 200,
+            headers: {
+              'Content-Type': finalCt,
+              'Cache-Control': 'public, max-age=86400, s-maxage=86400, stale-while-revalidate=604800',
+              ...(contentLength ? { 'Content-Length': contentLength } : {}),
+            },
+          });
         }
       }
     } catch {
