@@ -7,12 +7,16 @@
  * 1. For external manga CDN images (gmbr.pro, manhwaland, R2 dev) → use regular
  *    <img> tag with onError fallback AND route through our smart proxy.
  * 2. For local/Supabase images → use Next.js Image (with optimization)
- * 3. If external image fails → show placeholder emoji
+ * 3. If external image fails → fallback chain: direct → proxy → placeholder
  *
  * CRITICAL FIX: Previously, external CDN URLs (gmbr.pro) were passed directly to
  * the <img> tag without proxying. This caused broken images in the reader because
  * of hotlink protection (403 from browser). Now we use proxyImageUrl() which
  * routes BOTH R2 URLs and external CDN URLs through our server-side proxy.
+ *
+ * FALLBACK CHAIN: When a direct browser load fails, we automatically retry through
+ * /api/proxy/image?url=<original> (server-side fetch without Referer). This handles
+ * intermittent gmbr.pro failures and dead hosts (uwakjawa.xyz) gracefully.
  */
 
 import NextImage, { type ImageProps } from 'next/image';
@@ -67,6 +71,8 @@ function isExternalUrl(src: ImageProps['src']): boolean {
 export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) => {
   const isExternal = isExternalUrl(props.src);
   const [imageError, setImageError] = useState(false);
+  // Fallback chain: try direct → proxy → placeholder
+  const [fallbackStage, setFallbackStage] = useState<'direct' | 'proxy' | 'failed'>('direct');
 
   // External CDN images → use regular <img> tag with fallback
   if (isExternal && typeof props.src === 'string') {
@@ -83,10 +89,17 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
     } = props;
     // CRITICAL: use smart proxy that handles BOTH R2 URLs and external CDN URLs
     // (gmbr.pro, manhwaland, etc.) — prevents hotlink-protection broken images.
-    const src = proxyImageUrl(rawSrc as string) ?? (rawSrc as string);
+    const proxiedSrc = proxyImageUrl(rawSrc as string) ?? (rawSrc as string);
+    // Fallback strategy:
+    // Stage 1 (direct): use proxiedSrc as-is
+    // Stage 2 (proxy): if direct fails, route through /api/proxy/image?url=<original>
+    // Stage 3 (failed): show placeholder emoji
+    const src = fallbackStage === 'proxy' && !proxiedSrc.startsWith('/api/proxy/image')
+      ? `/api/proxy/image?url=${encodeURIComponent(rawSrc as string)}`
+      : proxiedSrc;
 
-    // Show placeholder if image failed to load
-    if (imageError) {
+    // Show placeholder only after BOTH direct AND proxy attempts fail
+    if (imageError && fallbackStage === 'failed') {
       const placeholderStyle: React.CSSProperties = fill
         ? {
             position: 'absolute',
@@ -143,7 +156,19 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
         style={imgStyle}
         referrerPolicy="no-referrer"
         loading={priority ? undefined : 'lazy'}
-        onError={() => setImageError(true)}
+        onError={() => {
+          // Fallback chain: direct → proxy → placeholder
+          if (fallbackStage === 'direct') {
+            setFallbackStage('proxy');
+            setImageError(false);
+          } else if (fallbackStage === 'proxy') {
+            setFallbackStage('failed');
+            setImageError(true);
+          } else {
+            setImageError(true);
+          }
+        }}
+        onLoad={() => setImageError(false)}
         {...rest}
       />
     );
