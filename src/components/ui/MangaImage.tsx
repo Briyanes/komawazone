@@ -147,6 +147,7 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
+        {...rest}
         ref={ref}
         src={src}
         alt={alt || 'Manga cover'}
@@ -158,18 +159,38 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
         loading={priority ? undefined : 'lazy'}
         onError={() => {
           // Fallback chain: direct → proxy → placeholder
+          // IMPORTANT: This MUST come after {...rest} so that parent onError
+          // handlers don't override our internal fallback chain.
           if (fallbackStage === 'direct') {
             setFallbackStage('proxy');
             setImageError(false);
           } else if (fallbackStage === 'proxy') {
             setFallbackStage('failed');
             setImageError(true);
+            // Notify parent component that ALL fallbacks failed
+            if (rest.onError) {
+              (rest.onError as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
+                new Event('error') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
+              );
+            }
           } else {
             setImageError(true);
+            if (rest.onError) {
+              (rest.onError as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
+                new Event('error') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
+              );
+            }
           }
         }}
-        onLoad={() => setImageError(false)}
-        {...rest}
+        onLoad={() => {
+          setImageError(false);
+          // Forward onLoad to parent
+          if (rest.onLoad) {
+            (rest.onLoad as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
+              new Event('load') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
+            );
+          }
+        }}
       />
     );
   }

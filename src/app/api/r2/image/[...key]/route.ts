@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Client, GetObjectCommand } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
-import { rateLimit } from '@/lib/rate-limit';
 
 /**
  * GET /api/r2/image/[...key]
@@ -14,6 +13,7 @@ import { rateLimit } from '@/lib/rate-limit';
  * - Streams R2 response directly (no full buffer in memory)
  * - 1-year immutable cache for existing images (edge CDN cached)
  * - 5-min cache for missing images (migration-friendly)
+ * - NO rate limiting — images are static content, browsers handle concurrency
  *
  * Example: /api/r2/image/chapters/473ad2ac-c46a-46b5-b2b0-4bf86e17d3d6/5.jpg
  */
@@ -46,19 +46,6 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ key: string[] }> }
 ) {
-  // Rate limit: 300 image requests per minute per IP (prevents bandwidth abuse)
-  const rl = await rateLimit(req, { limit: 300, window: 60 * 1000 });
-  if (!rl.success) {
-    return new NextResponse('Too many requests', {
-      status: 429,
-      headers: {
-        'Content-Type': 'text/plain',
-        'X-RateLimit-Reset': rl.resetAt.toISOString(),
-        'Cache-Control': 'no-store',
-      },
-    });
-  }
-
   const { key: keyParts } = await params;
   const key = keyParts.join('/');
 
