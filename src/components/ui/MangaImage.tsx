@@ -20,7 +20,7 @@
  */
 
 import NextImage, { type ImageProps } from 'next/image';
-import { forwardRef, useState } from 'react';
+import { forwardRef, useEffect, useState } from 'react';
 import { proxyImageUrl } from '@/lib/image-proxy';
 
 // External manga image hosts that block hotlinking (use regular img tag)
@@ -41,6 +41,27 @@ const EXTERNAL_HOSTS = [
   '*.manhwaland.in',
   'manhwaland.in',
 ];
+
+// Hosts that are DEAD (DNS dead, 403 forever, or permanently offline).
+// Instead of trying to load → waiting for timeout → failing → showing placeholder,
+// we SKIP directly to placeholder for these hosts. This eliminates the 5-10s
+// timeout per dead image and makes the page appear clean instantly.
+const DEAD_HOSTS = [
+  'gmbr.pro',
+  'gmbar.xyz',
+  'uwakjawa.xyz',
+];
+
+function isDeadHost(src: ImageProps['src']): boolean {
+  if (typeof src !== 'string') return false;
+  if (src.startsWith('/api/r2/image/') || src.startsWith('/api/proxy/image')) return false;
+  try {
+    const url = new URL(src);
+    return DEAD_HOSTS.some(h => url.hostname.includes(h));
+  } catch {
+    return false;
+  }
+}
 
 function isExternalUrl(src: ImageProps['src']): boolean {
   if (typeof src !== 'string') return false;
@@ -70,9 +91,21 @@ function isExternalUrl(src: ImageProps['src']): boolean {
 
 export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) => {
   const isExternal = isExternalUrl(props.src);
+  const isDead = isDeadHost(props.src);
   const [imageError, setImageError] = useState(false);
   // Fallback chain: try direct → proxy → placeholder
   const [fallbackStage, setFallbackStage] = useState<'direct' | 'proxy' | 'failed'>('direct');
+
+  // Dead host → fire onLoad so parent (e.g. ImageCard) removes its loading skeleton.
+  // Without this, the skeleton would pulse forever since no <img> onLoad fires.
+  useEffect(() => {
+    if (isDead && props.onLoad) {
+      (props.onLoad as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
+        new Event('load') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
+      );
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDead]);
 
   // External CDN images → use regular <img> tag with fallback
   if (isExternal && typeof props.src === 'string') {
@@ -87,6 +120,45 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
       priority,
       ...rest
     } = props;
+
+    // ─── FAST FAIL: Dead host → show placeholder immediately ───
+    // Skip the entire load → timeout → fail chain. The host is DNS-dead
+    // so any fetch attempt wastes 5-10 seconds. Just show placeholder now.
+    // (Once the backfill script replaces this URL with R2, it will load fine.)
+    if (isDead) {
+      const placeholderStyle: React.CSSProperties = fill
+        ? {
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: fill ? '2rem' : '4rem',
+            background: '#1a1a2e',
+            color: '#4a4a6a',
+            ...(style || {}),
+          }
+        : {
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '4rem',
+            width: width || '100%',
+            height: height || 'auto',
+            background: '#1a1a2e',
+            color: '#4a4a6a',
+            ...(style || {}),
+          };
+
+      return (
+        <div className={className} style={placeholderStyle}>
+          📖
+        </div>
+      );
+    }
     // CRITICAL: use smart proxy that handles BOTH R2 URLs and external CDN URLs
     // (gmbr.pro, manhwaland, etc.) — prevents hotlink-protection broken images.
     const proxiedSrc = proxyImageUrl(rawSrc as string) ?? (rawSrc as string);

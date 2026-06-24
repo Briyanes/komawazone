@@ -45,7 +45,12 @@ interface ReaderClientProps {
 // Dead CDN domains that are completely offline — no retry will help
 // NOTE: gmbr.pro is NOT dead — our proxy can fetch it with correct Referer header.
 // Only truly dead domains that return 404/520 regardless of headers should be here.
-const DEAD_CDN_PATTERNS = ['kambingjantan.cc'];
+const DEAD_CDN_PATTERNS = [
+  'gmbr.pro',      // DNS dead — primary source, 586K+ images affected
+  'gmbar.xyz',     // DNS dead — mirror of gmbr.pro
+  'uwakjawa.xyz',  // DNS dead
+  'kambingjantan.cc',
+];
 
 function isDeadCDN(url: string): boolean {
   return DEAD_CDN_PATTERNS.some(p => url.includes(p));
