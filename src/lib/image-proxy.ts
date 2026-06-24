@@ -53,8 +53,8 @@ export function proxyExternalUrl(url: string): string {
     return url;
   }
 
-  // gmbr.pro returns 403 Cloudflare to browsers but is fetchable server-side
-  // (no Referer). Route all external manga CDN hosts through our proxy.
+  // gmbr.pro is DEAD (DNS doesn't resolve). Route through proxy which will
+  // return SVG placeholder immediately (no wasted DNS lookup in browser).
   const EXTERNAL_HOSTS = [
     'gmbr.pro',
     'gmbar.xyz',

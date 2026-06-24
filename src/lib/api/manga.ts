@@ -64,22 +64,18 @@ export type MangaWithChapters = {
 /** Number of free preview chapters for mature manga */
 export const MATURE_PREVIEW_CHAPTERS = 3;
 
-/**
- * Dead CDN domains that no longer serve images (404/DNS dead).
- *
- * NOTE: gmbr.pro was previously listed here, but it is NOT dead — it returns
- * 403 Cloudflare to browsers while our /api/proxy/image fetches it fine (200).
- * Listing it here caused the lazy-load logic to re-scrape from manhwaland.land
- * (which IS dead), making things worse. Now gmbr.pro images load via proxy.
- */
-const DEAD_CDN_PATTERNS: string[] = [];
+/** Dead CDN domains that no longer serve images (404). */
+const DEAD_CDN_PATTERNS = [
+  'gmbr.pro',
+  'manhwaland.land',
+  'uwakjawa.xyz',
+];
 
 /**
  * Check if an image URL points to a known-dead CDN.
  * Returns true if the URL will likely 404.
  */
 export function isDeadCdnUrl(url: string): boolean {
-  if (DEAD_CDN_PATTERNS.length === 0) return false;
   try {
     const hostname = new URL(url).hostname.toLowerCase();
     return DEAD_CDN_PATTERNS.some(pattern =>
