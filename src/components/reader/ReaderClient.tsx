@@ -42,18 +42,25 @@ interface ReaderClientProps {
   chapterList?: ChapterListItem[];
 }
 
-// Dead CDN domains that are completely offline — no retry will help
-// NOTE: gmbr.pro is NOT dead — our proxy can fetch it with correct Referer header.
-// Only truly dead domains that return 404/520 regardless of headers should be here.
-const DEAD_CDN_PATTERNS = [
-  'gmbr.pro',      // DNS dead — primary source, 586K+ images affected
-  'gmbar.xyz',     // DNS dead — mirror of gmbr.pro
-  'uwakjawa.xyz',  // DNS dead
+// Dead CDN domains — DNS dead (bare root domains only).
+// CRITICAL: Subdomains like api-l.gmbr.pro and jablay.gmbr.pro STILL WORK in the
+// browser. Only the bare domain gmbr.pro has DNS failure. Using url.includes()
+// would incorrectly mark api-l.gmbr.pro as dead and block the entire chapter!
+const DEAD_CDN_ROOTS = [
+  'gmbr.pro',      // DNS dead — bare domain only (subdomains still resolve)
+  'gmbar.xyz',     // DNS dead — bare domain only
+  'uwakjawa.xyz',  // DNS dead — bare domain only
   'kambingjantan.cc',
 ];
 
 function isDeadCDN(url: string): boolean {
-  return DEAD_CDN_PATTERNS.some(p => url.includes(p));
+  try {
+    const parsed = new URL(url);
+    // Only match EXACT hostname (e.g. "gmbr.pro"), NOT subdomains like "api-l.gmbr.pro"
+    return DEAD_CDN_ROOTS.includes(parsed.hostname);
+  } catch {
+    return false;
+  }
 }
 
 type ReadMode  = 'webtoon' | 'paged';
