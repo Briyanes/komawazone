@@ -412,39 +412,45 @@ async function main() {
   if (LIMIT_ARG) console.log(`  Chapter limit: ${LIMIT_ARG}`);
   console.log();
 
-  // 1. Get all chapters with dead images (smaller batches + retry to avoid DB timeout)
-  console.log('📊 Step 1: Finding chapters with dead images...');
-  const allDeadImages = [];
-  let offset = 0;
-  while (offset < 20000) {
+  // 1. Get all chapters with dead images using KEYSET PAGINATION (cursor-based)
+  // .range(offset) is O(n²) — PostgreSQL must skip `offset` rows, causing timeout
+  // Keyset: WHERE id > cursor ORDER BY id LIMIT batch — O(1) per page always
+  console.log('📊 Step 1: Finding chapters with dead images (keyset pagination)...');
+  const byChapter = {};  // chapter_id → count of dead images
+  let cursor = null;     // Last seen id for keyset pagination
+  let totalDead = 0;
+
+  while (true) {
     const result = await dbQueryWithRetry(async () => {
-      return await sb.from('chapter_images')
-        .select('id, image_url, chapter_id, number')
+      let q = sb.from('chapter_images')
+        .select('id, chapter_id')
         .not('image_url', 'like', '/api/r2/image/%')
-        .range(offset, offset + DB_QUERY_BATCH - 1);
-    }, `dead images @${offset}`);
+        .order('id', { ascending: true })
+        .limit(DB_QUERY_BATCH);
+      if (cursor) q = q.gt('id', cursor);
+      return await q;
+    }, `dead images @${totalDead}`);
 
     if (result.error) {
-      console.error(`  ❌ Query failed at offset ${offset}:`, result.error.message);
+      console.error(`  ❌ Query failed after ${totalDead} images:`, result.error.message);
       break;
     }
     if (!result.data || result.data.length === 0) break;
-    allDeadImages.push(...result.data);
-    process.stdout.write(`\r  Found ${allDeadImages.length} dead images...`);
-    offset += DB_QUERY_BATCH;
+
+    for (const img of result.data) {
+      if (!byChapter[img.chapter_id]) byChapter[img.chapter_id] = 0;
+      byChapter[img.chapter_id]++;
+    }
+
+    cursor = result.data[result.data.length - 1].id;
+    totalDead += result.data.length;
+    process.stdout.write(`\r  Found ${totalDead} dead images...`);
+
     if (result.data.length < DB_QUERY_BATCH) break; // No more rows
   }
-  console.log(`\n  Found ${allDeadImages.length} dead images total`);
+  console.log(`\n  Found ${totalDead} dead images total across ${Object.keys(byChapter).length} chapters`);
 
-  // Group by chapter_id
-  const byChapter = {};
-  allDeadImages.forEach(img => {
-    if (!byChapter[img.chapter_id]) byChapter[img.chapter_id] = [];
-    byChapter[img.chapter_id].push(img);
-  });
-
-  let chapterIds = Object.keys(byChapter);
-  console.log(`  Across ${chapterIds.length} chapters`);
+  const chapterIds = Object.keys(byChapter);
 
   // 2. Load chapter + manga info
   console.log('\n📊 Step 2: Loading chapter & manga info...');
@@ -523,7 +529,7 @@ async function main() {
       if (!manga) continue;
       console.log(`  📖 ${manga.title.substring(0, 50)} (${chapters.length} chapters)`);
       for (const ch of chapters) {
-        const deadCount = byChapter[ch.id]?.length || 0;
+        const deadCount = byChapter[ch.id] || 0;
         console.log(`     Ch ${ch.number}: ${deadCount} dead images`);
       }
     }
@@ -576,8 +582,8 @@ async function main() {
           continue;
         }
 
-        const deadImages = byChapter[ch.id] || [];
-        console.log(`\n   Ch ${ch.number}: ${deadImages.length} dead images`);
+        const deadCount = byChapter[ch.id] || 0;
+        console.log(`\n   Ch ${ch.number}: ${deadCount} dead images`);
 
         // Find matching source chapter URL
         const sourceCh = sourceChapters.find(sc => sc.number === ch.number) ||

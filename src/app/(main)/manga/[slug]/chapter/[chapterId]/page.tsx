@@ -7,9 +7,9 @@ import { ReaderClient } from '@/components/reader/ReaderClient';
 import { AdZone } from '@/components/ads/AdZone';
 import { createClient } from '@/lib/supabase/server';
 
-// Force dynamic rendering — lazy-load image scraping must run on every request,
-// not at build time. Without this, Next.js may statically generate the page
-// and the lazy-load (getChapterWithImages) never fires for new chapters.
+// Lazy-load scraping was removed — the heavy DB/API egress killer is gone.
+// Page remains dynamic because mature-content gating checks user VIP status
+// per-request (redirect). But without the scrape, egress is now minimal.
 export const dynamic = 'force-dynamic';
 
 // Deduplicate: generateMetadata and the page both call this — use React cache

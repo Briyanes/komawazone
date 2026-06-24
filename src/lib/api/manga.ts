@@ -269,15 +269,15 @@ export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null,
 }
 
 export async function getMangaBySlug(slug: string): Promise<MangaWithChapters | null> {
-  // Use admin client so RLS doesn't hide chapter_images rows from guest users.
-  // Without this, nested chapter_images can be silently filtered out by RLS,
-  // causing the manga detail page to fall back to stale thumbnail_url from DB
-  // (which may show cover/first page instead of the correct 5th-page thumbnail).
+  // Use admin client so RLS doesn't hide chapter data from guest users.
+  // NOTE: We NO LONGER fetch nested chapter_images here — that was fetching
+  // thousands of image URLs per page view (huge Supabase egress waste).
+  // Thumbnails are stored in chapters.thumbnail_url (set by backfill scripts).
   const adminSupabase = createAdminClient();
 
   const { data, error } = await adminSupabase
     .from('manga')
-    .select(`*, chapters(id, number, title, release_date, views, thumbnail_url, chapter_images(image_url, number)), uploader:users(username, email)`)
+    .select(`*, chapters(id, number, title, release_date, views, thumbnail_url), uploader:users(username, email)`)
     .eq('slug', slug)
     .is('deleted_at', null)
     .lte('chapters.release_date', new Date().toISOString())
@@ -299,7 +299,16 @@ export async function getMangaBySlug(slug: string): Promise<MangaWithChapters | 
 }
 
 export async function getChapterWithImages(chapterId: string): Promise<ChapterDetail | null> {
-  // Use admin client so RLS doesn't hide chapter_images rows from guest users
+  // Use admin client so RLS doesn't hide chapter_images rows from guest users.
+  //
+  // NOTE: Lazy-load scraping was REMOVED to prevent Supabase egress explosion.
+  // Previously, every chapter view with dead CDN URLs (gmbr.pro etc.) would:
+  //   1. Scrape source site (HTTP fetch)
+  //   2. Download all images (buffer transfer)
+  //   3. Upload to R2 (another transfer)
+  //   4. Insert to DB (more queries)
+  // This caused ~3GB+ egress per billing cycle. Images are now backfilled
+  // offline via scripts/backfill-dead-parallel.mjs instead.
   const adminClient = createAdminClient();
   const { data, error } = await adminClient
     .from('chapters')
@@ -313,117 +322,7 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
 
   if (error) return null;
 
-  const chapter = data as unknown as ChapterDetail;
-
-  // Lazy-load images: if chapter has no images OR all images point to dead CDNs
-  // (gmbr.pro, manhwaland, etc.), scrape, download to R2, and save them now.
-  const hasImages = chapter.chapter_images.length > 0;
-  const allDead = hasImages && chapter.chapter_images.every(img => isDeadCdnUrl(img.image_url));
-
-  if ((!hasImages || allDead) && chapter.manga?.slug) {
-    try {
-      const { scrapeChapterImages } = await import('@/lib/scrapers/manga-scraper');
-      const { batchDownloadAndUploadToR2 } = await import('@/lib/storage/r2');
-      const mangaSlug = chapter.manga.slug;
-      const chapterNum = chapter.number;
-      const intNum = Math.floor(chapterNum);
-
-      // Build candidate chapter URLs. Priority:
-      //   1. chapter.source_url (stored at import time — most reliable)
-      //   2. Guess from manga.source_url origin + slug + chapter number
-      const origin = chapter.manga.source_url
-        ? new URL(chapter.manga.source_url).origin
-        : 'https://04x.manhwaland.land';
-      const paddedNum = String(intNum).padStart(2, '0');
-
-      const candidateUrls: string[] = [];
-      if (chapter.source_url) {
-        candidateUrls.push(chapter.source_url);
-      }
-      if (intNum !== chapterNum) {
-        candidateUrls.push(`${origin}/${mangaSlug}-chapter-${chapterNum}/`);
-      } else if (intNum < 100) {
-        candidateUrls.push(`${origin}/${mangaSlug}-chapter-${intNum}/`);
-        candidateUrls.push(`${origin}/${mangaSlug}-chapter-${paddedNum}/`);
-      } else {
-        candidateUrls.push(`${origin}/${mangaSlug}-chapter-${intNum}/`);
-      }
-
-      let sourceImageUrls: string[] = [];
-      let matchedUrl: string | null = null;
-      for (const url of candidateUrls) {
-        try {
-          sourceImageUrls = await scrapeChapterImages(url);
-          if (sourceImageUrls.length > 0) {
-            matchedUrl = url;
-            break;
-          }
-        } catch {
-          // continue to next candidate
-        }
-      }
-      if (sourceImageUrls.length > 0) {
-        // Download and upload images to R2 so we control the CDN URL.
-        // This ensures thumbnails and reader images are reliable (no hotlink
-        // protection, no external dependency).
-        console.log(`[LazyImages] Downloading ${sourceImageUrls.length} images for ch.${chapterNum} to R2...`);
-        const r2Results = await batchDownloadAndUploadToR2(
-          sourceImageUrls,
-          'pages',
-          `${mangaSlug}-ch${chapterNum}`
-        );
-
-        // Keep ALL images in original order — failures fall back to their
-        // original URL. This preserves page numbers so the 5th-page
-        // thumbnail (index 4) stays correct.
-        const finalUrls = r2Results.map(r => r.url);
-
-        const imageRows = finalUrls.map((url, i) => ({
-          chapter_id: chapter.id,
-          image_url: url,
-          number: i + 1,
-        }));
-        // Use admin client to bypass RLS — lazy loading runs for any user (guest/logged-in)
-        // upsert with ignoreDuplicates prevents race-condition duplicate-key errors
-        const { data: inserted, error: insertErr } = await adminClient
-          .from('chapter_images')
-          .upsert(imageRows, { onConflict: 'chapter_id,number', ignoreDuplicates: true })
-          .select('id, number, image_url, width, height');
-
-        if (insertErr) {
-          console.error('[LazyImages] Insert failed for chapter', chapterId, insertErr.message);
-        }
-
-        // Always update thumbnail to 5th image (index 4) by ORIGINAL order.
-        // Uses r2Results (not filtered) so the index matches the source order.
-        const lazyThumb = r2Results.length >= 5
-          ? r2Results[4].url
-          : r2Results[r2Results.length - 1]?.url;
-
-        // Persist thumbnail + source_url so future lazy-loads skip URL guessing.
-        // Cast to never because supabase gen types haven't been refreshed yet
-        // (the `source_url` column is added by migration 035 and isn't in the
-        // auto-generated Database type yet).
-        const chapterUpdate: Record<string, string | null> = {
-          thumbnail_url: lazyThumb ?? null,
-        };
-        if (matchedUrl) chapterUpdate.source_url = matchedUrl;
-
-        await adminClient
-          .from('chapters')
-          .update(chapterUpdate as never)
-          .eq('id', chapter.id);
-
-        chapter.chapter_images = (inserted ?? []) as ChapterImage[];
-      } else {
-        console.warn(`[LazyImages] No images found for chapter ${chapterId} from ${candidateUrls.length} candidate URLs`);
-      }
-    } catch (err) {
-      console.error('[LazyImages] Failed to scrape images for chapter', chapterId, err);
-    }
-  }
-
-  return chapter;
+  return data as unknown as ChapterDetail;
 }
 
 export async function getAdjacentChapters(mangaId: string, currentNumber: number): Promise<{

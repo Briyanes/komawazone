@@ -82,31 +82,23 @@ export default async function MangaDetailPage({ params }: Props) {
     }
   }
 
-  // Dead manga CDN domains - their images return 403/404 forever
-  const DEAD_DOMAINS = ['gmbr.pro', 'gmbar.xyz'];
+  // Dead manga CDN domains — only EXACT hostname match (not subdomains).
+  // Subdomains like api-l.gmbr.pro still work in browser with referrerPolicy.
+  const DEAD_HOSTNAMES = new Set(['gmbr.pro', 'gmbar.xyz', 'uwakjawa.xyz']);
 
   const isDeadUrl = (url: string | null | undefined): boolean => {
     if (!url) return true;
-    return DEAD_DOMAINS.some(d => url.includes(d));
+    try {
+      return DEAD_HOSTNAMES.has(new URL(url).hostname);
+    } catch {
+      // Relative/proxy URLs (e.g. /api/r2/image/...) are never dead
+      return false;
+    }
   };
 
-  const chapters = manga.chapters.slice().sort((a, b) => b.number - b.number).map(ch => {
-    // DB thumbnail_url is already the correct 5th image (or curated best image),
-    // stored in R2 CDN. Use it FIRST — only fall back to chapter_images if DB is null/dead.
-    // Dead domains like gmbr.pro/gmbar.xyz return 403, so skip them.
-    if (!isDeadUrl(ch.thumbnail_url)) {
-      return { ...ch };
-    }
-    const imgs = (ch.chapter_images ?? []).slice().sort((a, b) => a.number - b.number);
-    const fifth = imgs[4]?.image_url;
-    const first = imgs[0]?.image_url;
-    return {
-      ...ch,
-      thumbnail_url: !isDeadUrl(fifth) ? fifth
-                     : !isDeadUrl(first) ? first
-                     : null,
-    };
-  });
+  // chapter_images is no longer fetched (egress optimization).
+  // thumbnail_url is set by backfill scripts and stored in DB.
+  const chapters = manga.chapters.slice().sort((a, b) => b.number - a.number);
   const firstChapter = [...manga.chapters].sort((a, b) => a.number - b.number)[0];
   const heroBg = manga.banner_url || manga.cover_url;
 
