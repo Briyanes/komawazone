@@ -44,6 +44,11 @@ export function proxyR2Url(url: string): string {
 /**
  * Convert an external manga CDN URL to our proxy URL
  * Example: https://img-uwak.gmbr.pro/path/image.jpg → /api/proxy/image?url=...
+ *
+ * CRITICAL: Only route through server proxy if the host is truly dead (DNS fail).
+ * Working subdomains like api-l.gmbr.pro, jablay.gmbr.pro MUST load directly in
+ * the browser because Cloudflare blocks server-side (Vercel) fetches with 403.
+ * The <img> tag uses referrerPolicy="no-referrer" which bypasses hotlink protection.
  */
 export function proxyExternalUrl(url: string): string {
   if (!url) return url;
@@ -53,25 +58,25 @@ export function proxyExternalUrl(url: string): string {
     return url;
   }
 
-  // gmbr.pro is DEAD (DNS doesn't resolve). Route through proxy which will
-  // return SVG placeholder immediately (no wasted DNS lookup in browser).
-  const EXTERNAL_HOSTS = [
-    'gmbr.pro',
-    'gmbar.xyz',
-    'uwakjawa.xyz',
-    'manhwaland.land',
-    'manhwaland.in',
-    'kambingjantan.cc',
-    'shinigami.asia',
-  ];
-
   try {
     const parsed = new URL(url);
-    const isExternal = EXTERNAL_HOSTS.some(h => parsed.hostname.includes(h));
 
-    if (isExternal) {
+    // Only proxy hosts that are DNS-dead (bare root domains only).
+    // Subdomains (api-l.gmbr.pro, jablay.gmbr.pro, etc.) still work in the browser.
+    const DEAD_ROOT_DOMAINS = [
+      'gmbr.pro',     // bare domain DNS dead — subdomains still resolve
+      'gmbar.xyz',    // bare domain DNS dead
+      'uwakjawa.xyz', // bare domain DNS dead
+    ];
+
+    // Only EXACT hostname match (not subdomains)
+    if (DEAD_ROOT_DOMAINS.includes(parsed.hostname)) {
       return `/api/proxy/image?url=${encodeURIComponent(url)}`;
     }
+
+    // All other external hosts → load directly in browser with referrerPolicy=no-referrer
+    // This includes: api-l.gmbr.pro, jablay.gmbr.pro, manhwaland.land, etc.
+    // They work fine from the browser but return 403 from Vercel server-side fetch.
   } catch {
     // Not a valid URL, return as-is
   }

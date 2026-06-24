@@ -46,10 +46,14 @@ const EXTERNAL_HOSTS = [
 // Instead of trying to load → waiting for timeout → failing → showing placeholder,
 // we SKIP directly to placeholder for these hosts. This eliminates the 5-10s
 // timeout per dead image and makes the page appear clean instantly.
-const DEAD_HOSTS = [
-  'gmbr.pro',
-  'gmbar.xyz',
-  'uwakjawa.xyz',
+//
+// CRITICAL: Only list EXACT root domains here. Subdomains like api-l.gmbr.pro
+// and jablay.gmbr.pro still work in the browser — only the bare domain gmbr.pro
+// has DNS failure. Using .includes('gmbr.pro') would kill working subdomains too!
+const DEAD_HOSTS_EXACT = [
+  'gmbr.pro',     // DNS dead — bare domain only (subdomains still resolve)
+  'gmbar.xyz',    // DNS dead — bare domain only
+  'uwakjawa.xyz', // DNS dead — bare domain only
 ];
 
 function isDeadHost(src: ImageProps['src']): boolean {
@@ -57,7 +61,8 @@ function isDeadHost(src: ImageProps['src']): boolean {
   if (src.startsWith('/api/r2/image/') || src.startsWith('/api/proxy/image')) return false;
   try {
     const url = new URL(src);
-    return DEAD_HOSTS.some(h => url.hostname.includes(h));
+    // Only match EXACT hostname (e.g. "gmbr.pro"), NOT subdomains like "api-l.gmbr.pro"
+    return DEAD_HOSTS_EXACT.includes(url.hostname);
   } catch {
     return false;
   }
