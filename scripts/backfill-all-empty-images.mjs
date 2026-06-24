@@ -4,7 +4,9 @@
  * Stores source CDN URLs in chapter_images (no R2 download here).
  * The existing R2 migration (migrate-gmbr-to-r2-direct.mjs) will handle R2 upload later.
  *
- * Usage: node scripts/backfill-all-empty-images.mjs
+ * Usage:
+ *   node scripts/backfill-all-empty-images.mjs              # All manga
+ *   node scripts/backfill-all-empty-images.mjs --manga=SLUG  # Single manga
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -24,6 +26,10 @@ for (const line of envText.split('\n')) {
 const sb = createClient(env.NEXT_PUBLIC_SUPABASE_URL, env.SUPABASE_SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
 });
+
+// Parse args
+const args = process.argv.slice(2);
+const MANGA_FILTER = args.find(a => a.startsWith('--manga='))?.split('=')[1];
 
 const UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
@@ -100,21 +106,68 @@ async function main() {
   console.log('═'.repeat(70));
   console.log('  BATCH BACKFILL: All Empty Chapter Images');
   console.log('═'.repeat(70));
+  if (MANGA_FILTER) console.log(`  🎯 Manga filter: ${MANGA_FILTER}`);
 
   // Get all chapters with their manga info
   console.log('🔍 Loading chapters...');
-  const { data: allChapters } = await sb
-    .from('chapters')
-    .select('id, number, title, source_url, manga_id, manga:manga(slug, title, source_url)')
-    .is('deleted_at', null)
-    .order('manga_id', { ascending: true })
-    .limit(50000);
 
-  if (!allChapters || allChapters.length === 0) {
-    console.log('❌ No chapters found in DB');
+  let allChapters = [];
+  if (MANGA_FILTER) {
+    // Single manga mode: query chapters filtered by manga slug directly
+    const { data: mangaData } = await sb
+      .from('manga')
+      .select('id, slug, title, source_url')
+      .eq('slug', MANGA_FILTER)
+      .single();
+
+    if (!mangaData) {
+      console.error(`❌ Manga not found with slug: "${MANGA_FILTER}"`);
+      process.exit(1);
+    }
+    console.log(`📖 Manga: ${mangaData.title} (${mangaData.slug})`);
+
+    // Paginate through all chapters for this manga
+    let offset = 0;
+    while (true) {
+      const { data: batch } = await sb
+        .from('chapters')
+        .select('id, number, title, source_url, manga_id')
+        .eq('manga_id', mangaData.id)
+        .is('deleted_at', null)
+        .order('number', { ascending: true })
+        .range(offset, offset + 999);
+      if (!batch || batch.length === 0) break;
+      // Attach manga info
+      for (const ch of batch) {
+        ch.manga = mangaData;
+      }
+      allChapters.push(...batch);
+      if (batch.length < 1000) break;
+      offset += 1000;
+    }
+    console.log(`📚 Chapters for this manga: ${allChapters.length}`);
+  } else {
+    // Full mode: paginate through ALL chapters
+    let offset = 0;
+    while (offset < 50000) {
+      const { data: batch } = await sb
+        .from('chapters')
+        .select('id, number, title, source_url, manga_id, manga:manga(slug, title, source_url)')
+        .is('deleted_at', null)
+        .order('manga_id', { ascending: true })
+        .range(offset, offset + 999);
+      if (!batch || batch.length === 0) break;
+      allChapters.push(...batch);
+      if (batch.length < 1000) break;
+      offset += 1000;
+    }
+    console.log(`📚 Total chapters in DB: ${allChapters.length}`);
+  }
+
+  if (allChapters.length === 0) {
+    console.log('❌ No chapters found');
     process.exit(1);
   }
-  console.log(`📚 Total chapters in DB: ${allChapters.length}`);
 
   // Get all chapter_ids that ALREADY have images (batch query)
   const { data: chaptersWithImages } = await sb

@@ -1,0 +1,1643 @@
+═══════════════════════════════════════════════════
+  🔄 Backfill Dead Images from Source (Playwright)
+═══════════════════════════════════════════════════
+  Mode: LIVE
+  Browser restart: every 20 chapters
+  Retry per chapter: 2x
+  DB batch size: 200
+
+📊 Step 1: Finding chapters with dead images...
+  Found 200 dead images...  Found 400 dead images...  Found 600 dead images...  Found 800 dead images...  Found 1000 dead images...  Found 1200 dead images...  Found 1400 dead images...  Found 1600 dead images...  Found 1800 dead images...  Found 2000 dead images...  Found 2200 dead images...  Found 2400 dead images...  Found 2600 dead images...  Found 2800 dead images...  Found 3000 dead images...  Found 3200 dead images...  Found 3400 dead images...  Found 3600 dead images...  Found 3800 dead images...  Found 4000 dead images...  Found 4200 dead images...  Found 4400 dead images...  Found 4600 dead images...  Found 4800 dead images...  Found 5000 dead images...  Found 5200 dead images...  Found 5400 dead images...  Found 5600 dead images...  Found 5800 dead images...  Found 6000 dead images...  Found 6001 dead images...
+  Found 6001 dead images total
+  Across 199 chapters
+
+📊 Step 2: Loading chapter & manga info...
+  199 chapters across 125 manga
+
+🌐 Launching Playwright browser...
+
+
+📖 Virgin Chauwa! I’m No Virgin!
+   Source: https://04x.manhwaland.land/manga/virgin-chauwa-im-no-virgin/
+   Chapters to fix: 1
+   Found 1 chapters on source
+
+   Ch 1: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/virgin-chauwa-im-no-virgin-chapter-1/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+📖 Mom’s Friends
+   Source: https://04x.manhwaland.land/manga/moms-friends/
+   Chapters to fix: 1
+   Found 27 chapters on source
+
+   Ch 6: 13 dead images
+      🌐 Scraping: https://04x.manhwaland.land/moms-friends-chapter-6-2/
+      📸 Captured 26 images
+      ✅ Replaced with 26/26 fresh R2 images
+
+📖 Miss Announcer
+   Source: https://04x.manhwaland.land/manga/miss-announcer/
+   Chapters to fix: 3
+   Found 100 chapters on source
+
+   Ch 16: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/miss-announcer-chapter-16/
+      📸 Captured 138 images
+      ✅ Replaced with 138/138 fresh R2 images
+
+   Ch 15: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/miss-announcer-chapter-15/
+      📸 Captured 130 images
+      ✅ Replaced with 130/130 fresh R2 images
+
+   Ch 72: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/miss-announcer-chapter-72/
+      📸 Captured 179 images
+      ✅ Replaced with 179/179 fresh R2 images
+
+📖 Immortal Swordsman in the Reverse World
+   Source: https://04x.manhwaland.land/manga/immortal-swordsman-in-the-reverse-world/
+   Chapters to fix: 8
+   Found 274 chapters on source
+
+   Ch 37: 29 dead images
+      🌐 Scraping: https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-37/
+      📸 Captured 42 images
+      ✅ Replaced with 42/42 fresh R2 images
+
+   Ch 71: 44 dead images
+      🌐 Scraping: https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-71/
+      📸 Captured 57 images
+      ✅ Replaced with 57/57 fresh R2 images
+
+   Ch 246: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-246/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 5: 72 dead images
+      🌐 Scraping: https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-5/
+      📸 Captured 44 images
+      ✅ Replaced with 44/44 fresh R2 images
+
+   Ch 15: 25 dead images
+      🌐 Scraping: https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-15/
+      📸 Captured 39 images
+      ✅ Replaced with 39/39 fresh R2 images
+
+   Ch 20: 25 dead images
+      🌐 Scraping: https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-20/
+      📸 Captured 38 images
+      ✅ Replaced with 38/38 fresh R2 images
+
+   Ch 54: 8 dead images
+      🌐 Scraping: https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-54/
+      📸 Captured 26 images
+      ✅ Replaced with 26/26 fresh R2 images
+
+   Ch 63: 13 dead images
+      🌐 Scraping: https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-63/
+      📸 Captured 26 images
+      ✅ Replaced with 26/26 fresh R2 images
+
+📖 The Ark Is Me
+   Source: https://04x.manhwaland.land/manga/the-ark-is-me/
+   Chapters to fix: 2
+   Found 120 chapters on source
+
+   Ch 47: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-ark-is-me-chapter-47/
+      📸 Captured 173 images
+      ✅ Replaced with 173/173 fresh R2 images
+
+   Ch 66: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-ark-is-me-chapter-66/
+      📸 Captured 171 images
+      ✅ Replaced with 171/171 fresh R2 images
+
+📖 Time to Choose
+   Source: https://04x.manhwaland.land/manga/time-to-choose/
+   Chapters to fix: 1
+   Found 26 chapters on source
+
+   Ch 13: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/time-to-choose-chapter-13/
+      📸 Captured 183 images
+      ✅ Replaced with 183/183 fresh R2 images
+
+📖 The Emperor of The Night
+   Source: https://04x.manhwaland.land/manga/the-emperor-of-the-night/
+   Chapters to fix: 1
+   Found 115 chapters on source
+
+   Ch 76: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-emperor-of-the-night-chapter-76/
+      📸 Captured 51 images
+      ✅ Replaced with 51/51 fresh R2 images
+
+📖 Hero no Deban nante Nakatta
+   Source: https://04x.manhwaland.land/manga/hero-no-deban-nante-nakatta/
+   Chapters to fix: 2
+   Found 3 chapters on source
+
+   Ch 2: 23 dead images
+      🌐 Scraping: https://04x.manhwaland.land/hero-no-deban-nante-nakatta-chapter-2/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 1: 51 dead images
+      🌐 Scraping: https://04x.manhwaland.land/hero-no-deban-nante-nakatta-chapter-1/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 The Plunderers
+   Source: https://04x.manhwaland.land/manga/the-plunderers/
+   Chapters to fix: 6
+   Found 53 chapters on source
+
+   Ch 35: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-plunderers-chapter-35/
+      📸 Captured 165 images
+      ✅ Replaced with 165/165 fresh R2 images
+
+   Ch 31: 8 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-plunderers-chapter-31/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 171 images
+      ✅ Replaced with 171/171 fresh R2 images
+
+   Ch 5: 5 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-plunderers-chapter-05/
+      📸 Captured 176 images
+      ✅ Replaced with 176/176 fresh R2 images
+
+   Ch 20: 14 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-plunderers-chapter-20/
+      📸 Captured 182 images
+      ✅ Replaced with 182/182 fresh R2 images
+
+   Ch 3: 9 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-plunderers-chapter-03/
+      📸 Captured 186 images
+      ✅ Replaced with 186/186 fresh R2 images
+
+   Ch 42: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-plunderers-chapter-42/
+      📸 Captured 164 images
+      ✅ Replaced with 164/164 fresh R2 images
+
+📖 Live With: Do You Want to Do It?
+   Source: https://04x.manhwaland.land/manga/live-with-do-you-want-to-do-it/
+   Chapters to fix: 3
+   Found 45 chapters on source
+
+   Ch 17: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/live-with-do-you-want-to-do-it-chapter-17/
+      📸 Captured 20 images
+      ✅ Replaced with 20/20 fresh R2 images
+
+   Ch 15: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/live-with-do-you-want-to-do-it-chapter-15/
+      📸 Captured 23 images
+      ✅ Replaced with 23/23 fresh R2 images
+
+   Ch 14: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/live-with-do-you-want-to-do-it-chapter-14/
+      📸 Captured 23 images
+      ✅ Replaced with 23/23 fresh R2 images
+
+📖 My Other Girlfriend
+   Source: https://04x.manhwaland.land/manga/my-other-girlfriend/
+   Chapters to fix: 1
+   Found 40 chapters on source
+
+   Ch 3: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-other-girlfriend-chapter-3/
+      📸 Captured 50 images
+      ✅ Replaced with 50/50 fresh R2 images
+
+📖 A Wise Driver’s Life
+   Source: https://04x.manhwaland.land/manga/a-wise-drivers-life/
+   Chapters to fix: 4
+   Found 57 chapters on source
+
+   Ch 17: 24 dead images
+      🌐 Scraping: https://04x.manhwaland.land/a-wise-drivers-life-chapter-17-2/
+      📸 Captured 37 images
+      ✅ Replaced with 37/37 fresh R2 images
+
+   Ch 3: 92 dead images
+      🌐 Scraping: https://04x.manhwaland.land/a-wise-drivers-life-chapter-03/
+      📸 Captured 36 images
+      ✅ Replaced with 36/36 fresh R2 images
+
+   Ch 41: 11 dead images
+      🌐 Scraping: https://04x.manhwaland.land/a-wise-drivers-life-chapter-41-2/
+      📸 Captured 24 images
+      ✅ Replaced with 24/24 fresh R2 images
+
+   Ch 49: 12 dead images
+      🌐 Scraping: https://04x.manhwaland.land/a-wise-drivers-life-chapter-49-2/
+      📸 Captured 25 images
+      ✅ Replaced with 25/25 fresh R2 images
+
+📖 Deviant Diary
+   Source: https://04x.manhwaland.land/manga/deviant-diary/
+   Chapters to fix: 3
+   Found 47 chapters on source
+
+   Ch 41: 16 dead images
+      🌐 Scraping: https://04x.manhwaland.land/deviant-diary-chapter-41-2/
+      📸 Captured 29 images
+      ✅ Replaced with 29/29 fresh R2 images
+
+   Ch 35: 14 dead images
+      🌐 Scraping: https://04x.manhwaland.land/deviant-diary-chapter-35-2/
+      📸 Captured 27 images
+      ✅ Replaced with 27/27 fresh R2 images
+
+   Ch 36: 19 dead images
+      🌐 Scraping: https://04x.manhwaland.land/deviant-diary-chapter-36-2/
+      📸 Captured 27 images
+      ✅ Replaced with 27/27 fresh R2 images
+
+📖 Queen Bee (Andrew)
+   Source: https://04x.manhwaland.land/manga/queen-bee-andrew/
+   Chapters to fix: 1
+   Found 345 chapters on source
+
+   Ch 44: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/queen-bee-andrew-chapter-44/
+      📸 Captured 44 images
+      ✅ Replaced with 44/44 fresh R2 images
+
+📖 The Assistant
+   Source: https://04x.manhwaland.land/manga/the-assistant/
+   Chapters to fix: 1
+   Found 47 chapters on source
+
+   Ch 26: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-assistant-chapter-26/
+      📸 Captured 173 images
+      ✅ Replaced with 173/173 fresh R2 images
+
+📖 Fellatio Kenkyuubu
+   Source: https://04x.manhwaland.land/manga/fellatio-kenkyuubu/
+   Chapters to fix: 1
+   Found 6 chapters on source
+
+   Ch 1: 30 dead images
+      🌐 Scraping: https://04x.manhwaland.land/fellatio-kenkyuubu-chapter-1/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Valhalla Otintin-kan
+   Source: https://04x.manhwaland.land/manga/valhalla-otintin-kan/
+   Chapters to fix: 3
+   Found 31 chapters on source
+
+   Ch 11.2: 9 dead images
+      ⚠️  No matching source chapter for #11.2
+
+   Ch 9.1: 17 dead images
+      ⚠️  No matching source chapter for #9.1
+
+   Ch 9.5: 16 dead images
+      ⚠️  No matching source chapter for #9.5
+
+📖 Showtime!: Uta no Oneesan datte Shitai
+   Source: https://04x.manhwaland.land/manga/showtime-uta-no-oneesan-datte-shitai/
+   Chapters to fix: 2
+   Found 27 chapters on source
+
+   Ch 3: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/showtime-uta-no-oneesan-datte-shitai-chapter-3/
+      📸 Captured 34 images
+      ✅ Replaced with 34/34 fresh R2 images
+
+   Ch 5: 23 dead images
+      🌐 Scraping: https://04x.manhwaland.land/showtime-uta-no-oneesan-datte-shitai-chapter-5/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 36 images
+      ✅ Replaced with 36/36 fresh R2 images
+
+📖 Love Limit Exceeded
+   Source: https://04x.manhwaland.land/manga/love-limit-exceeded/
+   Chapters to fix: 2
+   Found 50 chapters on source
+
+   Ch 25: 10 dead images
+      🌐 Scraping: https://04x.manhwaland.land/love-limit-exceeded-chapter-25-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+   Ch 28: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/love-limit-exceeded-chapter-28-2/
+      📸 Captured 24 images
+      ✅ Replaced with 24/24 fresh R2 images
+
+📖 Jyoshi Luck 2 Years Later
+   Source: https://04x.manhwaland.land/manga/jyoshi-luck-2-years-later/
+   Chapters to fix: 1
+   Found 20 chapters on source
+
+   Ch 10.2: 61 dead images
+      ⚠️  No matching source chapter for #10.2
+
+📖 Hole Shop
+   Source: https://04x.manhwaland.land/manga/hole-shop/
+   Chapters to fix: 3
+   Found 26 chapters on source
+
+   Ch 12: 24 dead images
+      🌐 Scraping: https://04x.manhwaland.land/hole-shop-chapter-12/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 18: 51 dead images
+      🌐 Scraping: https://04x.manhwaland.land/hole-shop-chapter-18/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 14: 14 dead images
+      🌐 Scraping: https://04x.manhwaland.land/hole-shop-chapter-14/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Living With a MILF
+   Source: https://04x.manhwaland.land/manga/living-with-a-milf/
+   Chapters to fix: 2
+   Found 125 chapters on source
+
+   Ch 60: 8 dead images
+      🌐 Scraping: https://04x.manhwaland.land/living-with-a-milf-chapter-60/
+      📸 Captured 79 images
+      ✅ Replaced with 79/79 fresh R2 images
+
+   Ch 56: 5 dead images
+      🌐 Scraping: https://04x.manhwaland.land/living-with-a-milf-chapter-56/
+      📸 Captured 79 images
+      ✅ Replaced with 79/79 fresh R2 images
+
+📖 Desperate Housewives
+   Source: https://04x.manhwaland.land/manga/desperate-housewives/
+   Chapters to fix: 3
+   Found 36 chapters on source
+
+   Ch 14: 16 dead images
+      🌐 Scraping: https://04x.manhwaland.land/desperate-housewives-chapter-14-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+   Ch 19: 8 dead images
+      🌐 Scraping: https://04x.manhwaland.land/desperate-housewives-chapter-19-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+   Ch 20: 4 dead images
+      🌐 Scraping: https://04x.manhwaland.land/desperate-housewives-chapter-20-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+📖 Friends (ATZ)
+   Source: https://04x.manhwaland.land/manga/friends-atz/
+   Chapters to fix: 5
+   Found 40 chapters on source
+
+   Ch 25: 32 dead images
+      🌐 Scraping: https://04x.manhwaland.land/friends-atz-chapter-25-2/
+      📸 Captured 40 images
+      ✅ Replaced with 40/40 fresh R2 images
+
+   Ch 30: 483 dead images
+      🌐 Scraping: https://04x.manhwaland.land/friends-atz-chapter-30-2/
+      📸 Captured 263 images
+      ✅ Replaced with 263/263 fresh R2 images
+
+   Ch 24: 231 dead images
+      🌐 Scraping: https://04x.manhwaland.land/friends-atz-chapter-24-2/
+      📸 Captured 163 images
+      ✅ Replaced with 163/163 fresh R2 images
+
+   Ch 34: 10 dead images
+      🌐 Scraping: https://04x.manhwaland.land/friends-atz-chapter-34-2/
+      📸 Captured 219 images
+      ✅ Replaced with 219/219 fresh R2 images
+
+   Ch 35: 110 dead images
+      🌐 Scraping: https://04x.manhwaland.land/friends-atz-chapter-35-2/
+      📸 Captured 212 images
+      ✅ Replaced with 212/212 fresh R2 images
+
+📖 Not Your Daughter, But Your Mother
+   Source: https://04x.manhwaland.land/manga/not-your-daughter-but-your-mother/
+   Chapters to fix: 2
+   Found 100 chapters on source
+
+   Ch 8: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/not-your-daughter-but-your-mother-chapter-8/
+      📸 Captured 52 images
+      ✅ Replaced with 52/52 fresh R2 images
+
+   Ch 31: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/not-your-daughter-but-your-mother-chapter-31/
+      📸 Captured 57 images
+      ✅ Replaced with 57/57 fresh R2 images
+
+📖 Tonight
+   Source: https://04x.manhwaland.land/manga/tonight/
+   Chapters to fix: 1
+   Found 53 chapters on source
+
+   Ch 0: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/tonight-chapter-0/
+      📸 Captured 16 images
+      ✅ Replaced with 16/16 fresh R2 images
+
+📖 Wicked Diary
+   Source: https://04x.manhwaland.land/manga/wicked-diary/
+   Chapters to fix: 1
+   Found 141 chapters on source
+
+   Ch 35: 36 dead images
+      🌐 Scraping: https://04x.manhwaland.land/wicked-diary-chapter-35-2/
+      📸 Captured 49 images
+      ✅ Replaced with 49/49 fresh R2 images
+
+📖 Panty Note
+   Source: https://04x.manhwaland.land/manga/panty-note/
+   Chapters to fix: 2
+   Found 201 chapters on source
+
+   Ch 138: 7 dead images
+      🌐 Scraping: https://04x.manhwaland.land/panty-note-chapter-138-2/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 20 images
+      ✅ Replaced with 20/20 fresh R2 images
+
+   Ch 11: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/panty-note-chapter-11/
+      📸 Captured 62 images
+      ✅ Replaced with 62/62 fresh R2 images
+
+📖 In Love With the Friend’s Mother
+   Source: https://04x.manhwaland.land/manga/in-love-with-the-friends-mother/
+   Chapters to fix: 3
+   Found 37 chapters on source
+
+   Ch 4: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/in-love-with-the-friends-mother-chapter-4/
+      📸 Captured 205 images
+      ✅ Replaced with 205/205 fresh R2 images
+
+   Ch 32: 42 dead images
+      🌐 Scraping: https://04x.manhwaland.land/in-love-with-the-friends-mother-chapter-32-2/
+      📸 Captured 261 images
+      ✅ Replaced with 261/261 fresh R2 images
+
+   Ch 22: 71 dead images
+      🌐 Scraping: https://04x.manhwaland.land/in-love-with-the-friends-mother-chapter-22-2/
+      📸 Captured 115 images
+      ✅ Replaced with 115/115 fresh R2 images
+
+📖 The Stand-up Guy (Dolphin)
+   Source: https://04x.manhwaland.land/manga/the-stand-up-guy-dolphin/
+   Chapters to fix: 1
+   Found 57 chapters on source
+
+   Ch 0: 24 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-stand-up-guy-dolphin-chapter-0/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Sponsor Me Please
+   Source: https://04x.manhwaland.land/manga/sponsor-me-please/
+   Chapters to fix: 2
+   Found 67 chapters on source
+
+   Ch 36: 14 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sponsor-me-please-chapter-36/
+      📸 Captured 27 images
+      ✅ Replaced with 27/27 fresh R2 images
+
+   Ch 50: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sponsor-me-please-chapter-50/
+      📸 Captured 75 images
+      ✅ Replaced with 75/75 fresh R2 images
+
+📖 Observation Diary
+   Source: https://04x.manhwaland.land/manga/observation-diary/
+   Chapters to fix: 1
+   Found 30 chapters on source
+
+   Ch 2: 10 dead images
+      🌐 Scraping: https://04x.manhwaland.land/observation-diary-chapter-02/
+      📸 Captured 29 images
+      ✅ Replaced with 29/29 fresh R2 images
+
+📖 Bandit Nieces
+   Source: https://04x.manhwaland.land/manga/bandit-nieces/
+   Chapters to fix: 1
+   Found 42 chapters on source
+
+   Ch 16: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/bandit-nieces-chapter-16-2/
+      📸 Captured 27 images
+      ✅ Replaced with 27/27 fresh R2 images
+
+📖 Old Friend
+   Source: https://04x.manhwaland.land/manga/old-friend/
+   Chapters to fix: 1
+   Found 25 chapters on source
+
+   Ch 24: 8 dead images
+      🌐 Scraping: https://04x.manhwaland.land/old-friend-chapter-24/
+      📸 Captured 23 images
+      ✅ Replaced with 23/23 fresh R2 images
+
+📖 Teach Me How to Please You
+   Source: https://04x.manhwaland.land/manga/teach-me-how-to-please-you/
+   Chapters to fix: 3
+   Found 25 chapters on source
+
+   Ch 4: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/teach-me-how-to-please-you-chapter-4/
+      📸 Captured 69 images
+      ✅ Replaced with 69/69 fresh R2 images
+
+   Ch 11: 5 dead images
+      🌐 Scraping: https://04x.manhwaland.land/teach-me-how-to-please-you-chapter-11/
+      📸 Captured 68 images
+      ✅ Replaced with 68/68 fresh R2 images
+
+   Ch 9: 4 dead images
+      🌐 Scraping: https://04x.manhwaland.land/teach-me-how-to-please-you-chapter-9/
+      📸 Captured 52 images
+      ✅ Replaced with 52/52 fresh R2 images
+
+📖 Office Trouble (Appeal)
+   Source: https://04x.manhwaland.land/manga/office-trouble-appeal/
+   Chapters to fix: 5
+   Found 28 chapters on source
+
+   Ch 4: 7 dead images
+      🌐 Scraping: https://04x.manhwaland.land/office-trouble-appeal-chapter-4-2/
+      📸 Captured 20 images
+      ✅ Replaced with 20/20 fresh R2 images
+
+   Ch 11: 24 dead images
+      🌐 Scraping: https://04x.manhwaland.land/office-trouble-appeal-chapter-11-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+   Ch 18: 6 dead images
+      🌐 Scraping: https://04x.manhwaland.land/office-trouble-appeal-chapter-18-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+   Ch 5: 12 dead images
+      🌐 Scraping: https://04x.manhwaland.land/office-trouble-appeal-chapter-5-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+   Ch 20: 24 dead images
+      🌐 Scraping: https://04x.manhwaland.land/office-trouble-appeal-chapter-20-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+📖 Yeoni of the Tavern
+   Source: https://04x.manhwaland.land/manga/yeoni-of-the-tavern/
+   Chapters to fix: 1
+   Found 28 chapters on source
+
+   Ch 6: 10 dead images
+      🌐 Scraping: https://04x.manhwaland.land/yeoni-of-the-tavern-chapter-6/
+      📸 Captured 23 images
+      ✅ Replaced with 23/23 fresh R2 images
+
+📖 Little Miss Delinquent
+   Source: https://04x.manhwaland.land/manga/little-miss-delinquent/
+   Chapters to fix: 1
+   Found 36 chapters on source
+
+   Ch 2: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/little-miss-delinquent-chapter-2/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 30 images
+      ✅ Replaced with 30/30 fresh R2 images
+
+📖 Secret Class
+   Source: https://04x.manhwaland.land/manga/secret-class/
+   Chapters to fix: 1
+   Found 309 chapters on source
+
+   Ch 117: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/secret-class-chapter-117/
+      📸 Captured 18 images
+      ✅ Replaced with 18/18 fresh R2 images
+
+📖 An XXL Dick to Satisfy a Married Woman
+   Source: https://04x.manhwaland.land/manga/an-xxl-dick-to-satisfy-a-married-woman/
+   Chapters to fix: 2
+   Found 9 chapters on source
+
+   Ch 5.3: 21 dead images
+      ⚠️  No matching source chapter for #5.3
+
+   Ch 8.2: 7 dead images
+      ⚠️  No matching source chapter for #8.2
+
+📖 Never Too Late
+   Source: https://04x.manhwaland.land/manga/never-too-late/
+   Chapters to fix: 1
+   Found 132 chapters on source
+
+   Ch 97: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/never-too-late-chapter-97/
+      📸 Captured 133 images
+      ✅ Replaced with 133/133 fresh R2 images
+
+📖 The BJ Manager Who Boosts His Favorability
+   Source: https://04x.manhwaland.land/manga/the-bj-manager-who-boosts-his-favorability/
+   Chapters to fix: 4
+   Found 25 chapters on source
+
+   Ch 22: 194 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-22/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 17: 142 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-17/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 25: 56 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-25/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 20: 132 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-20/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Teacher, Long Time No See
+   Source: https://04x.manhwaland.land/manga/teacher-long-time-no-see/
+   Chapters to fix: 2
+   Found 66 chapters on source
+
+   Ch 32: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/teacher-long-time-no-see-chapter-32/
+      📸 Captured 44 images
+      ✅ Replaced with 44/44 fresh R2 images
+
+   Ch 18: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/teacher-long-time-no-see-chapter-18/
+      📸 Captured 55 images
+      ✅ Replaced with 55/55 fresh R2 images
+
+📖 Shh! Her Secret
+   Source: https://04x.manhwaland.land/manga/shh-her-secret/
+   Chapters to fix: 1
+   Found 65 chapters on source
+
+   Ch 2: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/shh-her-secret-chapter-2/
+      📸 Captured 109 images
+      ✅ Replaced with 109/109 fresh R2 images
+
+📖 Are You Just Going To Watch
+   Source: https://04x.manhwaland.land/manga/are-you-just-going-to-watch/
+   Chapters to fix: 3
+   Found 50 chapters on source
+
+   Ch 29: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/are-you-just-going-to-watch-chapter-29/
+      📸 Captured 95 images
+      ✅ Replaced with 95/95 fresh R2 images
+
+   Ch 47: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/are-you-just-going-to-watch-chapter-47/
+      📸 Captured 79 images
+      ✅ Replaced with 79/79 fresh R2 images
+
+   Ch 5: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/are-you-just-going-to-watch-chapter-05/
+      📸 Captured 31 images
+      ✅ Replaced with 31/31 fresh R2 images
+
+📖 Back With a Bang
+   Source: https://04x.manhwaland.land/manga/back-with-a-bang/
+   Chapters to fix: 1
+   Found 26 chapters on source
+
+   Ch 10: 33 dead images
+      🌐 Scraping: https://04x.manhwaland.land/back-with-a-bang-chapter-10-2/
+      📸 Captured 42 images
+      ✅ Replaced with 42/42 fresh R2 images
+
+📖 Otto ni wa Ienai Watashi no
+   Source: https://04x.manhwaland.land/manga/otto-ni-wa-ienai-watashi-no/
+   Chapters to fix: 1
+   Found 2 chapters on source
+
+   Ch 0: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/otto-ni-wa-ienai-watashi-no-chapter-0/
+      📸 Captured 16 images
+      ✅ Replaced with 16/16 fresh R2 images
+
+📖 ZZIN Protect Bahasa Indonesia
+   Source: https://04x.manhwaland.land/manga/zzin-protect-bahasa-indonesia/
+   Chapters to fix: 1
+   Found 83 chapters on source
+
+   Ch 18: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/zzin-protect-bahasa-indonesia-chapter-18/
+      📸 Captured 88 images
+      ✅ Replaced with 88/88 fresh R2 images
+
+📖 Wreck My Bias
+   Source: https://04x.manhwaland.land/manga/wreck-my-bias/
+   Chapters to fix: 1
+   Found 72 chapters on source
+
+   Ch 4: 96 dead images
+      🌐 Scraping: https://04x.manhwaland.land/wreck-my-bias-chapter-4-2/
+      📸 Captured 60 images
+      ✅ Replaced with 60/60 fresh R2 images
+
+📖 Jukumitsuki Intouden
+   Source: https://04x.manhwaland.land/manga/jukumitsuki-intouden/
+   Chapters to fix: 1
+   Found 3 chapters on source
+
+   Ch 3.2: 78 dead images
+      ⚠️  No matching source chapter for #3.2
+
+📖 Gal sen
+   Source: https://04x.manhwaland.land/manga/gal-sen/
+   Chapters to fix: 2
+   Found 31 chapters on source
+
+   Ch 23: 59 dead images
+      🌐 Scraping: https://04x.manhwaland.land/gal-sen-chapter-23/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 6: 17 dead images
+      🌐 Scraping: https://04x.manhwaland.land/gal-sen-chapter-06/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Dance Department’s Female Sunbaes
+   Source: https://04x.manhwaland.land/manga/dance-departments-female-sunbaes/
+   Chapters to fix: 1
+   Found 80 chapters on source
+
+   Ch 76: 36 dead images
+      🌐 Scraping: https://04x.manhwaland.land/dance-departments-female-sunbaes-chapter-76-2/
+      📸 Captured 22 images
+      ✅ Replaced with 22/22 fresh R2 images
+
+📖 Safe Haven
+   Source: https://04x.manhwaland.land/manga/safe-haven/
+   Chapters to fix: 3
+   Found 44 chapters on source
+
+   Ch 22: 4 dead images
+      🌐 Scraping: https://04x.manhwaland.land/safe-haven-chapter-22/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 187 images
+      ✅ Replaced with 187/187 fresh R2 images
+
+   Ch 11: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/safe-haven-chapter-11/
+      📸 Captured 241 images
+      ✅ Replaced with 241/241 fresh R2 images
+
+   Ch 38: 5 dead images
+      🌐 Scraping: https://04x.manhwaland.land/safe-haven-chapter-38/
+      📸 Captured 190 images
+      ✅ Replaced with 190/190 fresh R2 images
+
+📖 Succubus Miboujin Hirusagari no Himitsu
+   Source: https://04x.manhwaland.land/manga/succubus-miboujin-hirusagari-no-himitsu/
+   Chapters to fix: 1
+   Found 2 chapters on source
+
+   Ch 0: 8 dead images
+      🌐 Scraping: https://04x.manhwaland.land/succubus-miboujin-hirusagari-no-himitsu-chapter-0/
+      📸 Captured 16 images
+      ✅ Replaced with 16/16 fresh R2 images
+
+📖 Hentai Elf to Majime Orc
+   Source: https://04x.manhwaland.land/manga/hentai-elf-to-majime-orc/
+   Chapters to fix: 1
+   Found 9 chapters on source
+
+   Ch 3: 36 dead images
+      🌐 Scraping: https://04x.manhwaland.land/hentai-elf-to-majime-orc-chapter-3-5/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Spirit Possession
+   Source: https://04x.manhwaland.land/manga/spirit-possession/
+   Chapters to fix: 2
+   Found 54 chapters on source
+
+   Ch 55: 575 dead images
+      🌐 Scraping: https://04x.manhwaland.land/spirit-possession-chapter-55/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+   Ch 42: 285 dead images
+      🌐 Scraping: https://04x.manhwaland.land/spirit-possession-chapter-42/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Summer Vacation
+   Source: https://04x.manhwaland.land/manga/summer-vacation/
+   Chapters to fix: 1
+   Found 116 chapters on source
+
+   Ch 78: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/summer-vacation-chapter-78/
+      📸 Captured 43 images
+      ✅ Replaced with 43/43 fresh R2 images
+
+📖 King of Delusions
+   Source: https://04x.manhwaland.land/manga/king-of-delusions/
+   Chapters to fix: 1
+   Found 31 chapters on source
+
+   Ch 6: 13 dead images
+      🌐 Scraping: https://04x.manhwaland.land/king-of-delusions-chapter-06/
+      📸 Captured 26 images
+      ✅ Replaced with 26/26 fresh R2 images
+
+📖 Soothe Me
+   Source: https://04x.manhwaland.land/manga/soothe-me/
+   Chapters to fix: 1
+   Found 60 chapters on source
+
+   Ch 1: 12 dead images
+      🌐 Scraping: https://04x.manhwaland.land/soothe-me-chapter-1/
+      📸 Captured 25 images
+      ✅ Replaced with 25/25 fresh R2 images
+
+📖 Tsumamama Tachi to Manman
+   Source: https://04x.manhwaland.land/manga/tsumamama-tachi-to-manman/
+   Chapters to fix: 1
+   Found 9 chapters on source
+
+   Ch 9: 29 dead images
+      🌐 Scraping: https://04x.manhwaland.land/tsumamama-tachi-to-manman-chapter-9/
+      📸 Captured 42 images
+      ✅ Replaced with 42/42 fresh R2 images
+
+📖 Sold Out Girl
+   Source: https://04x.manhwaland.land/manga/sold-out-girl/
+   Chapters to fix: 1
+   Found 46 chapters on source
+
+   Ch 12: 25 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sold-out-girl-chapter-12/
+      📸 Captured 62 images
+      ✅ Replaced with 62/62 fresh R2 images
+
+📖 Superstar Cynthia Oh
+   Source: https://04x.manhwaland.land/manga/superstar-cynthia-oh/
+   Chapters to fix: 1
+   Found 55 chapters on source
+
+   Ch 15: 21 dead images
+      🌐 Scraping: https://04x.manhwaland.land/superstar-cynthia-oh-chapter-15/
+      📸 Captured 20 images
+      ✅ Replaced with 20/20 fresh R2 images
+
+📖 Tatoeba Last Dungeon Mae no Mura no Shounen ga Job
+   Source: https://04x.manhwaland.land/manga/tatoeba-last-dungeon-mae-no-mura-no-shounen-ga-joban-no-machi-de-kurasu-youna-monogatari/
+   Chapters to fix: 1
+   Found 28 chapters on source
+
+   Ch 25: 34 dead images
+      🌐 Scraping: https://04x.manhwaland.land/tatoeba-last-dungeon-mae-no-mura-no-shounen-ga-joban-no-machi-de-kurasu-youna-monogatari-chapter-25/
+      📸 Captured 43 images
+      ✅ Replaced with 43/43 fresh R2 images
+
+📖 Twin Slaves
+   Source: https://04x.manhwaland.land/manga/twin-slaves/
+   Chapters to fix: 1
+   Found 123 chapters on source
+
+   Ch 88: 7 dead images
+      🌐 Scraping: https://04x.manhwaland.land/twin-slaves-chapter-88/
+      📸 Captured 20 images
+      ✅ Replaced with 20/20 fresh R2 images
+
+📖 Oni Zeme! Goumou Moto Yan Do-S Mama no Itazura Mus
+   Source: https://04x.manhwaland.land/manga/oni-zeme-goumou-moto-yan-do-s-mama-no-itazura-musuko-choukyou/
+   Chapters to fix: 1
+   Found 1 chapters on source
+
+   Ch 1: 27 dead images
+      🌐 Scraping: https://04x.manhwaland.land/oni-zeme-goumou-moto-yan-do-s-mama-no-itazura-musuko-choukyou-chapter-1/
+      📸 Captured 41 images
+      ✅ Replaced with 41/41 fresh R2 images
+
+📖 My Wife As a Teacher
+   Source: https://04x.manhwaland.land/manga/my-wife-as-a-teacher/
+   Chapters to fix: 1
+   Found 40 chapters on source
+
+   Ch 3: 32 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-wife-as-a-teacher-chapter-3-2/
+      📸 Captured 45 images
+      ✅ Replaced with 45/45 fresh R2 images
+
+📖 Sweet Days
+   Source: https://04x.manhwaland.land/manga/sweet-days/
+   Chapters to fix: 1
+   Found 10 chapters on source
+
+   Ch 2: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sweet-days-chapter-2/
+      📸 Captured 31 images
+      ✅ Replaced with 31/31 fresh R2 images
+
+📖 Maid (KOI)
+   Source: https://04x.manhwaland.land/manga/maid-koi/
+   Chapters to fix: 1
+   Found 40 chapters on source
+
+   Ch 2: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/maid-koi-chapter-2/
+      📸 Captured 103 images
+      ✅ Replaced with 103/103 fresh R2 images
+
+📖 Campus Love
+   Source: https://04x.manhwaland.land/manga/campus-love/
+   Chapters to fix: 1
+   Found 51 chapters on source
+
+   Ch 33: 39 dead images
+      🌐 Scraping: https://04x.manhwaland.land/campus-love-chapter-33/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Okaa-san Itadakimasui
+   Source: https://04x.manhwaland.land/manga/okaa-san-itadakimasui/
+   Chapters to fix: 1
+   Found 3 chapters on source
+
+   Ch 1: 43 dead images
+      🌐 Scraping: https://04x.manhwaland.land/okaa-san-itadakimasui-chapter-1-2-2/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 39 images
+      ✅ Replaced with 39/39 fresh R2 images
+
+📖 My High School Bully
+   Source: https://04x.manhwaland.land/manga/my-high-school-bully/
+   Chapters to fix: 4
+   Found 289 chapters on source
+
+   Ch 109: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-high-school-bully-chapter-109/
+      📸 Captured 184 images
+      ✅ Replaced with 184/184 fresh R2 images
+
+   Ch 264: 19 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-high-school-bully-chapter-264/
+      📸 Captured 32 images
+      ✅ Replaced with 32/32 fresh R2 images
+
+   Ch 158: 25 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-high-school-bully-chapter-158-2/
+      📸 Captured 38 images
+      ✅ Replaced with 38/38 fresh R2 images
+
+   Ch 6: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-high-school-bully-chapter-6/
+      📸 Captured 115 images
+      ✅ Replaced with 115/115 fresh R2 images
+
+📖 Japanese Sister in Law
+   Source: https://04x.manhwaland.land/manga/japanese-sister-in-law/
+   Chapters to fix: 1
+   Found 31 chapters on source
+
+   Ch 6: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/japanese-sister-in-law-chapter-6/
+      📸 Captured 134 images
+      ✅ Replaced with 134/134 fresh R2 images
+
+📖 Young Boss
+   Source: https://04x.manhwaland.land/manga/young-boss/
+   Chapters to fix: 1
+   Found 112 chapters on source
+
+   Ch 80: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/young-boss-chapter-80/
+      📸 Captured 53 images
+      ✅ Replaced with 53/53 fresh R2 images
+
+📖 Sweet Guy
+   Source: https://04x.manhwaland.land/manga/sweet-guy/
+   Chapters to fix: 2
+   Found 76 chapters on source
+
+   Ch 41: 24 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sweet-guy-chapter-41/
+      📸 Captured 37 images
+      ✅ Replaced with 37/37 fresh R2 images
+
+   Ch 51: 18 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sweet-guy-chapter-51/
+      📸 Captured 33 images
+      ✅ Replaced with 33/33 fresh R2 images
+
+📖 Sexual Teacher
+   Source: https://04x.manhwaland.land/manga/sexual-teacher/
+   Chapters to fix: 1
+   Found 96 chapters on source
+
+   Ch 95: 37 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sexual-teacher-chapter-95/
+      📸 Captured 50 images
+      ✅ Replaced with 50/50 fresh R2 images
+
+📖 NOT An Office Love
+   Source: https://04x.manhwaland.land/manga/not-an-office-love/
+   Chapters to fix: 1
+   Found 1 chapters on source
+
+   Ch 1: 31 dead images
+      🌐 Scraping: https://04x.manhwaland.land/not-an-office-love-chapter-1/
+      📸 Captured 40 images
+      ✅ Replaced with 40/40 fresh R2 images
+
+📖 The Man Who Devours
+   Source: https://04x.manhwaland.land/manga/the-man-who-devours/
+   Chapters to fix: 2
+   Found 93 chapters on source
+
+   Ch 24: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-man-who-devours-chapter-24/
+      📸 Captured 81 images
+      ✅ Replaced with 81/81 fresh R2 images
+
+   Ch 14: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-man-who-devours-chapter-14/
+      📸 Captured 77 images
+      ✅ Replaced with 77/77 fresh R2 images
+
+📖 MILF Guard
+   Source: https://04x.manhwaland.land/manga/milf-guard/
+   Chapters to fix: 1
+   Found 65 chapters on source
+
+   Ch 64: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/milf-guard-chapter-64/
+      📸 Captured 38 images
+      ✅ Replaced with 38/38 fresh R2 images
+
+📖 Midnight Taxi
+   Source: https://04x.manhwaland.land/manga/midnight-taxi/
+   Chapters to fix: 1
+   Found 40 chapters on source
+
+   Ch 32: 45 dead images
+      🌐 Scraping: https://04x.manhwaland.land/midnight-taxi-chapter-32-2/
+      📸 Captured 60 images
+      ✅ Replaced with 60/60 fresh R2 images
+
+📖 My Illustrator
+   Source: https://04x.manhwaland.land/manga/my-illustrator/
+   Chapters to fix: 1
+   Found 81 chapters on source
+
+   Ch 31: 9 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-illustrator-chapter-31-2/
+      📸 Captured 24 images
+      ✅ Replaced with 24/24 fresh R2 images
+
+📖 Please Scan Here!
+   Source: https://04x.manhwaland.land/manga/please-scan-here/
+   Chapters to fix: 1
+   Found 50 chapters on source
+
+   Ch 40: 9 dead images
+      🌐 Scraping: https://04x.manhwaland.land/please-scan-here-chapter-40/
+      📸 Captured 22 images
+      ✅ Replaced with 22/22 fresh R2 images
+
+📖 Resume
+   Source: https://04x.manhwaland.land/manga/resume/
+   Chapters to fix: 1
+   Found 121 chapters on source
+
+   Ch 62: 31 dead images
+      🌐 Scraping: https://04x.manhwaland.land/resume-chapter-62-2/
+      📸 Captured 44 images
+      ✅ Replaced with 44/44 fresh R2 images
+
+📖 Since When Did We Start Dating?
+   Source: https://04x.manhwaland.land/manga/since-when-did-we-start-dating/
+   Chapters to fix: 1
+   Found 49 chapters on source
+
+   Ch 5: 8 dead images
+      🌐 Scraping: https://04x.manhwaland.land/since-when-did-we-start-dating-chapter-5/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+📖 The Teachers’ Effort
+   Source: https://04x.manhwaland.land/manga/the-teachers-effort/
+   Chapters to fix: 1
+   Found 98 chapters on source
+
+   Ch 21: 18 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-teachers-effort-chapter-21/
+      📸 Captured 31 images
+      ✅ Replaced with 31/31 fresh R2 images
+
+📖 The Ladies' Associate
+   Source: https://04x.manhwaland.land/manga/the-ladies-associate/
+   Chapters to fix: 2
+   Found 140 chapters on source
+
+   Ch 90: 4 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-ladies-associate-chapter-90/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 17 images
+      ✅ Replaced with 17/17 fresh R2 images
+
+   Ch 12: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-ladies-associate-chapter-12/
+      📸 Captured 104 images
+      ✅ Replaced with 104/104 fresh R2 images
+
+📖 The Four of Us Can’t Live Together
+   Source: https://04x.manhwaland.land/manga/the-four-of-us-cant-live-together/
+   Chapters to fix: 1
+   Found 48 chapters on source
+
+   Ch 22: 5 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-four-of-us-cant-live-together-chapter-22-2/
+      📸 Captured 18 images
+      ✅ Replaced with 18/18 fresh R2 images
+
+📖 That Mans Epilepsy
+   Source: https://04x.manhwaland.land/manga/that-mans-epilepsy/
+   Chapters to fix: 2
+   Found 176 chapters on source
+
+   Ch 50: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/that-mans-epilepsy-chapter-50/
+      📸 Captured 43 images
+      ✅ Replaced with 43/43 fresh R2 images
+
+   Ch 37: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/that-mans-epilepsy-chapter-37/
+      📸 Captured 44 images
+      ✅ Replaced with 44/44 fresh R2 images
+
+📖 Daddy-in-Law
+   Source: https://04x.manhwaland.land/manga/daddy-in-law/
+   Chapters to fix: 2
+   Found 49 chapters on source
+
+   Ch 26: 27 dead images
+      🌐 Scraping: https://04x.manhwaland.land/daddy-in-law-chapter-26-2/
+      📸 Captured 40 images
+      ✅ Replaced with 40/40 fresh R2 images
+
+   Ch 18: 4 dead images
+      🌐 Scraping: https://04x.manhwaland.land/daddy-in-law-chapter-18-2/
+      📸 Captured 23 images
+      ✅ Replaced with 23/23 fresh R2 images
+
+📖 One’s Step Sister
+   Source: https://04x.manhwaland.land/manga/ones-step-sister/
+   Chapters to fix: 1
+   Found 30 chapters on source
+
+   Ch 26: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/ones-step-sister-chapter-26-2/
+      📸 Captured 27 images
+      ✅ Replaced with 27/27 fresh R2 images
+
+📖 Share Girls
+   Source: https://04x.manhwaland.land/manga/share-girls/
+   Chapters to fix: 1
+   Found 41 chapters on source
+
+   Ch 35: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/share-girls-chapter-35/
+      📸 Captured 138 images
+      ✅ Replaced with 138/138 fresh R2 images
+
+📖 Say You Like it
+   Source: https://04x.manhwaland.land/manga/say-you-like-it/
+   Chapters to fix: 1
+   Found 33 chapters on source
+
+   Ch 0: 136 dead images
+      🌐 Scraping: https://04x.manhwaland.land/say-you-like-it-chapter-0/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Your Situation
+   Source: https://04x.manhwaland.land/manga/your-situation/
+   Chapters to fix: 1
+   Found 56 chapters on source
+
+   Ch 1: 14 dead images
+      🌐 Scraping: https://04x.manhwaland.land/your-situation-chapter-01/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+📖 The Brides Who Can't Eat
+   Source: https://04x.manhwaland.land/manga/the-brides-who-cant-eat/
+   Chapters to fix: 1
+   Found 60 chapters on source
+
+   Ch 12: 38 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-brides-who-cant-eat-chapter-12-2/
+      📸 Captured 32 images
+      ✅ Replaced with 32/32 fresh R2 images
+
+📖 Ore no Genjitsu wa Renai Game?? ka to Omottara Ino
+   Source: https://04x.manhwaland.land/manga/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta/
+   Chapters to fix: 5
+   Found 53 chapters on source
+
+   Ch 16.2: 56 dead images
+      ⚠️  No matching source chapter for #16.2
+
+   Ch 9.2: 51 dead images
+      ⚠️  No matching source chapter for #9.2
+
+   Ch 13.2: 56 dead images
+      ⚠️  No matching source chapter for #13.2
+
+   Ch 16.1: 26 dead images
+      ⚠️  No matching source chapter for #16.1
+
+   Ch 15.2: 27 dead images
+      ⚠️  No matching source chapter for #15.2
+
+📖 Uzaki-chan wa Matomete Sukebe Shitai!
+   Source: https://04x.manhwaland.land/manga/uzaki-chan-wa-matomete-sukebe-shitai/
+   Chapters to fix: 1
+   Found 2 chapters on source
+
+   Ch 0: 6 dead images
+      🌐 Scraping: https://04x.manhwaland.land/uzaki-chan-wa-matomete-sukebe-shitai-chapter-0/
+      📸 Captured 16 images
+      ✅ Replaced with 16/16 fresh R2 images
+
+📖 My Female Friend Who Crossed The Line
+   Source: https://04x.manhwaland.land/manga/my-female-friend-who-crossed-the-line/
+   Chapters to fix: 1
+   Found 65 chapters on source
+
+   Ch 53: 4 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-female-friend-who-crossed-the-line-chapter-53/
+      📸 Captured 81 images
+      ✅ Replaced with 81/81 fresh R2 images
+
+📖 Secret Campus
+   Source: https://04x.manhwaland.land/manga/secret-campus/
+   Chapters to fix: 1
+   Found 20 chapters on source
+
+   Ch 2: 12 dead images
+      🌐 Scraping: https://04x.manhwaland.land/secret-campus-chapter-02/
+      📸 Captured 31 images
+      ✅ Replaced with 31/31 fresh R2 images
+
+📖 Sukebe Elf Tanbouki
+   Source: https://04x.manhwaland.land/manga/sukebe-elf-tanbouki/
+   Chapters to fix: 1
+   Found 3 chapters on source
+
+   Ch 2: 39 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sukebe-elf-tanbouki-chapter-2/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 With Yumi
+   Source: https://04x.manhwaland.land/manga/with-yumi/
+   Chapters to fix: 1
+   Found 42 chapters on source
+
+   Ch 34: 4 dead images
+      🌐 Scraping: https://04x.manhwaland.land/with-yumi-chapter-34/
+      📸 Captured 166 images
+      ✅ Replaced with 166/166 fresh R2 images
+
+📖 Charming Girl
+   Source: https://04x.manhwaland.land/manga/charming-girl/
+   Chapters to fix: 1
+   Found 50 chapters on source
+
+   Ch 42: 183 dead images
+      🌐 Scraping: https://04x.manhwaland.land/charming-girl-chapter-42-2/
+      📸 Captured 113 images
+      ✅ Replaced with 113/113 fresh R2 images
+
+📖 My Memory of You
+   Source: https://04x.manhwaland.land/manga/my-memory-of-you/
+   Chapters to fix: 1
+   Found 50 chapters on source
+
+   Ch 24: 79 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-memory-of-you-chapter-24/
+      📸 Captured 125 images
+      ✅ Replaced with 125/125 fresh R2 images
+
+📖 Saijo no Osewa ~Takane no Hana Darakena Meimon Kou
+   Source: https://04x.manhwaland.land/manga/saijo-no-osewa-takane-no-hana-darakena-meimon-kou-de-gakuin-ichi-no-ojou-sama-seikatsu-noryoku-kaimu-o-kagenagara-osewa-suru-koto-ni-narimashita/
+   Chapters to fix: 1
+   Found 13 chapters on source
+
+   Ch 7: 39 dead images
+      🌐 Scraping: https://04x.manhwaland.land/saijo-no-osewa-takane-no-hana-darakena-meimon-kou-de-gakuin-ichi-no-ojou-sama-seikatsu-noryoku-kaimu-o-kagenagara-osewa-suru-koto-ni-narimashita-chapter-7/
+      📸 Captured 52 images
+      ✅ Replaced with 52/52 fresh R2 images
+
+📖 Wife for 1000 Days
+   Source: https://04x.manhwaland.land/manga/wife-for-1000-days/
+   Chapters to fix: 2
+   Found 61 chapters on source
+
+   Ch 50: 36 dead images
+      🌐 Scraping: https://04x.manhwaland.land/wife-for-1000-days-chapter-50-2/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 87 images
+      ✅ Replaced with 87/87 fresh R2 images
+
+   Ch 54: 71 dead images
+      🌐 Scraping: https://04x.manhwaland.land/wife-for-1000-days-chapter-54-3/
+      📸 Captured 84 images
+      ✅ Replaced with 84/84 fresh R2 images
+
+📖 Salamander
+   Source: https://04x.manhwaland.land/manga/salamander/
+   Chapters to fix: 1
+   Found 35 chapters on source
+
+   Ch 30: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/salamander-chapter-30/
+      📸 Captured 36 images
+      ✅ Replaced with 36/36 fresh R2 images
+
+📖 Yuusha Party wo Tsuihou sareta Ore daga, Ore kara 
+   Source: https://04x.manhwaland.land/manga/yuusha-party-wo-tsuihou-sareta-ore-daga-ore-kara-sudattekureta-you-de-ureshii-nanode-dai-seijo-omae-ni-ottekorarete-wa-komaru-no-daga/
+   Chapters to fix: 1
+   Found 23 chapters on source
+
+   Ch 10: 26 dead images
+      🌐 Scraping: https://04x.manhwaland.land/yuusha-party-wo-tsuihou-sareta-ore-daga-ore-kara-sudattekureta-you-de-ureshii-nanode-dai-seijo-omae-ni-ottekorarete-wa-komaru-no-daga-chapter-10/
+      📸 Captured 40 images
+      ✅ Replaced with 40/40 fresh R2 images
+
+📖 Honey Trap Sharehouse
+   Source: https://04x.manhwaland.land/manga/honey-trap-sharehouse/
+   Chapters to fix: 1
+   Found 13 chapters on source
+
+   Ch 10: 30 dead images
+      🌐 Scraping: https://04x.manhwaland.land/honey-trap-sharehouse-chapter-10/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Interrupted Innocence
+   Source: https://04x.manhwaland.land/manga/interrupted-innocence/
+   Chapters to fix: 1
+   Found 28 chapters on source
+
+   Ch 5: 8 dead images
+      🌐 Scraping: https://04x.manhwaland.land/interrupted-innocence-chapter-5-2/
+      📸 Captured 21 images
+      ✅ Replaced with 21/21 fresh R2 images
+
+📖 Tonari no Heya no Russia-jin ga Urusain desu ga
+   Source: https://04x.manhwaland.land/manga/tonari-no-heya-no-russia-jin-ga-urusain-desu-ga/
+   Chapters to fix: 1
+   Found 2 chapters on source
+
+   Ch 0: 3 dead images
+      🌐 Scraping: https://04x.manhwaland.land/tonari-no-heya-no-russia-jin-ga-urusain-desu-ga-chapter-0/
+      📸 Captured 16 images
+      ✅ Replaced with 16/16 fresh R2 images
+
+📖 Analog
+   Source: https://04x.manhwaland.land/manga/analog/
+   Chapters to fix: 1
+   Found 69 chapters on source
+
+   Ch 1: 20 dead images
+      🌐 Scraping: https://04x.manhwaland.land/analog-chapter-1-2/
+      📸 Captured 42 images
+      ✅ Replaced with 42/42 fresh R2 images
+
+📖 My Girlfriends Naughty Sister
+   Source: https://04x.manhwaland.land/manga/my-girlfriends-naughty-sister/
+   Chapters to fix: 1
+   Found 27 chapters on source
+
+   Ch 14: 10 dead images
+      🌐 Scraping: https://04x.manhwaland.land/my-girlfriends-naughty-sister-chapter-14-2/
+      📸 Captured 23 images
+      ✅ Replaced with 23/23 fresh R2 images
+
+📖 Swinging
+   Source: https://04x.manhwaland.land/manga/swinging/
+   Chapters to fix: 2
+   Found 51 chapters on source
+
+   Ch 33: 14 dead images
+      🌐 Scraping: https://04x.manhwaland.land/swinging-chapter-33/
+      📸 Captured 65 images
+      ✅ Replaced with 65/65 fresh R2 images
+
+   Ch 40: 15 dead images
+      🌐 Scraping: https://04x.manhwaland.land/swinging-chapter-40/
+      📸 Captured 69 images
+      ✅ Replaced with 69/69 fresh R2 images
+
+📖 Noona and her BIG little Bro
+   Source: https://04x.manhwaland.land/manga/noona-and-her-big-little-bro/
+   Chapters to fix: 1
+   Found 32 chapters on source
+
+   Ch 26: 14 dead images
+      🌐 Scraping: https://04x.manhwaland.land/noona-and-her-big-little-bro-chapter-26/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 MILF Hunting In Another World
+   Source: https://04x.manhwaland.land/manga/milf-hunting-in-another-world/
+   Chapters to fix: 1
+   Found 123 chapters on source
+
+   Ch 14: 14 dead images
+      🌐 Scraping: https://04x.manhwaland.land/milf-hunting-in-another-world-chapter-14-2/
+      📸 Captured 26 images
+      ✅ Replaced with 26/26 fresh R2 images
+
+📖 Genkyou ~Cabecilla~
+   Source: https://04x.manhwaland.land/manga/genkyou-cabecilla/
+   Chapters to fix: 1
+   Found 4 chapters on source
+
+   Ch 2: 26 dead images
+      🌐 Scraping: https://04x.manhwaland.land/genkyou-cabecilla-chapter-2/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Musuko no Doukyuusei wa Watashi no SeFri
+   Source: https://04x.manhwaland.land/manga/musuko-no-doukyuusei-wa-watashi-no-sefri/
+   Chapters to fix: 1
+   Found 7 chapters on source
+
+   Ch 5: 24 dead images
+      🌐 Scraping: https://04x.manhwaland.land/musuko-no-doukyuusei-wa-watashi-no-sefri-chapter-5-2-2/
+      📸 Captured 37 images
+      ✅ Replaced with 37/37 fresh R2 images
+
+📖 Saikyou Hikikomori Onzoushi no Torokeru Konkatsu H
+   Source: https://04x.manhwaland.land/manga/saikyou-hikikomori-onzoushi-no-torokeru-konkatsu-harem/
+   Chapters to fix: 1
+   Found 10 chapters on source
+
+   Ch 5: 27 dead images
+      🌐 Scraping: https://04x.manhwaland.land/saikyou-hikikomori-onzoushi-no-torokeru-konkatsu-harem-chapter-5/
+      📸 Captured 40 images
+      ✅ Replaced with 40/40 fresh R2 images
+
+📖 The Teacher Secret
+   Source: https://04x.manhwaland.land/manga/the-teacher-secret/
+   Chapters to fix: 1
+   Found 30 chapters on source
+
+   Ch 3: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-teacher-secret-chapter-3/
+      📸 Captured 150 images
+      ✅ Replaced with 150/150 fresh R2 images
+
+📖 Block 69
+   Source: https://04x.manhwaland.land/manga/block-69/
+   Chapters to fix: 2
+   Found 71 chapters on source
+
+   Ch 30: 117 dead images
+      🌐 Scraping: https://04x.manhwaland.land/block-69-chapter-30-2/
+      📸 Captured 135 images
+      ✅ Replaced with 135/135 fresh R2 images
+
+   Ch 47: 158 dead images
+      🌐 Scraping: https://04x.manhwaland.land/block-69-chapter-47-2/
+      📸 Captured 144 images
+      ✅ Replaced with 144/144 fresh R2 images
+
+📖 Teen Aunt
+   Source: https://04x.manhwaland.land/manga/teen-aunt/
+   Chapters to fix: 1
+   Found 75 chapters on source
+
+   Ch 39: 1 dead images
+      🌐 Scraping: https://04x.manhwaland.land/teen-aunt-chapter-39-2/
+      📸 Captured 65 images
+      ✅ Replaced with 65/65 fresh R2 images
+
+📖 Sextudy Group
+   Source: https://04x.manhwaland.land/manga/sextudy-group/
+   Chapters to fix: 1
+   Found 110 chapters on source
+
+   Ch 105: 2 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sextudy-group-chapter-105/
+   🔄 Restarting browser (every 20 chapters)...
+   ⚠️  Browser disconnected/crashed
+      📸 Captured 22 images
+      ✅ Replaced with 22/22 fresh R2 images
+
+📖 The Unforeseen Guest
+   Source: https://04x.manhwaland.land/manga/the-unforeseen-guest/
+   Chapters to fix: 2
+   Found 140 chapters on source
+
+   Ch 70: 12 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-unforeseen-guest-chapter-70-2/
+      📸 Captured 25 images
+      ✅ Replaced with 25/25 fresh R2 images
+
+   Ch 78: 21 dead images
+      🌐 Scraping: https://04x.manhwaland.land/the-unforeseen-guest-chapter-78-2/
+      📸 Captured 26 images
+      ✅ Replaced with 26/26 fresh R2 images
+
+📖 Pheromone-holic
+   Source: https://04x.manhwaland.land/manga/pheromone-holic/
+   Chapters to fix: 1
+   Found 53 chapters on source
+
+   Ch 6: 58 dead images
+      🌐 Scraping: https://04x.manhwaland.land/pheromone-holic-chapter-06/
+      📸 Captured 45 images
+      ✅ Replaced with 45/45 fresh R2 images
+
+📖 Seijo-sama ni Shitto Shichau Alter-chan
+   Source: https://04x.manhwaland.land/manga/seijo-sama-ni-shitto-shichau-alter-chan/
+   Chapters to fix: 1
+   Found 1 chapters on source
+
+   Ch 1: 26 dead images
+      🌐 Scraping: https://04x.manhwaland.land/seijo-sama-ni-shitto-shichau-alter-chan-chapter-1/
+      📸 Captured 13 images
+      ✅ Replaced with 13/13 fresh R2 images
+
+📖 Sok Gung-Hap Consulting
+   Source: https://04x.manhwaland.land/manga/sok-gung-hap-consulting/
+   Chapters to fix: 1
+   Found 50 chapters on source
+
+   Ch 5: 15 dead images
+      🌐 Scraping: https://04x.manhwaland.land/sok-gung-hap-consulting-chapter-5/
+      📸 Captured 30 images
+      ✅ Replaced with 30/30 fresh R2 images
+
+📖 Mind Reader
+   Source: https://04x.manhwaland.land/manga/mind-reader/
+   Chapters to fix: 1
+   Found 51 chapters on source
+
+   Ch 43: 24 dead images
+      🌐 Scraping: https://04x.manhwaland.land/mind-reader-chapter-43/
+      📸 Captured 37 images
+      ✅ Replaced with 37/37 fresh R2 images
+   ⚠️  Browser disconnected/crashed
+
+═══════════════════════════════════════════════════
+  📊 BACKFILL COMPLETE
+═══════════════════════════════════════════════════
+  Chapters processed: 187
+  Chapters succeeded: 187
+  Chapters failed:    12
+  Images fixed:       11271
+  Progress saved:     /Users/mac/VSC Project/Manga Zone/backfill-dead-progress.json
+

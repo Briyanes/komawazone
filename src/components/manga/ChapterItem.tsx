@@ -60,6 +60,7 @@ export function ChapterItem({
             alt={`Chapter ${number}`}
             className="h-full w-full object-cover"
             loading="lazy"
+            referrerPolicy="no-referrer"
             onError={() => setImgError(true)}
             style={isLocked ? { filter: 'blur(6px)' } : undefined}
           />

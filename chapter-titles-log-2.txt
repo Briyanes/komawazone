@@ -1,0 +1,26 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  Chapter Title Normalizer — "Manga Title Chapter N" → "Chapter N"
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Chapters with bad titles: 10500
+Processing in batches of 500...
+
+[500/10500] 4.8% — Updated 500 titles (total: 500)
+[1000/10500] 9.5% — Updated 500 titles (total: 1000)
+[1500/10500] 14.3% — Updated 500 titles (total: 1500)
+[2000/10500] 19.0% — Updated 500 titles (total: 2000)
+[2500/10500] 23.8% — Updated 500 titles (total: 2500)
+[3000/10500] 28.6% — Updated 500 titles (total: 3000)
+[3500/10500] 33.3% — Updated 500 titles (total: 3500)
+[4000/10500] 38.1% — Updated 500 titles (total: 4000)
+[4500/10500] 42.9% — Updated 500 titles (total: 4500)
+[5000/10500] 47.6% — Updated 500 titles (total: 5000)
+[5500/10500] 52.4% — Updated 500 titles (total: 5500)
+
+✅ No more chapters to process!
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  ✅ DONE! Total chapters updated: 5500
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Verification — remaining bad titles: 5000

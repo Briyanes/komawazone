@@ -52,10 +52,13 @@ async function main() {
   console.log(`Chapters with bad titles: ${totalBadTitles}`);
   console.log(`Processing in batches of ${BATCH_SIZE}...\n`);
 
-  let offset = 0;
+  // Keep offset at 0 — once we update a row's title to "Chapter N",
+  // it no longer matches the filter and drops out of the result set.
+  // So the next unfixed row always bubbles up to position 0.
+  const offset = 0;
 
   while (true) {
-    // Fetch a batch of chapters with bad titles
+    // Fetch a batch of chapters with bad titles (always from offset 0)
     const { data: chapters, error } = await supabase
       .from('chapters')
       .select('id, number, title')
@@ -73,9 +76,7 @@ async function main() {
       break;
     }
 
-    // Build updates — group by identical new title to reduce API calls
-    // But since each chapter gets its own "Chapter N", we update individually
-    // in a batch using Promise.all
+    // Build updates
     const updates = chapters.map(ch => ({
       id: ch.id,
       title: `Chapter ${ch.number}`,
@@ -104,13 +105,11 @@ async function main() {
     }
 
     totalUpdated += batchUpdated;
-    totalProcessed += chapters.length;
+    totalProcessed += batchUpdated;
     const pct = totalBadTitles > 0 ? ((totalProcessed / totalBadTitles) * 100).toFixed(1) : '0';
     console.log(
       `[${totalProcessed}/${totalBadTitles}] ${pct}% — Updated ${batchUpdated} titles (total: ${totalUpdated})`,
     );
-
-    offset += BATCH_SIZE;
 
     // Small delay between batches
     await new Promise(r => setTimeout(r, 200));
