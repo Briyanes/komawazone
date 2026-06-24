@@ -13,11 +13,23 @@ const sb = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-const { count } = await sb
+// Use .not() correctly — Supabase head count with .not().like() works
+const { count: deadCount } = await sb
   .from('chapter_images')
   .select('*', { count: 'exact', head: true })
   .not('image_url', 'like', '/api/r2/image/%');
 
-// Output ONLY the number, nothing else
-process.stdout.write(String(count || 0));
+const { count: totalCount } = await sb
+  .from('chapter_images')
+  .select('*', { count: 'exact', head: true });
+
+const { count: r2Count } = await sb
+  .from('chapter_images')
+  .select('*', { count: 'exact', head: true })
+  .like('image_url', '/api/r2/image/%');
+
+const pct = totalCount > 0 ? ((r2Count / totalCount) * 100).toFixed(1) : 0;
+console.log(`Total: ${totalCount?.toLocaleString()}`);
+console.log(`R2:    ${r2Count?.toLocaleString()} (${pct}%)`);
+console.log(`Dead:  ${deadCount?.toLocaleString()}`);
 process.exit(0);

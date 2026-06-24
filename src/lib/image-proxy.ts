@@ -61,22 +61,25 @@ export function proxyExternalUrl(url: string): string {
   try {
     const parsed = new URL(url);
 
-    // Only proxy hosts that are DNS-dead (bare root domains only).
-    // Subdomains (api-l.gmbr.pro, jablay.gmbr.pro, etc.) still work in the browser.
-    const DEAD_ROOT_DOMAINS = [
-      'gmbr.pro',     // bare domain DNS dead — subdomains still resolve
-      'gmbar.xyz',    // bare domain DNS dead
-      'uwakjawa.xyz', // bare domain DNS dead
+    // Route ALL gmbr.pro/gmbar.xyz/uwakjawa.xyz through proxy (including subdomains).
+    // These hosts return 403 from both browser and server.
+    // Proxy will try fetch → if fails, return clean SVG placeholder (not broken icon).
+    const DEAD_DOMAINS = [
+      'gmbr.pro',
+      'gmbar.xyz',
+      'uwakjawa.xyz',
     ];
 
-    // Only EXACT hostname match (not subdomains)
-    if (DEAD_ROOT_DOMAINS.includes(parsed.hostname)) {
+    // Check if hostname ends with any dead domain (covers subdomains too)
+    const isDeadHost = DEAD_DOMAINS.some(d =>
+      parsed.hostname === d || parsed.hostname.endsWith('.' + d)
+    );
+
+    if (isDeadHost) {
       return `/api/proxy/image?url=${encodeURIComponent(url)}`;
     }
 
     // All other external hosts → load directly in browser with referrerPolicy=no-referrer
-    // This includes: api-l.gmbr.pro, jablay.gmbr.pro, manhwaland.land, etc.
-    // They work fine from the browser but return 403 from Vercel server-side fetch.
   } catch {
     // Not a valid URL, return as-is
   }

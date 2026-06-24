@@ -34,16 +34,16 @@ const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID;
 const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY;
 const R2_BUCKET = process.env.R2_BUCKET;
 
-const CHAPTER_DELAY = 500;      // Reduced delay (parallel processing compensates)
-const MANGA_DELAY = 1000;       // Reduced delay between manga
-const SCROLL_STEPS = 12;        // Slightly fewer scroll steps
-const SCROLL_WAIT = 600;        // Faster scroll wait
-const PAGE_TIMEOUT = 25000;     // Slightly shorter timeout
-const BROWSER_RESTART_INTERVAL = 15; // Restart browser every N chapters
+const CHAPTER_DELAY = 300;      // Faster: 500 → 300ms
+const MANGA_DELAY = 800;        // Faster: 1000 → 800ms
+const SCROLL_STEPS = 8;         // Fewer scrolls: 12 → 8
+const SCROLL_WAIT = 400;        // Faster scroll: 600 → 400ms
+const PAGE_TIMEOUT = 20000;     // Shorter timeout: 25 → 20s
+const BROWSER_RESTART_INTERVAL = 20; // Restart less often: 15 → 20
 const MAX_RETRIES = 2;
-const DB_QUERY_BATCH = 1000;  // Increased from 200 → 1000 (5x fewer API calls)
+const DB_QUERY_BATCH = 1000;
 const DB_QUERY_RETRIES = 3;
-const UPLOAD_CONCURRENCY = 5;   // Upload images in parallel batches
+const UPLOAD_CONCURRENCY = 8;   // More parallel uploads: 5 → 8
 
 // Parse args
 const args = process.argv.slice(2);
