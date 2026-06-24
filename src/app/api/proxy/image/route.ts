@@ -9,17 +9,17 @@ export const maxDuration = 10;
  * Proxy external manga images through our server.
  *
  * Strategy (Vercel Hobby 10s limit):
- * 1. For DEAD hosts (gmbr.pro DNS dead) → return SVG placeholder immediately.
- * 2. Try DIRECT fetch (5s timeout) — works when host doesn't block Vercel IPs.
- * 3. If direct fails → return SVG placeholder immediately.
+ * 1. Try DIRECT fetch (5s timeout) — works when host doesn't block Vercel IPs.
+ * 2. If direct fails → return SVG placeholder immediately.
+ *
+ * NOTE: gmbr.pro returns 403 Cloudflare to browsers but is fetchable server-side
+ * with NO Referer header. We previously listed it as DEAD_HOSTS which returned
+ * a placeholder instantly and broke 585K+ images. That was wrong — now we fetch.
  *
  * Usage: /api/proxy/image?url=https://img-uwak.gmbr.pro/path/to/image.jpg
  */
 
 const SVG_PLACEHOLDER = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="270" font-size="56" text-anchor="middle" fill="#4a4a6a">📖</text><text x="200" y="330" font-size="16" text-anchor="middle" fill="#6a6a8a" font-family="sans-serif" font-weight="600">Gambar sedang diperbaiki</text><text x="200" y="355" font-size="12" text-anchor="middle" fill="#4a4a6a" font-family="sans-serif">Server gambar sedang bermasalah</text></svg>`;
-
-// Hosts known to be DEAD (DNS doesn't resolve) — skip fetch entirely
-const DEAD_HOSTS = ['gmbr.pro'];
 
 function svgResponse() {
   return new NextResponse(SVG_PLACEHOLDER, {
@@ -76,13 +76,6 @@ export async function GET(req: NextRequest) {
 
     if (!isAllowed) {
       return NextResponse.json({ error: 'Host not allowed' }, { status: 403 });
-    }
-
-    // FAST FAIL: For dead hosts (DNS doesn't resolve), skip fetch entirely.
-    // Saves 5s timeout per image × 628K images = massive perf improvement.
-    const isDeadHost = DEAD_HOSTS.some(dead => url.hostname.includes(dead));
-    if (isDeadHost) {
-      return svgResponse();
     }
 
     // IMPORTANT: gmbr.pro blocks requests WITH Referer (403 Forbidden).

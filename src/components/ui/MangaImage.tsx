@@ -42,25 +42,14 @@ const EXTERNAL_HOSTS = [
   'manhwaland.in',
 ];
 
-// Hosts that are DEAD (DNS dead, 403 forever, or permanently offline).
-// Instead of trying to load → waiting for timeout → failing → showing placeholder,
-// we SKIP directly to placeholder for these hosts. This eliminates the 5-10s
-// timeout per dead image and makes the page appear clean instantly.
-const DEAD_HOSTS = [
-  'gmbr.pro',
-  'gmbar.xyz',
-  'uwakjawa.xyz',
-];
+// NOTE: gmbr.pro is NOT dead — it returns 403 Cloudflare to browsers but
+// our /api/proxy/image can fetch it successfully (HTTP 200, no Referer).
+// Previously we listed it as DEAD_HOSTS which broke 585K images instantly.
+// Now all external hosts go through the proxy and the fallback chain:
+// direct → proxy → placeholder. No more premature dead-host placeholder.
 
-function isDeadHost(src: ImageProps['src']): boolean {
-  if (typeof src !== 'string') return false;
-  if (src.startsWith('/api/r2/image/') || src.startsWith('/api/proxy/image')) return false;
-  try {
-    const url = new URL(src);
-    return DEAD_HOSTS.some(h => url.hostname.includes(h));
-  } catch {
-    return false;
-  }
+function isDeadHost(_src: ImageProps['src']): boolean {
+  return false;
 }
 
 function isExternalUrl(src: ImageProps['src']): boolean {
