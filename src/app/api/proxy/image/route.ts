@@ -19,8 +19,10 @@ export const maxDuration = 10;
 
 const SVG_PLACEHOLDER = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="270" font-size="56" text-anchor="middle" fill="#4a4a6a">📖</text><text x="200" y="330" font-size="16" text-anchor="middle" fill="#6a6a8a" font-family="sans-serif" font-weight="600">Gambar sedang diperbaiki</text><text x="200" y="355" font-size="12" text-anchor="middle" fill="#4a4a6a" font-family="sans-serif">Server gambar sedang bermasalah</text></svg>`;
 
-// Hosts known to be DEAD (DNS doesn't resolve) — skip fetch entirely
-const DEAD_HOSTS = ['gmbr.pro'];
+// Hosts known to be DEAD (DNS doesn't resolve) — skip fetch entirely.
+// CRITICAL: BARE domain only. Subdomains like api-l.gmbr.pro, jablay.gmbr.pro
+// STILL WORK and must be fetched (not short-circuited to placeholder).
+const DEAD_HOSTS = new Set(['gmbr.pro']);
 
 function svgResponse() {
   return new NextResponse(SVG_PLACEHOLDER, {
@@ -80,9 +82,9 @@ export async function GET(req: NextRequest) {
     }
 
     // FAST FAIL: For dead hosts (DNS doesn't resolve), skip fetch entirely.
-    // Saves 5s timeout per image × 628K images = massive perf improvement.
-    const isDeadHost = DEAD_HOSTS.some(dead => url.hostname.includes(dead));
-    if (isDeadHost) {
+    // CRITICAL: Exact hostname match only. Subdomains like api-l.gmbr.pro
+    // STILL RESOLVE and must be fetched normally.
+    if (DEAD_HOSTS.has(url.hostname)) {
       return svgResponse();
     }
 

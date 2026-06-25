@@ -61,21 +61,21 @@ export function proxyExternalUrl(url: string): string {
   try {
     const parsed = new URL(url);
 
-    // Route ALL gmbr.pro/gmbar.xyz/uwakjawa.xyz through proxy (including subdomains).
-    // These hosts return 403 from both browser and server.
-    // Proxy will try fetch → if fails, return clean SVG placeholder (not broken icon).
-    const DEAD_DOMAINS = [
+    // CRITICAL: Only proxy BARE dead domains (gmbr.pro, gmbar.xyz, uwakjawa.xyz).
+    // Subdomains like api-l.gmbr.pro, jablay.gmbr.pro, img-uwak.gmbr.pro STILL WORK
+    // in the browser (they resolve and serve images). Routing them through our server
+    // proxy would KILL them because:
+    //   1. The proxy uses `hostname.includes('gmbr.pro')` which matches subdomains too
+    //   2. Cloudflare blocks server-side (Vercel) fetches with 403
+    // Browser <img> with referrerPolicy="no-referrer" loads them fine!
+    const DEAD_BARE_DOMAINS = new Set([
       'gmbr.pro',
       'gmbar.xyz',
       'uwakjawa.xyz',
-    ];
+    ]);
 
-    // Check if hostname ends with any dead domain (covers subdomains too)
-    const isDeadHost = DEAD_DOMAINS.some(d =>
-      parsed.hostname === d || parsed.hostname.endsWith('.' + d)
-    );
-
-    if (isDeadHost) {
+    // Only match EXACT hostname — NOT subdomains
+    if (DEAD_BARE_DOMAINS.has(parsed.hostname)) {
       return `/api/proxy/image?url=${encodeURIComponent(url)}`;
     }
 
