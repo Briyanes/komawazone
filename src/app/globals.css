@@ -249,3 +249,72 @@ img, video {
   -webkit-user-drag: none;
 }
 
+/* ── OLLUQ Loader Animations ───────────────────────────────────────── */
+@keyframes olluq-spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes olluq-spin-reverse {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+@keyframes olluq-pulse {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.15); opacity: 0.85; }
+}
+
+@keyframes olluq-fade {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
+}
+
+@keyframes olluq-bars {
+  0%, 80%, 100% { transform: scaleY(0.4); opacity: 0.4; }
+  40% { transform: scaleY(1); opacity: 1; }
+}
+
+/* OLLUQ Loading bars fallback (no-JS) */
+.olluq-bars {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+  justify-content: center;
+}
+.olluq-bars span {
+  display: block;
+  width: 4px;
+  height: 24px;
+  background: var(--accent-primary, #6366f1);
+  border-radius: 2px;
+  animation: olluq-bars 1s ease-in-out infinite;
+}
+.olluq-bars span:nth-child(2) { animation-delay: 0.15s; }
+.olluq-bars span:nth-child(3) { animation-delay: 0.3s; }
+.olluq-bars span:nth-child(4) { animation-delay: 0.45s; }
+
+/* Route transition progress bar */
+@keyframes olluq-progress {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+.olluq-progress-bar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 99999;
+  overflow: hidden;
+  pointer-events: none;
+}
+.olluq-progress-bar::after {
+  content: '';
+  display: block;
+  height: 100%;
+  width: 40%;
+  background: linear-gradient(90deg, var(--accent-primary, #6366f1), var(--accent-secondary, #8b5cf6));
+  animation: olluq-progress 1s ease-in-out infinite;
+}
+

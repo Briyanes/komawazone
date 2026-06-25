@@ -1,7 +1,8 @@
 'use client';
 
 import { useState } from 'react';
-import { Ticket, Check, AlertCircle, Loader2 } from 'lucide-react';
+import { Ticket, Check, AlertCircle } from 'lucide-react';
+import OlluqLoader from '@/components/ui/OlluqLoader';
 
 /** Auto-format voucher code: OLLUQ-XXXX-XXXX (3 groups) */
 function formatVoucherCode(raw: string): string {
@@ -100,7 +101,7 @@ export function VoucherRedeemForm() {
             style={{ background: 'var(--color-primary)' }}
           >
             {loading ? (
-              <Loader2 size={16} className="animate-spin" />
+              <OlluqLoader size="sm" />
             ) : (
               <Ticket size={16} />
             )}
