@@ -318,3 +318,14 @@ img, video {
   animation: olluq-progress 1s ease-in-out infinite;
 }
 
+/* ═══ OlluqTypingLoader (typing text + shimmer) ═══ */
+@keyframes olluq-shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+@keyframes olluq-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+

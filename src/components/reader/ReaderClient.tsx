@@ -106,6 +106,14 @@ export function ReaderClient({
   const [pageInputMode, setPageInputMode]   = useState(false);
   const [pageInputVal, setPageInputVal]     = useState('');
   const [autoAdvance, setAutoAdvance]       = useState<number | null>(null);
+
+  // Reset scroll position + page counter when chapter changes
+  useEffect(() => {
+    window.scrollTo(0, 0);
+    setCurrentPage(1);
+    setScrollProgress(0);
+    setAutoAdvance(null);
+  }, [chapterId]);
   const autoAdvanceTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const controlsTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 

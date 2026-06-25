@@ -1,9 +1,6 @@
-import OlluqLoader from '@/components/ui/OlluqLoader';
+import OlluqTypingLoader from "@/components/ui/OlluqTypingLoader";
 
 export default function Loading() {
-  return (
-    <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <OlluqLoader size="xl" text="Memuat chapter..." />
-    </div>
-  );
+  return <OlluqTypingLoader size="xl" text="Memuat..." />;
 }
+
