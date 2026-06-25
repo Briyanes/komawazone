@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+// Note: Edge CDN caching is controlled by Cache-Control response headers.
+// No need for force-dynamic — Vercel caches responses based on headers.
 export const maxDuration = 10;
 
 /**

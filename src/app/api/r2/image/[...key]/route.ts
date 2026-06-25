@@ -20,7 +20,9 @@ import { Readable } from 'stream';
 
 // Force Node.js runtime (not Edge) for S3 SDK + stream support
 export const runtime = 'nodejs';
-export const dynamic = 'force-dynamic';
+// Note: Vercel CDN edge caching is controlled by the Cache-Control response
+// header below (immutable, 1 year). No need for force-dynamic or force-static.
+// Each unique image key is cached independently at the edge after first fetch.
 
 const s3Client = new S3Client({
   region: 'auto',

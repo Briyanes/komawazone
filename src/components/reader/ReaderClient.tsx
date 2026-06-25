@@ -991,9 +991,32 @@ function ImageCard({
   src: string; alt: string; width: number; height: number;
   filter: string; priority?: boolean; loading?: 'eager' | 'lazy';
 }) {
+  // Status: loading → loaded | error
+  // Auto-retry: automatically retry up to 2 times on error (network glitch/timeout),
+  // before showing the "Gambar gagal dimuat" UI. Most "failed" images actually
+  // exist in R2 but fail due to transient network issues or concurrent load.
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [retryKey, setRetryKey] = useState(0);
-  useEffect(() => { setStatus('loading'); }, [src]);
+  const [autoRetries, setAutoRetries] = useState(0);
+  const MAX_AUTO_RETRIES = 2;
+
+  useEffect(() => {
+    setStatus('loading');
+    setAutoRetries(0);
+  }, [src]);
+
+  // Auto-retry on error: wait 800ms then retry (up to MAX_AUTO_RETRIES times)
+  useEffect(() => {
+    if (status === 'error' && autoRetries < MAX_AUTO_RETRIES) {
+      const timer = setTimeout(() => {
+        setAutoRetries(r => r + 1);
+        setRetryKey(k => k + 1);
+        setStatus('loading');
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [status, autoRetries]);
+
   const ar = width > 0 && height > 0 ? `${width} / ${height}` : '2 / 3';
   return (
     <div className="relative w-full" style={{ aspectRatio: ar }}>
@@ -1008,7 +1031,10 @@ function ImageCard({
           <ImageOff size={28} style={{ color: 'rgba(255,255,255,0.2)' }} />
           <p className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>Gambar gagal dimuat</p>
           <button
-            onClick={() => { setStatus('loading'); setRetryKey(k => k + 1); }}
+            onClick={() => {
+              setStatus('loading');
+              setRetryKey(k => k + 1);
+            }}
             className="mt-1 rounded-lg px-3 py-1 text-xs font-semibold"
             style={{ background: 'rgba(255,107,53,0.2)', color: 'var(--color-primary)' }}
           >
