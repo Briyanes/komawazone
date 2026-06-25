@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import MangaImage from '@/components/ui/MangaImage';
+import OlluqLoader from '@/components/ui/OlluqLoader';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ChevronLeft, ChevronRight, List, Home, ChevronDown,
@@ -1021,7 +1022,9 @@ function ImageCard({
   return (
     <div className="relative w-full" style={{ aspectRatio: ar }}>
       {status === 'loading' && (
-        <div className="absolute inset-0 animate-pulse" style={{ background: '#1c1c1c' }} />
+        <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#0f0f0f' }}>
+          <OlluqLoader size="sm" />
+        </div>
       )}
       {status === 'error' ? (
         <div
