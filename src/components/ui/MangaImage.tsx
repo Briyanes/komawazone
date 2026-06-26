@@ -47,22 +47,31 @@ const EXTERNAL_HOSTS = [
 // we SKIP directly to placeholder for these hosts. This eliminates the 5-10s
 // timeout per dead image and makes the page appear clean instantly.
 //
-// CRITICAL: Only list EXACT root domains here. Subdomains like api-l.gmbr.pro
-// and jablay.gmbr.pro still work in the browser — only the bare domain gmbr.pro
-// has DNS failure. Using .includes('gmbr.pro') would kill working subdomains too!
-const DEAD_HOSTS_EXACT = [
-  'gmbr.pro',     // DNS dead — bare domain only (subdomains still resolve)
-  'gmbar.xyz',    // DNS dead — bare domain only
-  'uwakjawa.xyz', // DNS dead — bare domain only
+// CRITICAL: As of June 2026, Cloudflare now blocks ALL access to gmbr.pro
+// including subdomains (api-l, jablay, img-uwak) with 403. Previously only
+// the bare domain gmbr.pro had DNS failure, but now the entire gmbr.pro
+// infrastructure is behind a Cloudflare wall that returns 403 for everyone.
+const DEAD_HOST_SUFFIXES = [
+  '.gmbr.pro',    // Cloudflare 403 — ALL subdomains dead (api-l, jablay, img-uwak)
+  '.gmbar.xyz',   // DNS dead — ALL subdomains
+  '.uwakjawa.xyz', // DNS dead — ALL subdomains
 ];
+
+// Also match bare domains (hostname without subdomain)
+const DEAD_HOSTS_EXACT = new Set([
+  'gmbr.pro',
+  'gmbar.xyz',
+  'uwakjawa.xyz',
+]);
 
 function isDeadHost(src: ImageProps['src']): boolean {
   if (typeof src !== 'string') return false;
   if (src.startsWith('/api/r2/image/') || src.startsWith('/api/proxy/image')) return false;
   try {
     const url = new URL(src);
-    // Only match EXACT hostname (e.g. "gmbr.pro"), NOT subdomains like "api-l.gmbr.pro"
-    return DEAD_HOSTS_EXACT.includes(url.hostname);
+    // Match bare domain OR any subdomain of dead hosts
+    if (DEAD_HOSTS_EXACT.has(url.hostname)) return true;
+    return DEAD_HOST_SUFFIXES.some(suffix => url.hostname.endsWith(suffix));
   } catch {
     return false;
   }

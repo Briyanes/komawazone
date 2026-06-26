@@ -82,14 +82,17 @@ export default async function MangaDetailPage({ params }: Props) {
     }
   }
 
-  // Dead manga CDN domains — only EXACT hostname match (not subdomains).
-  // Subdomains like api-l.gmbr.pro still work in browser with referrerPolicy.
-  const DEAD_HOSTNAMES = new Set(['gmbr.pro', 'gmbar.xyz', 'uwakjawa.xyz']);
+  // Dead manga CDN domains — suffix match (includes subdomains like img-uwak.gmbr.pro).
+  // As of June 2026, ALL gmbr.pro/gmbar.xyz/uwakjawa.xyz return 403 (Cloudflare block).
+  const DEAD_HOST_SUFFIXES = ['.gmbr.pro', '.gmbar.xyz', '.uwakjawa.xyz'];
+  const DEAD_HOSTS = new Set(['gmbr.pro', 'gmbar.xyz', 'uwakjawa.xyz', 'manhwaland.land']);
 
   const isDeadUrl = (url: string | null | undefined): boolean => {
     if (!url) return true;
     try {
-      return DEAD_HOSTNAMES.has(new URL(url).hostname);
+      const h = new URL(url).hostname;
+      if (DEAD_HOSTS.has(h)) return true;
+      return DEAD_HOST_SUFFIXES.some(s => h.endsWith(s));
     } catch {
       // Relative/proxy URLs (e.g. /api/r2/image/...) are never dead
       return false;

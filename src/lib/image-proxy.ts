@@ -61,21 +61,16 @@ export function proxyExternalUrl(url: string): string {
   try {
     const parsed = new URL(url);
 
-    // CRITICAL: Only proxy BARE dead domains (gmbr.pro, gmbar.xyz, uwakjawa.xyz).
-    // Subdomains like api-l.gmbr.pro, jablay.gmbr.pro, img-uwak.gmbr.pro STILL WORK
-    // in the browser (they resolve and serve images). Routing them through our server
-    // proxy would KILL them because:
-    //   1. The proxy uses `hostname.includes('gmbr.pro')` which matches subdomains too
-    //   2. Cloudflare blocks server-side (Vercel) fetches with 403
-    // Browser <img> with referrerPolicy="no-referrer" loads them fine!
-    const DEAD_BARE_DOMAINS = new Set([
-      'gmbr.pro',
-      'gmbar.xyz',
-      'uwakjawa.xyz',
-    ]);
+    // CRITICAL: As of June 2026, Cloudflare blocks ALL access to gmbr.pro
+    // including subdomains (api-l, jablay, img-uwak) with 403 for everyone.
+    // Previously only bare domains were dead, but now the entire infrastructure
+    // is behind a Cloudflare wall. Route ALL gmbr.pro/gmbar.xyz/uwakjawa.xyz
+    // through our proxy which will return a clean SVG placeholder.
+    const DEAD_DOMAIN_SUFFIXES = ['.gmbr.pro', '.gmbar.xyz', '.uwakjawa.xyz'];
+    const DEAD_BARE_DOMAINS = new Set(['gmbr.pro', 'gmbar.xyz', 'uwakjawa.xyz']);
 
-    // Only match EXACT hostname — NOT subdomains
-    if (DEAD_BARE_DOMAINS.has(parsed.hostname)) {
+    if (DEAD_BARE_DOMAINS.has(parsed.hostname) ||
+        DEAD_DOMAIN_SUFFIXES.some(suffix => parsed.hostname.endsWith(suffix))) {
       return `/api/proxy/image?url=${encodeURIComponent(url)}`;
     }
 

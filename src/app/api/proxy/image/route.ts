@@ -19,10 +19,16 @@ export const maxDuration = 10;
 
 const SVG_PLACEHOLDER = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600"><rect width="400" height="600" fill="#1a1a2e"/><text x="200" y="270" font-size="56" text-anchor="middle" fill="#4a4a6a">📖</text><text x="200" y="330" font-size="16" text-anchor="middle" fill="#6a6a8a" font-family="sans-serif" font-weight="600">Gambar sedang diperbaiki</text><text x="200" y="355" font-size="12" text-anchor="middle" fill="#4a4a6a" font-family="sans-serif">Server gambar sedang bermasalah</text></svg>`;
 
-// Hosts known to be DEAD (DNS doesn't resolve) — skip fetch entirely.
-// CRITICAL: BARE domain only. Subdomains like api-l.gmbr.pro, jablay.gmbr.pro
-// STILL WORK and must be fetched (not short-circuited to placeholder).
-const DEAD_HOSTS = new Set(['gmbr.pro']);
+// Hosts known to be DEAD — skip fetch entirely.
+// CRITICAL: As of June 2026, Cloudflare blocks ALL access to gmbr.pro with 403
+// for everyone (browser, curl, server). ALL subdomains are dead too.
+const DEAD_HOST_SUFFIXES = ['.gmbr.pro', '.gmbar.xyz', '.uwakjawa.xyz'];
+const DEAD_HOSTS = new Set(['gmbr.pro', 'gmbar.xyz', 'uwakjawa.xyz']);
+
+function isDeadHost(hostname: string): boolean {
+  if (DEAD_HOSTS.has(hostname)) return true;
+  return DEAD_HOST_SUFFIXES.some(suffix => hostname.endsWith(suffix));
+}
 
 function svgResponse() {
   return new NextResponse(SVG_PLACEHOLDER, {
@@ -81,10 +87,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Host not allowed' }, { status: 403 });
     }
 
-    // FAST FAIL: For dead hosts (DNS doesn't resolve), skip fetch entirely.
-    // CRITICAL: Exact hostname match only. Subdomains like api-l.gmbr.pro
-    // STILL RESOLVE and must be fetched normally.
-    if (DEAD_HOSTS.has(url.hostname)) {
+    // FAST FAIL: For dead hosts, skip fetch entirely.
+    // As of June 2026, ALL gmbr.pro/gmbar.xyz/uwakjawa.xyz (including subdomains)
+    // are behind a Cloudflare 403 wall. Fetching wastes 5s and always fails.
+    // Return SVG placeholder instantly — clean UX, zero wasted time.
+    if (isDeadHost(url.hostname)) {
       return svgResponse();
     }
 
