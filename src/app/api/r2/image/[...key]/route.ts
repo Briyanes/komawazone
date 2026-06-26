@@ -68,7 +68,13 @@ export async function GET(
       Key: key,
     });
 
-    const response = await s3Client.send(command);
+    // Use a timeout promise to avoid hanging on R2 cold starts
+    const response = await Promise.race([
+      s3Client.send(command),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('R2_TIMEOUT')), 20000)
+      ),
+    ]);
 
     if (!response.Body) {
       return NextResponse.json({ error: 'Image not found' }, { status: 404 });

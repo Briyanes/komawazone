@@ -1008,6 +1008,49 @@ function ImageCard({
   // - Allow manual "Coba lagi" button
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [retryKey, setRetryKey] = useState(0);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [shouldLoad, setShouldLoad] = useState(loading === 'eager' || priority);
+
+  // Progressive loading: only load images that are near the viewport.
+  // This prevents Vercel serverless function concurrency limits (max ~6 concurrent)
+  // from causing mass image failures when a chapter has 30-50+ images.
+  useEffect(() => {
+    if (shouldLoad) return; // Already loading
+    if (!containerRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            // rootMargin: start loading when image is within 2 screens below
+            setShouldLoad(true);
+            observer.disconnect();
+            break;
+          }
+        }
+      },
+      {
+        // Preload images that are up to 2 viewport heights below current scroll
+        rootMargin: '0px 0px 200% 0px',
+        threshold: 0,
+      }
+    );
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
+  }, [shouldLoad]);
+
+  // Auto-retry: if image is stuck in 'loading' for too long, force a retry.
+  // Vercel serverless functions can silently timeout on cold starts or under
+  // heavy concurrent load. This catches those cases.
+  useEffect(() => {
+    if (status !== 'loading' || !shouldLoad) return;
+    const timeout = setTimeout(() => {
+      // Still loading after 15s → force retry with new cache-bust key
+      setRetryKey(k => k + 1);
+    }, 15000);
+    return () => clearTimeout(timeout);
+  }, [status, shouldLoad, retryKey]);
 
   // Reset to loading state when src changes (new image / chapter)
   useEffect(() => {
@@ -1016,7 +1059,7 @@ function ImageCard({
 
   const ar = width > 0 && height > 0 ? `${width} / ${height}` : '2 / 3';
   return (
-    <div className="relative w-full" style={{ aspectRatio: ar }}>
+    <div ref={containerRef} className="relative w-full" style={{ aspectRatio: ar }}>
       {status === 'loading' && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#0f0f0f' }}>
           <OlluqLoader size="sm" />
@@ -1040,7 +1083,7 @@ function ImageCard({
             Coba lagi
           </button>
         </div>
-      ) : (
+      ) : shouldLoad ? (
         <MangaImage
           key={retryKey}
           src={src}
@@ -1054,7 +1097,7 @@ function ImageCard({
           onLoad={() => setStatus('loaded')}
           onError={() => setStatus('error')}
         />
-      )}
+      ) : null}
     </div>
   );
 }
