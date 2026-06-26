@@ -34,9 +34,13 @@ function sleep(ms: number) {
 }
 
 /**
- * Validate content type is an image
+ * Validate content type is an image (excluding GIF which causes issues)
  */
 function isValidImageContentType(contentType: string): boolean {
+  // Reject GIF — causes loading/performance issues in reader
+  if (contentType.toLowerCase().includes('image/gif')) {
+    return false;
+  }
   return contentType.startsWith('image/');
 }
 

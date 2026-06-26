@@ -155,8 +155,22 @@ export function parseChapterImages(html: string): string[] {
     }
   }
 
+  // Filter out GIF images — they cause loading issues in the reader
+  const filteredUrls = urls.filter(u => {
+    try {
+      const lowerUrl = u.toLowerCase();
+      // Skip .gif extensions
+      if (lowerUrl.match(/\.gif(\?|#|$)/)) {
+        return false;
+      }
+      return true;
+    } catch {
+      return true;
+    }
+  });
+
   // Upgrade HTTP → HTTPS for CDNs that block plain HTTP (gmbr.pro returns 403 on HTTP)
-  return urls.map(u => {
+  return filteredUrls.map(u => {
     try {
       const parsed = new URL(u);
       if (parsed.protocol === 'http:' && parsed.hostname.includes('gmbr.pro')) {
