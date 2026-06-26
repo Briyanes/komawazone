@@ -107,8 +107,12 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
   const isExternal = isExternalUrl(props.src);
   const isDead = isDeadHost(props.src);
   const [imageError, setImageError] = useState(false);
-  // Fallback chain: try direct → proxy → placeholder
+  // Fallback chain for EXTERNAL CDN URLs only (gmbr.pro, etc.)
+  // For R2 URLs (/api/r2/image/), we retry the same URL with cache-busting
+  // instead of switching to a broken proxy URL.
   const [fallbackStage, setFallbackStage] = useState<'direct' | 'proxy' | 'failed'>('direct');
+  // Retry count for R2 URLs — allows cache-busting retries on transient failures
+  const [r2Retry, setR2Retry] = useState(0);
 
   // Dead host → fire onLoad so parent (e.g. ImageCard) removes its loading skeleton.
   // Without this, the skeleton would pulse forever since no <img> onLoad fires.
@@ -176,13 +180,29 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
     // CRITICAL: use smart proxy that handles BOTH R2 URLs and external CDN URLs
     // (gmbr.pro, manhwaland, etc.) — prevents hotlink-protection broken images.
     const proxiedSrc = proxyImageUrl(rawSrc as string) ?? (rawSrc as string);
-    // Fallback strategy:
-    // Stage 1 (direct): use proxiedSrc as-is
-    // Stage 2 (proxy): if direct fails, route through /api/proxy/image?url=<original>
-    // Stage 3 (failed): show placeholder emoji
-    const src = fallbackStage === 'proxy' && !proxiedSrc.startsWith('/api/proxy/image')
-      ? `/api/proxy/image?url=${encodeURIComponent(rawSrc as string)}`
-      : proxiedSrc;
+    const isR2Url = proxiedSrc.startsWith('/api/r2/image/');
+
+    // Determine final src based on fallback stage.
+    // R2 URLs: retry same endpoint with cache-busting (avoids broken proxy URL bug).
+    // External CDN URLs: direct → server proxy → placeholder.
+    let src: string;
+    if (fallbackStage === 'direct') {
+      src = proxiedSrc;
+    } else if (fallbackStage === 'proxy') {
+      if (isR2Url) {
+        // R2 retry: append cache-busting query param (same endpoint, fresh fetch)
+        const separator = proxiedSrc.includes('?') ? '&' : '?';
+        src = `${proxiedSrc}${separator}r=${r2Retry}`;
+      } else if (!proxiedSrc.startsWith('/api/proxy/image')) {
+        // External CDN fallback: server-side proxy (bypasses hotlink protection)
+        src = `/api/proxy/image?url=${encodeURIComponent(rawSrc as string)}`;
+      } else {
+        // Already proxied (e.g. dead gmbr.pro) → can't retry further
+        src = proxiedSrc;
+      }
+    } else {
+      src = proxiedSrc;
+    }
 
     // Show placeholder only after BOTH direct AND proxy attempts fail
     if (imageError && fallbackStage === 'failed') {
@@ -244,27 +264,55 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
         referrerPolicy="no-referrer"
         loading={priority ? undefined : 'lazy'}
         onError={() => {
-          // Fallback chain: direct → proxy → placeholder
-          // IMPORTANT: This MUST come after {...rest} so that parent onError
-          // handlers don't override our internal fallback chain.
-          if (fallbackStage === 'direct') {
-            setFallbackStage('proxy');
-            setImageError(false);
-          } else if (fallbackStage === 'proxy') {
-            setFallbackStage('failed');
-            setImageError(true);
-            // Notify parent component that ALL fallbacks failed
-            if (rest.onError) {
-              (rest.onError as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
-                new Event('error') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
-              );
+          // Fallback chain depends on URL type:
+          //
+          // R2 URLs (/api/r2/image/): retry same endpoint with cache-busting
+          // up to 3 times. R2 images exist but fail on transient network issues
+          // or concurrent load (browser limits 6 concurrent per origin).
+          //
+          // External CDN URLs: direct → server proxy → placeholder
+          const MAX_R2_RETRIES = 3;
+
+          if (isR2Url) {
+            // R2 retry: cache-bust up to MAX_R2_RETRIES times, then give up
+            if (fallbackStage === 'direct') {
+              setR2Retry(1);
+              setFallbackStage('proxy');
+              setImageError(false);
+            } else if (fallbackStage === 'proxy' && r2Retry < MAX_R2_RETRIES) {
+              setR2Retry(r => r + 1);
+              setImageError(false);
+              // src recalculates on re-render with new r2Retry → new cache-bust query
+            } else {
+              // Exhausted retries → show placeholder, notify parent
+              setFallbackStage('failed');
+              setImageError(true);
+              if (rest.onError) {
+                (rest.onError as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
+                  new Event('error') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
+                );
+              }
             }
           } else {
-            setImageError(true);
-            if (rest.onError) {
-              (rest.onError as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
-                new Event('error') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
-              );
+            // External CDN: direct → proxy → placeholder
+            if (fallbackStage === 'direct') {
+              setFallbackStage('proxy');
+              setImageError(false);
+            } else if (fallbackStage === 'proxy') {
+              setFallbackStage('failed');
+              setImageError(true);
+              if (rest.onError) {
+                (rest.onError as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
+                  new Event('error') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
+                );
+              }
+            } else {
+              setImageError(true);
+              if (rest.onError) {
+                (rest.onError as React.EventHandler<React.SyntheticEvent<HTMLImageElement, Event>>)(
+                  new Event('error') as unknown as React.SyntheticEvent<HTMLImageElement, Event>
+                );
+              }
             }
           }
         }}

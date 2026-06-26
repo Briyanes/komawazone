@@ -1001,30 +1001,18 @@ function ImageCard({
   filter: string; priority?: boolean; loading?: 'eager' | 'lazy';
 }) {
   // Status: loading → loaded | error
-  // Auto-retry: automatically retry up to 2 times on error (network glitch/timeout),
-  // before showing the "Gambar gagal dimuat" UI. Most "failed" images actually
-  // exist in R2 but fail due to transient network issues or concurrent load.
+  // MangaImage now handles retries internally (3 cache-bust retries for R2 URLs,
+  // direct→proxy fallback for external CDNs). ImageCard only needs to:
+  // - Show loading skeleton while MangaImage is retrying
+  // - Show "Gambar gagal dimuat" ONLY after MangaImage truly fails
+  // - Allow manual "Coba lagi" button
   const [status, setStatus] = useState<'loading' | 'loaded' | 'error'>('loading');
   const [retryKey, setRetryKey] = useState(0);
-  const [autoRetries, setAutoRetries] = useState(0);
-  const MAX_AUTO_RETRIES = 2;
 
+  // Reset to loading state when src changes (new image / chapter)
   useEffect(() => {
     setStatus('loading');
-    setAutoRetries(0);
   }, [src]);
-
-  // Auto-retry on error: wait 800ms then retry (up to MAX_AUTO_RETRIES times)
-  useEffect(() => {
-    if (status === 'error' && autoRetries < MAX_AUTO_RETRIES) {
-      const timer = setTimeout(() => {
-        setAutoRetries(r => r + 1);
-        setRetryKey(k => k + 1);
-        setStatus('loading');
-      }, 800);
-      return () => clearTimeout(timer);
-    }
-  }, [status, autoRetries]);
 
   const ar = width > 0 && height > 0 ? `${width} / ${height}` : '2 / 3';
   return (
