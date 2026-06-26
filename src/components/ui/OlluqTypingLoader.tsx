@@ -71,7 +71,7 @@ export default function OlluqTypingLoader({
         alignItems: 'center',
         justifyContent: 'center',
         gap: s.gap,
-        minHeight: '60vh',
+        minHeight: '70vh',
         opacity: mounted ? (visible ? 1 : 0) : 0,
         transition: 'opacity 400ms ease-in-out',
       };
