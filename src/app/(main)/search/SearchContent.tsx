@@ -69,7 +69,7 @@ export default function SearchContent() {
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    fetch('/api/v1/admin/genres')
+    fetch('/api/v1/genres')
       .then(r => r.json())
       .then((d: { status: string; data: Genre[] }) => { if (d.status === 'success') setGenres(d.data); })
       .catch(() => {});
@@ -169,6 +169,7 @@ export default function SearchContent() {
             placeholder="Cari manga, manhwa…"
             value={inputValue}
             onChange={(e) => handleSearchInput(e.target.value)}
+            aria-label="Cari manga atau manhwa"
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: 'var(--text-primary)' }}
           />

@@ -60,22 +60,24 @@ export function Header() {
         </Link>
 
         {/* Desktop nav */}
-        <nav className="hidden md:flex items-center gap-0.5 flex-1">
+        <nav className="hidden md:flex items-center gap-0.5 flex-1" aria-label="Navigasi utama">
           {[
-            { href: '/',                    label: 'Home'    },
-            { href: '/search',              label: 'Browse'  },
-            { href: '/search?sort=latest',  label: 'Terbaru' },
-          ].map(({ href, label }) => (
+            { href: '/',                      label: 'Home',    match: pathname === '/' },
+            { href: '/search',                label: 'Browse',  match: pathname.startsWith('/search') && !pathname.includes('sort=') },
+            { href: '/search?sort=latest',    label: 'Terbaru', match: pathname.includes('sort=latest') },
+            { href: '/search?sort=popular',   label: 'Populer', match: pathname.includes('sort=popular') },
+            { href: '/genre',                 label: 'Genre',   match: pathname.startsWith('/genre') },
+          ].map(({ href, label, match }) => (
             <Link
               key={label}
               href={href}
               className={cn(
                 'px-3 py-1.5 rounded-full text-sm font-medium transition-all',
-                pathname === href
+                match
                   ? 'text-white font-semibold'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
               )}
-              style={pathname === href ? { background: 'var(--color-primary)' } : {}}
+              style={match ? { background: 'var(--color-primary)' } : {}}
             >
               {label}
             </Link>
@@ -97,6 +99,7 @@ export function Header() {
             placeholder="Cari manga..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Cari manga atau manhwa"
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-[var(--text-tertiary)]"
             style={{ color: 'var(--text-primary)' }}
           />
@@ -181,6 +184,7 @@ export function Header() {
             placeholder="Cari manga, manhwa..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
+            aria-label="Cari manga atau manhwa"
             className="flex-1 bg-transparent text-sm outline-none"
             style={{ color: 'var(--text-primary)' }}
           />
