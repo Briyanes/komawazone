@@ -6,10 +6,11 @@ import { decodeHtml } from '@/lib/cn';
 
 async function getStats(supabase: Awaited<ReturnType<typeof createClient>>) {
   // Try optimized RPC first (single SQL query via SUM/COUNT)
-  // Cast to any because generated types don't include get_dashboard_stats yet
-  const { data: rpcData, error: rpcError } = await (supabase as any)
-    .rpc('get_dashboard_stats')
-    .maybeSingle() as { data: Record<string, number> | null; error: { message: string } | null };
+  // Cast through unknown (not any) because generated types don't include get_dashboard_stats yet
+  const rpcResult = await (supabase as unknown as {
+    rpc: (fn: string) => { maybeSingle: () => Promise<{ data: Record<string, number> | null; error: { message: string } | null }> };
+  }).rpc('get_dashboard_stats').maybeSingle();
+  const { data: rpcData, error: rpcError } = rpcResult;
   if (!rpcError && rpcData) {
     return {
       manga: rpcData.total_manga ?? 0,

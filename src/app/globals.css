@@ -75,6 +75,10 @@
   --overlay: rgba(0,0,0,.5);
   --shadow-color: rgba(0,0,0,.08);
 
+  /* Accent (OLLUQ brand orange) */
+  --accent-primary: #f97316;
+  --accent-secondary: #fb923c;
+
   /* Glass / header */
   --header-bg: rgba(255,255,255,0.82);
   --glass-bg: rgba(255,255,255,0.75);
@@ -99,6 +103,10 @@
   --overlay: rgba(0,0,0,.75);
   --shadow-color: rgba(0,0,0,.5);
 
+  /* Accent (OLLUQ brand orange — same in dark mode) */
+  --accent-primary: #f97316;
+  --accent-secondary: #fb923c;
+
   --shadow-sm: 0 1px 3px 0 rgba(0,0,0,.4), 0 1px 2px 0 rgba(0,0,0,.3);
   --shadow-md: 0 4px 12px -1px rgba(0,0,0,.5), 0 2px 6px -1px rgba(0,0,0,.3);
   --shadow-lg: 0 10px 30px -3px rgba(0,0,0,.6), 0 4px 10px -2px rgba(0,0,0,.3);
@@ -113,7 +121,12 @@
 
 html {
   -webkit-text-size-adjust: 100%;
-  scroll-behavior: smooth;
+  /* CRITICAL: DO NOT use scroll-behavior: smooth globally.
+   * It breaks Next.js route navigation — the browser tries to smooth-scroll
+   * to the top but the animation gets interrupted when new content renders,
+   * leaving the page stuck mid-scroll. Use JS scroll({behavior:'smooth'})
+   * for specific cases (BackToTop button, anchor links) instead. */
+  scroll-behavior: auto;
   overflow-x: hidden;
   /* Prevent iOS rubber-band bounce — native feel */
   overscroll-behavior-y: none;
@@ -194,11 +207,6 @@ img, video {
 @keyframes progress-fill {
   from { width: 0%; }
   to   { width: 100%; }
-}
-
-@keyframes marquee-scroll {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(calc(-50% - 8px)); }
 }
 
 @keyframes marquee-scroll {

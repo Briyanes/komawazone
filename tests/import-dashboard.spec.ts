@@ -41,7 +41,7 @@ test.describe('Import Dashboard Fixes', () => {
   });
 
   test.describe('Admin Import Dashboard', () => {
-    test.beforeEach(async ({ page }) => {
+    test.beforeEach(async () => {
       // Navigate to admin import page
       // Note: Without auth, this will redirect — but we can still check component rendering
       // by checking the page loads and has the expected structure

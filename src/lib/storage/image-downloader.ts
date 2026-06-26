@@ -121,7 +121,7 @@ export async function downloadImageWithRetry(
     try {
       if (useProxy) {
         // Route through proxy pool — avoids Vercel IP blocks from CDNs.
-        const { buffer, contentType, status } = await fetchBufferWithProxy(fetchUrl, {
+        const { buffer, contentType } = await fetchBufferWithProxy(fetchUrl, {
           headers,
           timeoutMs: timeout,
           maxAttempts: 3,

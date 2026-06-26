@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import MangaImage from '@/components/ui/MangaImage';
-import OlluqLoader from '@/components/ui/OlluqLoader';
+import OlluqTypingLoader from '@/components/ui/OlluqTypingLoader';
 import { useRouter } from 'next/navigation';
 import {
   ArrowLeft, ChevronLeft, ChevronRight, List, Home, ChevronDown,
@@ -106,6 +106,7 @@ export function ReaderClient({
   const [pageInputMode, setPageInputMode]   = useState(false);
   const [pageInputVal, setPageInputVal]     = useState('');
   const [autoAdvance, setAutoAdvance]       = useState<number | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
 
   // Reset scroll position + page counter when chapter changes
   useEffect(() => {
@@ -208,10 +209,7 @@ export function ReaderClient({
     } catch { /* ignore */ }
   }, [mangaSlug]);
 
-  // Track scroll progress (must be declared before auto-advance effect below)
-  const [scrollProgress, setScrollProgress] = useState(0);
-
-  // Persist reading progress to DB (debounced 2s) — placed after scrollProgress declaration
+  // Persist reading progress to DB (debounced 2s)
   useEffect(() => {
     debouncedSave({
       mangaId,
@@ -1062,7 +1060,7 @@ function ImageCard({
     <div ref={containerRef} className="relative w-full" style={{ aspectRatio: ar }}>
       {status === 'loading' && (
         <div className="absolute inset-0 flex items-center justify-center" style={{ background: '#0f0f0f' }}>
-          <OlluqLoader size="sm" />
+          <OlluqTypingLoader size="sm" fullScreen={false} />
         </div>
       )}
       {status === 'error' ? (

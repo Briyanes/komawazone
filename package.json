@@ -8,10 +8,6 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
-    "db:generate": "prisma generate",
-    "db:migrate": "prisma migrate dev",
-    "db:push": "prisma db push",
-    "db:studio": "prisma studio",
     "migrate:covers": "node scripts/migrate-images-to-r2.mjs --type=covers",
     "migrate:chapters": "node scripts/migrate-images-to-r2.mjs --type=chapters",
     "migrate:all": "node scripts/migrate-images-to-r2.mjs --type=all"

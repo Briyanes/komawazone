@@ -28,10 +28,11 @@ export async function GET() {
     .limit(50);
 
   // ── Fast path: use RPC function (migration 034) ─────────────────────────
-  // Cast to any because generated types don't include get_import_stats yet
-  const { data: rpcData, error: rpcErr } = await (supabase as any)
-    .rpc('get_import_stats')
-    .maybeSingle() as { data: Record<string, number> | null; error: { message: string } | null };
+  // Use unknown cast (not `any`) to satisfy ESLint while calling untyped RPC
+  const rpcResult = await (supabase as unknown as {
+    rpc: (fn: string) => { maybeSingle: () => Promise<{ data: Record<string, number> | null; error: { message: string } | null }> };
+  }).rpc('get_import_stats').maybeSingle();
+  const { data: rpcData, error: rpcErr } = rpcResult;
 
   if (!rpcErr && rpcData) {
     return NextResponse.json({

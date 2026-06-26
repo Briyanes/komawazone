@@ -83,6 +83,19 @@ export async function POST(request: NextRequest) {
 
   const { manga_id, number, title, thumbnail_url, release_date, images } = parsed.data;
 
+  // Auto-set thumbnail to the 5th image FROM LAST if not explicitly provided.
+  // Logic must match migration 039 (admin_fix_thumbnails_5th_from_last):
+  //   - >=5 images → 5th from LAST (images[images.length - 5])
+  //   - <5 images  → first image (images[0])
+  // This ensures every chapter has a thumbnail (page preview, not manga cover).
+  const resolveThumbnail = (): string | null => {
+    if (thumbnail_url) return thumbnail_url;
+    const sorted = [...images].sort((a, b) => a.number - b.number);
+    if (sorted.length === 0) return null;
+    const idx = sorted.length >= 5 ? sorted.length - 5 : 0;
+    return sorted[idx].image_url;
+  };
+
   // Insert chapter
   const { data: chapter, error: chErr } = await supabase
     .from('chapters')
@@ -90,7 +103,7 @@ export async function POST(request: NextRequest) {
       manga_id,
       number,
       title: title ?? null,
-      thumbnail_url: thumbnail_url ?? null,
+      thumbnail_url: resolveThumbnail(),
       release_date: release_date ?? new Date().toISOString(),
     })
     .select()

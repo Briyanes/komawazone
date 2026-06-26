@@ -33,6 +33,17 @@ scripts/fix-dead-images-failures.jsonl
 scripts/*.log
 scripts/*-progress.json
 
+# Root-level logs, progress, and audit artifacts
+/*.log
+/*-log.txt
+/*-log-*.txt
+/audit-*.json
+/audit-*.log
+/backfill-*.json
+/backfill-*.log
+/gif-thumb-fix-progress.json
+/thumbnail-backfill-log.txt
+
 # Proxy & credentials (NEVER commit)
 docs/Webshare*.txt
 docs/listproxcy
@@ -53,6 +64,9 @@ yarn-error.log*
 
 # vercel
 .vercel
+
+# supabase temp
+supabase/.temp/
 
 # typescript
 *.tsbuildinfo

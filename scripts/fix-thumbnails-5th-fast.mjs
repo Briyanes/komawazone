@@ -1,0 +1,94 @@
+#!/usr/bin/env node
+/**
+ * Fix ALL chapter thumbnails → 5th image FROM LAST
+ * Uses psql + RPC function — runs in SECONDS, not hours.
+ *
+ * Usage:
+ *   node scripts/fix-thumbnails-5th-fast.mjs            # deploy + run
+ */
+
+import dotenv from 'dotenv';
+import { execSync } from 'child_process';
+import { readFileSync, writeFileSync } from 'fs';
+import { resolve } from 'path';
+
+dotenv.config({ path: '.env.local' });
+
+const RAW_DB_URL = process.env.DATABASE_URL;
+
+if (!RAW_DB_URL) {
+  console.error('❌ DATABASE_URL not set in .env.local');
+  process.exit(1);
+}
+
+// Parse the connection string manually (password contains @ which breaks URI parsing)
+function parseDbUrl(url) {
+  const withoutScheme = url.replace(/^postgresql?:\/\//, '');
+  const lastAt = withoutScheme.lastIndexOf('@');
+  const creds = withoutScheme.substring(0, lastAt);
+  const hostPart = withoutScheme.substring(lastAt + 1);
+
+  const colonIdx = creds.indexOf(':');
+  const user = creds.substring(0, colonIdx);
+  const password = creds.substring(colonIdx + 1);
+
+  const slashIdx = hostPart.indexOf('/');
+  const hostPort = slashIdx >= 0 ? hostPart.substring(0, slashIdx) : hostPart;
+  const database = slashIdx >= 0 ? hostPart.substring(slashIdx + 1).split('?')[0] : 'postgres';
+
+  const [host, port] = hostPort.split(':');
+
+  return { user, password, host, port: port || '5432', database };
+}
+
+const DB_PARTS = parseDbUrl(RAW_DB_URL);
+
+function runSQL(sql) {
+  const tmpFile = '/tmp/fix-thumb-5th.sql';
+  writeFileSync(tmpFile, sql);
+
+  const env = { ...process.env, PGPASSWORD: DB_PARTS.password };
+  const result = execSync(
+    `psql -h "${DB_PARTS.host}" -p "${DB_PARTS.port}" -U "${DB_PARTS.user}" -d "${DB_PARTS.database}" -v ON_ERROR_STOP=1 -f "${tmpFile}"`,
+    { encoding: 'utf8', timeout: 120000, maxBuffer: 10 * 1024 * 1024, env }
+  );
+  return result;
+}
+
+async function main() {
+  console.log('🔧 Fix ALL Chapter Thumbnails → 5th Image FROM LAST (FAST)');
+  console.log('='.repeat(60));
+  console.log('');
+
+  // Step 1: Deploy RPC function
+  console.log('📋 Step 1: Deploying RPC function...');
+
+  const migrationPath = resolve('supabase/migrations/039_fix_thumbnails_5th_from_last.sql');
+  const sql = readFileSync(migrationPath, 'utf8');
+
+  try {
+    runSQL(sql);
+    console.log('  ✅ RPC function deployed');
+  } catch (err) {
+    console.error('  ❌ Failed to deploy:', err.stderr || err.message);
+    process.exit(1);
+  }
+
+  // Step 2: Execute
+  console.log('\n� Step 2: Executing fix...');
+  console.log('  ⏳ Running server-side update (this may take 10-30 seconds)...');
+
+  try {
+    const result = runSQL('SELECT admin_fix_thumbnails_5th_from_last();');
+    console.log('\n' + '='.repeat(60));
+    console.log('✅ DONE!');
+    console.log('='.repeat(60));
+    console.log(result.trim());
+    console.log('\n� ISR cache (10 min) will auto-refresh on next visit.');
+  } catch (err) {
+    console.error('❌ Execution failed:', err.stderr || err.message);
+    process.exit(1);
+  }
+}
+
+main().catch(console.error);

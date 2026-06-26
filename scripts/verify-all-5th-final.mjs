@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /**
  * Final global verification: check ALL chapters with thumbnails
- * that thumbnail_url matches 5th image (or last if <5 images)
+ * that thumbnail_url matches 5th image FROM LAST (or first if <5 images)
  */
 import dotenv from 'dotenv';
 dotenv.config({ path: '.env.local' });
@@ -44,7 +44,8 @@ for (let i = 0; i < allChapters.length; i += BATCH) {
     
     if (urls.length === 0) return; // no images, skip
     
-    const expected = urls.length >= 5 ? urls[4] : urls[urls.length - 1];
+    // 5th image FROM LAST, fallback to FIRST image
+    const expected = urls.length >= 5 ? urls[urls.length - 5] : urls[0];
     checked++;
     
     if (ch.thumbnail_url === expected) {
