@@ -65,10 +65,6 @@
     {
       "path": "/api/cron/daily",
       "schedule": "0 1 * * *"
-    },
-    {
-      "path": "/api/cron/frequent",
-      "schedule": "0 */6 * * *"
     }
   ]
 }
