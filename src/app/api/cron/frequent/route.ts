@@ -6,12 +6,13 @@ import { NextRequest, NextResponse } from 'next/server';
  * Runs every 6 hours — handles time-sensitive tasks that need faster
  * turnaround than the daily cron:
  *
- *   1. Auto-import (check sitemaps for new manga)
- *   2. Check new chapters & notify users
+ *   1. Import-advance (resume any running import jobs)
+ *   2. Auto-import (check sitemaps for new manga)
+ *   3. Check new chapters & notify users
  *
  * This leverages Vercel Hobby's 2-cron limit (daily + frequent).
  * The daily cron continues to handle less urgent tasks (expire subs,
- * revalidate cache, import-advance).
+ * revalidate cache).
  *
  * Auth: Authorization: Bearer CRON_SECRET
  */
@@ -29,7 +30,22 @@ export async function GET(req: NextRequest) {
   const startTime = Date.now();
   const results: Record<string, { ok: boolean; data?: unknown; error?: string }> = {};
 
-  // --- Task 1: Auto-import (check sitemaps for new manga) -------------
+  // --- Task 1: Import-advance (resume running import jobs) -------------
+  try {
+    const importAdvanceUrl = new URL('/api/cron/import-advance', req.nextUrl.origin);
+    const importRes = await fetch(importAdvanceUrl, {
+      headers: { authorization: `Bearer ${expected}` },
+      signal: AbortSignal.timeout(60_000), // 1 min timeout
+    });
+    results.importAdvance = {
+      ok: importRes.ok,
+      data: await importRes.json().catch(() => ({})),
+    };
+  } catch (err) {
+    results.importAdvance = { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+
+  // --- Task 2: Auto-import (check sitemaps for new manga) -------------
   try {
     const autoImportUrl = new URL('/api/cron/auto-import', req.nextUrl.origin);
     const autoImportRes = await fetch(autoImportUrl, {
@@ -44,7 +60,7 @@ export async function GET(req: NextRequest) {
     results.autoImport = { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 
-  // --- Task 2: Check new chapters & notify ----------------------------
+  // --- Task 3: Check new chapters & notify ----------------------------
   try {
     const checkChaptersUrl = new URL('/api/cron/check-new-chapters', req.nextUrl.origin);
     const checkRes = await fetch(checkChaptersUrl, {

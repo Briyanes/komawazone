@@ -1,26 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { processImportChunk, type ImportChunkOptions } from '@/lib/scrapers/sitemap-import';
+import { importAllChapters } from '@/app/api/v1/admin/scrape/manga-chapters/route';
 
 /**
  * GET /api/cron/import-advance
  *
- * Vercel Cron job (setiap 5 menit: "star/5 star star star star" — perlu Vercel Pro).
- * Melanjutkan import job yang sedang berjalan. Menggantikan mekanisme
- * triggerResume / after() yang tidak reliabel.
+ * Vercel Cron job (dipanggil oleh daily cron atau external cron).
+ * Melanjutkan import job yang sedang berjalan.
+ *
+ * Mendukung 2 jenis job:
+ * 1. sitemap_import  → processImportChunk() (batch sitemap)
+ * 2. scrape_manga_chapters → importAllChapters() (single manga)
  *
  * Auth: Authorization: Bearer CRON_SECRET
- *
- * Per invokasi: proses hingga 10 chunk × IMPORT_CHUNK_SIZE item,
- * atau hingga 45 detik, mana yang lebih dulu.
  */
 
-// Vercel Hobby: max 60 detik per function invocation
 export const maxDuration = 60;
 
-// Hentikan loop sebelum Vercel memaksa berhenti (gunakan 45s dari 60s budget)
-const MAX_INVOCATION_MS = 45_000;
-// Safety cap: jangan proses lebih dari N chunk dalam satu cron run
+const MAX_INVOCATION_MS = 50_000;
 const MAX_ITERATIONS = 10;
 
 const DEFAULT_OPTIONS: ImportChunkOptions = {
@@ -39,12 +37,25 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = createAdminClient();
+  const supabase = createAdminClient() as unknown as {
+    from: (table: string) => any;
+  };
 
-  // Ambil job RUNNING tertua (proses satu job per invokasi)
+  // Cleanup zombie jobs first (running > 1 hour)
+  await supabase
+    .from('import_jobs')
+    .update({
+      status: 'failed',
+      completed_at: new Date().toISOString(),
+      error_message: 'Auto-cleanup: timed out (>1 hour)',
+    })
+    .eq('status', 'running')
+    .lt('started_at', new Date(Date.now() - 60 * 60 * 1000).toISOString());
+
+  // Ambil job RUNNING tertua
   const { data: jobs } = await supabase
     .from('import_jobs')
-    .select('id, processed_items, total_items, config')
+    .select('id, job_type, processed_items, total_items, status, config, started_at')
     .eq('status', 'running')
     .order('started_at', { ascending: true })
     .limit(1);
@@ -54,9 +65,41 @@ export async function GET(req: NextRequest) {
   }
 
   const job = jobs[0];
-  const config = (job.config as Record<string, unknown>) ?? {};
+  const jobType = job.job_type as string;
 
-  // Baca options dari config (disimpan saat job dibuat)
+  console.log(`[CronAdvance] Job ${job.id} type=${jobType} — ${job.processed_items}/${job.total_items}`);
+
+  // === Handle scrape_manga_chapters ===
+  if (jobType === 'scrape_manga_chapters') {
+    const config = (job.config as Record<string, unknown>) ?? {};
+    const mangaId = config.manga_id as string;
+    const slug = config.slug as string;
+    const sourceUrl = config.source_url as string;
+    const metadataOnly = (config.metadata_only as boolean) ?? false;
+
+    if (!mangaId || !sourceUrl) {
+      await supabase.from('import_jobs').update({
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        error_message: 'Missing manga_id or source_url in config',
+      }).eq('id', job.id);
+      return NextResponse.json({ status: 'error', error: 'Invalid job config' });
+    }
+
+    // Resume with remaining time budget
+    const result = await importAllChapters(mangaId, slug, sourceUrl, metadataOnly, job.id, MAX_INVOCATION_MS);
+
+    return NextResponse.json({
+      status: 'ok',
+      jobId: job.id,
+      jobType,
+      result,
+      done: result.done,
+    });
+  }
+
+  // === Handle sitemap_import (default) ===
+  const config = (job.config as Record<string, unknown>) ?? {};
   const savedOptions = config.options as Partial<ImportChunkOptions> | undefined;
   const options: ImportChunkOptions = {
     ...DEFAULT_OPTIONS,
@@ -67,13 +110,12 @@ export async function GET(req: NextRequest) {
   let iterations = 0;
   let currentOffset = (job.processed_items as number) ?? 0;
 
-  console.log(`[CronAdvance] Job ${job.id as string} — mulai dari offset ${currentOffset}`);
+  console.log(`[CronAdvance] Job ${job.id} — mulai dari offset ${currentOffset}`);
 
   while (Date.now() - invocationStart < MAX_INVOCATION_MS && iterations < MAX_ITERATIONS) {
     iterations++;
     await processImportChunk(job.id as string, [], options, currentOffset);
 
-    // Baca state terbaru dari DB
     const { data: updated } = await supabase
       .from('import_jobs')
       .select('processed_items, total_items, status')
@@ -81,13 +123,13 @@ export async function GET(req: NextRequest) {
       .single();
 
     if (!updated || updated.status !== 'running') {
-      console.log(`[CronAdvance] Job ${job.id as string} berhenti — status=${updated?.status ?? 'unknown'}`);
+      console.log(`[CronAdvance] Job ${job.id} berhenti — status=${updated?.status ?? 'unknown'}`);
       break;
     }
 
     const newOffset = (updated.processed_items as number) ?? 0;
     if (newOffset <= currentOffset) {
-      console.warn(`[CronAdvance] Job ${job.id as string} tidak ada kemajuan — berhenti (offset stuck at ${currentOffset})`);
+      console.warn(`[CronAdvance] Job ${job.id} tidak ada kemajuan — berhenti (offset stuck at ${currentOffset})`);
       break;
     }
 
@@ -95,7 +137,7 @@ export async function GET(req: NextRequest) {
     currentOffset = newOffset;
 
     if (updatedTotal > 0 && currentOffset >= updatedTotal) {
-      console.log(`[CronAdvance] Job ${job.id as string} selesai: ${currentOffset}/${updatedTotal}`);
+      console.log(`[CronAdvance] Job ${job.id} selesai: ${currentOffset}/${updatedTotal}`);
       break;
     }
   }
