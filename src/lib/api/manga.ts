@@ -206,8 +206,9 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
     .limit(limit);
   const { data, error } = await q;
   if (error || !data || data.length === 0) {
-    // Fallback: just return popular if no recent updates
-    return getPopularManga(limit);
+    // Return empty instead of fallback to getPopularManga()
+    // PopularTabs already fetches popular separately — avoids duplicate query
+    return [];
   }
   return (data ?? []) as unknown as MangaListItem[];
 }
@@ -250,7 +251,7 @@ export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
     .order('views', { ascending: false })
     .limit(limit);
   const { data, error } = await q;
-  if (error || !data || data.length === 0) return getPopularManga(limit);
+  if (error || !data || data.length === 0) return [];
   return (data ?? []) as unknown as MangaListItem[];
 }
 

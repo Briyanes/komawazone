@@ -87,6 +87,34 @@ async function runAutoImport(sources: ActiveSource[]) {
     return;
   }
 
+  // ── BATCH FETCH: Get all existing manga slug→{id, source_url} ONCE ───────
+  // This eliminates the N+1 query problem (was 1 query per sitemap item).
+  // ~1K rows × ~50 bytes = ~50KB egress ONCE vs. hundreds of round-trips.
+  const { data: allManga } = await supabase
+    .from('manga')
+    .select('id, slug, source_url')
+    .is('deleted_at', null);
+
+  const existingBySlug = new Map<string, { id: string; source_url: string | null }>();
+  const existingByUrl = new Map<string, { id: string; source_url: string | null }>();
+  for (const m of (allManga ?? []) as Array<{ id: string; slug: string; source_url: string | null }>) {
+    existingBySlug.set(m.slug, { id: m.id, source_url: m.source_url });
+    if (m.source_url) existingByUrl.set(m.source_url, { id: m.id, source_url: m.source_url });
+  }
+  console.log(`[AutoImport] Loaded ${existingBySlug.size} existing manga into memory`);
+
+  // ── BATCH FETCH: Get chapter counts per manga ONCE ───────────────────────
+  // Avoids 1 count query per existing manga during chapter check.
+  // Cast to any because generated DB types don't include this RPC yet.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: chapterCounts } = await (supabase as any)
+    .rpc('get_chapter_counts_by_manga');
+
+  const chapterCountMap = new Map<string, number>();
+  for (const row of (chapterCounts ?? []) as Array<{ manga_id: string; count: number }>) {
+    chapterCountMap.set(row.manga_id, row.count);
+  }
+
   for (const source of sources) {
     console.log(`\n[AutoImport] ─── Processing source: ${source.name} ───`);
 
@@ -134,13 +162,8 @@ async function runAutoImport(sources: ActiveSource[]) {
         }
 
         try {
-          // Check if manga already exists
-          const { data: existing } = await supabase
-            .from('manga')
-            .select('id, slug, updated_at, source_url')
-            .or(`slug.eq.${item.slug},source_url.eq.${item.url}`)
-            .is('deleted_at', null)
-            .maybeSingle();
+          // ── IN-MEMORY CHECK (no DB query!) ──
+          const existing = existingBySlug.get(item.slug) ?? existingByUrl.get(item.url) ?? null;
 
           if (!existing) {
             // NEW manga — check limit
@@ -150,7 +173,12 @@ async function runAutoImport(sources: ActiveSource[]) {
             }
 
             const result = await importNewManga(item.url, item.slug, source.id, adminId, contentRating, source.type);
-            if (result === 'new') { totalNew++; newThisSource++; }
+            if (result === 'new') {
+              totalNew++; newThisSource++;
+              // Add to in-memory maps so subsequent sitemap items don't re-import
+              existingBySlug.set(item.slug, { id: 'pending', source_url: item.url });
+              existingByUrl.set(item.url, { id: 'pending', source_url: item.url });
+            }
             else if (result === 'failed') totalFailed++;
             else totalSkipped++;
 
@@ -164,12 +192,8 @@ async function runAutoImport(sources: ActiveSource[]) {
             }
             checkedThisSource++;
 
-            // Check if source has new chapters
-            const { count: dbCount } = await supabase
-              .from('chapters')
-              .select('id', { count: 'exact', head: true })
-              .eq('manga_id', existing.id)
-              .is('deleted_at', null);
+            // Use in-memory chapter count (no DB query)
+            const dbCount = chapterCountMap.get(existing.id) ?? 0;
 
             // Fetch source page to count chapters
             const chapterRes = await fetch(item.url, {
@@ -182,7 +206,7 @@ async function runAutoImport(sources: ActiveSource[]) {
               const { parseChapterListFromHtml } = await import('@/lib/scrapers/manga-scraper');
               const sourceChapters = parseChapterListFromHtml(html);
 
-              if (sourceChapters.length > (dbCount ?? 0)) {
+              if (sourceChapters.length > dbCount) {
                 console.log(`[AutoImport] ${item.slug}: source=${sourceChapters.length}, db=${dbCount} → importing new chapters`);
                 const { importAllChapters } = await import('@/app/api/v1/admin/scrape/manga-chapters/route');
                 await importAllChapters(existing.id, item.slug, item.url, true); // metadata-only for speed
