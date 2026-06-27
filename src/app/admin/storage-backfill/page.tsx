@@ -1,12 +1,13 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Play, RefreshCw, Info, AlertTriangle, CheckCircle, Image, DownloadCloud, HardDrive, ExternalLink } from 'lucide-react';
+import { Play, RefreshCw, Info, AlertTriangle, CheckCircle, Image, DownloadCloud, HardDrive, ExternalLink, Terminal, Copy, Server } from 'lucide-react';
 
 export default function StorageBackfillPage() {
   const [status, setStatus] = useState<string>('idle');
   const [result, setResult] = useState<Record<string, unknown> | null>(null);
   const [limit, setLimit] = useState(50);
+  const [copiedScript, setCopiedScript] = useState(false);
 
   // R2 migration stats
   const [migrateStats, setMigrateStats] = useState<{
@@ -27,12 +28,6 @@ export default function StorageBackfillPage() {
   const [thumbMangaId, setThumbMangaId] = useState('');
   const [thumbJobId, setThumbJobId] = useState<string | null>(null);
   const [thumbCompleted, setThumbCompleted] = useState<boolean>(false);
-
-  // Batch download all missing state
-  const [batchStatus, setBatchStatus] = useState<string>('idle');
-  const [batchResult, setBatchResult] = useState<Record<string, unknown> | null>(null);
-  const [batchJobId, setBatchJobId] = useState<string | null>(null);
-  const [batchProgress, setBatchProgress] = useState<{ processed: number; total: number; status: string } | null>(null);
 
   const runBackfill = async () => {
     setStatus('loading');
@@ -155,64 +150,15 @@ export default function StorageBackfillPage() {
     return () => clearInterval(interval);
   }, [thumbJobId, checkThumbStatus]);
 
-  const runBatchIncomplete = async () => {
-    if (!confirm(
-      'DOWNLOAD ALL MISSING\n\n' +
-      'Mencari semua manga dengan chapter yang belum di-scrape gambarnya (~141 manga, ~3,658 chapter)\n' +
-      'dan mendownload gambar mereka secara berurutan di background.\n\n' +
-      'Proses ini memakan waktu 2-3 hari. Pastikan laptop/server tetap menyala.\n\n' +
-      'Lanjutkan?'
-    )) return;
-    setBatchStatus('loading');
-    setBatchResult(null);
+  const copyToClipboard = async (text: string) => {
     try {
-      const res = await fetch('/api/v1/admin/scrape/batch-incomplete', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ limit: 500 }),
-      });
-      const data = await res.json();
-      setBatchResult(data);
-      setBatchStatus('success');
-      if (data.data?.jobId) {
-        setBatchJobId(data.data.jobId);
-        setBatchProgress({ processed: 0, total: data.data.count ?? 0, status: 'running' });
-      }
-    } catch (err) {
-      setBatchResult({ error: err instanceof Error ? err.message : String(err) });
-      setBatchStatus('error');
+      await navigator.clipboard.writeText(text);
+      setCopiedScript(true);
+      setTimeout(() => setCopiedScript(false), 2000);
+    } catch {
+      // ignore
     }
   };
-
-  const checkBatchStatus = useCallback(async () => {
-    if (!batchJobId) return;
-    try {
-      const res = await fetch(`/api/v1/admin/import/jobs?id=${batchJobId}&limit=1`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const jobData = data?.data?.jobs?.[0];
-      if (!jobData) return;
-      setBatchProgress({
-        processed: jobData.processed_items ?? 0,
-        total: jobData.total_items ?? 0,
-        status: jobData.status,
-      });
-      if (['completed', 'failed', 'cancelled'].includes(jobData.status)) {
-        setBatchJobId(null);
-      }
-    } catch {
-      // non-critical
-    }
-  }, [batchJobId]);
-
-  // Auto-poll batch progress setiap 5 detik saat job sedang running
-  useEffect(() => {
-    if (!batchJobId) return;
-    const interval = setInterval(() => {
-      checkBatchStatus();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [batchJobId, checkBatchStatus]);
 
   // Load R2 migration stats on mount
   const loadMigrateStats = useCallback(async () => {
@@ -240,6 +186,63 @@ export default function StorageBackfillPage() {
           Migrasi cover & repair chapter images ke Cloudflare R2
         </p>
       </div>
+
+      {/* ── PROMINENT WARNING: Bulk migration needs local scripts ── */}
+      {migrateStats && migrateStats.chapter_images.external > 0 && (
+        <div
+          className="rounded-xl p-5 space-y-3"
+          style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.3)' }}
+        >
+          <div className="flex items-start gap-3">
+            <AlertTriangle size={20} className="text-red-500 flex-shrink-0 mt-0.5" />
+            <div className="flex-1 space-y-2">
+              <p className="text-sm font-bold" style={{ color: '#ef4444' }}>
+                {migrateStats.chapter_images.external.toLocaleString()} gambar masih di CDN eksternal — butuh Local Scripts
+              </p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+                Dashboard Vercel punya timeout <strong>60 detik</strong>. Download {migrateStats.chapter_images.external.toLocaleString()} gambar
+                butuh <strong>berhari-hari</strong> non-stop. Ini <strong>tidak bisa</strong> dilakukan dari dashboard —
+                harus pakai terminal lokal (VSC) yang bisa run 24 jam tanpa timeout.
+              </p>
+            </div>
+          </div>
+
+          {/* Local script command */}
+          <div className="space-y-2 mt-3">
+            <p className="text-xs font-semibold flex items-center gap-1" style={{ color: 'var(--text-primary)' }}>
+              <Terminal size={12} /> Jalankan di Terminal VSC:
+            </p>
+            <div className="flex items-center gap-2">
+              <code
+                className="flex-1 text-xs font-mono px-3 py-2.5 rounded-lg overflow-x-auto"
+                style={{ background: 'var(--bg-primary)', color: '#22c55e', border: '1px solid var(--border-light)' }}
+              >
+                {migrateStats.script || 'node scripts/download-to-r2-massive.mjs'}
+              </code>
+              <button
+                onClick={() => copyToClipboard(migrateStats.script || 'node scripts/download-to-r2-massive.mjs')}
+                className="flex items-center gap-1 rounded-lg px-3 py-2.5 text-xs font-medium transition-opacity hover:opacity-80 flex-shrink-0"
+                style={{ background: copiedScript ? 'rgba(34,197,94,0.1)' : 'var(--bg-tertiary)', color: copiedScript ? '#22c55e' : 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
+                title="Copy command"
+              >
+                {copiedScript ? <CheckCircle size={14} /> : <Copy size={14} />}
+                {copiedScript ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            <div className="flex flex-wrap gap-4 text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+              <span className="flex items-center gap-1">
+                <Server size={10} /> Butuh: PROXY_LIST di .env.local
+              </span>
+              <span className="flex items-center gap-1">
+                <RefreshCw size={10} /> Estimasi: 3-7 hari (24 jam non-stop)
+              </span>
+              <span className="flex items-center gap-1">
+                <CheckCircle size={10} /> Parallel: 10-50 concurrent downloads
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── R2 Migration Status ── */}
       <div
@@ -305,140 +308,10 @@ export default function StorageBackfillPage() {
                 <p className="text-[10px] uppercase tracking-wide" style={{ color: 'var(--text-tertiary)' }}>Est. Time</p>
               </div>
             </div>
-
-            {/* Run script instruction */}
-            {migrateStats.chapter_images.external > 0 && (
-              <div
-                className="rounded-lg p-3 space-y-2"
-                style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.2)' }}
-              >
-                <p className="text-xs font-semibold" style={{ color: '#f59e0b' }}>
-                  ⚠️ {migrateStats.chapter_images.external.toLocaleString()} images still on external CDNs
-                </p>
-                <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-                  Jalankan script ini di terminal lokal untuk download semua:
-                </p>
-                <div className="flex items-center gap-2">
-                  <code
-                    className="flex-1 text-xs font-mono px-3 py-2 rounded"
-                    style={{ background: 'var(--bg-primary)', color: '#22c55e' }}
-                  >
-                    {migrateStats.script}
-                  </code>
-                  <button
-                    onClick={() => navigator.clipboard.writeText(migrateStats.script)}
-                    className="rounded px-2 py-2 text-xs"
-                    style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}
-                    title="Copy command"
-                  >
-                    <ExternalLink size={12} />
-                  </button>
-                </div>
-                <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-                  Butuh: PROXY_LIST di .env.local (Webshare 100 proxies recommended)
-                </p>
-              </div>
-            )}
           </>
         ) : (
           <div className="flex items-center gap-2 text-sm" style={{ color: 'var(--text-tertiary)' }}>
             <RefreshCw size={14} className="animate-spin" /> Loading stats...
-          </div>
-        )}
-      </div>
-
-      {/* ── Download All Missing ── */}
-      <div
-        className="rounded-xl p-5 space-y-4"
-        style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}
-      >
-        <div className="flex items-center gap-2">
-          <h2 className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-            Download All Missing Chapters
-          </h2>
-          <span className="text-xs px-2 py-0.5 rounded-full flex items-center gap-1" style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6' }}>
-            <DownloadCloud size={10} /> Batch
-          </span>
-        </div>
-
-        <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
-          Scan database untuk manga yang chapter-nya belum punya gambar (belum di-scrape),
-          lalu download gambarnya secara berurutan di background. Hanya untuk chapter yang
-          <strong> sudah ada</strong> di database, bukan download manga baru. Estimasi 2-3 hari.
-        </p>
-
-        <div className="flex flex-wrap items-end gap-3">
-          <button
-            onClick={runBatchIncomplete}
-            disabled={batchStatus === 'loading' || !!batchJobId}
-            className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ background: '#8B5CF6' }}
-          >
-            {batchStatus === 'loading' ? (
-              <RefreshCw size={14} className="animate-spin" />
-            ) : (
-              <DownloadCloud size={14} />
-            )}
-            {batchStatus === 'loading' ? 'Starting...' : batchJobId ? 'Running...' : 'Download All Missing'}
-          </button>
-          {batchJobId && (
-            <button
-              onClick={checkBatchStatus}
-              className="flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-opacity hover:opacity-80"
-              style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)', border: '1px solid var(--border-light)' }}
-            >
-              <RefreshCw size={14} />
-              Check Progress
-            </button>
-          )}
-        </div>
-
-        {/* Show running job indicator with progress bar */}
-        {batchProgress && batchJobId && (
-          <div
-            className="rounded-lg p-4 space-y-2"
-            style={{ background: 'rgba(139,92,246,0.06)', border: '1px solid rgba(139,92,246,0.2)' }}
-          >
-            <div className="flex items-center gap-2 text-sm">
-              <RefreshCw size={14} className="animate-spin text-purple-500" />
-              <span style={{ color: 'var(--text-secondary)' }}>
-                {`Job running: ${batchProgress.processed}/${batchProgress.total} manga (${batchProgress.total > 0 ? Math.round((batchProgress.processed / batchProgress.total) * 100) : 0}%)`}
-              </span>
-            </div>
-            {/* Progress bar */}
-            <div className="w-full h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg-tertiary)' }}>
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${batchProgress.total > 0 ? Math.min(100, (batchProgress.processed / batchProgress.total) * 100) : 0}%`, background: 'linear-gradient(90deg, #8B5CF6, #6366f1)' }}
-              />
-            </div>
-            <p className="text-[10px]" style={{ color: 'var(--text-tertiary)' }}>
-              Estimasi: 2-3 hari. Biarkan laptop menyala. Progress update tiap 5 detik.
-            </p>
-          </div>
-        )}
-
-        {/* Show completion message */}
-        {batchProgress && !batchJobId && batchProgress.status === 'completed' && (
-          <div
-            className="rounded-lg p-3 flex items-center gap-2 text-sm"
-            style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)' }}
-          >
-            <CheckCircle size={14} className="text-green-500" />
-            <span style={{ color: 'var(--text-secondary)' }}>
-              {`✅ Batch selesai! ${batchProgress.processed} manga diproses.`}
-            </span>
-          </div>
-        )}
-
-        {batchResult && (
-          <div
-            className="rounded-lg p-4 overflow-auto max-h-96"
-            style={{ background: 'var(--bg-tertiary)' }}
-          >
-            <pre className="text-xs font-mono whitespace-pre-wrap" style={{ color: 'var(--text-primary)' }}>
-              {JSON.stringify(batchResult, null, 2)}
-            </pre>
           </div>
         )}
       </div>
@@ -757,12 +630,11 @@ export default function StorageBackfillPage() {
           <Info size={14} className="text-blue-500" /> Info
         </p>
         <ul className="space-y-1 text-sm" style={{ color: 'var(--text-secondary)' }}>
-          <li>• <strong>Download All Missing</strong>: Download gambar untuk chapter yang belum di-scrape</li>
-          <li>• <strong>Cover Migration</strong>: Download cover manga dan upload ke R2</li>
-          <li>• <strong>Retry Failed Images</strong>: Re-scrape chapter yang gagal download gambarnya</li>
-          <li>• <strong>Regenerate Thumbnails</strong>: Update thumbnail pakai gambar ke-5 (bukan cover)</li>
+          <li>• <strong>Bulk Migration</strong> (lebih dari 10,000 images): Gunakan <strong>local scripts</strong> di terminal VSC</li>
+          <li>• <strong>Cover Migration</strong>: Download cover manga ke R2 (max 200 per batch, OK di Vercel)</li>
+          <li>• <strong>Retry Failed Images</strong>: Re-scrape chapter yang gagal (max 200 per batch, OK di Vercel)</li>
+          <li>• <strong>Regenerate Thumbnails</strong>: Update thumbnail pakai gambar ke-5 (max 2000 per batch, OK di Vercel)</li>
           <li>• Semua proses berjalan di background, cek progress di Import Jobs</li>
-          <li>• Max 200 item per batch (Regenerate max 2000)</li>
         </ul>
       </div>
     </div>
