@@ -4,21 +4,20 @@ import { revalidatePath } from 'next/cache';
 /**
  * GET /api/cron/daily
  *
- * Unified daily cron job — replaces 5 separate cron endpoints to stay within
- * Vercel Hobby's 2-cron limit.
+ * Daily cron job (1 AM) — handles low-frequency maintenance tasks.
+ * Time-sensitive tasks (auto-import, check-new-chapters) are handled by
+ * /api/cron/frequent which runs every 6 hours.
  *
  * Executes sequentially:
  *   1. Revalidate homepage & search cache
  *   2. Expire subscriptions & clear VIP status
  *   3. Import-advance (continue running import jobs)
- *   4. Auto-import new manga from sitemaps
- *   5. Check new chapters & notify
  *
  * Each task is wrapped in try/catch so one failure doesn't kill the rest.
  * Auth: Authorization: Bearer CRON_SECRET
  */
 
-export const maxDuration = 300; // 5 min — needed for auto-import scraping
+export const maxDuration = 120; // 2 min — import-advance fetch is the longest task
 
 export async function GET(req: NextRequest) {
   const auth = req.headers.get('authorization');
@@ -96,37 +95,6 @@ export async function GET(req: NextRequest) {
     };
   } catch (err) {
     results.importAdvance = { ok: false, error: err instanceof Error ? err.message : String(err) };
-  }
-
-  // --- Task 4: Auto-import (check sitemaps for new manga) -----------------
-  try {
-    // Dynamic import to avoid loading heavy deps if not needed
-    const autoImportUrl = new URL('/api/cron/auto-import', req.nextUrl.origin);
-    const autoImportRes = await fetch(autoImportUrl, {
-      headers: { authorization: `Bearer ${expected}` },
-      signal: AbortSignal.timeout(120_000), // 2 min timeout
-    });
-    results.autoImport = {
-      ok: autoImportRes.ok,
-      data: await autoImportRes.json().catch(() => ({})),
-    };
-  } catch (err) {
-    results.autoImport = { ok: false, error: err instanceof Error ? err.message : String(err) };
-  }
-
-  // --- Task 5: Check new chapters -----------------------------------------
-  try {
-    const checkChaptersUrl = new URL('/api/cron/check-new-chapters', req.nextUrl.origin);
-    const checkRes = await fetch(checkChaptersUrl, {
-      headers: { authorization: `Bearer ${expected}` },
-      signal: AbortSignal.timeout(120_000),
-    });
-    results.checkNewChapters = {
-      ok: checkRes.ok,
-      data: await checkRes.json().catch(() => ({})),
-    };
-  } catch (err) {
-    results.checkNewChapters = { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 
   const elapsed = Date.now() - startTime;
