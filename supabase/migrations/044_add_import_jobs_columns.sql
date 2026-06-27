@@ -7,10 +7,10 @@ ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS error_message TEXT;
 ALTER TABLE import_jobs ADD COLUMN IF NOT EXISTS started_at TIMESTAMPTZ
   DEFAULT now();
 
--- Update started_at untuk row lama yang NULL (pakai created_at sebagai fallback)
+-- Update started_at untuk row lama yang NULL (pakai now() sebagai fallback)
 UPDATE import_jobs
-SET started_at = created_at
-WHERE started_at IS NULL AND created_at IS NOT NULL;
+SET started_at = now()
+WHERE started_at IS NULL;
 
 -- 2. Cleanup zombie jobs (dari 043, sekarang bisa jalan karena kolom sudah ada)
 --    Zombie = running, total_items 0, dan sudah > 30 menit
