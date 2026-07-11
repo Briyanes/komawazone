@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
     .not('source_url', 'is', null)
     .is('deleted_at', null)
     .order('updated_at', { ascending: true }) // cek yang paling lama di-update duluan
-    .limit(100); // batasi 100 per run agar tidak timeout
+    .limit(30); // batasi 30 per run — kurangi Supabase egress (was 100)
 
   if (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

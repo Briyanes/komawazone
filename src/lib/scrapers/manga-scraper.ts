@@ -169,21 +169,88 @@ function imptdt(html: string, label: string): string {
   return m ? m[1].trim() : '';
 }
 
-/** Parse manga metadata from manhwaland.land (WordPress / Madara theme) HTML */
-function parseManhwalandManga(html: string): ScrapedManga {
-  // Title: prefer H1, fallback to <title> tag stripped of site name
-  const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/);
-  let title = h1Match ? decodeHtmlEntities(h1Match[1].trim()) : '';
+/**
+ * Extract a metadata value from multiple Madara theme patterns.
+ * Tries (in order):
+ *  1. manhwaland's div.imptdt with label (e.g. "Author", "Status")
+ *  2. Madara standard .summary-content / .post-content with data-label attr
+ *  3. Madara alternative: div.author-content / div.artist-content
+ *  4. Generic WordPress: .manga-meta / .post-meta with label text
+ */
+function extractMadaraField(html: string, label: string): string {
+  // 1. manhwaland pattern: <div class="imptdt"> Author <i>Name</i> </div>
+  const imptdtVal = imptdt(html, label);
+  if (imptdtVal) return imptdtVal;
+
+  // 2. Madara standard: <div class="summary-content" data-label="Author">...</div>
+  //    or <h5>Author</h5> <div class="summary-content">value</div>
+  const summaryRe = new RegExp(
+    `(?:data-label=["']${label}["'][^>]*>([^<]+)<|` +
+    `<h5[^>]*>\\s*${label}\\s*</h5>[\\s\\S]{0,200}?<div[^>]+class="[^"]*summary-content[^"]*"[^>]*>([\\s\\S]*?)</div>)`,
+    'i',
+  );
+  const summaryMatch = html.match(summaryRe);
+  if (summaryMatch) {
+    const val = (summaryMatch[1] || summaryMatch[2] || '').replace(/<[^>]+>/g, '').trim();
+    if (val) return decodeHtmlEntities(val);
+  }
+
+  // 3. Madara alt: div.author-content / div.artist-content
+  const altClassMap: Record<string, string> = {
+    Author: 'author-content',
+    Artist: 'artist-content',
+  };
+  const altClass = altClassMap[label];
+  if (altClass) {
+    const altRe = new RegExp(
+      `<div[^>]+class="[^"]*${altClass}[^"]*"[^>]*>([\\s\\S]*?)</div>`,
+      'i',
+    );
+    const altMatch = html.match(altRe);
+    if (altMatch) {
+      const val = altMatch[1].replace(/<[^>]+>/g, '').trim();
+      if (val) return decodeHtmlEntities(val);
+    }
+  }
+
+  // 4. Status: try .summary-content with post-status or bio-content
+  if (label === 'Status') {
+    const statusRe = /<div[^>]+class="[^"]*(?:post-status|summary-content|bio-content)[^"]*"[^>]*>\s*(?:<span[^>]*>)?\s*(\w+)/i;
+    const statusMatch = html.match(statusRe);
+    if (statusMatch) return statusMatch[1].trim();
+  }
+
+  // 5. Type: try .summary-content with type-related class
+  if (label === 'Type') {
+    const typeRe = /<div[^>]+class="[^"]*summary-content[^"]*"[^>]*>\s*(MANGA|MANHWA|MANHUA|WEBTOON|manga|manhwa|manhua|webtoon)/i;
+    const typeMatch = html.match(typeRe);
+    if (typeMatch) return typeMatch[1].trim();
+  }
+
+  return '';
+}
+
+/**
+ * Generic manga metadata parser for WordPress Madara theme.
+ * Works across manhwaland.land, manhwaindo.my, asuratoon.com, manhwatop.com, etc.
+ * Uses progressive fallback patterns to handle structural differences.
+ */
+function parseMadaraManga(html: string): ScrapedManga {
+  // Title: prefer H1, fallback to <title> tag stripped of site name suffix
+  const h1Match = html.match(/<h1[^>]*>([\s\S]*?)<\/h1>/);
+  let title = h1Match ? decodeHtmlEntities(h1Match[1].replace(/<[^>]+>/g, '').trim()) : '';
   if (!title) {
     const titleMatch = html.match(/<title>([^<]+)<\/title>/);
-    title = titleMatch ? decodeHtmlEntities(titleMatch[1].replace(/\s*[-|]\s*ManhwaLand.*/i, '').trim()) : '';
+    title = titleMatch
+      ? decodeHtmlEntities(titleMatch[1].replace(/\s*[-|]\s*[^|]+$/i, '').trim())
+      : '';
   }
 
   // Description from og:description meta (decode HTML entities)
   const description = decodeHtmlEntities(
     getMeta(html, 'property', 'og:description')
     || getMeta(html, 'name', 'description')
-  );
+  ).replace(/\s*…\s*$/, '…').trim();
 
   // Cover: primary source is the main post image (img.wp-post-image in the thumb div)
   const wpPostImg = html.match(/<img[^>]+src="([^"]+)"[^>]+class="[^"]*wp-post-image[^"]*"/i)
@@ -192,26 +259,35 @@ function parseManhwalandManga(html: string): ScrapedManga {
     || getMeta(html, 'property', 'og:image')
     || getMeta(html, 'name', 'twitter:image');
 
-  // Genres from rel="tag" links
+  // Genres from rel="tag" links (works across all Madara variants)
   const genreMatches = html.matchAll(/rel="tag">([^<]+)<\/a>/g);
-  const genres = Array.from(genreMatches, m => decodeHtmlEntities(m[1].trim())).filter(Boolean);
+  let genres = Array.from(genreMatches, m => decodeHtmlEntities(m[1].trim())).filter(Boolean);
 
-  // Author / Artist from div.imptdt blocks
-  const author = decodeHtmlEntities(imptdt(html, 'Author'));
-  const artist = decodeHtmlEntities(imptdt(html, 'Artist'));
+  // Fallback: some Madara variants use class="manga-genre" or class="genres-content"
+  if (genres.length === 0) {
+    const genreContainer = html.match(/<div[^>]+class="[^"]*genres-content[^"]*"[^>]*>([\s\S]*?)<\/div>/i);
+    if (genreContainer) {
+      const genreLinks = genreContainer[1].matchAll(/>([^<]+)</g);
+      genres = Array.from(genreLinks, m => decodeHtmlEntities(m[1].trim())).filter(g => g.length > 1 && g.length < 50);
+    }
+  }
 
-  // Status from div.imptdt
-  const statusRaw = imptdt(html, 'Status').toUpperCase();
+  // Author / Artist — multi-pattern extraction
+  const author = decodeHtmlEntities(extractMadaraField(html, 'Author'));
+  const artist = decodeHtmlEntities(extractMadaraField(html, 'Artist'));
+
+  // Status — multi-pattern extraction
+  const statusRaw = extractMadaraField(html, 'Status').toUpperCase();
   const statusMap: Record<string, MangaStatus> = {
-    ONGOING: 'ONGOING', ACTIVE: 'ONGOING', PUBLISHING: 'ONGOING',
-    COMPLETED: 'COMPLETED', FINISHED: 'COMPLETED', END: 'COMPLETED',
+    ONGOING: 'ONGOING', ACTIVE: 'ONGOING', PUBLISHING: 'ONGOING', BERJALAN: 'ONGOING',
+    COMPLETED: 'COMPLETED', FINISHED: 'COMPLETED', END: 'COMPLETED', TAMAT: 'COMPLETED',
     HIATUS: 'HIATUS',
     DROPPED: 'DROPPED', CANCELLED: 'DROPPED', CANCELED: 'DROPPED',
   };
   const status: MangaStatus = statusMap[statusRaw] ?? 'ONGOING';
 
-  // Type from div.imptdt
-  const typeRaw = imptdt(html, 'Type').toUpperCase();
+  // Type — multi-pattern extraction
+  const typeRaw = extractMadaraField(html, 'Type').toUpperCase();
   const typeMap: Record<string, MangaType> = {
     MANGA: 'MANGA', MANHWA: 'MANHWA', MANHUA: 'MANHUA', WEBTOON: 'WEBTOON',
   };
@@ -219,6 +295,9 @@ function parseManhwalandManga(html: string): ScrapedManga {
 
   return { title, description, cover_url, genres, author, artist, type, status };
 }
+
+/** Backward-compatible alias */
+const parseManhwalandManga = parseMadaraManga;
 
 /** Random delay helper */
 function sleep(ms: number) {

@@ -31,9 +31,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ─── Config ────────────────────────────────────────────────────────
-const CONCURRENCY = parseInt(process.env.CONCURRENCY || '20', 10);
+const CONCURRENCY = parseInt(process.env.CONCURRENCY || '5', 10);
 const MAX_RETRIES = 3;
 const TIMEOUT_MS = 30_000;
+const USE_PROXY = !!process.env.PROXY_LIST;
 const PROGRESS_FILE = path.join(__dirname, 'download-progress.json');
 
 // ─── Load .env.local ───────────────────────────────────────────────
@@ -116,16 +117,16 @@ function parseProxyList(raw) {
 }
 
 function initProxyPool() {
-  const raw = process.env.PROXY_LIST?.trim();
-  if (!raw) {
-    console.error('❌ PROXY_LIST not set! Set it in .env.local:');
-    console.error('   PROXY_LIST="host1:port1:user1:pass1,host2:port2:user2:pass2,..."');
-    process.exit(1);
+  if (!USE_PROXY) {
+    console.log('⚠️  No PROXY_LIST found — running in DIRECT mode (no proxy)');
+    console.log('   Concurrency reduced to avoid IP ban. For faster migration, add proxies.');
+    return;
   }
+  const raw = process.env.PROXY_LIST.trim();
   proxyPool = parseProxyList(raw);
   console.log(`📡 Proxy pool: ${proxyPool.length} proxies loaded`);
   if (proxyPool.length === 0) {
-    console.error('❌ No valid proxies found!');
+    console.error('❌ No valid proxies found in PROXY_LIST!');
     process.exit(1);
   }
 }

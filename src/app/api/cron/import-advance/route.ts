@@ -37,9 +37,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = createAdminClient() as unknown as {
-    from: (table: string) => any;
-  };
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const supabase = createAdminClient() as unknown as { from: (table: string) => any };
 
   // Cleanup zombie jobs first (running > 1 hour)
   await supabase

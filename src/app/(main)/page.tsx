@@ -1,4 +1,4 @@
-export const revalidate = 3600; // 1 hour ISR — reduces Supabase egress (was 300s)
+export const revalidate = 21600; // 6 hours ISR — minimizes Supabase egress (was 3600s/1hr)
 
 import Link from 'next/link';
 import { Suspense, cache } from 'react';
