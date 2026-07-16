@@ -68,11 +68,11 @@
     },
     {
       "path": "/api/cron/import-advance",
-      "schedule": "0 */2 * * *"
+      "schedule": "0 3 * * *"
     },
     {
       "path": "/api/cron/check-new-chapters",
-      "schedule": "0 */6 * * *"
+      "schedule": "0 5 * * *"
     },
     {
       "path": "/api/cron/auto-import",
@@ -80,7 +80,7 @@
     },
     {
       "path": "/api/cron/frequent",
-      "schedule": "0 */4 * * *"
+      "schedule": "0 7 * * *"
     }
   ]
 }
