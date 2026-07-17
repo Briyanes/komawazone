@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+import { createServiceClient } from '@/lib/supabase/service';
 /**
  * POST /api/v1/admin/import-jobs/[id]/cancel
  * Manually cancel a stuck/running import job.
@@ -11,7 +12,8 @@ export async function POST(_req: Request, { params }: { params: Promise<{ id: st
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: profile } = await supabase
+  const serviceClient = createServiceClient();
+  const { data: profile } = await serviceClient
     .from('users').select('role').eq('id', user.id).single();
   if (profile?.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

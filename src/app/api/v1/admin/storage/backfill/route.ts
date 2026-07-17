@@ -3,12 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { downloadAndUploadToR2, batchDownloadAndUploadToR2, isR2Url } from '@/lib/storage/r2';
 
+import { createServiceClient } from '@/lib/supabase/service';
 export const maxDuration = 300;
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
+  const { data: profile } = await serviceClient.from('users').select('role').eq('id', user.id).single();
   return profile?.role === 'ADMIN' ? user : null;
 }
 

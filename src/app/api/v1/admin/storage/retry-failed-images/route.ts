@@ -4,10 +4,12 @@ import { createAdminClient } from '@/lib/supabase/admin';
 import { uploadBufferToR2 } from '@/lib/storage/r2';
 import { buildScraperHeaders, parseChapterImages } from '@/lib/scrapers/scraper-utils';
 
+import { createServiceClient } from '@/lib/supabase/service';
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
+  const { data: profile } = await serviceClient.from('users').select('role').eq('id', user.id).single();
   return profile?.role === 'ADMIN' ? user : null;
 }
 

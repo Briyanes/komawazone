@@ -4,15 +4,17 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { deleteObjectFromR2, extractR2ObjectKey, uploadBufferToR2 } from '@/lib/storage/r2';
 
+import { createServiceClient } from '@/lib/supabase/service';
 export const runtime = 'nodejs';
 
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20 MB
 const ALLOWED_FOLDERS = new Set(['covers', 'banners', 'pages', 'thumbnails', 'imports']);
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
+  const { data: profile } = await serviceClient.from('users').select('role').eq('id', user.id).single();
   if (profile?.role !== 'ADMIN') return null;
   return user;
 }

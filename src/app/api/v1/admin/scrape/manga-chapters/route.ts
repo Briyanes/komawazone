@@ -5,12 +5,14 @@ import { parseChapterListFromHtml, scrapeChapterImages } from '@/lib/scrapers/ma
 import { buildScraperHeaders, validateScraperUrl } from '@/lib/scrapers/scraper-utils';
 import { batchDownloadAndUploadToR2 } from '@/lib/storage/r2';
 
+import { createServiceClient } from '@/lib/supabase/service';
 export const maxDuration = 300;
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceClient
     .from('users').select('role').eq('id', user.id).single();
   return profile?.role === 'ADMIN' ? user : null;
 }

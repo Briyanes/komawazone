@@ -2,6 +2,7 @@ import { NextRequest, NextResponse, after } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { processImportChunk } from '@/lib/scrapers/sitemap-import';
 
+import { createServiceClient } from '@/lib/supabase/service';
 // Allow up to 300s on Vercel Pro; background work runs via after()
 // processImportChunk handles chunking automatically — setiap invokasi proses IMPORT_CHUNK_SIZE item
 // lalu auto-trigger /resume untuk melanjutkan, sehingga job bisa berjalan jauh lebih lama dari 300 detik.
@@ -20,7 +21,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const serviceClient = createServiceClient();
+  const { data: profile } = await serviceClient
     .from('users')
     .select('role')
     .eq('id', user.id)

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { exportToGoogleSheet } from '@/lib/integrations/google-sheets';
 
+import { createServiceClient } from '@/lib/supabase/service';
 /**
  * POST /api/v1/admin/export/sheets
  * Export import job results to Google Sheets
@@ -15,7 +16,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const serviceClient = createServiceClient();
+  const { data: profile } = await serviceClient
     .from('users')
     .select('role')
     .eq('id', user.id)

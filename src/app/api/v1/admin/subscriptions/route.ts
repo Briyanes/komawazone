@@ -3,10 +3,12 @@ import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 import { z } from 'zod';
 
+import { createServiceClient } from '@/lib/supabase/service';
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
+  const { data: profile } = await serviceClient.from('users').select('role').eq('id', user.id).single();
   if (profile?.role !== 'ADMIN') return null;
   return user;
 }
@@ -20,6 +22,7 @@ const GrantSchema = z.object({
 
 // GET: list subscriptions OR find user by email (?find_user=email)
 export async function GET(request: NextRequest) {
+  const serviceClient = createServiceClient();
   const supabase = await createClient();
   if (!await assertAdmin(supabase)) {
     return NextResponse.json({ status: 'error', error: 'Forbidden' }, { status: 403 });
@@ -29,7 +32,7 @@ export async function GET(request: NextRequest) {
   const findUser = url.searchParams.get('find_user');
 
   if (findUser) {
-    const { data } = await supabase
+    const { data } = await serviceClient
       .from('users')
       .select('id, email, username, avatar_url, vip_expires_at')
       .ilike('email', findUser.trim())

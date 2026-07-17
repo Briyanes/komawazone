@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+import { createServiceClient } from '@/lib/supabase/service';
 /**
  * GET /api/v1/admin/analytics
  * Returns daily stats for last 30 days: chapters uploaded, views trend.
@@ -10,7 +11,8 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
+  const serviceClient = createServiceClient();
+  const { data: profile } = await serviceClient.from('users').select('role').eq('id', user.id).single();
   if (profile?.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
   // Last 30 days chapters per day
@@ -22,7 +24,7 @@ export async function GET() {
     .order('release_date', { ascending: true });
 
   // Last 30 days new users per day
-  const { data: users } = await supabase
+  const { data: users } = await serviceClient
     .from('users')
     .select('created_at')
     .gte('created_at', since)

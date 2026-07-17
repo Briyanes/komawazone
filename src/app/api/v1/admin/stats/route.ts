@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+import { createServiceClient } from '@/lib/supabase/service';
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceClient
     .from('users')
     .select('role')
     .eq('id', user.id)
@@ -14,6 +16,7 @@ async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
 }
 
 export async function GET() {
+  const serviceClient = createServiceClient();
   const supabase = await createClient();
   if (!await assertAdmin(supabase)) {
     return NextResponse.json({ status: 'error', error: 'Forbidden' }, { status: 403 });
@@ -28,7 +31,7 @@ export async function GET() {
   ] = await Promise.all([
     supabase.from('manga').select('*', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('chapters').select('*', { count: 'exact', head: true }).is('deleted_at', null),
-    supabase.from('users').select('*', { count: 'exact', head: true }),
+    serviceClient.from('users').select('*', { count: 'exact', head: true }),
     supabase.from('manga').select('id, title, cover_url, views').order('views', { ascending: false }).limit(5),
     supabase.from('ad_providers').select('*', { count: 'exact', head: true }).eq('is_active', true),
   ]);

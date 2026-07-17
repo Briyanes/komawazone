@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
+import { createServiceClient } from '@/lib/supabase/service';
 /**
  * GET /api/v1/admin/import/jobs
  * List import jobs with pagination and filtering
@@ -14,7 +15,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const serviceClient = createServiceClient();
+  const { data: profile } = await serviceClient
     .from('users')
     .select('role')
     .eq('id', user.id)
@@ -93,7 +95,8 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { data: profile } = await supabase
+  const serviceClient = createServiceClient();
+  const { data: profile } = await serviceClient
     .from('users')
     .select('role')
     .eq('id', user.id)

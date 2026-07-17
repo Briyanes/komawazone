@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import type { Database } from '@/types/database';
 
+import { createServiceClient } from '@/lib/supabase/service';
 type AdProviderUpdate = Database['public']['Tables']['ad_providers']['Update'];
 
 const ProviderPatchSchema = z.object({
@@ -13,9 +14,10 @@ const ProviderPatchSchema = z.object({
 });
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceClient
     .from('users')
     .select('role')
     .eq('id', user.id)

@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 import type { Database } from '@/types/database';
 
+import { createServiceClient } from '@/lib/supabase/service';
 type MangaUpdate = Database['public']['Tables']['manga']['Update'];
 
 const MangaUpdateSchema = z.object({
@@ -24,9 +25,10 @@ const MangaUpdateSchema = z.object({
 });
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceClient
     .from('users')
     .select('role')
     .eq('id', user.id)

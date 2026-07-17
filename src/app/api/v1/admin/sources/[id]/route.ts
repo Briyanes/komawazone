@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
+import { createServiceClient } from '@/lib/supabase/service';
 const PatchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
   base_url: z.string().url().optional(),
@@ -16,9 +17,10 @@ const PatchSchema = z.object({
 type Params = { params: Promise<{ id: string }> };
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase.from('users').select('role').eq('id', user.id).single();
+  const { data: profile } = await serviceClient.from('users').select('role').eq('id', user.id).single();
   return profile?.role === 'ADMIN' ? user : null;
 }
 

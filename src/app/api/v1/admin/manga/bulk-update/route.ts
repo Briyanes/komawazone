@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
+import { createServiceClient } from '@/lib/supabase/service';
 const BulkUpdateSchema = z.object({
   ids: z.array(z.string().uuid()).min(1).max(500),
   updates: z.object({
@@ -12,9 +13,10 @@ const BulkUpdateSchema = z.object({
 });
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
+  const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return null;
-  const { data: profile } = await supabase
+  const { data: profile } = await serviceClient
     .from('users')
     .select('role')
     .eq('id', user.id)
