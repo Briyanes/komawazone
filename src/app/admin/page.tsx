@@ -1,10 +1,14 @@
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 import Link from 'next/link';
 import { BookOpen, Users, FileText, TrendingUp, Plus, Megaphone, ArrowRight, Clock } from 'lucide-react';
 import { AdminAnalyticsChart } from '@/components/admin/AdminAnalyticsChart';
 import { decodeHtml } from '@/lib/cn';
 
-async function getStats(supabase: Awaited<ReturnType<typeof createClient>>) {
+type ServiceClient = SupabaseClient<Database>;
+
+async function getStats(supabase: ServiceClient) {
   // Try optimized RPC first (single SQL query via SUM/COUNT)
   // Cast through unknown (not any) because generated types don't include get_dashboard_stats yet
   const rpcResult = await (supabase as unknown as {
@@ -40,7 +44,7 @@ async function getStats(supabase: Awaited<ReturnType<typeof createClient>>) {
   };
 }
 
-async function getRecentManga(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function getRecentManga(supabase: ServiceClient) {
   const { data } = await supabase
     .from('manga')
     .select('id, slug, title, status, views, updated_at')
@@ -50,7 +54,7 @@ async function getRecentManga(supabase: Awaited<ReturnType<typeof createClient>>
   return data ?? [];
 }
 
-async function getRecentChapters(supabase: Awaited<ReturnType<typeof createClient>>) {
+async function getRecentChapters(supabase: ServiceClient) {
   const { data } = await supabase
     .from('chapters')
     .select('id, number, title, release_date, manga(title, slug)')
@@ -67,8 +71,8 @@ const statusColor: Record<string, string> = {
 };
 
 export default async function AdminDashboard() {
-  // Share a single Supabase client across all queries (was 3 separate clients)
-  const supabase = await createClient();
+  // Use service client to bypass RLS — admin pages already verified ADMIN role in layout
+  const supabase = createServiceClient();
   const [stats, recentManga, recentChapters] = await Promise.all([
     getStats(supabase), getRecentManga(supabase), getRecentChapters(supabase),
   ]);
