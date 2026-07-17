@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import {
   LayoutDashboard, BookOpen, FileText, Megaphone, BarChart2,
-  Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag, Download, Crown, Globe, Ticket, HardDrive, LogOut, Image,
+  Settings, X, ArrowLeft, Zap, MessageCircle, Flag, Users, Tag, Download, Crown, Globe, Ticket, HardDrive, LogOut, Image, ScrollText,
 } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { createClient } from '@/lib/supabase/client';
@@ -45,6 +45,7 @@ const navGroups = [
       { href: '/admin/settings', icon: Settings, label: 'Settings' },
       { href: '/admin/storage-backfill', icon: HardDrive, label: 'Storage Backfill' },
       { href: '/admin/thumbnails', icon: Image, label: 'Thumbnail Audit' },
+      { href: '/admin/activity-logs', icon: ScrollText, label: 'Activity Logs' },
     ],
   },
 ];

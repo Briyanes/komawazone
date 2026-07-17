@@ -3,6 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { z } from 'zod';
 
 import { createServiceClient } from '@/lib/supabase/service';
+import { logAdminAction } from '@/lib/auth/admin-log';
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
   const serviceClient = createServiceClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -102,6 +103,17 @@ export async function POST(request: NextRequest) {
     .select('code, plan');
 
   if (error) return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
+
+  // Log the admin action (fire-and-forget)
+  logAdminAction({
+    admin: user,
+    action: 'CREATE',
+    entity: 'voucher',
+    method: 'POST',
+    path: '/api/v1/admin/vouchers',
+    status: 201,
+    details: { plan, count: data?.length ?? 0 },
+  });
 
   return NextResponse.json({
     status: 'success',

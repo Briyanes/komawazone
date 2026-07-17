@@ -3,6 +3,46 @@ import { createServerClient } from '@supabase/ssr';
 import { HUB_DOMAIN, READER_DOMAIN, isHubAllowedPath } from '@/config/domains';
 
 /**
+ * Lightweight in-memory rate limiter (per Edge instance).
+ * Protects sensitive API endpoints from brute-force / spam.
+ * Limit: 60 requests per minute per IP for admin/auth/write endpoints.
+ */
+const RATE_LIMIT_WINDOW_MS = 60_000; // 1 minute
+const RATE_LIMIT_MAX = 60; // 60 req/min
+const RATE_LIMIT_PATHS = [
+  '/api/v1/admin/',
+  '/api/v1/auth/',
+  '/api/v1/user/',
+  '/api/v1/vip/',
+];
+
+interface RateLimitEntry { count: number; resetAt: number; }
+const rateLimitMap = new Map<string, RateLimitEntry>();
+
+function checkRateLimit(ip: string): { allowed: boolean; remaining: number; resetAt: number } {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+
+  if (!entry || now > entry.resetAt) {
+    const newEntry: RateLimitEntry = { count: 1, resetAt: now + RATE_LIMIT_WINDOW_MS };
+    rateLimitMap.set(ip, newEntry);
+    return { allowed: true, remaining: RATE_LIMIT_MAX - 1, resetAt: newEntry.resetAt };
+  }
+
+  entry.count++;
+  const allowed = entry.count <= RATE_LIMIT_MAX;
+
+  // Periodic cleanup (every 1000th request)
+  if (entry.count % 1000 === 0) {
+    for (const [key, val] of rateLimitMap) {
+      if (now > val.resetAt) rateLimitMap.delete(key);
+    }
+  }
+
+  return { allowed, remaining: Math.max(0, RATE_LIMIT_MAX - entry.count), resetAt: entry.resetAt };
+}
+
+/**
  * R2 image proxy hotlink protection.
  * Allow requests only when:
  *   - Host header matches our domains, OR
@@ -85,6 +125,33 @@ export async function middleware(request: NextRequest) {
   //     });
   //   }
   // }
+
+  // --- RATE LIMITING (sensitive API endpoints) ---
+  if (RATE_LIMIT_PATHS.some((p) => pathname.startsWith(p))) {
+    const clientIp =
+      request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() ??
+      request.headers.get('x-real-ip') ??
+      'unknown';
+
+    const { allowed, remaining, resetAt } = checkRateLimit(clientIp);
+
+    if (!allowed) {
+      logSuspiciousActivity('RATE_LIMIT', request, { ip: clientIp });
+      return new NextResponse(
+        JSON.stringify({ error: 'Too many requests. Please try again later.' }),
+        {
+          status: 429,
+          headers: {
+            'Content-Type': 'application/json',
+            'Retry-After': String(Math.ceil((resetAt - Date.now()) / 1000)),
+            'X-RateLimit-Limit': String(RATE_LIMIT_MAX),
+            'X-RateLimit-Remaining': '0',
+            'X-RateLimit-Reset': String(resetAt),
+          },
+        }
+      );
+    }
+  }
 
   // --- SUBDOMAIN REDIRECTS (read.olluq.com, 01.olluq.com, www.olluq.xyz) ---
   const parts = cleanHost.split('.');
