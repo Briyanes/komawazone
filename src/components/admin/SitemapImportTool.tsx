@@ -4,13 +4,13 @@ import { useState, useEffect, useRef } from 'react';
 import { Upload, XCircle, CheckCircle, Clock, Download } from 'lucide-react';
 
 const DEFAULT_SITEMAPS = [
-  'https://04x.manhwaland.land/manga-sitemap.xml',
-  'https://04x.manhwaland.land/manga-sitemap2.xml',
-  'https://04x.manhwaland.land/manga-sitemap3.xml',
-  'https://04x.manhwaland.land/manga-sitemap4.xml',
-  'https://04x.manhwaland.land/manga-sitemap5.xml',
-  'https://04x.manhwaland.land/manga-sitemap6.xml',
-  'https://04x.manhwaland.land/manga-sitemap7.xml',
+  'https://04x-1s.manhwaland.land/post-sitemap.xml',
+  'https://04x-1s.manhwaland.land/post-sitemap2.xml',
+  'https://04x-1s.manhwaland.land/post-sitemap3.xml',
+  'https://04x-1s.manhwaland.land/post-sitemap4.xml',
+  'https://04x-1s.manhwaland.land/post-sitemap5.xml',
+  'https://04x-1s.manhwaland.land/post-sitemap6.xml',
+  'https://04x-1s.manhwaland.land/post-sitemap7.xml',
 ];
 
 interface ImportJob {
@@ -36,7 +36,7 @@ export function SitemapImportTool() {
   });
   // Pre-set sitemap7 as mature (known mature-only sitemap from manhwaland)
   const [sitemapRatings, setSitemapRatings] = useState<Record<string, 'general' | 'mature'>>({
-    'https://04x.manhwaland.land/manga-sitemap7.xml': 'mature',
+    'https://04x-1s.manhwaland.land/post-sitemap7.xml': 'mature',
   });
   const [defaultRating, setDefaultRating] = useState<'general' | 'mature'>('general');
   const [activeJob, setActiveJob] = useState<ImportJob | null>(null);

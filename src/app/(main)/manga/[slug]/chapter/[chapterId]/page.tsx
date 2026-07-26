@@ -41,7 +41,10 @@ export default async function ChapterReaderPage({ params }: Props) {
     const supabase = await createClient();
     const vipStatus = await getVipStatus(supabase);
     if (!vipStatus.canAccessMature) {
-      redirect(`/vip?reason=mature&manga=${encodeURIComponent(chapter.manga?.slug ?? '')}`);
+      // Include chapterId so /vip can build a smart "return to chapter" URL after claim.
+      redirect(
+        `/vip?reason=mature&manga=${encodeURIComponent(chapter.manga?.slug ?? '')}&chapter=${encodeURIComponent(chapterId)}`,
+      );
     }
   }
 

@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Gift, Loader2, CheckCircle2, LogIn } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Gift, Loader2, CheckCircle2, LogIn, BookOpen, Home } from 'lucide-react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 interface FreeTrialClaimProps {
   /** True if user is logged in. */
@@ -13,6 +14,10 @@ interface FreeTrialClaimProps {
   alreadyClaimed: boolean;
   /** ISO date string of when the existing trial expires (if already claimed). */
   claimedExpiresAt?: string | null;
+  /** URL to return to after claim (e.g. chapter page). Default: '/' */
+  returnTo?: string;
+  /** True when user just came back from a chapter that triggered the gate. */
+  fromChapter?: boolean;
 }
 
 type ClaimState = 'idle' | 'loading' | 'success' | 'error';
@@ -22,10 +27,25 @@ export function FreeTrialClaim({
   trialEligible,
   alreadyClaimed,
   claimedExpiresAt,
+  returnTo,
+  fromChapter,
 }: FreeTrialClaimProps) {
   const [state, setState] = useState<ClaimState>('idle');
   const [message, setMessage] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
+  const router = useRouter();
+
+  // Smart return URL: prefer chapter, fallback to home.
+  const targetPath = returnTo || '/';
+  const loginRedirect = `/vip${returnTo ? `?returnTo=${encodeURIComponent(returnTo)}` : ''}`;
+
+  // Auto-redirect to chapter 3s after successful claim (only when from chapter).
+  useEffect(() => {
+    if (state === 'success' && fromChapter && returnTo) {
+      const t = setTimeout(() => router.push(returnTo), 3000);
+      return () => clearTimeout(t);
+    }
+  }, [state, fromChapter, returnTo, router]);
 
   async function handleClaim() {
     setState('loading');
@@ -68,31 +88,35 @@ export function FreeTrialClaim({
             🎁 FREE 1 Bulan VIP!
           </p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
-            Login dulu untuk klaim free trial VIP 30 hari. Gratis, tanpa kartu kredit.
+            {fromChapter
+              ? 'Login dulu untuk klaim free trial VIP 30 hari. Otomatis balik ke chapter setelah login!'
+              : 'Login dulu untuk klaim free trial VIP 30 hari. Gratis, tanpa kartu kredit.'}
           </p>
         </div>
         <Link
-          href="/login?redirect=%2Fvip"
+          href={`/login?redirect=${encodeURIComponent(loginRedirect)}`}
           className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           style={{ background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)' }}
         >
           <LogIn size={14} />
-          Login untuk Klaim
+          {fromChapter ? 'Login & Klaim Gratis' : 'Login untuk Klaim'}
         </Link>
       </div>
     );
   }
 
-  // ── Already claimed ──
+  // ── Already claimed / just claimed ──
   if (alreadyClaimed || state === 'success') {
     const expiry = expiresAt || claimedExpiresAt;
     return (
       <div
-        className="rounded-2xl border p-5 text-center space-y-2"
+        className="rounded-2xl border p-5 text-center space-y-3"
         style={{ background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.3)' }}
       >
         <CheckCircle2 size={32} className="mx-auto text-emerald-500" />
-        <p className="text-base font-bold text-emerald-500">Free Trial Sudah Aktif! 🎉</p>
+        <p className="text-base font-bold text-emerald-500">
+          {state === 'success' ? 'VIP Trial Aktif! 🎉' : 'Free Trial Sudah Aktif! 🎉'}
+        </p>
         <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
           {message || 'Kamu sudah klaim free trial VIP. Nikmati semua chapter 18+ sekarang!'}
         </p>
@@ -104,6 +128,33 @@ export function FreeTrialClaim({
               month: 'long',
               year: 'numeric',
             })}
+          </p>
+        )}
+
+        {/* Smart CTA: return to chapter if available */}
+        {fromChapter && (
+          <div className="flex flex-col gap-2 pt-2">
+            <Link
+              href={targetPath}
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90"
+              style={{ background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)' }}
+            >
+              <BookOpen size={14} />
+              Baca Chapter Sekarang
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-2 rounded-xl px-5 py-2 text-xs font-medium transition-opacity hover:opacity-70"
+              style={{ color: 'var(--text-tertiary)' }}
+            >
+              <Home size={12} />
+              Ke Beranda
+            </Link>
+          </div>
+        )}
+        {state === 'success' && fromChapter && (
+          <p className="text-[11px] italic" style={{ color: 'var(--text-tertiary)' }}>
+            ⏳ Mengarahkan otomatis ke chapter dalam 3 detik...
           </p>
         )}
       </div>
@@ -134,7 +185,9 @@ export function FreeTrialClaim({
             🎁 FREE 1 Bulan VIP
           </p>
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
-            Launch Special — Klaim sekarang, berlaku 30 hari!
+            {fromChapter
+              ? 'Launch Special — Klaim & langsung lanjut baca chapter ini!'
+              : 'Launch Special — Klaim sekarang, berlaku 30 hari!'}
           </p>
         </div>
       </div>

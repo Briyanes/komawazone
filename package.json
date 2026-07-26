@@ -10,7 +10,15 @@
     "typecheck": "tsc --noEmit",
     "migrate:covers": "node scripts/migrate-images-to-r2.mjs --type=covers",
     "migrate:chapters": "node scripts/migrate-images-to-r2.mjs --type=chapters",
-    "migrate:all": "node scripts/migrate-images-to-r2.mjs --type=all"
+    "migrate:all": "node scripts/migrate-images-to-r2.mjs --type=all",
+    "import:local": "node scripts/local-import.mjs",
+    "import:local:manga": "node scripts/local-import.mjs manga",
+    "import:local:chapters": "node scripts/local-import.mjs chapters",
+    "import:local:full": "node scripts/local-import.mjs full",
+    "import:local:sitemap": "node scripts/local-import.mjs sitemap",
+    "watch:sitemap": "node scripts/local-sitemap-watcher.mjs",
+    "watch:sitemap:loop": "node scripts/local-sitemap-watcher.mjs --watch --interval=10",
+    "setup:local": "bash scripts/setup-local-importer.sh"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1054.0",

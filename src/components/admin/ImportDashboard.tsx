@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import {
   Download, RefreshCw, Play, CheckCircle, XCircle,
   Clock, BookOpen, FileText, AlertTriangle, Zap, StopCircle,
+  Terminal, Copy, CheckCheck,
 } from 'lucide-react';
 
 interface ImportJob {
@@ -171,6 +172,9 @@ export function ImportDashboard() {
           <StatCard icon={<AlertTriangle size={16} />} label="Belum Ada Chapter" value={stats.mangaWithoutChapters} color="yellow" />
         </div>
       ) : null}
+
+      {/* Local Import — jalan dari MacBook (powerful, no Vercel timeout) */}
+      <LocalImportCard />
 
       {/* Aksi cepat */}
       <div className="rounded-xl p-4" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
@@ -369,6 +373,130 @@ export function ImportDashboard() {
             </>
           );
         })()}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Local Import Card
+ * Menampilkan CLI commands yang bisa di-copy dan dijalankan dari terminal MacBook.
+ * Lebih powerful dari Vercel cron karena tidak ada timeout (10s/60s/300s).
+ */
+function LocalImportCard() {
+  const [copiedCmd, setCopiedCmd] = useState<string | null>(null);
+
+  const commands = [
+    {
+      id: 'full',
+      label: 'Import Full (Manga + Chapters + Images)',
+      description: 'Scrape metadata, chapter list, download semua gambar, upload ke R2',
+      cmd: 'npm run import:local -- full --url "https://04x-1s.manhwaland.land/manga/prison-revenge/"',
+    },
+    {
+      id: 'manga',
+      label: 'Import Manga Saja (Metadata)',
+      description: 'Cepat — hanya metadata manga tanpa chapter/images',
+      cmd: 'npm run import:local -- manga --url "https://04x-1s.manhwaland.land/manga/prison-revenge/"',
+    },
+    {
+      id: 'chapters',
+      label: 'Import Chapters (Metadata + Images)',
+      description: 'Untuk manga yang sudah ada — tambah/update chapter + gambar',
+      cmd: 'npm run import:local -- chapters --url "https://04x-1s.manhwaland.land/manga/prison-revenge/"',
+    },
+    {
+      id: 'sitemap',
+      label: 'Batch Import dari Sitemap',
+      description: 'Scan semua manga dari sitemap XML — import massal',
+      cmd: 'npm run import:local -- sitemap',
+    },
+  ];
+
+  const copyCmd = async (cmd: string, id: string) => {
+    try {
+      await navigator.clipboard.writeText(cmd);
+      setCopiedCmd(id);
+      setTimeout(() => setCopiedCmd(null), 2000);
+    } catch {
+      // fallback — select text manually
+    }
+  };
+
+  return (
+    <div
+      className="rounded-xl p-4"
+      style={{
+        background: 'linear-gradient(135deg, rgba(99,102,241,0.06) 0%, rgba(168,85,247,0.06) 100%)',
+        border: '1px solid rgba(99,102,241,0.2)',
+      }}
+    >
+      {/* Header */}
+      <div className="mb-3 flex items-center gap-2">
+        <div
+          className="flex size-7 items-center justify-center rounded-lg"
+          style={{ background: 'rgba(99,102,241,0.12)', color: '#6366f1' }}
+        >
+          <Terminal size={14} />
+        </div>
+        <div>
+          <h2 className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+            Local Import (MacBook) — Recommended
+          </h2>
+          <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+            Jalan langsung dari terminal — tanpa timeout Vercel, download gambar paralel, upload ke R2
+          </p>
+        </div>
+      </div>
+
+      {/* Commands list */}
+      <div className="space-y-2">
+        {commands.map((c) => (
+          <div
+            key={c.id}
+            className="rounded-lg p-3"
+            style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)' }}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-semibold" style={{ color: 'var(--text-primary)' }}>
+                  {c.label}
+                </div>
+                <div className="text-[11px] mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
+                  {c.description}
+                </div>
+              </div>
+              <button
+                onClick={() => copyCmd(c.cmd, c.id)}
+                className="flex shrink-0 items-center gap-1 rounded-md px-2 py-1 text-[10px] font-medium transition-colors"
+                style={{
+                  background: copiedCmd === c.id ? 'rgba(34,197,94,0.12)' : 'rgba(99,102,241,0.1)',
+                  color: copiedCmd === c.id ? '#22c55e' : '#6366f1',
+                  border: `1px solid ${copiedCmd === c.id ? 'rgba(34,197,94,0.25)' : 'rgba(99,102,241,0.2)'}`,
+                }}
+              >
+                {copiedCmd === c.id ? <CheckCheck size={11} /> : <Copy size={11} />}
+                {copiedCmd === c.id ? 'Copied!' : 'Copy'}
+              </button>
+            </div>
+            {/* Terminal-style command preview */}
+            <div
+              className="mt-2 flex items-center gap-1.5 rounded-md px-2.5 py-1.5 font-mono text-[11px] overflow-x-auto"
+              style={{ background: 'rgba(0,0,0,0.25)', color: '#a5b4fc' }}
+            >
+              <span style={{ color: '#64748b' }}>$</span>
+              <span className="whitespace-nowrap">{c.cmd}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Info footer */}
+      <div className="mt-3 flex items-start gap-2 text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mt-0.5 shrink-0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <span>
+          Pastikan file <code className="px-1 py-0.5 rounded" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>.env</code> ada di root project dengan kredensial Supabase + R2 + Proxy. Lihat <code className="px-1 py-0.5 rounded" style={{ background: 'var(--bg-tertiary)', color: 'var(--text-secondary)' }}>docs/LOCAL_IMPORT_TOOL.md</code> untuk panduan lengkap.
+        </span>
       </div>
     </div>
   );

@@ -30,12 +30,22 @@ const PACKAGES = [
 ];
 
 interface Props {
-  searchParams: Promise<{ reason?: string; manga?: string }>;
+  searchParams: Promise<{ reason?: string; manga?: string; chapter?: string; returnTo?: string }>;
 }
 
 export default async function VIPPage({ searchParams }: Props) {
-  const { reason, manga } = await searchParams;
+  const { reason, manga, chapter, returnTo } = await searchParams;
   const isMatureGate = reason === 'mature';
+
+  // Build smart return URL: explicit returnTo > chapter+manga reconstruction > manga page
+  const chapterReturnPath =
+    returnTo ||
+    (manga && chapter
+      ? `/manga/${manga}/chapter/${chapter}`
+      : manga
+        ? `/manga/${manga}`
+        : '/');
+  const fromChapter = !!(manga || returnTo);
 
   const supabase = await createClient();
 
@@ -133,6 +143,8 @@ export default async function VIPPage({ searchParams }: Props) {
           trialEligible={trialEligible}
           alreadyClaimed={!!trialClaimedAt}
           claimedExpiresAt={vipExpiresAt}
+          returnTo={chapterReturnPath}
+          fromChapter={fromChapter}
         />
       )}
 

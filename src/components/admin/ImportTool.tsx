@@ -322,7 +322,7 @@ function MangaImportTab() {
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleScrape()}
-            placeholder="https://04x.manhwaland.land/manga/prison-revenge/"
+            placeholder="https://04x-1s.manhwaland.land/manga/prison-revenge/"
             className="flex-1 rounded-xl px-4 py-2.5 text-sm outline-none transition-all focus:ring-2"
             style={{
               background: 'var(--bg-tertiary)',
@@ -573,7 +573,7 @@ function ChapterImportTab() {
             value={url}
             onChange={e => setUrl(e.target.value)}
             onKeyDown={e => e.key === 'Enter' && handleScrape()}
-            placeholder="https://04x.manhwaland.land/prison-revenge-chapter-1/"
+            placeholder="https://04x-1s.manhwaland.land/prison-revenge-chapter-1/"
             className="flex-1 rounded-xl px-4 py-2.5 text-sm outline-none"
             style={{ background: 'var(--bg-tertiary)', border: '1px solid var(--border-light)', color: 'var(--text-primary)' }}
           />

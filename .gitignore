@@ -13,6 +13,11 @@
 # testing
 /coverage
 
+# Local import progress
+.import-progress.json
+.sitemap-snapshots/
+/logs/
+
 # next.js
 /.next/
 /out/
