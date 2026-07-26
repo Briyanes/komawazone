@@ -34,6 +34,16 @@ export const metadata: Metadata = {
   },
   twitter: { card: 'summary_large_image' },
   robots: { index: true, follow: true },
+  applicationName: 'OLLUQ',
+  appleWebApp: {
+    capable: true,
+    title: 'OLLUQ',
+    statusBarStyle: 'black-translucent',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  manifest: '/manifest.webmanifest',
 };
 
 export const viewport: Viewport = {
