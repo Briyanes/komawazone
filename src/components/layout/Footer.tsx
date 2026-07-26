@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
-import { Gift } from 'lucide-react';
+import { Gift, ShieldCheck, Heart, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 
 const SOCIALS = [
@@ -98,13 +98,11 @@ export function Footer() {
               <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
                 Navigasi
               </p>
-              <svg
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                className={`size-4 transition-transform duration-200 md:hidden ${openNav ? 'rotate-180' : ''}`}
+              <ChevronDown
+                className={`size-4 shrink-0 transition-transform duration-200 md:hidden ${openNav ? 'rotate-180' : ''}`}
                 style={{ color: '#FF6B35' }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+                strokeWidth={2.5}
+              />
             </button>
             <ul className={`${openNav ? 'block' : 'hidden'} md:block space-y-2.5 mt-3 md:mt-4`}>
               {[
@@ -142,13 +140,11 @@ export function Footer() {
               <p className="text-[11px] font-black uppercase tracking-[0.18em]" style={{ color: '#FF6B35' }}>
                 Tautan Cepat
               </p>
-              <svg
-                viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"
-                className={`size-4 transition-transform duration-200 md:hidden ${openQuick ? 'rotate-180' : ''}`}
+              <ChevronDown
+                className={`size-4 shrink-0 transition-transform duration-200 md:hidden ${openQuick ? 'rotate-180' : ''}`}
                 style={{ color: '#FF6B35' }}
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+                strokeWidth={2.5}
+              />
             </button>
             <ul className={`${openQuick ? 'block' : 'hidden'} md:block space-y-2.5 mt-3 md:mt-4`}>
               {[
@@ -181,10 +177,13 @@ export function Footer() {
           style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)' }}
         >
           <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
-            <span className="text-sm">🚫</span>
+            <ShieldCheck size={14} className="shrink-0" />
             <span>100% Tanpa Iklan</span>
             <span className="text-white/20">·</span>
-            <span className="text-emerald-300/80">Didukung oleh VIP Members ❤️</span>
+            <span className="flex items-center gap-1 text-emerald-300/80">
+              Didukung oleh VIP Members
+              <Heart size={11} className="shrink-0 fill-current" />
+            </span>
           </div>
           <p className="text-[11px] leading-relaxed max-w-md" style={{ color: 'var(--text-tertiary)' }}>
             Olluq adalah platform manga ad-free. Pengalaman baca nyaman tanpa gangguan popup, banner, atau redirect.
