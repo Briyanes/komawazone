@@ -65,29 +65,28 @@ export interface Database {
         Row: {
           id: string;
           user_id: string | null;
-          to_email: string;
-          type: string;
-          subject: string;
+          email_type: string;
+          recipient: string;
           status: 'sent' | 'failed' | 'skipped';
           resend_id: string | null;
           error: string | null;
-          sent_at: string;
+          sent_date: string | null;
           created_at: string;
         };
         Insert: {
           user_id?: string | null;
-          to_email: string;
-          type: string;
-          subject: string;
+          email_type: string;
+          recipient: string;
           status?: 'sent' | 'failed' | 'skipped';
           resend_id?: string | null;
           error?: string | null;
-          sent_at?: string;
+          sent_date?: string | null;
         };
         Update: {
           status?: 'sent' | 'failed' | 'skipped';
           resend_id?: string | null;
           error?: string | null;
+          sent_date?: string | null;
         };
         Relationships: [];
       };

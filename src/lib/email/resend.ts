@@ -140,13 +140,15 @@ export async function alreadySentToday(
   userId: string,
   type: EmailType
 ): Promise<boolean> {
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+  // Use UTC date to match the `sent_date` column (auto-filled by trigger).
+  // This mirrors the unique index (user_id, email_type, sent_date).
+  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD (UTC)
   const { data } = await supabase
     .from('email_log')
     .select('id')
     .eq('user_id', userId)
     .eq('email_type', type)
-    .gte('created_at', `${today}T00:00:00Z`)
+    .eq('sent_date', today)
     .limit(1);
 
   return Array.isArray(data) && data.length > 0;
