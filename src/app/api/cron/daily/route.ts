@@ -13,6 +13,7 @@ import { revalidatePath } from 'next/cache';
  *   3. Import-advance (continue running import jobs)
  *   4. Auto-import new manga from sitemaps
  *   5. Check new chapters & notify users
+ *   6. Send VIP/Trial expiry reminder emails (H-3, via Resend)
  *
  * For more frequent auto-import/check-chapters (every 6h), set up an
  * external cron (e.g. cron-job.org, GitHub Actions) that hits:
@@ -130,6 +131,17 @@ export async function GET(req: NextRequest) {
     };
   } catch (err) {
     results.checkNewChapters = { ok: false, error: err instanceof Error ? err.message : String(err) };
+  }
+
+  // --- Task 6: VIP/Trial expiry reminder emails (Resend, H-3) -------------
+  try {
+    const { createClient } = await import('@/lib/supabase/server');
+    const supabase = await createClient();
+    const { sendVipReminders } = await import('@/lib/email/send-vip-reminders');
+    const emailResult = await sendVipReminders(supabase);
+    results.emailReminders = { ok: true, data: emailResult };
+  } catch (err) {
+    results.emailReminders = { ok: false, error: err instanceof Error ? err.message : String(err) };
   }
 
   const elapsed = Date.now() - startTime;

@@ -27,6 +27,7 @@ export interface Database {
           trial_source: string | null;
           referral_code: string | null;
           referred_by: string | null;
+          email_consent: boolean | null;
           created_at: string;
           updated_at: string;
         };
@@ -43,6 +44,7 @@ export interface Database {
           trial_source?: string | null;
           referral_code?: string | null;
           referred_by?: string | null;
+          email_consent?: boolean | null;
         };
         Update: {
           username?: string | null;
@@ -55,6 +57,37 @@ export interface Database {
           role?: 'USER' | 'ADMIN';
           referral_code?: string | null;
           referred_by?: string | null;
+          email_consent?: boolean | null;
+        };
+        Relationships: [];
+      };
+      email_log: {
+        Row: {
+          id: string;
+          user_id: string | null;
+          to_email: string;
+          type: string;
+          subject: string;
+          status: 'sent' | 'failed' | 'skipped';
+          resend_id: string | null;
+          error: string | null;
+          sent_at: string;
+          created_at: string;
+        };
+        Insert: {
+          user_id?: string | null;
+          to_email: string;
+          type: string;
+          subject: string;
+          status?: 'sent' | 'failed' | 'skipped';
+          resend_id?: string | null;
+          error?: string | null;
+          sent_at?: string;
+        };
+        Update: {
+          status?: 'sent' | 'failed' | 'skipped';
+          resend_id?: string | null;
+          error?: string | null;
         };
         Relationships: [];
       };

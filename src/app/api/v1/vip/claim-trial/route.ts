@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { getVipStatus, computeTrialExpiry, formatExpiryId, REFERRAL_REWARD_DAYS } from '@/lib/vip';
 import { processReferralReward } from '@/lib/referral';
+import { sendEmail } from '@/lib/email/resend';
+import { referralRewardEmail } from '@/lib/email/templates';
 
 /**
  * POST /api/v1/vip/claim-trial
@@ -89,6 +91,7 @@ export async function POST(req: NextRequest) {
   // ── Referral reward processing (best-effort, never blocks trial claim) ──
   let referralRewarded = false;
   let finalExpiry = expiresAt.toISOString();
+  let inviterName: string | undefined;
   try {
     const result = await processReferralReward(supabase, user.id, referralCode);
     referralRewarded = result.rewarded;
@@ -96,10 +99,52 @@ export async function POST(req: NextRequest) {
       // Re-read the final expiry (may have been extended by +7d bonus).
       const { data: refreshed } = await supabase
         .from('users')
-        .select('vip_expires_at')
+        .select('vip_expires_at, username, email')
         .eq('id', user.id)
         .single();
       if (refreshed?.vip_expires_at) finalExpiry = refreshed.vip_expires_at;
+      const inviteeName = refreshed?.username ?? undefined;
+      const inviteeEmail = refreshed?.email ?? undefined;
+
+      // Fetch inviter details for the email (and to notify them too).
+      if (referralCode) {
+        const { data: inviter } = await supabase
+          .from('users')
+          .select('id, username, email, vip_expires_at')
+          .eq('referral_code', referralCode.trim().toUpperCase())
+          .maybeSingle();
+        inviterName = inviter?.username ?? undefined;
+
+        // Email the INVITER (+7d reward) — best effort.
+        if (inviter?.email) {
+          const tpl = referralRewardEmail({
+            recipientEmail: inviter.email,
+            recipientName: inviterName,
+            rewardDays: REFERRAL_REWARD_DAYS,
+            inviterName: inviteeName,
+            totalExpiry: inviter.vip_expires_at ? formatExpiryId(inviter.vip_expires_at) : undefined,
+          });
+          void sendEmail(
+            { to: inviter.email, type: 'referral_reward', subject: tpl.subject, html: tpl.html, userId: inviter.id },
+            supabase
+          );
+        }
+      }
+
+      // Email the INVITEE (this user, +7d bonus) — best effort.
+      if (inviteeEmail) {
+        const tpl = referralRewardEmail({
+          recipientEmail: inviteeEmail,
+          recipientName: inviteeName,
+          rewardDays: REFERRAL_REWARD_DAYS,
+          inviterName,
+          totalExpiry: formatExpiryId(finalExpiry),
+        });
+        void sendEmail(
+          { to: inviteeEmail, type: 'referral_reward', subject: tpl.subject, html: tpl.html, userId: user.id },
+          supabase
+        );
+      }
     }
   } catch {
     // Referral failures must NEVER break the trial claim.
