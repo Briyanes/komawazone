@@ -4,13 +4,15 @@ import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { VoucherRedeemForm } from '@/components/payment/VoucherRedeemForm';
 import { MarketplaceLinks } from '@/components/payment/MarketplaceLinks';
+import { FreeTrialClaim } from '@/components/payment/FreeTrialClaim';
+import { getVipStatus } from '@/lib/vip';
 
 export const metadata: Metadata = {
   title: 'VIP — OLLUQ',
-  description: 'Upgrade ke OLLUQ VIP untuk akses penuh konten 18+, baca tanpa iklan, badge eksklusif, dan semua chapter terbuka. Mulai dari Rp 15.000.',
+  description: 'Klaim FREE 1 bulan VIP atau upgrade ke OLLUQ VIP untuk akses penuh konten 18+, baca tanpa iklan, badge eksklusif, dan semua chapter terbuka. Mulai dari Rp 15.000.',
   openGraph: {
     title: 'OLLUQ VIP — Beyond Every Story',
-    description: 'Bebas baca 18+, tanpa iklan, akses semua chapter. Mulai dari Rp 15.000/bulan.',
+    description: 'FREE 1 bulan VIP! Bebas baca 18+, tanpa iklan, akses semua chapter. Klaim sekarang.',
   },
 };
 
@@ -37,25 +39,15 @@ export default async function VIPPage({ searchParams }: Props) {
 
   const supabase = await createClient();
 
-  // ── Check if user is already VIP ──
-  let isVip = false;
-  let vipExpiresAt: string | null = null;
-  const { data: { user } } = await supabase.auth.getUser();
-  if (user) {
-    const { data } = await supabase
-      .from('users')
-      .select('vip_expires_at, role')
-      .eq('id', user.id)
-      .single();
-    const row = data as { vip_expires_at?: string | null; role?: string | null } | null;
-    if (row?.role === 'ADMIN') {
-      isVip = true;
-    } else {
-      const exp = row?.vip_expires_at ?? null;
-      isVip = !!exp && new Date(exp) > new Date();
-      vipExpiresAt = isVip ? exp : null;
-    }
-  }
+  // ── Check user VIP/trial status via centralised helper ──
+  const vipStatus = await getVipStatus(supabase);
+  const {
+    isVip,
+    vipExpiresAt,
+    isAuthenticated,
+    trialEligible,
+    trialClaimedAt,
+  } = vipStatus;
 
   // Fetch marketplace links server-side so they render immediately (no client fetch)
   const marketKeys = [
@@ -132,6 +124,16 @@ export default async function VIPPage({ searchParams }: Props) {
             )}
           </div>
         </div>
+      )}
+
+      {/* ── Free Trial Claim section (only when not VIP) ── */}
+      {!isVip && (
+        <FreeTrialClaim
+          isAuthenticated={isAuthenticated}
+          trialEligible={trialEligible}
+          alreadyClaimed={!!trialClaimedAt}
+          claimedExpiresAt={vipExpiresAt}
+        />
       )}
 
       {/* Hero */}

@@ -23,6 +23,8 @@ export interface Database {
           bio: string | null;
           theme_preference: 'light' | 'dark';
           vip_expires_at: string | null;
+          trial_claimed_at: string | null;
+          trial_source: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -35,6 +37,8 @@ export interface Database {
           bio?: string | null;
           theme_preference?: 'light' | 'dark';
           vip_expires_at?: string | null;
+          trial_claimed_at?: string | null;
+          trial_source?: string | null;
         };
         Update: {
           username?: string | null;
@@ -42,6 +46,8 @@ export interface Database {
           bio?: string | null;
           theme_preference?: 'light' | 'dark';
           vip_expires_at?: string | null;
+          trial_claimed_at?: string | null;
+          trial_source?: string | null;
           role?: 'USER' | 'ADMIN';
         };
         Relationships: [];
@@ -818,6 +824,39 @@ export interface Database {
           {
             foreignKeyName: 'vip_codes_used_by_fkey';
             columns: ['used_by'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      vip_trial_log: {
+        Row: {
+          id: string;
+          user_id: string;
+          source: string;
+          ip_address: string | null;
+          user_agent: string | null;
+          claimed_at: string;
+          expires_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          source?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+          claimed_at?: string;
+          expires_at: string;
+        };
+        Update: {
+          source?: string;
+          ip_address?: string | null;
+          user_agent?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'vip_trial_log_user_id_fkey';
+            columns: ['user_id'];
             referencedRelation: 'users';
             referencedColumns: ['id'];
           }
