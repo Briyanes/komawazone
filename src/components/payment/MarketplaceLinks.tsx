@@ -1,4 +1,4 @@
-import { MessageCircle } from 'lucide-react';
+import { MessageCircle, PartyPopper, ChevronRight } from 'lucide-react';
 
 interface MarketLinks {
   tokopedia_url?: string;
@@ -15,11 +15,11 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
   // Kalau gak ada link marketplace sama WA, skip section ini
   if (!hasMarket && !hasWa) return null;
 
-  const steps = [
+  const steps: { n: string; text: string | React.ReactNode }[] = [
     { n: '1', text: hasMarket ? 'Beli voucher VIP lewat link Tokopedia/Shopee di bawah. Bayar pakai apa aja (transfer, e-wallet, COD kalo ada).' : 'Hubungi admin lewat WhatsApp di bawah untuk beli voucher.' },
     { n: '2', text: 'Setelah pembayaran confirmed, kode voucher dikirim ke chat/inbox marketplace atau WA.' },
     { n: '3', text: 'Balik ke halaman ini, paste kodenya di kotak Redeem di atas, klik tombol merahnya.' },
-    { n: '4', text: 'VIP lu langsung aktif. Bisa baca semua chapter 18+ tanpa iklan! 🎉' },
+    { n: '4', text: <span className="inline-flex items-center gap-1">VIP lu langsung aktif. Bisa baca semua chapter 18+ tanpa iklan! <PartyPopper size={12} className="shrink-0 text-amber-500" /></span> },
   ];
 
   return (
@@ -32,8 +32,12 @@ export function MarketplaceLinks({ links }: { links: MarketLinks }) {
         <h2 className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
           Gimana Cara Beli?
         </h2>
-        <p className="text-xs mt-0.5" style={{ color: 'var(--text-tertiary)' }}>
-          Gampang kok, tinggal klik beli → dapet kode → redeem. Selesai.
+        <p className="text-xs mt-0.5 flex items-center flex-wrap gap-y-0.5" style={{ color: 'var(--text-tertiary)' }}>
+          Gampang kok, tinggal klik beli
+          <ChevronRight size={10} className="inline shrink-0 mx-0.5" />
+          dapet kode
+          <ChevronRight size={10} className="inline shrink-0 mx-0.5" />
+          redeem. Selesai.
         </p>
       </div>
 

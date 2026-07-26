@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { Crown, Check, Zap, Lock, Sparkles } from 'lucide-react';
+import { Crown, Check, Zap, Lock, Sparkles, PartyPopper, Ban, X, Target, Heart, Gift } from 'lucide-react';
 import type { Metadata } from 'next';
 import { createClient } from '@/lib/supabase/server';
 import { VoucherRedeemForm } from '@/components/payment/VoucherRedeemForm';
@@ -144,7 +144,10 @@ export default async function VIPPage({ searchParams }: Props) {
             <Sparkles size={18} className="text-emerald-500" />
           </div>
           <div>
-            <p className="text-sm font-bold text-emerald-500">VIP Aktif 🎉</p>
+            <p className="flex items-center gap-1.5 text-sm font-bold text-emerald-500">
+              VIP Aktif
+              <PartyPopper size={14} className="shrink-0" />
+            </p>
             <p className="text-xs mt-0.5" style={{ color: 'var(--text-secondary)' }}>
               {vipExpiresAt
                 ? `Berlaku sampai ${new Date(vipExpiresAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}. Nikmati semua konten 18+ dan baca tanpa iklan!`
@@ -279,13 +282,13 @@ export default async function VIPPage({ searchParams }: Props) {
             <div className="p-3 text-center" style={{ color: '#10b981' }}>OLLUQ</div>
             <div className="p-3 text-center" style={{ color: 'var(--text-tertiary)' }}>Lainnya</div>
           </div>
-          {[
-            { label: 'Iklan banner / popup', olluq: '🚫 0', others: 'Banyak' },
+          {([
+            { label: 'Iklan banner / popup', olluq: <span className="inline-flex items-center justify-center gap-1"><Ban size={12} className="shrink-0" /> 0</span>, others: 'Banyak' },
             { label: 'Redirect mencurigakan', olluq: 'Tidak ada', others: 'Sering' },
             { label: 'Loading halaman', olluq: 'Cepat', others: 'Lambat' },
             { label: 'Kualitas gambar', olluq: 'HD', others: 'Var' },
-            { label: 'Baca nyaman', olluq: '✓', others: '✗' },
-          ].map((row, i) => (
+            { label: 'Baca nyaman', olluq: <Check size={14} className="inline-block shrink-0" />, others: <X size={14} className="inline-block shrink-0" /> },
+          ] as const).map((row, i) => (
             <div
               key={row.label}
               className="grid grid-cols-3 text-xs"
@@ -300,8 +303,10 @@ export default async function VIPPage({ searchParams }: Props) {
             </div>
           ))}
         </div>
-        <p className="text-[11px] text-center pt-1" style={{ color: 'var(--text-tertiary)' }}>
-          🎯 OLLUQ gratis & tanpa iklan — didukung oleh VIP Members seperti kamu ❤️
+        <p className="flex items-center justify-center gap-1 text-[11px] text-center pt-1" style={{ color: 'var(--text-tertiary)' }}>
+          <Target size={11} className="shrink-0" />
+          OLLUQ gratis & tanpa iklan — didukung oleh VIP Members seperti kamu
+          <Heart size={11} className="shrink-0 fill-current text-rose-400" />
         </p>
       </div>
 
@@ -367,8 +372,9 @@ export default async function VIPPage({ searchParams }: Props) {
             borderColor: 'rgba(139,92,246,0.2)',
           }}
         >
-          <p className="text-sm font-bold" style={{ color: '#8b5cf6' }}>
-            🎁 Ajak Teman, Dapat VIP Gratis!
+          <p className="flex items-center justify-center gap-1.5 text-sm font-bold" style={{ color: '#8b5cf6' }}>
+            <Gift size={15} className="shrink-0" />
+            Ajak Teman, Dapat VIP Gratis!
           </p>
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
             Login & klaim free trial dulu, lalu bagikan kode referral-mu. Kamu & teman

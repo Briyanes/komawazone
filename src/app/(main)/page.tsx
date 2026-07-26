@@ -2,7 +2,7 @@ export const revalidate = 21600; // 6 hours ISR — minimizes Supabase egress (w
 
 import Link from 'next/link';
 import { Suspense, cache } from 'react';
-import { TrendingUp, Clock, ChevronRight, Flame, Sparkles, CheckCircle2, Gift } from 'lucide-react';
+import { TrendingUp, Clock, ChevronRight, Flame, Sparkles, CheckCircle2, Gift, ShieldCheck } from 'lucide-react';
 import { getLatestManga, getPopularManga, getFeaturedManga, getTopThisWeek, getTopToday, getNewTitles, getCompletedManga, getRekomByType } from '@/lib/api/manga';
 import { MangaGrid } from '@/components/manga/MangaGrid';
 import { PopularTabs } from '@/components/manga/PopularTabs';
@@ -210,13 +210,15 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
               className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white"
               style={{ background: 'rgba(255,107,53,0.25)', border: '1px solid rgba(255,107,53,0.45)' }}
             >
-              ✦ Look Beyond Fantasy
+              <Sparkles size={11} className="shrink-0" />
+              Look Beyond Fantasy
             </span>
             <span
               className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold text-emerald-300"
               style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)' }}
             >
-              🚫 Ad-Free Forever
+              <ShieldCheck size={12} className="shrink-0" />
+              Ad-Free Forever
             </span>
           </div>
 

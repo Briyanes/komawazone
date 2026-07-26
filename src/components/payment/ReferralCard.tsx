@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Users, Copy, Check, Share2, Gift } from 'lucide-react';
+import { Users, Copy, Check, Share2, Gift, ChevronRight } from 'lucide-react';
 
 interface ReferralCardProps {
   /** User's referral code (OLLUQ-XXXXXX). If null, will be generated lazily. */
@@ -98,8 +98,9 @@ export function ReferralCard({
           <Users size={18} className="text-violet-500" />
         </div>
         <div>
-          <p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
-            🎁 Ajak Teman, Dapat Bonus VIP!
+          <p className="flex items-center gap-1.5 text-sm font-bold" style={{ color: 'var(--text-primary)' }}>
+            <Gift size={15} className="shrink-0 text-violet-500" />
+            Ajak Teman, Dapat Bonus VIP!
           </p>
           <p className="text-[11px]" style={{ color: 'var(--text-secondary)' }}>
             Kamu +7 hari, teman +7 hari. Maksimal 5 teman.
@@ -164,8 +165,9 @@ export function ReferralCard({
           </button>
         </div>
         {copied && (
-          <p className="text-[11px] font-medium text-emerald-500">
-            ✅ Kode disalin! Bagikan ke teman.
+          <p className="flex items-center gap-1 text-[11px] font-medium text-emerald-500">
+            <Check size={11} className="shrink-0" />
+            Kode disalin! Bagikan ke teman.
           </p>
         )}
       </div>
@@ -180,8 +182,11 @@ export function ReferralCard({
         Bagikan Link Referral
       </button>
 
-      <p className="text-[10px] text-center" style={{ color: 'var(--text-tertiary)' }}>
-        <Gift size={10} className="inline" /> Teman klaim trial pakai kodemu → kamu & dia +7 hari VIP
+      <p className="flex items-center justify-center gap-1 text-[10px] text-center" style={{ color: 'var(--text-tertiary)' }}>
+        <Gift size={10} className="shrink-0" />
+        Teman klaim trial pakai kodemu
+        <ChevronRight size={10} className="shrink-0" />
+        kamu & dia +7 hari VIP
       </p>
     </div>
   );

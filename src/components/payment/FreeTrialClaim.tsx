@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Gift, Loader2, CheckCircle2, LogIn, BookOpen, Home } from 'lucide-react';
+import { Gift, Loader2, CheckCircle2, LogIn, BookOpen, Home, PartyPopper, Check, AlertTriangle, Clock, X } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
@@ -99,8 +99,9 @@ export function FreeTrialClaim({
           <Gift size={24} className="text-emerald-500" />
         </div>
         <div>
-          <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-            🎁 FREE 1 Bulan VIP!
+          <p className="flex items-center justify-center gap-1.5 text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            <Gift size={16} className="shrink-0 text-emerald-500" />
+            FREE 1 Bulan VIP!
           </p>
           <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>
             {fromChapter
@@ -129,8 +130,9 @@ export function FreeTrialClaim({
         style={{ background: 'rgba(34,197,94,0.06)', borderColor: 'rgba(34,197,94,0.3)' }}
       >
         <CheckCircle2 size={32} className="mx-auto text-emerald-500" />
-        <p className="text-base font-bold text-emerald-500">
-          {state === 'success' ? 'VIP Trial Aktif! 🎉' : 'Free Trial Sudah Aktif! 🎉'}
+        <p className="flex items-center justify-center gap-1.5 text-base font-bold text-emerald-500">
+          {state === 'success' ? 'VIP Trial Aktif!' : 'Free Trial Sudah Aktif!'}
+          <PartyPopper size={16} className="shrink-0" />
         </p>
         <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
           {message || 'Kamu sudah klaim free trial VIP. Nikmati semua chapter 18+ sekarang!'}
@@ -146,8 +148,9 @@ export function FreeTrialClaim({
           </p>
         )}
         {referralRewarded && (
-          <p className="text-[11px] font-semibold text-emerald-500">
-            🎁 Bonus referral +7 hari sudah ditambahkan!
+          <p className="flex items-center justify-center gap-1 text-[11px] font-semibold text-emerald-500">
+            <Gift size={11} className="shrink-0" />
+            Bonus referral +7 hari sudah ditambahkan!
           </p>
         )}
 
@@ -173,8 +176,9 @@ export function FreeTrialClaim({
           </div>
         )}
         {state === 'success' && fromChapter && (
-          <p className="text-[11px] italic" style={{ color: 'var(--text-tertiary)' }}>
-            ⏳ Mengarahkan otomatis ke chapter dalam 3 detik...
+          <p className="flex items-center justify-center gap-1 text-[11px] italic" style={{ color: 'var(--text-tertiary)' }}>
+            <Clock size={10} className="shrink-0" />
+            Mengarahkan otomatis ke chapter dalam 3 detik...
           </p>
         )}
       </div>
@@ -201,8 +205,9 @@ export function FreeTrialClaim({
           <Gift size={24} className="text-emerald-500" />
         </div>
         <div>
-          <p className="text-base font-bold" style={{ color: 'var(--text-primary)' }}>
-            🎁 FREE 1 Bulan VIP
+          <p className="flex items-center gap-1.5 text-base font-bold" style={{ color: 'var(--text-primary)' }}>
+            <Gift size={16} className="shrink-0 text-emerald-500" />
+            FREE 1 Bulan VIP
           </p>
           <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
             {fromChapter
@@ -212,11 +217,11 @@ export function FreeTrialClaim({
         </div>
       </div>
 
-      <ul className="text-xs space-y-1 pl-1" style={{ color: 'var(--text-secondary)' }}>
-        <li>✅ Akses semua chapter 18+ tanpa batas</li>
-        <li>✅ Baca tanpa iklan</li>
-        <li>✅ Tanpa kartu kredit, langsung aktif</li>
-        <li>⚠️ Hanya 1x per akun</li>
+      <ul className="text-xs space-y-1.5 pl-1" style={{ color: 'var(--text-secondary)' }}>
+        <li className="flex items-center gap-1.5"><Check size={12} className="shrink-0 text-emerald-500" /> Akses semua chapter 18+ tanpa batas</li>
+        <li className="flex items-center gap-1.5"><Check size={12} className="shrink-0 text-emerald-500" /> Baca tanpa iklan</li>
+        <li className="flex items-center gap-1.5"><Check size={12} className="shrink-0 text-emerald-500" /> Tanpa kartu kredit, langsung aktif</li>
+        <li className="flex items-center gap-1.5"><AlertTriangle size={12} className="shrink-0 text-amber-500" /> Hanya 1x per akun</li>
       </ul>
 
       {/* Referral code input (collapsible) */}
@@ -244,22 +249,23 @@ export function FreeTrialClaim({
                     setShowReferralInput(false);
                     setReferralCode('');
                   }}
-                  className="rounded-xl px-2 text-xs"
-                  style={{ color: 'var(--text-tertiary)' }}
-                >
-                  ✕
-                </button>
+                 className="rounded-xl px-2 text-xs"
+                   style={{ color: 'var(--text-tertiary)' }}
+                 >
+                   <X size={12} />
+                 </button>
               )}
             </div>
           ) : (
             <button
               type="button"
               onClick={() => setShowReferralInput(true)}
-              className="text-[11px] font-medium underline transition-opacity hover:opacity-70"
-              style={{ color: 'rgba(34,197,94,0.9)' }}
-            >
-              🎁 Punya kode referral? +7 hari bonus!
-            </button>
+              className="flex items-center gap-1 text-[11px] font-medium underline transition-opacity hover:opacity-70"
+               style={{ color: 'rgba(34,197,94,0.9)' }}
+             >
+               <Gift size={11} className="shrink-0" />
+               Punya kode referral? +7 hari bonus!
+             </button>
           )}
         </div>
       )}
