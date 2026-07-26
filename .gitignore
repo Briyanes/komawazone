@@ -76,3 +76,6 @@ supabase/.temp/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# phantom/artifact folder (not part of project)
+/amp

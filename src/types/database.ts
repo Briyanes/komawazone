@@ -25,6 +25,8 @@ export interface Database {
           vip_expires_at: string | null;
           trial_claimed_at: string | null;
           trial_source: string | null;
+          referral_code: string | null;
+          referred_by: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -39,6 +41,8 @@ export interface Database {
           vip_expires_at?: string | null;
           trial_claimed_at?: string | null;
           trial_source?: string | null;
+          referral_code?: string | null;
+          referred_by?: string | null;
         };
         Update: {
           username?: string | null;
@@ -49,6 +53,8 @@ export interface Database {
           trial_claimed_at?: string | null;
           trial_source?: string | null;
           role?: 'USER' | 'ADMIN';
+          referral_code?: string | null;
+          referred_by?: string | null;
         };
         Relationships: [];
       };
@@ -857,6 +863,48 @@ export interface Database {
           {
             foreignKeyName: 'vip_trial_log_user_id_fkey';
             columns: ['user_id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          }
+        ];
+      };
+      referrals: {
+        Row: {
+          id: string;
+          referrer_id: string;
+          referred_id: string;
+          referral_code: string;
+          status: 'pending' | 'completed' | 'rewarded';
+          reward_days: number;
+          referrer_rewarded_at: string | null;
+          referred_rewarded_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          referrer_id: string;
+          referred_id: string;
+          referral_code: string;
+          status?: 'pending' | 'completed' | 'rewarded';
+          reward_days?: number;
+          referrer_rewarded_at?: string | null;
+          referred_rewarded_at?: string | null;
+        };
+        Update: {
+          status?: 'pending' | 'completed' | 'rewarded';
+          referrer_rewarded_at?: string | null;
+          referred_rewarded_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: 'referrals_referrer_id_fkey';
+            columns: ['referrer_id'];
+            referencedRelation: 'users';
+            referencedColumns: ['id'];
+          },
+          {
+            foreignKeyName: 'referrals_referred_id_fkey';
+            columns: ['referred_id'];
             referencedRelation: 'users';
             referencedColumns: ['id'];
           }

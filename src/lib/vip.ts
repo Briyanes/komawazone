@@ -30,6 +30,10 @@ export interface VipStatus {
   trialEligible: boolean;
   /** Timestamp when trial was claimed (null = never). */
   trialClaimedAt: string | null;
+  /** Unique referral code for sharing (null = not generated yet). */
+  referralCode: string | null;
+  /** Referral code of the inviter (null = no inviter). */
+  referredBy: string | null;
 }
 
 interface UserVipRow {
@@ -37,6 +41,8 @@ interface UserVipRow {
   role?: string | null;
   trial_claimed_at?: string | null;
   trial_source?: string | null;
+  referral_code?: string | null;
+  referred_by?: string | null;
 }
 
 function isExpiryActive(exp: string | null | undefined): boolean {
@@ -62,12 +68,14 @@ export async function getVipStatus(
       canAccessMature: false,
       trialEligible: false, // guests must log in before claiming
       trialClaimedAt: null,
+      referralCode: null,
+      referredBy: null,
     };
   }
 
   const { data } = await supabase
     .from('users')
-    .select('vip_expires_at, role, trial_claimed_at, trial_source')
+    .select('vip_expires_at, role, trial_claimed_at, trial_source, referral_code, referred_by')
     .eq('id', user.id)
     .single();
 
@@ -87,6 +95,8 @@ export async function getVipStatus(
     // Eligible = logged in, NOT already VIP/admin, and has never claimed.
     trialEligible: !isVip && trialClaimedAt === null,
     trialClaimedAt,
+    referralCode: row?.referral_code ?? null,
+    referredBy: row?.referred_by ?? null,
   };
 }
 
@@ -103,6 +113,29 @@ export const TRIAL_DURATION_DAYS = Number(process.env.VIP_TRIAL_DAYS ?? 30);
  */
 export function computeTrialExpiry(): Date {
   return new Date(Date.now() + TRIAL_DURATION_DAYS * 24 * 60 * 60 * 1000);
+}
+
+/**
+ * Referral reward configuration.
+ * Double-sided: both inviter and invitee get REFERRAL_REWARD_DAYS extension.
+ * Max referrals per user to prevent abuse.
+ */
+export const REFERRAL_REWARD_DAYS = 7;
+export const MAX_REFERRALS_PER_USER = 5;
+
+/**
+ * Compute new VIP expiry by extending from current expiry or now.
+ * - If user is currently VIP (expiry in future): extend from current expiry.
+ * - If user is not VIP (expired or null): start from now.
+ *
+ * Used for referral rewards and voucher redemptions.
+ */
+export function extendVipExpiry(
+  currentExpiry: string | null | undefined,
+  days: number
+): Date {
+  const base = isExpiryActive(currentExpiry) ? new Date(currentExpiry!) : new Date();
+  return new Date(base.getTime() + days * 24 * 60 * 60 * 1000);
 }
 
 /**

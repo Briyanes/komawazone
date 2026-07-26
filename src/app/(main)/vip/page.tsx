@@ -5,22 +5,38 @@ import { createClient } from '@/lib/supabase/server';
 import { VoucherRedeemForm } from '@/components/payment/VoucherRedeemForm';
 import { MarketplaceLinks } from '@/components/payment/MarketplaceLinks';
 import { FreeTrialClaim } from '@/components/payment/FreeTrialClaim';
+import { ReferralCard } from '@/components/payment/ReferralCard';
 import { getVipStatus } from '@/lib/vip';
+import { ensureReferralCode, getReferralStats } from '@/lib/referral';
 
 export const metadata: Metadata = {
   title: 'VIP — OLLUQ',
-  description: 'Klaim FREE 1 bulan VIP atau upgrade ke OLLUQ VIP untuk akses penuh konten 18+, baca tanpa iklan, badge eksklusif, dan semua chapter terbuka. Mulai dari Rp 15.000.',
+  description:
+    'Klaim FREE 1 bulan VIP atau upgrade ke OLLUQ VIP untuk akses penuh konten 18+, baca tanpa iklan, badge eksklusif, dan semua chapter terbuka. Mulai dari Rp 15.000.',
   openGraph: {
     title: 'OLLUQ VIP — Beyond Every Story',
-    description: 'FREE 1 bulan VIP! Bebas baca 18+, tanpa iklan, akses semua chapter. Klaim sekarang.',
+    description:
+      'FREE 1 bulan VIP! Bebas baca 18+, tanpa iklan, akses semua chapter. Klaim sekarang.',
   },
 };
 
 const BENEFITS = [
-  { title: 'Bebas Baca 18+', desc: 'Akses penuh semua chapter konten Mature, Ecchi, Adult, Smut, dan genre dewasa lainnya' },
-  { title: 'Baca Tanpa Iklan', desc: 'Pengalaman membaca tanpa gangguan iklan sama sekali' },
-  { title: 'Akses Seluruh Chapter', desc: 'Buka semua chapter yang terkunci di manga 18+ (gratisan cuma bisa 3 chapter awal)' },
-  { title: 'Badge VIP', desc: 'Tampilkan status VIP eksklusif di profil dan komentar kamu' },
+  {
+    title: 'Bebas Baca 18+',
+    desc: 'Akses penuh semua chapter konten Mature, Ecchi, Adult, Smut, dan genre dewasa lainnya',
+  },
+  {
+    title: 'Baca Tanpa Iklan',
+    desc: 'Pengalaman membaca tanpa gangguan iklan sama sekali',
+  },
+  {
+    title: 'Akses Seluruh Chapter',
+    desc: 'Buka semua chapter yang terkunci di manga 18+ (gratisan cuma bisa 3 chapter awal)',
+  },
+  {
+    title: 'Badge VIP',
+    desc: 'Tampilkan status VIP eksklusif di profil dan komentar kamu',
+  },
 ];
 
 const PACKAGES = [
@@ -30,11 +46,17 @@ const PACKAGES = [
 ];
 
 interface Props {
-  searchParams: Promise<{ reason?: string; manga?: string; chapter?: string; returnTo?: string }>;
+  searchParams: Promise<{
+    reason?: string;
+    manga?: string;
+    chapter?: string;
+    returnTo?: string;
+    ref?: string;
+  }>;
 }
 
 export default async function VIPPage({ searchParams }: Props) {
-  const { reason, manga, chapter, returnTo } = await searchParams;
+  const { reason, manga, chapter, returnTo, ref } = await searchParams;
   const isMatureGate = reason === 'mature';
 
   // Build smart return URL: explicit returnTo > chapter+manga reconstruction > manga page
@@ -57,7 +79,29 @@ export default async function VIPPage({ searchParams }: Props) {
     isAuthenticated,
     trialEligible,
     trialClaimedAt,
+    referralCode: existingReferralCode,
+    userId,
   } = vipStatus;
+
+  // ── Referral: ensure code exists + fetch stats (authenticated users only) ──
+  let referralCode = existingReferralCode;
+  let referralStats = {
+    totalReferrals: 0,
+    successfulReferrals: 0,
+    remainingSlots: 5,
+    rewardDaysEarned: 0,
+  };
+  if (isAuthenticated && userId) {
+    try {
+      referralCode = await ensureReferralCode(supabase, userId);
+      referralStats = await getReferralStats(supabase, userId);
+    } catch {
+      // Non-critical — fall back to whatever we have.
+    }
+  }
+
+  // Referral code from URL (?ref=OLLUQ-XXXXXX) — pre-fill into trial claim.
+  const initialReferralCode = ref?.trim().toUpperCase() || null;
 
   // Fetch marketplace links server-side so they render immediately (no client fetch)
   const marketKeys = [
@@ -72,7 +116,8 @@ export default async function VIPPage({ searchParams }: Props) {
     .in('key', marketKeys);
   const settingsMap: Record<string, string> = {};
   for (const row of settingRows ?? []) {
-    settingsMap[row.key] = typeof row.value === 'string' ? row.value : String(row.value ?? '');
+    settingsMap[row.key] =
+      typeof row.value === 'string' ? row.value : String(row.value ?? '');
   }
   const marketLinks = {
     tokopedia_url: settingsMap.marketplace_tokopedia_url || '',
@@ -83,12 +128,14 @@ export default async function VIPPage({ searchParams }: Props) {
 
   return (
     <div className="mx-auto max-w-2xl px-4 py-8 md:py-12 space-y-8 md:space-y-10">
-
       {/* ── Already VIP banner ── */}
       {isVip && (
         <div
           className="flex items-center gap-3 rounded-2xl border p-4"
-          style={{ background: 'rgba(34,197,94,0.08)', borderColor: 'rgba(34,197,94,0.35)' }}
+          style={{
+            background: 'rgba(34,197,94,0.08)',
+            borderColor: 'rgba(34,197,94,0.35)',
+          }}
         >
           <div
             className="flex size-10 shrink-0 items-center justify-center rounded-xl"
@@ -111,7 +158,10 @@ export default async function VIPPage({ searchParams }: Props) {
       {isMatureGate && !isVip && (
         <div
           className="flex items-start gap-3 rounded-2xl border p-4"
-          style={{ background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }}
+          style={{
+            background: 'rgba(245,158,11,0.08)',
+            borderColor: 'rgba(245,158,11,0.4)',
+          }}
         >
           <Lock size={18} className="text-amber-500 mt-0.5 shrink-0" />
           <div>
@@ -145,6 +195,17 @@ export default async function VIPPage({ searchParams }: Props) {
           claimedExpiresAt={vipExpiresAt}
           returnTo={chapterReturnPath}
           fromChapter={fromChapter}
+          initialReferralCode={initialReferralCode}
+        />
+      )}
+
+      {/* ── Referral Program section (authenticated users only) ── */}
+      {isAuthenticated && (
+        <ReferralCard
+          referralCode={referralCode}
+          totalReferrals={referralStats.totalReferrals}
+          remainingSlots={referralStats.remainingSlots}
+          rewardDaysEarned={referralStats.rewardDaysEarned}
         />
       )}
 
@@ -156,7 +217,10 @@ export default async function VIPPage({ searchParams }: Props) {
         >
           <Crown size={32} className="text-amber-500" />
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold leading-tight" style={{ color: 'var(--text-primary)' }}>
+        <h1
+          className="text-2xl md:text-3xl font-bold leading-tight"
+          style={{ color: 'var(--text-primary)' }}
+        >
           OLLUQ VIP
         </h1>
         <p className="text-sm md:text-base font-semibold" style={{ color: '#f59e0b' }}>
@@ -169,28 +233,41 @@ export default async function VIPPage({ searchParams }: Props) {
 
       {/* Benefits */}
       <div className="grid gap-3 sm:grid-cols-2">
-        {BENEFITS.map(b => (
+        {BENEFITS.map((b) => (
           <div
             key={b.title}
             className="rounded-xl border p-4 space-y-1"
-            style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)' }}
+            style={{
+              background: 'var(--bg-secondary)',
+              borderColor: 'var(--border-light)',
+            }}
           >
             <div className="flex items-center gap-2">
               <Check size={14} className="text-emerald-500 shrink-0" />
-              <span className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{b.title}</span>
+              <span
+                className="text-sm font-semibold"
+                style={{ color: 'var(--text-primary)' }}
+              >
+                {b.title}
+              </span>
             </div>
-            <p className="text-xs pl-5" style={{ color: 'var(--text-tertiary)' }}>{b.desc}</p>
+            <p className="text-xs pl-5" style={{ color: 'var(--text-tertiary)' }}>
+              {b.desc}
+            </p>
           </div>
         ))}
       </div>
 
       {/* Pricing cards */}
       <div className="space-y-3">
-        <h2 className="text-lg font-semibold text-center" style={{ color: 'var(--text-primary)' }}>
+        <h2
+          className="text-lg font-semibold text-center"
+          style={{ color: 'var(--text-primary)' }}
+        >
           Pilih Paket VIP
         </h2>
         <div className="grid gap-3 sm:grid-cols-3">
-          {PACKAGES.map(p => {
+          {PACKAGES.map((p) => {
             const isBest = p.code === '3-month';
             return (
               <div
@@ -210,8 +287,18 @@ export default async function VIPPage({ searchParams }: Props) {
                     {p.badge}
                   </span>
                 )}
-                <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>{p.plan}</p>
-                <p className="text-lg font-bold" style={{ color: isBest ? '#f59e0b' : 'var(--color-primary)' }}>{p.price}</p>
+                <p
+                  className="text-sm font-semibold"
+                  style={{ color: 'var(--text-primary)' }}
+                >
+                  {p.plan}
+                </p>
+                <p
+                  className="text-lg font-bold"
+                  style={{ color: isBest ? '#f59e0b' : 'var(--color-primary)' }}
+                >
+                  {p.price}
+                </p>
               </div>
             );
           })}
@@ -224,17 +311,64 @@ export default async function VIPPage({ searchParams }: Props) {
       {/* Voucher Redeem */}
       <VoucherRedeemForm />
 
+      {/* Referral program info (for guests/not-yet-eligible) */}
+      {!isAuthenticated && (
+        <div
+          className="rounded-2xl border p-4 text-center space-y-1"
+          style={{
+            background: 'rgba(139,92,246,0.05)',
+            borderColor: 'rgba(139,92,246,0.2)',
+          }}
+        >
+          <p className="text-sm font-bold" style={{ color: '#8b5cf6' }}>
+            🎁 Ajak Teman, Dapat VIP Gratis!
+          </p>
+          <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>
+            Login & klaim free trial dulu, lalu bagikan kode referral-mu. Kamu & teman
+            dapat +7 hari VIP bonus!
+          </p>
+        </div>
+      )}
+
       {/* FAQ / Help */}
       <div
         className="rounded-2xl border p-4 text-sm space-y-2"
-        style={{ background: 'var(--bg-secondary)', borderColor: 'var(--border-light)', color: 'var(--text-secondary)' }}
+        style={{
+          background: 'var(--bg-secondary)',
+          borderColor: 'var(--border-light)',
+          color: 'var(--text-secondary)',
+        }}
       >
         <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>
           Pertanyaan yang sering ditanya
         </p>
-        <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Kode voucher gak masuk-masuk?</span> Tunggu 5-10 menit setelah pembayaran confirmed. Kalo masih gak ada, chat admin.</p>
-        <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Voucher expired?</span> Semua voucher berlaku 30 hari dari tanggal pembelian. Buruan redeem ya!</p>
-        <p><span className="font-medium" style={{ color: 'var(--text-primary)' }}>Bisa refund?</span> Karena ini produk digital, gak bisa refund setelah kode udah dikirim.</p>
+        <p>
+          <span
+            className="font-medium"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Kode voucher gak masuk-masuk?
+          </span>{' '}
+          Tunggu 5-10 menit setelah pembayaran confirmed. Kalo masih gak ada, chat admin.
+        </p>
+        <p>
+          <span
+            className="font-medium"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Voucher expired?
+          </span>{' '}
+          Semua voucher berlaku 30 hari dari tanggal pembelian. Buruan redeem ya!
+        </p>
+        <p>
+          <span
+            className="font-medium"
+            style={{ color: 'var(--text-primary)' }}
+          >
+            Bisa refund?
+          </span>{' '}
+          Karena ini produk digital, gak bisa refund setelah kode udah dikirim.
+        </p>
       </div>
 
       {/* CTA */}
@@ -242,7 +376,9 @@ export default async function VIPPage({ searchParams }: Props) {
         <Link
           href="/"
           className="inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-semibold text-white transition-opacity hover:opacity-90"
-          style={{ background: 'linear-gradient(135deg, #f59e0b 0%, var(--color-primary) 100%)' }}
+          style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, var(--color-primary) 100%)',
+          }}
         >
           <Zap size={14} />
           Kembali Baca Manga

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { getVipStatus, computeTrialExpiry, formatExpiryId } from '@/lib/vip';
+import { getVipStatus, computeTrialExpiry, formatExpiryId, REFERRAL_REWARD_DAYS } from '@/lib/vip';
+import { processReferralReward } from '@/lib/referral';
 
 /**
  * POST /api/v1/vip/claim-trial
@@ -10,10 +11,13 @@ import { getVipStatus, computeTrialExpiry, formatExpiryId } from '@/lib/vip';
  *   1. trial_claimed_at IS NULL (where clause)
  *   2. atomic UPDATE returning the row
  *
+ * Optional: pass `referralCode` in body to attach a referrer and trigger
+ * double-sided reward (inviter +7d, invitee +7d bonus).
+ *
  * On success, sets vip_expires_at = now + 30d and trial_claimed_at = now,
  * and inserts a row into vip_trial_log for admin auditing.
  */
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   const supabase = await createClient();
 
   const { data: { user } } = await supabase.auth.getUser();
@@ -22,6 +26,15 @@ export async function POST(_req: NextRequest) {
       { error: 'Login dulu untuk klaim free trial VIP.' },
       { status: 401 }
     );
+  }
+
+  // Parse optional referral code from body.
+  let referralCode: string | null = null;
+  try {
+    const body = await req.json();
+    referralCode = typeof body?.referralCode === 'string' ? body.referralCode : null;
+  } catch {
+    // No body or invalid JSON — that's fine, referral is optional.
   }
 
   // Re-check eligibility server-side (defense in depth).
@@ -44,12 +57,14 @@ export async function POST(_req: NextRequest) {
 
   // Atomic claim: only updates if trial_claimed_at is still NULL.
   // If two requests race, only one will get data back.
+  // Also persist referred_by atomically (immutable after set).
   const { data: updated, error: claimError } = await supabase
     .from('users')
     .update({
       vip_expires_at: expiresAt.toISOString(),
       trial_claimed_at: nowIso,
       trial_source: 'launch',
+      ...(referralCode ? { referred_by: referralCode.trim().toUpperCase() } : {}),
     })
     .eq('id', user.id)
     .is('trial_claimed_at', null) // anti-abuse: only if never claimed
@@ -71,10 +86,35 @@ export async function POST(_req: NextRequest) {
     expires_at: expiresAt.toISOString(),
   });
 
+  // ── Referral reward processing (best-effort, never blocks trial claim) ──
+  let referralRewarded = false;
+  let finalExpiry = expiresAt.toISOString();
+  try {
+    const result = await processReferralReward(supabase, user.id, referralCode);
+    referralRewarded = result.rewarded;
+    if (referralRewarded) {
+      // Re-read the final expiry (may have been extended by +7d bonus).
+      const { data: refreshed } = await supabase
+        .from('users')
+        .select('vip_expires_at')
+        .eq('id', user.id)
+        .single();
+      if (refreshed?.vip_expires_at) finalExpiry = refreshed.vip_expires_at;
+    }
+  } catch {
+    // Referral failures must NEVER break the trial claim.
+  }
+
+  const finalExpiryDate = new Date(finalExpiry);
+  const message = referralRewarded
+    ? `VIP Trial + Bonus Referral ${REFERRAL_REWARD_DAYS} hari aktif! Berlaku hingga ${formatExpiryId(finalExpiryDate)}.`
+    : `VIP FREE Trial aktif! Berlaku hingga ${formatExpiryId(finalExpiryDate)}.`;
+
   return NextResponse.json({
     success: true,
-    message: `VIP FREE Trial aktif! Berlaku hingga ${formatExpiryId(expiresAt)}.`,
-    plan: 'free-trial-30d',
-    expiresAt: expiresAt.toISOString(),
+    message,
+    plan: referralRewarded ? 'free-trial-30d+referral-bonus' : 'free-trial-30d',
+    expiresAt: finalExpiry,
+    referralRewarded,
   });
 }

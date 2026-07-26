@@ -18,6 +18,8 @@ interface FreeTrialClaimProps {
   returnTo?: string;
   /** True when user just came back from a chapter that triggered the gate. */
   fromChapter?: boolean;
+  /** Pre-filled referral code from URL ?ref= param. */
+  initialReferralCode?: string | null;
 }
 
 type ClaimState = 'idle' | 'loading' | 'success' | 'error';
@@ -29,10 +31,16 @@ export function FreeTrialClaim({
   claimedExpiresAt,
   returnTo,
   fromChapter,
+  initialReferralCode,
 }: FreeTrialClaimProps) {
   const [state, setState] = useState<ClaimState>('idle');
   const [message, setMessage] = useState('');
   const [expiresAt, setExpiresAt] = useState('');
+  const [referralCode, setReferralCode] = useState(initialReferralCode ?? '');
+  const [referralRewarded, setReferralRewarded] = useState(false);
+  const [showReferralInput, setShowReferralInput] = useState(
+    !!initialReferralCode && !alreadyClaimed
+  );
   const router = useRouter();
 
   // Smart return URL: prefer chapter, fallback to home.
@@ -51,7 +59,13 @@ export function FreeTrialClaim({
     setState('loading');
     setMessage('');
     try {
-      const res = await fetch('/api/v1/vip/claim-trial', { method: 'POST' });
+      const res = await fetch('/api/v1/vip/claim-trial', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          referralCode: referralCode.trim() || null,
+        }),
+      });
       const data = await res.json();
       if (!res.ok) {
         setState('error');
@@ -61,6 +75,7 @@ export function FreeTrialClaim({
       setState('success');
       setExpiresAt(data.expiresAt);
       setMessage(data.message);
+      setReferralRewarded(!!data.referralRewarded);
     } catch {
       setState('error');
       setMessage('Koneksi bermasalah. Coba lagi ya.');
@@ -128,6 +143,11 @@ export function FreeTrialClaim({
               month: 'long',
               year: 'numeric',
             })}
+          </p>
+        )}
+        {referralRewarded && (
+          <p className="text-[11px] font-semibold text-emerald-500">
+            🎁 Bonus referral +7 hari sudah ditambahkan!
           </p>
         )}
 
@@ -198,6 +218,51 @@ export function FreeTrialClaim({
         <li>✅ Tanpa kartu kredit, langsung aktif</li>
         <li>⚠️ Hanya 1x per akun</li>
       </ul>
+
+      {/* Referral code input (collapsible) */}
+      {!alreadyClaimed && (
+        <div className="space-y-1.5">
+          {showReferralInput ? (
+            <div className="flex gap-2">
+              <input
+                type="text"
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value.toUpperCase())}
+                placeholder="OLLUQ-XXXXXX"
+                className="flex-1 rounded-xl border px-3 py-2 text-xs font-mono uppercase tracking-wider"
+                style={{
+                  borderColor: 'rgba(34,197,94,0.3)',
+                  background: 'var(--bg-secondary)',
+                  color: 'var(--text-primary)',
+                }}
+                maxLength={12}
+              />
+              {!initialReferralCode && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowReferralInput(false);
+                    setReferralCode('');
+                  }}
+                  className="rounded-xl px-2 text-xs"
+                  style={{ color: 'var(--text-tertiary)' }}
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setShowReferralInput(true)}
+              className="text-[11px] font-medium underline transition-opacity hover:opacity-70"
+              style={{ color: 'rgba(34,197,94,0.9)' }}
+            >
+              🎁 Punya kode referral? +7 hari bonus!
+            </button>
+          )}
+        </div>
+      )}
 
       {state === 'error' && (
         <p className="text-xs font-medium text-red-500">{message}</p>
