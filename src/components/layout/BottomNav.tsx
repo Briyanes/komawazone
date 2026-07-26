@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, Search, Bookmark, User, LogIn, History } from 'lucide-react';
+import { Home, Search, Bookmark, User, LogIn, History, Crown } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/hooks/useAuth';
 
@@ -16,10 +16,13 @@ const navItems = [
 
 export function BottomNav() {
   const pathname = usePathname();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isVip } = useAuth();
 
   // Hide in reader mode
   if (pathname.includes('/chapter/')) return null;
+
+  // Non-VIP logged-in: show VIP upgrade badge on Profile tab
+  const showVipBadge = isAuthenticated && !isVip;
 
   return (
     <nav
@@ -54,7 +57,7 @@ export function BottomNav() {
             >
               <span
                 className={cn(
-                  'flex size-9 items-center justify-center rounded-xl transition-all',
+                  'relative flex size-9 items-center justify-center rounded-xl transition-all',
                   isActive ? 'shadow-sm' : ''
                 )}
                 style={isActive ? { background: 'var(--color-primary)', boxShadow: '0 4px 12px rgba(255,107,53,0.35)' } : {}}
@@ -64,6 +67,18 @@ export function BottomNav() {
                   strokeWidth={isActive ? 2.5 : 1.8}
                   color={isActive ? '#fff' : 'var(--text-tertiary)'}
                 />
+                {/* VIP upgrade badge for non-VIP logged-in users */}
+                {isProfile && showVipBadge && (
+                  <span
+                    className="absolute -top-1 -right-1 flex size-3.5 items-center justify-center rounded-full"
+                    style={{
+                      background: '#f59e0b',
+                      boxShadow: '0 0 0 2px var(--bg-primary)',
+                    }}
+                  >
+                    <Crown size={8} className="text-white" />
+                  </span>
+                )}
               </span>
               <span
                 className="text-[9px] font-semibold tracking-wide"

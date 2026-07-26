@@ -2,6 +2,8 @@
 
 import Link from 'next/link';
 import { useState } from 'react';
+import { Gift } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
 
 const SOCIALS = [
   {
@@ -35,6 +37,7 @@ export function Footer() {
   const year = new Date().getFullYear();
   const [openNav, setOpenNav] = useState(false);
   const [openQuick, setOpenQuick] = useState(false);
+  const { isVip } = useAuth();
 
   return (
     <footer className="relative overflow-hidden" style={{ background: 'var(--bg-primary)' }}>
@@ -187,6 +190,41 @@ export function Footer() {
             Olluq adalah platform manga ad-free. Pengalaman baca nyaman tanpa gangguan popup, banner, atau redirect.
           </p>
         </div>
+
+        {/* ── VIP Trial CTA banner (hidden for VIP users) ── */}
+        {!isVip && (
+          <Link
+            href="/vip"
+            className="mt-8 flex items-center justify-between gap-3 rounded-2xl px-5 py-4 transition-all hover:opacity-95 active:scale-[0.99]"
+            style={{
+              background: 'linear-gradient(110deg, rgba(245,158,11,0.18) 0%, rgba(255,107,53,0.18) 100%)',
+              border: '1px solid rgba(245,158,11,0.4)',
+            }}
+          >
+            <div className="flex items-center gap-3">
+              <span
+                className="flex size-10 shrink-0 items-center justify-center rounded-xl"
+                style={{ background: 'linear-gradient(135deg, #f59e0b, #FF6B35)' }}
+              >
+                <Gift size={20} className="text-white" />
+              </span>
+              <div>
+                <p className="text-sm font-black" style={{ color: '#fbbf24' }}>
+                  Klaim 1 Bulan VIP Gratis
+                </p>
+                <p className="text-[11px]" style={{ color: 'var(--text-tertiary)' }}>
+                  Akses semua chapter tanpa batas · 100% gratis
+                </p>
+              </div>
+            </div>
+            <span
+              className="shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold"
+              style={{ background: '#f59e0b', color: '#fff' }}
+            >
+              Klaim →
+            </span>
+          </Link>
+        )}
 
         {/* ── Bottom bar ── */}
         <div
