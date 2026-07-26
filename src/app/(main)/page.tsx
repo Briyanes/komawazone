@@ -2,7 +2,7 @@ export const revalidate = 21600; // 6 hours ISR — minimizes Supabase egress (w
 
 import Link from 'next/link';
 import { Suspense, cache } from 'react';
-import { TrendingUp, Clock, ChevronRight, Flame, Sparkles, CheckCircle2 } from 'lucide-react';
+import { TrendingUp, Clock, ChevronRight, Flame, Sparkles, CheckCircle2, Gift } from 'lucide-react';
 import { getLatestManga, getPopularManga, getFeaturedManga, getTopThisWeek, getTopToday, getNewTitles, getCompletedManga, getRekomByType } from '@/lib/api/manga';
 import { MangaGrid } from '@/components/manga/MangaGrid';
 import { PopularTabs } from '@/components/manga/PopularTabs';
@@ -260,6 +260,14 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
               style={{ background: 'var(--color-primary)', boxShadow: '0 8px 28px rgba(255,107,53,0.45)' }}
             >
               Mulai Membaca <ChevronRight size={15} />
+            </Link>
+            <Link
+              href="/vip"
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-bold text-amber-200 transition-all hover:bg-amber-500/20 active:scale-95"
+              style={{ background: 'rgba(245,158,11,0.15)', backdropFilter: 'blur(10px)', border: '1px solid rgba(245,158,11,0.45)' }}
+            >
+              <Gift size={15} />
+              1 Bulan VIP Gratis
             </Link>
             <Link
               href="/genre"

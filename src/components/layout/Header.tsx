@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Search, X, LogIn, User as UserIcon, Bookmark, LogOut, Crown, LayoutDashboard } from 'lucide-react';
+import { Search, X, LogIn, UserPlus, User as UserIcon, Bookmark, LogOut, Crown, LayoutDashboard } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
 import { cn } from '@/lib/cn';
 import { useAuth } from '@/hooks/useAuth';
@@ -158,14 +158,46 @@ export function Header() {
               )}
             </div>
           ) : (
-            <Link
-              href="/login"
-              className="hidden md:flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
-              style={{ background: 'var(--color-primary)', color: '#fff' }}
-            >
-              <LogIn size={14} />
-              Masuk
-            </Link>
+            <>
+              <Link
+                href="/login"
+                className="hidden md:flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-semibold transition-all hover:opacity-90 active:scale-95"
+                style={{
+                  background: 'transparent',
+                  color: 'var(--text-primary)',
+                  border: '1px solid var(--border-medium)',
+                }}
+              >
+                <LogIn size={14} />
+                Masuk
+              </Link>
+              <Link
+                href="/register"
+                className="hidden md:flex items-center gap-1.5 rounded-full px-4 py-1.5 text-sm font-bold transition-all hover:opacity-90 active:scale-95"
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#fff',
+                  boxShadow: '0 4px 14px rgba(16,185,129,0.35)',
+                }}
+              >
+                <UserPlus size={14} />
+                Daftar Gratis
+              </Link>
+              {/* Mobile: compact CTA */}
+              <Link
+                href="/register"
+                className="flex md:hidden items-center justify-center rounded-full transition-all active:scale-95"
+                style={{
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+                  color: '#fff',
+                  padding: '7px 12px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                }}
+              >
+                Daftar
+              </Link>
+            </>
           )}
         </div>
       </div>
