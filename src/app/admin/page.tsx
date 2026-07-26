@@ -2,7 +2,7 @@ import { createServiceClient } from '@/lib/supabase/service';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { Database } from '@/types/database';
 import Link from 'next/link';
-import { BookOpen, Users, FileText, TrendingUp, Plus, Megaphone, ArrowRight, Clock } from 'lucide-react';
+import { BookOpen, Users, FileText, TrendingUp, Plus, Megaphone, ArrowRight, Clock, Gift } from 'lucide-react';
 import { AdminAnalyticsChart } from '@/components/admin/AdminAnalyticsChart';
 import { decodeHtml } from '@/lib/cn';
 
@@ -44,6 +44,16 @@ async function getStats(supabase: ServiceClient) {
   };
 }
 
+async function getTrialStats(supabase: ServiceClient) {
+  const { count: claimed } = await supabase
+    .from('users').select('*', { count: 'exact', head: true }).not('trial_claimed_at', 'is', null);
+  const { count: active } = await supabase
+    .from('users').select('*', { count: 'exact', head: true })
+    .not('trial_claimed_at', 'is', null)
+    .gt('vip_expires_at', new Date().toISOString());
+  return { claimed: claimed ?? 0, active: active ?? 0 };
+}
+
 async function getRecentManga(supabase: ServiceClient) {
   const { data } = await supabase
     .from('manga')
@@ -73,8 +83,8 @@ const statusColor: Record<string, string> = {
 export default async function AdminDashboard() {
   // Use service client to bypass RLS — admin pages already verified ADMIN role in layout
   const supabase = createServiceClient();
-  const [stats, recentManga, recentChapters] = await Promise.all([
-    getStats(supabase), getRecentManga(supabase), getRecentChapters(supabase),
+  const [stats, recentManga, recentChapters, trialStats] = await Promise.all([
+    getStats(supabase), getRecentManga(supabase), getRecentChapters(supabase), getTrialStats(supabase),
   ]);
 
   const statCards = [
@@ -99,6 +109,15 @@ export default async function AdminDashboard() {
       bg: 'rgba(139,92,246,0.1)',
     },
   ];
+
+  // Trial conversion card (only shows when trial feature is active)
+  const trialCard = {
+    icon: Gift, label: 'Trial Aktif / Claimed',
+    value: `${trialStats.active} / ${trialStats.claimed}`,
+    href: '/admin/subscriptions',
+    color: '#F59E0B',
+    bg: 'rgba(245,158,11,0.1)',
+  };
 
   const quickActions = [
     { href: '/admin/manga/new',    icon: Plus,      label: 'New Manga',   color: 'var(--color-primary)' },
@@ -132,6 +151,22 @@ export default async function AdminDashboard() {
             </p>
           </Link>
         ))}
+        {/* Free Trial conversion card */}
+        <Link
+          href={trialCard.href}
+          className="group rounded-xl p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5"
+          style={{ background: 'var(--bg-secondary)', border: '1px solid rgba(245,158,11,0.2)' }}
+        >
+          <div className="mb-3 flex size-9 items-center justify-center rounded-lg" style={{ background: trialCard.bg }}>
+            <trialCard.icon size={18} style={{ color: trialCard.color }} />
+          </div>
+          <p className="text-2xl font-bold tabular-nums" style={{ color: 'var(--text-primary)' }}>
+            {trialCard.value}
+          </p>
+          <p className="mt-0.5 text-xs font-medium" style={{ color: 'var(--text-tertiary)' }}>
+            {trialCard.label}
+          </p>
+        </Link>
       </div>
 
       {/* Quick actions */}
