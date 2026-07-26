@@ -149,9 +149,8 @@ export function Footer() {
             </button>
             <ul className={`${openQuick ? 'block' : 'hidden'} md:block space-y-2.5 mt-3 md:mt-4`}>
               {[
-                { label: 'Tentang Kami',              href: '/about'     },
-                { label: 'Iklan Bersama Kami',         href: '/advertise' },
-                { label: 'Hubungi Kami',               href: '/contact'   },
+                 { label: 'Tentang Kami',              href: '/about'     },
+                 { label: 'Hubungi Kami',               href: '/contact'   },
                 { label: 'Syarat & Ketentuan',         href: '/terms'     },
               ].map(l => (
                 <li key={l.label}>
@@ -173,9 +172,25 @@ export function Footer() {
 
         </div>
 
+        {/* ── Ad-free trust bar ── */}
+        <div
+          className="mt-8 flex flex-col items-center justify-center gap-2 rounded-2xl px-4 py-4 text-center"
+          style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.18)' }}
+        >
+          <div className="flex items-center gap-2 text-xs font-bold text-emerald-400">
+            <span className="text-sm">🚫</span>
+            <span>100% Tanpa Iklan</span>
+            <span className="text-white/20">·</span>
+            <span className="text-emerald-300/80">Didukung oleh VIP Members ❤️</span>
+          </div>
+          <p className="text-[11px] leading-relaxed max-w-md" style={{ color: 'var(--text-tertiary)' }}>
+            Olluq adalah platform manga ad-free. Pengalaman baca nyaman tanpa gangguan popup, banner, atau redirect.
+          </p>
+        </div>
+
         {/* ── Bottom bar ── */}
         <div
-          className="mt-8 flex flex-col items-center justify-center gap-1.5 border-t pt-6 pb-24 md:pb-6 text-center"
+          className="mt-6 flex flex-col items-center justify-center gap-1.5 border-t pt-6 pb-24 md:pb-6 text-center"
           style={{ borderColor: 'var(--border-light)' }}
         >
           <p className="text-xs" style={{ color: 'var(--text-tertiary)' }}>

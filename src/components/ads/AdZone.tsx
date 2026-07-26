@@ -1,4 +1,3 @@
-import { createClient } from '@/lib/supabase/server';
 import { AdRenderer } from './AdRenderer';
 
 type AdPlacement =
@@ -32,7 +31,19 @@ interface ActiveCampaign {
   } | null;
 }
 
-export async function AdZone({ placement, className }: AdZoneProps) {
+/**
+ * OLLUQ is an ad-free platform by design.
+ * This component is disabled to honor our "Ad-Free Forever" promise.
+ * To re-enable ads in the future, remove the early return below and
+ * restore the Supabase query (see git history).
+ */
+export async function AdZone(_props: AdZoneProps) {
+  return null;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+async function AdZoneLegacy({ placement, className }: AdZoneProps) {
+  const { createClient } = await import('@/lib/supabase/server');
   const supabase = await createClient();
 
   // VIP users get ad-free experience

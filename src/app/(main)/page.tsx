@@ -163,7 +163,7 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
   const stats = [
     { value: '1.000+', label: 'Judul'  },
     { value: '50+',    label: 'Genre'  },
-    { value: 'Gratis', label: 'Selamanya' },
+    { value: '0',      label: 'Iklan'  },
   ];
 
   const covers = [
@@ -204,13 +204,21 @@ function StaticHero({ carouselItems = [] }: { carouselItems?: { id: string; slug
         {/* Left — text */}
         <div className="flex-1 min-w-0 space-y-5">
 
-          {/* Badge */}
-          <span
-            className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white"
-            style={{ background: 'rgba(255,107,53,0.25)', border: '1px solid rgba(255,107,53,0.45)' }}
-          >
-            ✦ Look Beyond Fantasy
-          </span>
+          {/* Badges */}
+          <div className="flex flex-wrap items-center gap-2">
+            <span
+              className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black uppercase tracking-[0.14em] text-white"
+              style={{ background: 'rgba(255,107,53,0.25)', border: '1px solid rgba(255,107,53,0.45)' }}
+            >
+              ✦ Look Beyond Fantasy
+            </span>
+            <span
+              className="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold text-emerald-300"
+              style={{ background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.4)' }}
+            >
+              🚫 Ad-Free Forever
+            </span>
+          </div>
 
           {/* Headline */}
           <h1

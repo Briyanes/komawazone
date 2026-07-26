@@ -258,6 +258,53 @@ export default async function VIPPage({ searchParams }: Props) {
         ))}
       </div>
 
+      {/* ── Why OLLUQ? Comparison table ── */}
+      <div className="space-y-3">
+        <h2
+          className="text-lg font-semibold text-center"
+          style={{ color: 'var(--text-primary)' }}
+        >
+          Kenapa OLLUQ?
+        </h2>
+        <p className="text-xs text-center -mt-1" style={{ color: 'var(--text-tertiary)' }}>
+          Beda dengan platform lain yang penuh iklan
+        </p>
+        <div
+          className="overflow-hidden rounded-xl border"
+          style={{ borderColor: 'var(--border-light)', background: 'var(--bg-secondary)' }}
+        >
+          {/* Table header */}
+          <div className="grid grid-cols-3 text-xs font-bold">
+            <div className="p-3" style={{ color: 'var(--text-tertiary)' }}>Fitur</div>
+            <div className="p-3 text-center" style={{ color: '#10b981' }}>OLLUQ</div>
+            <div className="p-3 text-center" style={{ color: 'var(--text-tertiary)' }}>Lainnya</div>
+          </div>
+          {[
+            { label: 'Iklan banner / popup', olluq: '🚫 0', others: 'Banyak' },
+            { label: 'Redirect mencurigakan', olluq: 'Tidak ada', others: 'Sering' },
+            { label: 'Loading halaman', olluq: 'Cepat', others: 'Lambat' },
+            { label: 'Kualitas gambar', olluq: 'HD', others: 'Var' },
+            { label: 'Baca nyaman', olluq: '✓', others: '✗' },
+          ].map((row, i) => (
+            <div
+              key={row.label}
+              className="grid grid-cols-3 text-xs"
+              style={{
+                background: i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.02)',
+                borderTop: '1px solid var(--border-light)',
+              }}
+            >
+              <div className="p-3" style={{ color: 'var(--text-secondary)' }}>{row.label}</div>
+              <div className="p-3 text-center font-semibold" style={{ color: '#10b981' }}>{row.olluq}</div>
+              <div className="p-3 text-center" style={{ color: 'var(--text-tertiary)' }}>{row.others}</div>
+            </div>
+          ))}
+        </div>
+        <p className="text-[11px] text-center pt-1" style={{ color: 'var(--text-tertiary)' }}>
+          🎯 OLLUQ gratis & tanpa iklan — didukung oleh VIP Members seperti kamu ❤️
+        </p>
+      </div>
+
       {/* Pricing cards */}
       <div className="space-y-3">
         <h2
