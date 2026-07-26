@@ -1,5 +1,5 @@
 import { Metadata } from 'next';
-import { Zap, BookOpen, MessageCircle, Flame, TrendingUp, Gift, Sparkles } from 'lucide-react';
+import { Zap, BookOpen, Compass, Search, Flame, TrendingUp, Gift, Sparkles, ArrowRight, Crown } from 'lucide-react';
 import { READER_DOMAIN } from '@/config/domains';
 import { createClient } from '@/lib/supabase/server';
 
@@ -22,7 +22,6 @@ export const metadata: Metadata = {
 const DEFAULTS = {
   bio_tagline: 'Beyond Every Story ✦ Beyond Fantasy',
   bio_description: 'Platform manga Indonesia terlengkap. Baca ribuan judul manga gratis dengan update setiap hari.',
-  bio_discord_url: 'https://discord.gg/olluq',
 };
 
 export default async function HubPage() {
@@ -30,7 +29,7 @@ export default async function HubPage() {
 
   // Parallel: settings + trending manga + counts
   const [{ data: settings }, { data: trendingManga }, { count: mangaCount }, { count: chapterCount }] = await Promise.all([
-    supabase.from('site_settings').select('key, value').in('key', ['bio_tagline', 'bio_description', 'bio_discord_url', 'reader_domain']),
+    supabase.from('site_settings').select('key, value').in('key', ['bio_tagline', 'bio_description', 'reader_domain']),
     supabase.from('manga').select('slug, title, cover_url').is('deleted_at', null).order('updated_at', { ascending: false }).limit(6),
     supabase.from('manga').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('chapters').select('id', { count: 'exact', head: true }),
@@ -43,7 +42,6 @@ export default async function HubPage() {
 
   const tagline = get('bio_tagline');
   const description = get('bio_description');
-  const discordUrl = get('bio_discord_url');
   const readerDomain = get('reader_domain') || READER_DOMAIN;
   const readerBase = `https://${readerDomain}`;
 
@@ -68,13 +66,20 @@ export default async function HubPage() {
       variant: 'vip' as const,
       desc: 'Trial gratis untuk user baru — tanpa kartu kredit',
     },
-    ...(discordUrl ? [{
-      label: 'Discord',
-      href: discordUrl,
-      icon: MessageCircle,
+    {
+      label: 'Jelajah Genre',
+      href: `${readerBase}/genre`,
+      icon: Compass,
       variant: 'default' as const,
-      desc: 'Gabung komunitas manga terbesar',
-    }] : []),
+      desc: 'Temukan manga favorit berdasarkan genre',
+    },
+    {
+      label: 'Cari Manga',
+      href: `${readerBase}/search`,
+      icon: Search,
+      variant: 'default' as const,
+      desc: 'Cari judul manga, manhwa, atau manhua',
+    },
   ];
 
   // JSON-LD structured data
@@ -162,16 +167,32 @@ export default async function HubPage() {
             <div style={{
               display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px',
             }}>
-              {trendingManga.map((m) => (
+              {trendingManga.map((m, idx) => (
                 <a
                   key={m.slug}
                   href={`${readerBase}/manga/${m.slug}`}
+                  data-click={`hub-trending-${idx + 1}`}
                   style={{
                     display: 'block', position: 'relative', borderRadius: '8px',
                     overflow: 'hidden', aspectRatio: '2/3', background: 'var(--bg-secondary)',
                     textDecoration: 'none', transition: 'transform 0.15s ease',
                   }}
                 >
+                  {idx < 3 && (
+                    <div style={{
+                      position: 'absolute', top: '4px', left: '4px', zIndex: 2,
+                      width: '20px', height: '20px', borderRadius: '6px',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      background: idx === 0
+                        ? 'linear-gradient(135deg, #FFD700 0%, #FFA500 100%)'
+                        : idx === 1
+                          ? 'linear-gradient(135deg, #E8E8E8 0%, #A8A8A8 100%)'
+                          : 'linear-gradient(135deg, #CD7F32 0%, #8B4513 100%)',
+                      boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+                    }}>
+                      <Crown size={11} color={idx === 1 ? '#333' : 'white'} fill={idx === 1 ? '#333' : 'white'} />
+                    </div>
+                  )}
                   {m.cover_url ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
@@ -218,14 +239,13 @@ export default async function HubPage() {
           {LINKS.map((link) => {
             const isPrimary = link.variant === 'primary';
             const isVip = link.variant === 'vip';
-            const isExternal = link.href.startsWith('https://discord');
 
             return (
               <a
                 key={link.label}
                 href={link.href}
-                target={isExternal ? '_blank' : undefined}
-                rel={isExternal ? 'noopener noreferrer' : undefined}
+                data-click={`hub-cta-${link.label.toLowerCase().replace(/\s+/g, '-')}`}
+                rel="noopener noreferrer"
                 style={{
                   display: 'flex', alignItems: 'center', gap: '14px', padding: '16px 20px',
                   borderRadius: '16px',
@@ -260,9 +280,7 @@ export default async function HubPage() {
                     {link.desc}
                   </div>
                 </div>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.5, flexShrink: 0 }}>
-                  <path d="M5 12h14M12 5l7 7-7 7" />
-                </svg>
+                <ArrowRight size={16} style={{ opacity: 0.5, flexShrink: 0 }} />
               </a>
             );
           })}
