@@ -1,0 +1,524 @@
+# COMPREHENSIVE AUDIT FIX LIST
+# Generated: 2026-07-26T19:40:39.489Z
+# Total issues: 15841
+
+# === MANGA TANPA CHAPTER (68) ===
+# Format: slug | source_url
+kanojo-no-shinyuu-to-himitsu-no-kankei | https://04x.manhwaland.land/manga/kanojo-no-shinyuu-to-himitsu-no-kankei/
+a-fluffy-thief-cat-one-piece | https://04x.manhwaland.land/manga/a-fluffy-thief-cat-one-piece/
+adegan-saat-aku-melakukan-seks-dengan-ibu | https://04x.manhwaland.land/manga/adegan-saat-aku-melakukan-seks-dengan-ibu/
+aiko-no-ma-chan | https://04x.manhwaland.land/manga/aiko-no-ma-chan/
+akasuri-yubana-no-chizuru-san-jo-no-shou | https://04x.manhwaland.land/manga/akasuri-yubana-no-chizuru-san-jo-no-shou/
+akumabarai | https://04x.manhwaland.land/manga/akumabarai/
+akuyuu-ni-sasowarete-jukujo-soap-ni-itte-mitara | https://04x.manhwaland.land/manga/akuyuu-ni-sasowarete-jukujo-soap-ni-itte-mitara/
+apa-aku-salah-mendidik-anak | https://04x.manhwaland.land/manga/apa-aku-salah-mendidik-anak/
+aru-hi-kuma-san-ni-deatta | https://04x.manhwaland.land/manga/aru-hi-kuma-san-ni-deatta/
+aunt-and-me | https://04x.manhwaland.land/manga/aunt-and-me/
+black-clover | https://04x.manhwaland.land/manga/black-clover/
+boku-no-namae-wa-shounen-a | https://04x.manhwaland.land/manga/boku-no-namae-wa-shounen-a/
+bring-my-level-up-alone | https://04x.manhwaland.land/manga/bring-my-level-up-alone/
+chotto-dake-kyuukei-shinai---dekachichi-manga | https://04x.manhwaland.land/manga/chotto-dake-kyuukei-shinai---dekachichi-manga/
+dokidoki-chounaikai | https://04x.manhwaland.land/manga/dokidoki-chounaikai/
+dokidoki-eizou-enkyuu-bu | https://04x.manhwaland.land/manga/dokidoki-eizou-enkyuu-bu/
+escape-artist-ni-yoroshiku-5 | https://04x.manhwaland.land/manga/escape-artist-ni-yoroshiku-5/
+filming-adult-videos-in-another-world | https://04x.manhwaland.land/manga/filming-adult-videos-in-another-world/
+fina-chan-to-himitsu-no | https://04x.manhwaland.land/manga/fina-chan-to-himitsu-no/
+fitness-g-ho | https://04x.manhwaland.land/manga/fitness-g-ho/
+futari-dake-no-denki-shingou | https://04x.manhwaland.land/manga/futari-dake-no-denki-shingou/
+gohoushi-maid-ga-h-cup-nanoni-ecchi-ja-nai | https://04x.manhwaland.land/manga/gohoushi-maid-ga-h-cup-nanoni-ecchi-ja-nai/
+h-daisuki-saaya-san-to-kusuri-de-youji-taikou-shita-danna-saaya-san | https://04x.manhwaland.land/manga/h-daisuki-saaya-san-to-kusuri-de-youji-taikou-shita-danna-saaya-san/
+hataraku-maou-sama | https://04x.manhwaland.land/manga/hataraku-maou-sama/
+henyou | https://04x.manhwaland.land/manga/henyou/
+hikage-shade | https://04x.manhwaland.land/manga/hikage-shade/
+hinomoto-san-chi-no-3-shimai | https://04x.manhwaland.land/manga/hinomoto-san-chi-no-3-shimai/
+hitoku-shikirenai-four-boobs | https://04x.manhwaland.land/manga/hitoku-shikirenai-four-boobs/
+hokusai-chan-ga-okuchi-de-teinei-ni-tannen-ni-nando-mo-nuite | https://04x.manhwaland.land/manga/hokusai-chan-ga-okuchi-de-teinei-ni-tannen-ni-nando-mo-nuite/
+honest-feelings | https://04x.manhwaland.land/manga/honest-feelings/
+i-love-you-so-much-i-want-to-wrap-myself-all-around-you | https://04x.manhwaland.land/manga/i-love-you-so-much-i-want-to-wrap-myself-all-around-you/
+incha-doutei-ga-shiro-gal-ni-kokutta-kekka | https://04x.manhwaland.land/manga/incha-doutei-ga-shiro-gal-ni-kokutta-kekka/
+innocent-sins | https://04x.manhwaland.land/manga/innocent-sins/
+inu-no-kimochi-ii | https://04x.manhwaland.land/manga/inu-no-kimochi-ii/
+itoko-no-onee-chan-ga-asobi-ni-kuru-yatsu | https://04x.manhwaland.land/manga/itoko-no-onee-chan-ga-asobi-ni-kuru-yatsu/
+joshikousei-to-seishokusha-san | https://04x.manhwaland.land/manga/joshikousei-to-seishokusha-san/
+kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen | https://04x.manhwaland.land/manga/kaguya-sama-wa-kokurasetai-tensai-tachi-no-renai-zunousen/
+kanojo-no-haha-ni-taberareru-yuuwaku-sarete-naisho-no-furin-kankei | https://04x.manhwaland.land/manga/kanojo-no-haha-ni-taberareru-yuuwaku-sarete-naisho-no-furin-kankei/
+kenja-no-mago | https://04x.manhwaland.land/manga/kenja-no-mago/
+kesson-club | https://04x.manhwaland.land/manga/kesson-club/
+konyoku-onsen-de-toshiue-no-onee-san-ni-ippai-shasei-sasete-morau-hanashi | https://04x.manhwaland.land/manga/konyoku-onsen-de-toshiue-no-onee-san-ni-ippai-shasei-sasete-morau-hanashi/
+kyonyuu-otaku-joshi-to-necafe-de-off-pako-after | https://04x.manhwaland.land/manga/kyonyuu-otaku-joshi-to-necafe-de-off-pako-after/
+kyouei-joshi-chan-anal-jelly-haisetsu-koubi | https://04x.manhwaland.land/manga/kyouei-joshi-chan-anal-jelly-haisetsu-koubi/
+lovely-storm | https://04x.manhwaland.land/manga/lovely-storm/
+low-return-toshiue-no-imouto | https://04x.manhwaland.land/manga/low-return-toshiue-no-imouto/
+mesu-goblin-vs-tei-level-zako-ossan-bokensha | https://04x.manhwaland.land/manga/mesu-goblin-vs-tei-level-zako-ossan-bokensha/
+my-holy-magic-teacher-wants-my-cum | https://04x.manhwaland.land/manga/my-holy-magic-teacher-wants-my-cum/
+need-for-almighty-master | https://04x.manhwaland.land/manga/need-for-almighty-master/
+niwasaki-poolside | https://04x.manhwaland.land/manga/niwasaki-poolside/
+non-non-nonbiri-isekai-nouka-harem | https://04x.manhwaland.land/manga/non-non-nonbiri-isekai-nouka-harem/
+obore-torawareru | https://04x.manhwaland.land/manga/obore-torawareru/
+oshiri-marudashi-soku-ecchi-%e2%98%85-ugokenai-no-ni-ima-kono-mama | https://04x.manhwaland.land/manga/oshiri-marudashi-soku-ecchi-%25e2%2598%2585-ugokenai-no-ni-ima-kono-mama/
+osu-kihada-sensei-no-tokubetsu-juugyou | https://04x.manhwaland.land/manga/osu-kihada-sensei-no-tokubetsu-juugyou/
+over-drive-%e2%99%82-shiteru-mitai | https://04x.manhwaland.land/manga/over-drive-%25e2%2599%2582-shiteru-mitai/
+rem-no-emilia-kuttsuke-daisakusen | https://04x.manhwaland.land/manga/rem-no-emilia-kuttsuke-daisakusen/
+rimuru-sensei-ni-seikyouiku | https://04x.manhwaland.land/manga/rimuru-sensei-ni-seikyouiku/
+rooster-fighter | https://04x.manhwaland.land/manga/rooster-fighter/
+s-kke-na-gimai-ni-shibori-tsukusareru-hanashi | https://04x.manhwaland.land/manga/s-kke-na-gimai-ni-shibori-tsukusareru-hanashi/
+sakasama-okazun | https://04x.manhwaland.land/manga/sakasama-okazun/
+sansai-temptation-yakusou-de-hatsujou-shita-choppiri-m-no-onee-san-ga-tomatte-kurenai | https://04x.manhwaland.land/manga/sansai-temptation-yakusou-de-hatsujou-shita-choppiri-m-no-onee-san-ga-tomatte-kurenai/
+seiso-ppoi-no-ni-gehin-na-kotobazukai-de-ohoaegi-shichau-kinjo-no-kyonyuu-onee-san-to-noukou-icha-love-ecchi-suru-hanashi | https://04x.manhwaland.land/manga/seiso-ppoi-no-ni-gehin-na-kotobazukai-de-ohoaegi-shichau-kinjo-no-kyonyuu-onee-san-to-noukou-icha-love-ecchi-suru-hanashi/
+the-cuckoos-fiancee | https://04x.manhwaland.land/manga/the-cuckoos-fiancee/
+tsundere-osananajimi-ni-saiminjutsu-o-kaketara-hanpa-ni-jiga-ga-nokotteta-hanashi | https://04x.manhwaland.land/manga/tsundere-osananajimi-ni-saiminjutsu-o-kaketara-hanpa-ni-jiga-ga-nokotteta-hanashi/
+virus-girlfriend | https://04x.manhwaland.land/manga/virus-girlfriend/
+yixuans-lesson-for-today | https://04x.manhwaland.land/manga/yixuans-lesson-for-today/
+yuusha-yamemasu | https://04x.manhwaland.land/manga/yuusha-yamemasu/
+yuzu-erosugiru | https://04x.manhwaland.land/manga/yuzu-erosugiru/
+zoku%e3%80%90rouhou%e3%80%91gekiyasu-fuuzoku-de-ooatari-hiita-www | https://04x.manhwaland.land/manga/zoku%25e3%2580%2590rouhou%25e3%2580%2591gekiyasu-fuuzoku-de-ooatari-hiita-www/
+
+# === CHAPTER TANPA IMAGES (15340) ===
+# Format: slug | chapterNumber | chapterId | source_url
+bandit-nieces | 12 | 00178568-a4de-40f0-a52a-f0d7f4aab26c | https://04x.manhwaland.land/bandit-nieces-chapter-12/
+desperate-housewives | 7 | 0029e42a-50ca-4b72-978e-0828741ef268 | https://04x.manhwaland.land/desperate-housewives-chapter-7/
+secret-matter-of-the-third-generation | 52 | 003e84b6-9ab1-44e5-a165-d764db5bf301 | https://04x.manhwaland.land/secret-matter-of-the-third-generation-chapter-52/
+jukumitsuki-intouden | 3.1 | 006db4e4-29e7-48ad-b4d5-12220135cd2d | https://04x.manhwaland.land/jukumitsuki-intouden-chapter-3.1/
+delphinium-madonna | 1 | 00ccd376-2d82-44c2-8542-d60d86ff8b68 | https://04x.manhwaland.land/delphinium-madonna-chapter-1/
+immortal-swordsman-in-the-reverse-world | 86 | 00e7f09b-30d4-495e-b22f-c3eaef32766b | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-86/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 27.1 | 010925c6-fa38-4b02-b32c-674ebc3d203b | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-27.1/
+a-wise-drivers-life | 5 | 0138dce6-ed5e-46b6-8639-5ffc68b597bd | https://04x.manhwaland.land/a-wise-drivers-life-chapter-5/
+thats-not-how-its-done | 52 | 013942be-6db6-46ad-9ae7-4c75a16eb95e | https://04x.manhwaland.land/thats-not-how-its-done-chapter-52-3/
+teito-seihai-kitan-fatetype-redline | 1 | 017dd0d4-8b2f-49c9-89a6-e9014327a786 | https://04x.manhwaland.land/teito-seihai-kitan-fatetype-redline-chapter-1/
+queen-bee-andrew | 272 | 01996036-63bc-400e-b6ff-55d9d2280b49 | https://04x.manhwaland.land/queen-bee-andrew-chapter-272/
+administrator-privileges | 113 | 019f6bc0-a409-4200-b902-275c44713045 | https://04x.manhwaland.land/administrator-privileges-chapter-113/
+aimitsu-carameliser | 8 | 01a75840-6698-43ea-a29c-d732823c1685 | https://04x.manhwaland.land/aimitsu-carameliser-chapter-8/
+lust | 2 | 01bf968e-f2c0-43e0-ab22-c64d60057b59 | https://04x.manhwaland.land/lust-chapter-2/
+panty-note | 193 | 01c30677-7b60-4870-a28a-ce060ec20e89 | https://04x.manhwaland.land/panty-note-chapter-193/
+bandit-nieces | 7 | 01dcdd7f-db1c-48cb-8fbd-0110449b0993 | https://04x.manhwaland.land/bandit-nieces-chapter-7/
+administrator-privileges | 134 | 01f37743-dcda-49f2-b4e1-d341a0735b1d | https://04x.manhwaland.land/administrator-privileges-chapter-134/
+senpai-no-tame-ni-dakaremasu | 1 | 01fab51b-67ac-4ef1-8e90-18be864804c3 | https://04x.manhwaland.land/senpai-no-tame-ni-dakaremasu-chapter-1/
+block-69 | 25 | 021408ea-a759-45cd-8a37-17a5cc750c4f | https://04x.manhwaland.land/block-69-chapter-25/
+wonderful-new-world | 179 | 021b1a78-6a7a-407f-a72b-03e094a0b8fb | https://04x.manhwaland.land/wonderful-new-world-chapter-179/
+a-wise-drivers-life | 7 | 0245a2a0-60e1-4825-b8f8-438fcb1d2661 | https://04x.manhwaland.land/a-wise-drivers-life-chapter-7/
+the-virgin-tutor-and-the-wealthy-whore | 0 | 02623a1a-ea2f-4964-8ece-a775bc73b441 | https://04x.manhwaland.land/the-virgin-tutor-and-the-wealthy-whore-chapter-00/
+time-of-conquest | 37 | 02793d21-d9e9-4dc1-aaf9-6d0d5b585cd3 | https://04x.manhwaland.land/time-of-conquest-chapter-37/
+an-xxl-dick-to-satisfy-a-married-woman | 5.3 | 02a5901e-0e12-4fbe-ba9a-0b8f62a14481 | https://04x.manhwaland.land/an-xxl-dick-to-satisfy-a-married-woman-chapter-5.3/
+take-a-peek | 150 | 02e10e6f-4f85-44f3-ae41-fab48148a843 | https://04x.manhwaland.land/take-a-peek-chapter-150/
+thats-not-how-its-done | 55 | 02e73653-64bb-401c-9d1a-d96ba14e374a | https://04x.manhwaland.land/thats-not-how-its-done-chapter-55-3/
+immortal-swordsman-in-the-reverse-world | 215 | 02fd6239-27dc-45cd-8949-06cead3580e8 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-215/
+the-bj-manager-who-boosts-his-favorability | 22 | 0323b1b8-5548-44dc-b919-d46221686543 | https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-22/
+succubus-miboujin-hirusagari-no-himitsu | 1 | 0352ad2f-521d-4109-8dfd-e1732a77c341 | https://04x.manhwaland.land/succubus-miboujin-hirusagari-no-himitsu-chapter-1/
+a-wise-drivers-life | 47 | 0353c476-b1b6-450b-8392-87c5f0b03595 | https://04x.manhwaland.land/a-wise-drivers-life-chapter-47/
+my-high-school-bully | 165 | 039c3476-5497-4e60-bddb-87e578054def | https://04x.manhwaland.land/my-high-school-bully-chapter-165/
+an-xxl-dick-to-satisfy-a-married-woman | 8.2 | 03b9910c-bfc9-4fad-9ac2-2e45807a6d76 | https://04x.manhwaland.land/an-xxl-dick-to-satisfy-a-married-woman-chapter-8.2/
+panty-note | 143 | 03d1bdbb-d9d1-474e-bd01-0753926f7788 | https://04x.manhwaland.land/panty-note-chapter-143/
+mind-control | 10 | 03f3daac-92e8-4f16-9561-269654ae3c69 | https://04x.manhwaland.land/mind-control-chapter-10/
+milf-hunting-in-another-world | 124 | 043becb8-30d3-4aae-b265-55ea0764ccf0 | https://04x-1s.manhwaland.land/milf-hunting-in-another-world-chapter-124/
+moms-friends | 8 | 046ef3a5-e33f-48b7-8598-9f8257f81857 | https://04x.manhwaland.land/moms-friends-chapter-8/
+the-bj-manager-who-boosts-his-favorability | 19 | 04b29154-53f7-4272-92e2-71766f587d13 | https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-19/
+charming-girl | 46 | 050391a7-2e9e-4ff1-96a7-cb5d77d4f778 | https://04x.manhwaland.land/charming-girl-chapter-46/
+midnight-taxi | 35 | 0507c56f-cd27-4155-8d29-e6597c6022a3 | https://04x.manhwaland.land/midnight-taxi-chapter-35/
+sexual-training-camp | 1 | 058a11ed-607d-4f44-9b0a-fc13aa0dc41f | https://04x.manhwaland.land/sexual-training-camp-chapter-1/
+resume | 66 | 059ce5fd-251e-42c2-98fb-8bf0a8a199a6 | https://04x.manhwaland.land/resume-chapter-66/
+touch-to-unlock | 108.3 | 059f8b24-8314-495b-9d6d-0507e6ebcdb6 | https://04x.manhwaland.land/touch-to-unlock-chapter-108-4/
+spirit-possession | 43 | 05e9f8e8-55c7-4ed1-bb16-3295651cef12 | https://04x.manhwaland.land/spirit-possession-chapter-43/
+hole-shop | 14 | 05ef33f0-6260-44e2-9554-2baede739726 | https://04x.manhwaland.land/hole-shop-chapter-14/
+the-bj-manager-who-boosts-his-favorability | 25 | 05fc9d44-6759-4d60-bb8f-3e9e4ff0d5e3 | https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-25/
+yuusha-ni-zenbu-ubawareta-ore-wa-yuusha-no-hahaoya-to-party-wo-kumimashita | 4 | 060563dc-939d-4e54-b98e-147835fcd70e | https://04x.manhwaland.land/yuusha-ni-zenbu-ubawareta-ore-wa-yuusha-no-hahaoya-to-party-wo-kumimashita-chapter-4/
+this-worlds-harem-knight | 0 | 06143f3e-d9c6-4b5f-82b0-d57e370fd4fe | https://04x.manhwaland.land/this-worlds-harem-knight-chapter-0/
+please-scan-here | 1 | 0646ac0b-1a87-48ba-b2c5-93224e2daa32 | https://04x.manhwaland.land/please-scan-here-chapter-1/
+an-xxl-dick-to-satisfy-a-married-woman | 1 | 06864b83-e480-4180-bc29-9a29682b6292 | https://04x.manhwaland.land/an-xxl-dick-to-satisfy-a-married-woman-chapter-1/
+resume | 68 | 0694e8d0-75d0-4e46-8cd2-fce5aa107e0b | https://04x.manhwaland.land/resume-chapter-68/
+wonderful-new-world | 142 | 06a7534e-f174-4127-a53a-bf848a16d8b9 | https://04x.manhwaland.land/wonderful-new-world-chapter-142/
+immortal-swordsman-in-the-reverse-world | 141 | 06ab072c-805a-4724-a492-a6f69bda0aea | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-141/
+queen-bee-andrew | 266 | 06cb1558-6f47-4eda-b11b-e4961b5720a1 | https://04x.manhwaland.land/queen-bee-andrew-chapter-266/
+paws-on-campus | 16 | 0709704e-2a3f-4911-b110-728b02634378 | https://04x.manhwaland.land/paws-on-campus-chapter-16/
+sukebe-elf-tanbouki | 1 | 07113d5c-8d1e-4bfb-8511-6d48900e0e3b | https://04x.manhwaland.land/sukebe-elf-tanbouki-chapter-1/
+queen-bee-andrew | 286 | 071ecf63-b932-4c0b-bff0-1a04a407c3b0 | https://04x.manhwaland.land/queen-bee-andrew-chapter-286/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 18.2 | 07ba972b-8fc4-43d7-9d46-c962a5671344 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-18.2/
+friends-atz | 28 | 07eab521-0b5c-49ca-8c95-903e48e6b06a | https://04x.manhwaland.land/friends-atz-chapter-28/
+ore-wa-lolicon-ja-nai | 10 | 080d81e9-53b0-4966-a4bc-f9d083bc6a89 | https://04x.manhwaland.land/ore-wa-lolicon-ja-nai-chapter-10/
+my-high-school-bully | 148 | 080d8b15-36d2-43ad-bdcb-9bd30ef053c1 | https://04x.manhwaland.land/my-high-school-bully-chapter-148-2/
+midnight-taxi | 39 | 08149718-f26a-496e-9432-10360de8790c | https://04x.manhwaland.land/midnight-taxi-chapter-39/
+isekai-koushoku-musou-roku | 11 | 086dec83-d0f6-4879-9c60-0a1d7cf161d7 | https://04x.manhwaland.land/isekai-koushoku-musou-roku-chapter-11/
+sweet-guy | 0 | 087fd6bb-bf61-497d-80b2-49a6e77a8ae0 | https://04x.manhwaland.land/sweet-guy-chapter-0/
+the-female-delinquent-set-her-eyes-on-me | 15 | 08977824-1ded-451d-b0e7-172b020905b6 | https://04x.manhwaland.land/the-female-delinquent-set-her-eyes-on-me-chapter-15/
+a-wise-drivers-life | 9 | 08af62f4-07a2-4345-b48a-53b2b060b1f0 | https://04x.manhwaland.land/a-wise-drivers-life-chapter-9/
+noona-and-her-big-little-bro | 25 | 08cf574d-76a2-498b-b472-5d6e79fb3166 | https://04x.manhwaland.land/noona-and-her-big-little-bro-chapter-25/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 26.1 | 08f08129-e81c-4032-9482-0cab23809ccc | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-26.1/
+my-high-school-bully | 154 | 08f75f1b-3de3-416f-b6b6-312e066be2d4 | https://04x.manhwaland.land/my-high-school-bully-chapter-154-2/
+iribitari-gal-ni-manko-tsukawasete-morau-hanashi | 1 | 09056aa4-2e1e-4242-8839-6f2b17459740 | https://04x.manhwaland.land/iribitari-gal-ni-manko-tsukawasete-morau-hanashi-chapter-1/
+gal-sen | 6 | 0948c576-94da-4b60-9e3c-f878f2a72f76 | https://04x.manhwaland.land/gal-sen-chapter-06/
+say-you-like-it | 0 | 095ba81d-1d2c-464d-a387-7e3d0b7201da | https://04x.manhwaland.land/say-you-like-it-chapter-0/
+an-xxl-dick-to-satisfy-a-married-woman | 8.3 | 09665f13-cfb6-49de-8ed4-eaa9bdc63de0 | https://04x.manhwaland.land/an-xxl-dick-to-satisfy-a-married-woman-chapter-8.3/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 16.2 | 09d99f0a-b80c-4067-b9cb-c557590dd95d | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-16.2/
+wild-eyes | 20 | 09e9ad49-444d-495d-afcd-e4e9bbe7456a | https://04x.manhwaland.land/wild-eyes-chapter-20/
+noona-and-her-big-little-bro | 29 | 0a071c8c-6aa4-4914-aa6c-1c52fa146509 | https://04x.manhwaland.land/noona-and-her-big-little-bro-chapter-29/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 9.2 | 0a1c49fb-cd74-4e0d-8553-cf39c356f55c | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-9.2/
+three-sisters | 1 | 0a207fac-a129-4a92-b41e-6d1e151de551 | https://04x.manhwaland.land/three-sisters-chapter-1/
+wicked-diary | 47 | 0a2b3710-fb73-405f-be4f-a69dc5cb0b8a | https://04x.manhwaland.land/wicked-diary-chapter-47-2/
+ore-wa-lolicon-ja-nai | 12 | 0a36d54c-a6f0-4ef8-972f-213c710cbac0 | https://04x.manhwaland.land/ore-wa-lolicon-ja-nai-chapter-12/
+ganyu-chan-ga-shigoto-to-seiyoku-shori-o-otetsudai-suru-hon | 1 | 0a5b19f9-7a20-40e5-98c6-3baa6671439b | https://04x.manhwaland.land/ganyu-chan-ga-shigoto-to-seiyoku-shori-o-otetsudai-suru-hon-chapter-1/
+gyakure-banchou | 2 | 0a7e9a0c-b8b4-4782-9b1a-aa8016457ced | https://04x.manhwaland.land/gyakure-banchou-chapter-2/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 16.1 | 0a8c48a2-5c18-4afe-9b83-0632c587c558 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-16.1/
+administrator-privileges | 121 | 0a8cd573-853f-47dc-8a88-99b88388dc87 | https://04x.manhwaland.land/administrator-privileges-chapter-121/
+honey-trap-sharehouse | 10 | 0ac334a4-1226-4923-9819-96cc318082fb | https://04x.manhwaland.land/honey-trap-sharehouse-chapter-10/
+panty-note | 1 | 0ace2961-9377-43b0-98b7-e7af80cf4aea | https://04x.manhwaland.land/panty-note-chapter-1/
+bride-training | 48 | 0af4b5f9-4d2a-449f-9f5b-9dbaf0cfa477 | https://04x.manhwaland.land/bride-training-chapter-48/
+the-brides-who-cant-eat | 13 | 0afa2e3a-d3fa-4ead-8c13-60d2be459c8c | https://04x.manhwaland.land/the-brides-who-cant-eat-chapter-13-2/
+wonderful-new-world | 160 | 0b274661-8077-4616-a03e-c70a764dcb0e | https://04x.manhwaland.land/wonderful-new-world-chapter-160/
+administrator-privileges | 117 | 0b358356-cfb9-4981-926a-8f9b60de3490 | https://04x.manhwaland.land/administrator-privileges-chapter-117/
+wonderful-new-world | 178 | 0b3c6670-a9bc-4bad-b68e-4531c6ab2a99 | https://04x.manhwaland.land/wonderful-new-world-chapter-178/
+the-teachers-effort | 9 | 0b40ce2b-5aa6-48dc-8cd1-069c23e763cc | https://04x.manhwaland.land/the-teachers-effort-chapter-9/
+i-wanna-be-a-daughter-thief | 60 | 0b4fe9db-a039-4962-bf8c-2d3eacd802ce | https://04x.manhwaland.land/i-wanna-be-a-daughter-thief-chapter-60/
+take-a-peek | 55 | 0b6f6491-fedd-4ca9-9ed1-3a6fbc3cb1a1 | https://04x.manhwaland.land/take-a-peek-chapter-55/
+king-of-delusions | 5 | 0b73743c-1432-4c9e-aeee-8e0335783f05 | https://04x.manhwaland.land/king-of-delusions-chapter-5/
+island-girl | 14 | 0b83b61b-cc75-409c-81a5-2be2117121c7 | https://04x.manhwaland.land/island-girl-chapter-14/
+boss-give-me-your-daughter | 9 | 0bb254a5-6d45-4aa5-8d28-47b45ffd4b3c | https://04x.manhwaland.land/boss-give-me-your-daughter-chapter-9/
+hentai-elf-to-majime-orc | 3.5 | 0c142b58-1d47-4e94-ba3f-4a1b12aecd3c | https://04x.manhwaland.land/hentai-elf-to-majime-orc-chapter-3.5/
+wonderful-new-world | 199 | 0c3a172c-ff3f-4637-9229-c727eadaa813 | https://04x.manhwaland.land/wonderful-new-world-chapter-199/
+taiyos-sisters-in-law-need-his-seed | 10 | 0c3d0c47-255f-4295-831e-f7aabf256721 | https://04x.manhwaland.land/taiyos-sisters-in-law-need-his-seed-chapter-10/
+valhalla-otintin-kan | 18 | 0c3e2108-3433-4481-825e-ed131ac8951d | https://04x.manhwaland.land/valhalla-otintin-kan-chapter-18/
+ero-the-princess-submits | 25 | 0c74c154-dacc-4676-b570-982811d0dd2c | https://04x.manhwaland.land/ero-the-princess-submits-chapter-25/
+wonderful-new-world | 155 | 0ca18ce8-eabc-41b8-a930-f38ba2b61bd1 | https://04x.manhwaland.land/wonderful-new-world-chapter-155/
+iribitari-gal-ni-manko-tsukawasete-morau-hanashi-the-gyaru | 5 | 0cc2d1df-411f-45fc-af46-0ddfaec72a4a | https://04x.manhwaland.land/iribitari-gal-ni-manko-tsukawasete-morau-hanashi-the-gyaru-chapter-5/
+i-wanna-be-a-daughter-thief | 63 | 0d449da0-f93d-4bed-83af-5e66cf670a42 | https://04x.manhwaland.land/i-wanna-be-a-daughter-thief-chapter-63/
+wicked-diary | 34 | 0d59ecdc-d22b-4ba6-9d8a-087caf1d9f33 | https://04x.manhwaland.land/wicked-diary-chapter-34-2/
+hero-no-deban-nante-nakatta | 2 | 0d5e9cf1-55ed-41bb-be45-357d08c900f8 | https://04x.manhwaland.land/hero-no-deban-nante-nakatta-chapter-2/
+block-69 | 43 | 0d5f1fc2-5b1b-401f-bda0-e889bf55f3a0 | https://04x.manhwaland.land/block-69-chapter-43/
+friends-or-f-buddies | 2 | 0d79a79f-f13f-44ea-afb7-6974c8a6daab | https://04x.manhwaland.land/friends-or-f-buddies-chapter-2/
+vikala-chan-to-ichaicha-suru-hon-4-satsume | 1 | 0d873d7f-4afb-474e-819b-42bb340a5944 | https://04x.manhwaland.land/vikala-chan-to-ichaicha-suru-hon-4-satsume-chapter-1/
+bandit-nieces | 21 | 0dc55bd2-ec0a-49c8-a621-7df0c9c2941d | https://04x.manhwaland.land/bandit-nieces-chapter-21/
+wild-eyes | 24 | 0dd2bf1c-538d-4efb-9ace-1096eb647697 | https://04x.manhwaland.land/wild-eyes-chapter-24/
+boss-give-me-your-daughter | 8 | 0df8970b-dd55-431d-b8c9-c67d8c592881 | https://04x.manhwaland.land/boss-give-me-your-daughter-chapter-8/
+jyoshi-luck-2-years-later | 2 | 0e1a683c-a1b8-4260-9b6e-210e916b31ce | https://04x.manhwaland.land/jyoshi-luck-2-years-later-chapter-2/
+troublesome-sister | 103.5 | 0e2fb0e8-e3c6-499d-8d75-ea85e8558cc6 | https://04x.manhwaland.land/troublesome-sister-chapter-103-5/
+fellatio-kenkyuubu | 1 | 0e7dba47-2555-4c28-bed4-99c92de4f4a5 | https://04x.manhwaland.land/fellatio-kenkyuubu-chapter-1/
+goddess-punishment-game | 1 | 0e80c0af-3b6a-46b7-97f1-398d5120dc6b | https://04x.manhwaland.land/goddess-punishment-game-chapter-1/
+valhalla-otintin-kan | 11.2 | 0e86c26d-4947-4fa0-97d0-ef2818c6480f | https://04x.manhwaland.land/valhalla-otintin-kan-chapter-11.2/
+in-love-with-the-friends-mother | 27 | 0eb071de-99d7-49ff-b4ba-5be3ed66e8d5 | https://04x.manhwaland.land/in-love-with-the-friends-mother-chapter-27/
+hole-shop | 22 | 0ebee78a-2e44-426d-82c7-1633724f9f4a | https://04x.manhwaland.land/hole-shop-chapter-22/
+my-stepmothers-friends-uncen | 46 | 0ed251d3-8d1d-4f0c-ae8e-7d11b46af068 | https://04x.manhwaland.land/my-stepmothers-friends-uncen-chapter-46/
+thats-not-how-its-done | 56 | 0ef62315-1a85-49d2-afb3-918c704f91e4 | https://04x.manhwaland.land/thats-not-how-its-done-chapter-56-2/
+wonderful-new-world | 159 | 0f336d0b-a04c-4e1c-b3ab-a4438f63fd63 | https://04x.manhwaland.land/wonderful-new-world-chapter-159/
+an-xxl-dick-to-satisfy-a-married-woman | 3.2 | 0f5e96c4-db53-45bb-9b95-54a378f20344 | https://04x.manhwaland.land/an-xxl-dick-to-satisfy-a-married-woman-chapter-3.2/
+in-love-with-the-friends-mother | 16 | 0fe127ee-73c8-4b79-8a6d-0db90145a7b8 | https://04x.manhwaland.land/in-love-with-the-friends-mother-chapter-16/
+noona-and-her-big-little-bro | 26 | 0fe851ef-8ade-4dd8-b52f-213148744bc7 | https://04x.manhwaland.land/noona-and-her-big-little-bro-chapter-26/
+jyoshi-luck-2-years-later | 10.2 | 100ed44a-8fa9-471f-bbc8-3158f1e857e2 | https://04x.manhwaland.land/jyoshi-luck-2-years-later-chapter-10.2/
+to-you-the-guardian-of-my-despair | 1 | 10162b60-ab8d-413c-be19-4d55c9efddbe | https://04x.manhwaland.land/to-you-the-guardian-of-my-despair-chapter-1/
+hole-shop | 12 | 105a4686-93fb-4d27-a646-9e3aa33d8398 | https://04x.manhwaland.land/hole-shop-chapter-12/
+puberty | 23 | 10cabd5f-b7b5-4b8b-9aab-eec440938999 | https://04x.manhwaland.land/puberty-chapter-23/
+wicked-diary | 46 | 1100c830-fcb4-4799-90f7-871061de9821 | https://04x.manhwaland.land/wicked-diary-chapter-46-2/
+ore-no-aishita-kanojo-wa-mou-inai | 1 | 11595813-840a-41d6-9db9-c4e0a887d0d2 | https://04x.manhwaland.land/ore-no-aishita-kanojo-wa-mou-inai-chapter-1/
+panty-note | 135 | 115bc7ba-b90a-4f84-99da-b729a70ae614 | https://04x.manhwaland.land/panty-note-chapter-135/
+immortal-swordsman-in-the-reverse-world | 239 | 11816e63-e54d-4acd-8e0d-79cd2ee90ff1 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-239/
+immortal-swordsman-in-the-reverse-world | 81 | 118f9e70-5b42-49be-9bb0-335878434c41 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-81/
+boss-give-me-your-daughter | 7 | 11d58b2b-45b3-48ed-8fca-2969671914b1 | https://04x.manhwaland.land/boss-give-me-your-daughter-chapter-7/
+resume | 63 | 12711110-db9d-4183-bb2b-12952b5f9c6d | https://04x.manhwaland.land/resume-chapter-63/
+interrupted-innocence | 10 | 12760ca8-e832-4d23-83ce-9b891034f039 | https://04x.manhwaland.land/interrupted-innocence-chapter-10/
+the-stand-up-guy-dolphin | 0 | 128cead9-0043-4648-9c7c-d5f9a789763e | https://04x.manhwaland.land/the-stand-up-guy-dolphin-chapter-0/
+shuumatsu-no-harem | 23 | 129d822c-7f96-4fd0-a19f-5f7646ffb3ee | https://04x.manhwaland.land/shuumatsu-no-harem-chapter-23/
+block-69 | 42 | 12b93fde-2892-46b4-a36c-dcacf7736edf | https://04x.manhwaland.land/block-69-chapter-42/
+take-a-peek | 147 | 12ba634e-d36b-4f35-9604-35220c5ccd2e | https://04x.manhwaland.land/take-a-peek-chapter-147/
+itd-be-nice-to-do-it-in-prison | 0 | 12d10b99-5704-41d8-9332-bdae682627fe | https://04x.manhwaland.land/itd-be-nice-to-do-it-in-prison-chapter-0/
+ore-wa-lolicon-ja-nai | 1 | 12e973aa-a798-4626-8fad-ef3e4011f15f | https://04x.manhwaland.land/ore-wa-lolicon-ja-nai-chapter-1/
+shuumatsu-no-harem | 10 | 12f6bb3d-5179-4710-9995-d10f97d972e5 | https://04x.manhwaland.land/shuumatsu-no-harem-chapter-10/
+the-law-of-reincarnation | 70 | 13724125-7bf2-4f4a-9e11-fea48d949658 | https://04x.manhwaland.land/the-law-of-reincarnation-chapter-70/
+my-stepmom-has-returned | 9 | 137f540b-9269-48dd-91ae-51c760775879 | https://04x.manhwaland.land/my-stepmom-has-returned-chapter-9/
+secret-class | 187 | 1383bba5-f53a-4dba-af8e-2713e599c9d3 | https://04x.manhwaland.land/secret-class-chapter-187/
+daddy-in-law | 32 | 13d5b3f8-b9b9-4c42-9068-713fd1691d2e | https://04x.manhwaland.land/daddy-in-law-chapter-32/
+friends-with-secret | 50 | 140f1ca9-dd6e-4730-a5a4-17522f21c967 | https://04x.manhwaland.land/friends-with-secret-chapter-50/
+oba-no-uwa-kitsu-cosplay-onanie-o-mokugeki-shita-ken | 1 | 141f89ba-076d-4a5c-bcbd-1041fdb428d2 | https://04x.manhwaland.land/oba-no-uwa-kitsu-cosplay-onanie-o-mokugeki-shita-ken-chapter-1/
+office-menace-alert | 2 | 142b0d0e-9cef-4294-abf9-3ef9e8552835 | https://04x.manhwaland.land/office-menace-alert-chapter-2/
+moms-friends | 13 | 1453168b-7c97-4089-963b-9c9e1e2efbde | https://04x.manhwaland.land/moms-friends-chapter-13/
+daddy-in-law | 38 | 145bc0c7-c821-44b7-8f09-c85144c925aa | https://04x.manhwaland.land/daddy-in-law-chapter-38/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 17.2 | 146c533d-df9e-4a5f-9a0a-f60acf3257eb | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-17.2/
+interrupted-innocence | 11 | 146f1cc8-ba95-495c-a5d4-742e9055a9e9 | https://04x.manhwaland.land/interrupted-innocence-chapter-11/
+immortal-swordsman-in-the-reverse-world | 131 | 14886aff-2901-4f21-8e7a-e4360eccf076 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-131/
+immortal-swordsman-in-the-reverse-world | 246 | 148efe06-42a7-4d36-882c-5532626f9507 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-246/
+valhalla-otintin-kan | 9.1 | 14bf5b8d-74d8-4c7e-b603-213ef892e82d | https://04x.manhwaland.land/valhalla-otintin-kan-chapter-9.1/
+manatsu-no-chaldea | 1 | 14cb75ac-901f-486e-972e-c6e24aff8681 | https://04x.manhwaland.land/manatsu-no-chaldea-chapter-1/
+kichiku-eiyuu | 51 | 14e24140-3500-4b8d-83e7-c5f4099d6a58 | https://04x.manhwaland.land/kichiku-eiyuu-chapter-51/
+immortal-swordsman-in-the-reverse-world | 243 | 14f904d1-71ff-4854-9610-4c7919700222 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-243/
+wicked-diary | 36 | 14fc0e93-174c-48c6-b64c-9f8cbd89b859 | https://04x.manhwaland.land/wicked-diary-chapter-36-2/
+spirit-possession | 49 | 153fe51d-f480-4265-939f-5bd00af2d451 | https://04x.manhwaland.land/spirit-possession-chapter-49/
+dance-departments-female-sunbaes | 68 | 15a42c0e-78ff-44a0-8a6b-971da0c3ba5e | https://04x.manhwaland.land/dance-departments-female-sunbaes-chapter-68/
+my-stepmothers-friends-uncen | 50 | 15d0c9ad-b9b4-4b7c-8d22-233e9e4639af | https://04x.manhwaland.land/my-stepmothers-friends-uncen-chapter-50/
+i-want-to-work-quietly | 21 | 160e78a4-f325-474b-84c6-a0dcba3a3cf8 | https://04x-1s.manhwaland.land/i-want-to-work-quietly-chapter-21/
+my-high-school-bully | 130 | 162ff0dd-a479-4e5f-a4b7-3e899eb7ba46 | https://04x.manhwaland.land/my-high-school-bully-chapter-130/
+valhalla-otintin-kan | 17.5 | 1660342e-4868-4602-bfee-ce0cd47d8fb9 | https://04x.manhwaland.land/valhalla-otintin-kan-chapter-17-5-2/
+fellatio-kenkyuubu | 4 | 1660b864-db5d-408c-ad96-d187122bc1b1 | https://04x.manhwaland.land/fellatio-kenkyuubu-chapter-4/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 15.2 | 16887824-d427-4b3c-a69b-e5818e527208 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-15.2/
+pleasure-up | 24 | 16a10de6-b75d-487a-8cbd-3875f6e12542 | https://04x.manhwaland.land/pleasure-up-chapter-24/
+genkyou-cabecilla | 2 | 16de7715-c866-4b14-ae7a-06844bc80b81 | https://04x.manhwaland.land/genkyou-cabecilla-chapter-2/
+moms-friends | 14 | 16f978c6-5a2b-4bb1-b731-e13e87f2e0bc | https://04x.manhwaland.land/moms-friends-chapter-14/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 25.2 | 1717250c-9a9f-4d16-bbc9-8661c5d67147 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-25.2/
+daddy-in-law | 24 | 174690f4-88ca-4297-aba8-fc2cc9607c39 | https://04x.manhwaland.land/daddy-in-law-chapter-24/
+midnight-taxi | 33 | 174eb6dd-ad53-4bff-9488-5a13c0a33406 | https://04x.manhwaland.land/midnight-taxi-chapter-33/
+immortal-swordsman-in-the-reverse-world | 244 | 181f2566-e1f9-4d95-9985-737d2fef570a | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-244/
+the-four-of-us-cant-live-together | 16 | 18554c42-46a9-45c7-ad7c-39922493a4cc | https://04x.manhwaland.land/the-four-of-us-cant-live-together-chapter-16-2/
+kangsae-the-strong | 1 | 185ce53a-0590-4f1b-af7c-588546473556 | https://04x.manhwaland.land/kangsae-the-strong-chapter-1/
+my-high-school-bully | 153 | 18655eba-ebcd-42cd-9dee-ea3350ab3fea | https://04x.manhwaland.land/my-high-school-bully-chapter-153-2/
+jukumitsuki-intouden | 3.2 | 1872852a-7546-4fa9-9d76-2f3d9cc7f27d | https://04x.manhwaland.land/jukumitsuki-intouden-chapter-3.2/
+gal-sen | 23 | 187ebe66-6073-43a0-bc5b-39588fdf724c | https://04x.manhwaland.land/gal-sen-chapter-23/
+a-midsummer-nightmare | 1 | 18839c20-9c1e-4cf2-971a-edc1096bda56 | https://04x.manhwaland.land/a-midsummer-nightmare-chapter-1/
+immortal-swordsman-in-the-reverse-world | 222 | 1885bf12-263d-4068-b0b7-e8902e0b1ee5 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-222/
+gomennasai-senpai | 1 | 18909acf-08d5-4e30-b464-c74a75db0965 | https://04x.manhwaland.land/gomennasai-senpai-chapter-1/
+wireless-onahole | 91 | 189bdf6f-37cf-4546-9ae2-90c9be815dbf | https://04x.manhwaland.land/wireless-onahole-chapter-91/
+office-trouble-appeal | 16 | 18cf480a-4be1-4df6-a82d-2d2c728b675b | https://04x.manhwaland.land/office-trouble-appeal-chapter-16/
+interrupted-innocence | 55 | 18d52e0b-598b-469f-abd0-b2c9606df10c | https://04x.manhwaland.land/interrupted-innocence-chapter-55/
+wild-eyes | 19 | 18e95944-d772-4a77-b9fd-5022ba03dcf3 | https://04x.manhwaland.land/wild-eyes-chapter-19/
+sukebe-elf-tanbouki | 2 | 18fedf24-d204-4ad8-ae1a-63db9c287d41 | https://04x.manhwaland.land/sukebe-elf-tanbouki-chapter-2/
+valhalla-otintin-kan | 9.5 | 197b2008-a09e-40d1-9617-145eb7e2b6bd | https://04x.manhwaland.land/valhalla-otintin-kan-chapter-9.5/
+the-female-delinquent-set-her-eyes-on-me | 11 | 198e5374-b52c-47e6-a175-5190a5eba69e | https://04x.manhwaland.land/the-female-delinquent-set-her-eyes-on-me-chapter-11/
+milf-hunting-in-another-world | 4 | 19a1d926-7167-427c-9cfc-bfe3f438bf29 | https://04x.manhwaland.land/milf-hunting-in-another-world-chapter-4/
+hole-shop | 25 | 19ce08dc-cb5a-43a0-a4ac-4cab57b98357 | https://04x.manhwaland.land/hole-shop-chapter-25/
+gal-sen | 29 | 19eff151-050e-48e7-b2b8-befeaf3b6965 | https://04x.manhwaland.land/gal-sen-chapter-29/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 28.1 | 19f4bee9-fc94-4bc8-9e70-453fc2b4c17e | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-28.1/
+hentai-elf-to-majime-orc | 3 | 1a16b4f1-439f-41e9-8ce7-a46e9848f445 | https://04x.manhwaland.land/hentai-elf-to-majime-orc-chapter-3/
+the-bj-manager-who-boosts-his-favorability | 17 | 1a16c47c-6836-473d-aeab-e1c13a938c5c | https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-17/
+valhalla-otintin-kan | 15.1 | 1a1a548d-a9f5-4297-8ad0-da06c041fc41 | https://04x.manhwaland.land/valhalla-otintin-kan-chapter-15-2-2/
+adamasu-no-majotachi | 5 | 1a61f53c-9ff1-4c8c-a598-ac5e7cf22390 | https://04x.manhwaland.land/adamasu-no-majotachi-chapter-5/
+valhalla-otintin-kan | 14.2 | 1a87de9e-74d5-4508-99f9-668028531aef | https://04x.manhwaland.land/valhalla-otintin-kan-chapter-14-2-2/
+secret-class | 302 | 1a8b7d85-d306-4298-8ada-e51defaee5ef | https://04x.manhwaland.land/secret-class-chapter-302/
+friends-or-f-buddies | 1 | 1aa2580b-73a5-4745-8a3a-1e5dee7bb269 | https://04x.manhwaland.land/friends-or-f-buddies-chapter-1/
+panty-note | 128 | 1ac48569-1d59-4aeb-8453-3090ab2abd3b | https://04x.manhwaland.land/panty-note-chapter-128/
+koakuma-setsuko-no-himitsu | 6 | 1b4b1d50-6637-4e73-8466-bbeed9e48e89 | https://04x.manhwaland.land/koakuma-setsuko-no-himitsu-chapter-6/
+immortal-swordsman-in-the-reverse-world | 136 | 1b6f5e4e-b5ae-445b-b8b9-ef735ca405a3 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-136/
+noona-and-her-big-little-bro | 28 | 1b718af2-9c12-401b-9138-b187a2780c4f | https://04x.manhwaland.land/noona-and-her-big-little-bro-chapter-28/
+dogeza-de-tanondemita | 1 | 1b7a085c-5c33-4b74-8a38-2d4e1d4a7edb | https://04x.manhwaland.land/dogeza-de-tanondemita-chapter-1/
+the-bj-manager-who-boosts-his-favorability | 16 | 1b8d3cc0-8ed7-4e20-bff3-221776b68228 | https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-16/
+the-four-of-us-cant-live-together | 18 | 1b95f34f-9095-46ad-8e5f-c0365b0da63d | https://04x.manhwaland.land/the-four-of-us-cant-live-together-chapter-18-2/
+the-bj-manager-who-boosts-his-favorability | 20 | 1bb58161-d2a5-4278-82b2-d7d8844080e1 | https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-20/
+analog | 7 | 1bb81041-a451-4acd-8489-2a891102a889 | https://04x.manhwaland.land/analog-chapter-7/
+wonderful-new-world | 184 | 1bce8d0f-7899-4064-a216-e6bee00fc871 | https://04x.manhwaland.land/wonderful-new-world-chapter-184/
+spirit-possession | 55 | 1bf9dd1a-ed1e-4b03-9628-60f8e8bc35ac | https://04x.manhwaland.land/spirit-possession-chapter-55/
+your-situation | 4 | 1bfa7aec-f7a7-4273-80fb-637ebe2cbf0a | https://04x.manhwaland.land/your-situation-chapter-04/
+honey-trap-sharehouse | 1.1 | 1c381ed2-f9f1-4061-bd68-b62d009f0d28 | https://04x.manhwaland.land/honey-trap-sharehouse-chapter-1.1/
+hero-no-deban-nante-nakatta | 1 | 1c3b4fd5-fa92-4571-b8d2-6a9371467883 | https://04x.manhwaland.land/hero-no-deban-nante-nakatta-chapter-1/
+twin-slaves | 113 | 1c4091a1-20b0-464e-93b6-e6629bd18244 | https://04x.manhwaland.land/twin-slaves-chapter-113/
+hole-shop | 18 | 1c56c3bd-f290-4980-b3b3-e7950aee9531 | https://04x.manhwaland.land/hole-shop-chapter-18/
+thats-not-how-its-done | 47 | 1c72a77f-3960-46f1-8542-14dedaae24eb | https://04x.manhwaland.land/thats-not-how-its-done-chapter-47-3/
+not-a-friends | 6 | 1c7682dd-85e5-458f-b375-5bc490720f22 | https://04x.manhwaland.land/not-a-friends-chapter-6/
+please-scan-here | 5 | 1cbdb2ef-eb27-4bea-91c5-c0015939f7a4 | https://04x.manhwaland.land/please-scan-here-chapter-5/
+desperate-housewives | 17 | 1ccb62da-2182-4800-8c41-03959d094344 | https://04x.manhwaland.land/desperate-housewives-chapter-17/
+moms-friends | 2 | 1cd07adf-e2a2-4bd6-bbc6-1eb9107a2261 | https://04x.manhwaland.land/moms-friends-chapter-2/
+the-main-character-is-the-villain | 50.5 | 1cef28fd-b0f7-42e9-af81-f67b96f3fb46 | https://04x.manhwaland.land/the-main-character-is-the-villain-chapter-50-5-2/
+fuchou-no-kenshin-sakusei-treatment | 1 | 1cfccfb5-c721-4a5f-bb47-41f296e138bd | https://04x.manhwaland.land/fuchou-no-kenshin-sakusei-treatment-chapter-1/
+boss-give-me-your-daughter | 6 | 1d40010a-18a9-422f-9a1b-7a1ec69b7825 | https://04x.manhwaland.land/boss-give-me-your-daughter-chapter-6/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 13.2 | 1d8cd3d7-ecf2-4308-a526-f86b60ee1615 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-13.2/
+the-teachers-effort | 74 | 1d9e4a35-7b35-4304-8240-1e9a4f6d3063 | https://04x.manhwaland.land/the-teachers-effort-chapter-74/
+analog | 3 | 1da93f8f-ee1e-4623-ab15-91a81d72b4ef | https://04x.manhwaland.land/analog-chapter-3/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 19.1 | 1db78c6d-86bc-4dc6-88a0-9796525d1d06 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-19.1/
+pheromone-holic | 1 | 1dc50f0f-a05e-4f3a-bfcc-79468614fb1e | https://04x.manhwaland.land/pheromone-holic-chapter-1/
+spirit-possession | 42 | 1dff5315-71f3-4030-a0ff-060c926a2435 | https://04x.manhwaland.land/spirit-possession-chapter-42/
+family-control | 1.2 | 1e11e193-cdad-4087-a1f7-8f13aed029e1 | https://04x.manhwaland.land/family-control-chapter-1.2/
+mm2-gou | 2 | 1e35a6d0-203e-4d5f-be7d-3ecf9f4bd8a3 | https://04x.manhwaland.land/mm2-gou-chapter-2/
+gal-sen | 8 | 1e402678-3cdd-4e8b-a5ac-12d1c45faffc | https://04x.manhwaland.land/gal-sen-chapter-08/
+family-control | 1.1 | 1e4eb536-d672-4d05-a655-d001fe922be0 | https://04x.manhwaland.land/family-control-chapter-1.1/
+the-bj-manager-who-boosts-his-favorability | 24 | 1e8f7671-b547-4eb0-8fef-fb292f2881d1 | https://04x.manhwaland.land/the-bj-manager-who-boosts-his-favorability-chapter-24/
+pleasure-up | 21 | 1ea0f77b-609f-4f2c-b42f-08e8c2f74425 | https://04x.manhwaland.land/pleasure-up-chapter-21/
+i-wanna-be-a-daughter-thief | 73 | 1ec013d3-6f74-4abe-93ca-6050877cb6ef | https://04x.manhwaland.land/i-wanna-be-a-daughter-thief-chapter-73/
+gal-sen | 5 | 1ef41147-a023-4ebe-8389-9af4f807cdc5 | https://04x.manhwaland.land/gal-sen-chapter-05/
+single-again | 3 | 1f16558c-48b8-4671-a2bc-4b03895b68ff | https://04x.manhwaland.land/single-again-chapter-3/
+masumasumasu | 1 | 1f29a67f-5a17-4d08-991f-39fd7fa31a67 | https://04x.manhwaland.land/masumasumasu-chapter-1/
+pull-yourself-together-team-leader | 21 | 1f3ffbe9-9cbc-4dd7-9393-4193a34742b2 | https://04x.manhwaland.land/pull-yourself-together-team-leader-chapter-21/
+naughty-girl | 32 | 1f3ffe16-219a-41f9-b169-1bf9815d874b | https://04x.manhwaland.land/naughty-girl-chapter-32/
+ani-to-imouto-no-shitai-shitai-shitai-koto | 17.1 | 1f4b31ad-ac9b-4fec-8cce-36b99561a57d | https://04x.manhwaland.land/ani-to-imouto-no-shitai-shitai-shitai-koto-chapter-17.1/
+seoul-kids-these-days | 8 | 1fb31480-820e-41ea-a9ca-5afcf3b23f04 | https://04x.manhwaland.land/seoul-kids-these-days-chapter-8/
+immortal-swordsman-in-the-reverse-world | 144 | 1fd63f43-93ac-4db5-becb-e759f340dca1 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-144/
+immortal-swordsman-in-the-reverse-world | 146 | 1fe18aa6-48a7-4172-b6af-0eee534552b5 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-146/
+the-four-of-us-cant-live-together | 17 | 1fe2bf98-a588-46d0-aa40-e061dc5c6263 | https://04x.manhwaland.land/the-four-of-us-cant-live-together-chapter-17/
+panty-note | 190 | 1ff3ccf1-8af6-4401-9967-88cbea14f263 | https://04x.manhwaland.land/panty-note-chapter-190/
+campus-love | 33 | 2010b5c6-a883-4a3e-9033-57f98aa879cc | https://04x.manhwaland.land/campus-love-chapter-33/
+okaa-san-itadakimasui | 1 | 20139081-d4e0-4d2c-a08e-688b172b97b4 | https://04x.manhwaland.land/okaa-san-itadakimasui-chapter-1/
+hikari-chan-no-motto-ecchi-hon | 1 | 2074a657-5407-4df9-999c-081c4f84c044 | https://04x.manhwaland.land/hikari-chan-no-motto-ecchi-hon-chapter-1/
+noona-and-her-big-little-bro | 27 | 208c986e-6416-4def-91d3-5cc9835950e2 | https://04x.manhwaland.land/noona-and-her-big-little-bro-chapter-27/
+when-did-we-start-dating | 28 | 2090749f-a2bd-4c09-ab71-f506256cc513 | https://04x.manhwaland.land/when-did-we-start-dating-chapter-28/
+my-high-school-bully | 162 | 20b3bca6-ba99-4879-bb37-c3c55f43b658 | https://04x.manhwaland.land/my-high-school-bully-chapter-162-3/
+not-you-but-your-sister | 18 | 20cffa00-f2f3-492b-b766-2265a0679e64 | https://04x.manhwaland.land/not-you-but-your-sister-chapter-18/
+seijo-sama-ni-shitto-shichau-alter-chan | 1 | 20d8838b-17ed-4552-949e-5e8804076226 | https://04x.manhwaland.land/seijo-sama-ni-shitto-shichau-alter-chan-chapter-1/
+immortal-swordsman-in-the-reverse-world | 252 | 20f802f9-fb3b-4aad-a0ca-9beb863ff64b | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-252/
+i-want-to-work-quietly | 26 | 20fd4a47-c469-4386-8058-edd54def6445 | https://04x-1s.manhwaland.land/i-want-to-work-quietly-chapter-26/
+pleasure-up | 41 | 210ea168-1a8f-4de7-aa00-99fe6c5ef6ff | https://04x.manhwaland.land/pleasure-up-chapter-41/
+panty-note | 126 | 2111a6e3-aca9-45bf-94e8-aff06e026099 | https://04x.manhwaland.land/panty-note-chapter-126/
+boku-no-risou-no-isekai-seikatsu-11 | 1 | 216ba8df-1c24-47df-a019-9a0745cc7322 | https://04x.manhwaland.land/boku-no-risou-no-isekai-seikatsu-11-chapter-1/
+my-mountain-village-pregnancy-diary | 9 | 218461d6-9695-44b9-8fc6-3763c0413184 | https://04x.manhwaland.land/my-mountain-village-pregnancy-diary-chapter-9/
+in-love-with-the-friends-mother | 29 | 21cda4c0-4e75-4e64-8c99-cbb5b120655f | https://04x.manhwaland.land/in-love-with-the-friends-mother-chapter-29/
+hole-shop | 24 | 22037a2f-a374-4a59-b2b6-7b3290625a55 | https://04x.manhwaland.land/hole-shop-chapter-24/
+wonderful-new-world | 135 | 22455b89-587b-4ba2-87df-6281a1206df6 | https://04x.manhwaland.land/wonderful-new-world-chapter-135/
+oji-san-tada-de-namahame-ii-yo | 1 | 226c61cd-c122-49b0-b1ee-615ca808ac55 | https://04x.manhwaland.land/oji-san-tada-de-namahame-ii-yo-chapter-1/
+wife-for-1000-days | 49 | 22903826-fda1-4574-99c5-bd47cbf9bb7a | https://04x.manhwaland.land/wife-for-1000-days-chapter-49/
+touch-to-unlock | 108.2 | 22c1d546-83d3-4caf-abbf-83994db73e80 | https://04x.manhwaland.land/touch-to-unlock-chapter-108-4/
+a-wise-drivers-life | 8 | 22db149e-e39e-444b-a553-859fb374d27f | https://04x.manhwaland.land/a-wise-drivers-life-chapter-8/
+in-love-with-the-friends-mother | 26 | 22e3d6d8-380f-4b4d-a64c-add8d377b532 | https://04x.manhwaland.land/in-love-with-the-friends-mother-chapter-26/
+mitsukiusagi-no-yuuwaku-zenpen | 1 | 2306ab7a-6dfa-48c9-b2c8-5e49fc0635ac | https://04x.manhwaland.land/mitsukiusagi-no-yuuwaku-zenpen-chapter-1/
+desperate-housewives | 21 | 232edaa6-3734-4e90-b14e-f603da01a385 | https://04x.manhwaland.land/desperate-housewives-chapter-21/
+secret-class | 190 | 2333375f-137b-48b6-b24f-bca4e4459b8d | https://04x.manhwaland.land/secret-class-chapter-190/
+administrator-privileges | 122 | 234f11b4-e134-45e8-b1dc-05a5022e61e5 | https://04x.manhwaland.land/administrator-privileges-chapter-122/
+daddy-in-law | 9 | 23903104-5e60-4b24-ad59-eb84024382dd | https://04x.manhwaland.land/daddy-in-law-chapter-9/
+since-my-previous-life-was-a-wise-man-i-can-afford-to-live | 4.1 | 23929538-6efd-4c3e-b2dc-32f25ca755b8 | https://04x.manhwaland.land/since-my-previous-life-was-a-wise-man-i-can-afford-to-live-chapter-4.1/
+oku-sama-o-ai-niku-sama | 1 | 23c66fea-fff2-4772-a380-b7f6e2039392 | https://04x.manhwaland.land/oku-sama-o-ai-niku-sama-chapter-1/
+immortal-swordsman-in-the-reverse-world | 220 | 23d31460-22c2-4957-94af-d1c568a8877e | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-220/
+wife-for-1000-days | 51 | 24107f24-570d-4a67-9672-0b48d1c647ba | https://04x.manhwaland.land/wife-for-1000-days-chapter-51-2/
+friends-atz | 27 | 2425e81d-69a3-4509-9cbe-c037686b0aa5 | https://04x.manhwaland.land/friends-atz-chapter-27/
+immortal-swordsman-in-the-reverse-world | 253 | 2431e8fc-3d6a-435c-9332-a0c99fbd98dc | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-253/
+wonderful-new-world | 216 | 24ae6ed9-702e-4399-ba6e-198b7681cfbe | https://04x.manhwaland.land/wonderful-new-world-chapter-216/
+arasaamama-no-watashi-de-ii-no | 23.5 | 25004b7b-4d03-4ceb-8685-b08428df98bb | https://04x.manhwaland.land/arasaamama-no-watashi-de-ii-no-chapter-23.5/
+king-of-delusions | 4 | 25119710-ecec-437c-9db6-5b95a034ed3e | https://04x.manhwaland.land/king-of-delusions-chapter-4/
+bandit-nieces | 14 | 257e9354-a7de-4822-9967-acedfadd29d4 | https://04x.manhwaland.land/bandit-nieces-chapter-14/
+my-stepmothers-friends-uncen | 25 | 25db7ed4-41cb-44a9-a980-1a635f0bcbf6 | https://04x.manhwaland.land/my-stepmothers-friends-uncen-chapter-25/
+i-wanna-be-a-daughter-thief | 56 | 261cb2d6-c02a-416b-a0de-55bc89355ff0 | https://04x.manhwaland.land/i-wanna-be-a-daughter-thief-chapter-56/
+block-69 | 24 | 262c3151-4534-46c0-a670-af80fff47b95 | https://04x.manhwaland.land/block-69-chapter-24/
+more-tutor-sex-life | 1 | 2648222e-97fb-4b35-96b2-a5e29f4e8e73 | https://04x.manhwaland.land/more-tutor-sex-life-chapter-1/
+secret-class-uncensored | 62 | 264bae01-f556-4012-826b-b5664943fe7e | https://04x.manhwaland.land/secret-class-uncensored-chapter-62/
+ore-wa-lolicon-ja-nai | 7 | 265b68fb-5bf8-4c6b-82bf-beef24e813c3 | https://04x.manhwaland.land/ore-wa-lolicon-ja-nai-chapter-7/
+block-69 | 28 | 265e3c27-e874-45fb-95cb-76a918f18041 | https://04x.manhwaland.land/block-69-chapter-28/
+genkyou-cabecilla | 3 | 268c5def-41ae-4cbb-bae3-9ecaa620eecd | https://04x.manhwaland.land/genkyou-cabecilla-chapter-3/
+hole-shop | 13 | 2697c06a-8bc0-45d0-968c-49dc021bac2f | https://04x.manhwaland.land/hole-shop-chapter-13/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 28.2 | 26c7e014-c4e2-4e8a-8edf-dfb29cc0cc0c | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-28.2/
+wonderful-new-world | 131 | 270c43f3-075b-4de1-8c1a-5ca03d5b10cf | https://04x.manhwaland.land/wonderful-new-world-chapter-131/
+desperate-housewives | 18 | 272f6bbd-d8d1-4e72-80a4-566b76dd7f41 | https://04x.manhwaland.land/desperate-housewives-chapter-18/
+my-wife-as-a-teacher | 2 | 2790fdaa-855a-457e-bc27-b249a23a63a6 | https://04x.manhwaland.land/my-wife-as-a-teacher-chapter-2/
+i-wanna-be-a-daughter-thief | 72 | 27ab8597-7ca6-4873-942f-e3b3eb5430a5 | https://04x.manhwaland.land/i-wanna-be-a-daughter-thief-chapter-72/
+icha-love-amaama-morgan-sama | 1 | 286e51d7-588a-4ecf-aab5-fa6c468a8694 | https://04x.manhwaland.land/icha-love-amaama-morgan-sama-chapter-1/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 23.2 | 28e55bbc-2d0f-47b4-a7b8-2d6ed144c145 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-23.2/
+everything-is-agreed-upon | 113 | 28e89b63-8e27-4c30-9880-d57bd824aedb | https://04x.manhwaland.land/everything-is-agreed-upon-chapter-113/
+immortal-swordsman-in-the-reverse-world | 155 | 292e76f5-59ce-4d0f-99e8-dfe611d7ff2f | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-155/
+daddy-in-law | 37 | 29399de7-b386-4c42-916f-4752f2c0e6c2 | https://04x.manhwaland.land/daddy-in-law-chapter-37/
+immortal-swordsman-in-the-reverse-world | 75 | 293de649-3633-4552-bd67-f8155e6be211 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-75/
+a-wise-drivers-life | 42 | 29773b55-e7ec-4bea-907a-58f587d648e0 | https://04x.manhwaland.land/a-wise-drivers-life-chapter-42/
+i-want-to-work-quietly | 23 | 2977fceb-8dfe-4b71-9912-db18c87edc70 | https://04x-1s.manhwaland.land/i-want-to-work-quietly-chapter-23/
+kaisha-no-madonna-to-lucky-de-yareta-hanashi | 1 | 29786443-fbc6-477d-9784-afe5f66edea2 | https://04x.manhwaland.land/kaisha-no-madonna-to-lucky-de-yareta-hanashi-chapter-1/
+wonderful-new-world | 122 | 298c0185-455e-4035-84e4-4036c85f9a74 | https://04x.manhwaland.land/wonderful-new-world-chapter-122/
+wife-for-1000-days | 48 | 29926bdc-323e-46ea-afd1-192e8591dd1d | https://04x.manhwaland.land/wife-for-1000-days-chapter-48-2/
+wonderful-new-world | 209 | 299b159c-e58b-45cc-a0f6-fdee8f8c85c1 | https://04x.manhwaland.land/wonderful-new-world-chapter-209/
+fellatio-kenkyuubu | 6 | 29be19d7-2a4f-4b91-99f4-b84db1b91dad | https://04x.manhwaland.land/fellatio-kenkyuubu-chapter-6/
+my-high-school-bully | 133 | 2a067fbf-a2c5-40cd-9c68-03556b2fc0b6 | https://04x.manhwaland.land/my-high-school-bully-chapter-133/
+immortal-swordsman-in-the-reverse-world | 226 | 2a40a08f-677f-4e82-a753-d2ff55d99c28 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-226/
+block-69 | 39 | 2a49257f-5ee6-417b-8d1c-06aaa087a4c1 | https://04x.manhwaland.land/block-69-chapter-39/
+charming-girl | 44 | 2a5bffd8-785f-45b6-8aab-c5cbbe625232 | https://04x.manhwaland.land/charming-girl-chapter-44/
+everything-is-agreed-upon | 116 | 2a71855e-f503-400b-8a98-168e946c9621 | https://04x.manhwaland.land/everything-is-agreed-upon-chapter-116/
+new-town-uncensored | 16 | 2a8fc41d-e556-4742-892c-116b1562ef34 | https://04x.manhwaland.land/new-town-uncensored-chapter-16/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 10.1 | 2ab0f2e3-9c56-4edc-8bb6-c902c7492b21 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-10.1/
+office-trouble-appeal | 12 | 2abe05c2-a972-4af1-937b-856e4b21b7f4 | https://04x.manhwaland.land/office-trouble-appeal-chapter-12/
+human-scum | 68 | 2b4f2be8-f369-4c83-83e5-e615b486e3a1 | https://04x.manhwaland.land/human-scum-chapter-68/
+gal-sen | 12 | 2b701d09-7c0b-4bc5-a664-e51521006fc9 | https://04x.manhwaland.land/gal-sen-chapter-12/
+the-unforeseen-guest | 81 | 2b83eb35-4376-41cd-bae9-8ddb40ba751f | https://04x.manhwaland.land/the-unforeseen-guest-chapter-81-2/
+secret-class-uncensored | 65 | 2b86147a-95f6-46c9-b83f-76ba6b313738 | https://04x.manhwaland.land/secret-class-uncensored-chapter-65/
+switch-on | 100 | 2b942618-9ea2-49c8-8f60-ed234bbe8034 | https://04x.manhwaland.land/switch-on-chapter-100/
+secret-matter-of-the-third-generation | 49 | 2ba94c3c-7b9c-494e-a00c-3d2b8507fd05 | https://04x.manhwaland.land/secret-matter-of-the-third-generation-chapter-49/
+an-xxl-dick-to-satisfy-a-married-woman | 5 | 2bd851d5-ef2d-4dba-b904-52ebf618b5f5 | https://04x.manhwaland.land/an-xxl-dick-to-satisfy-a-married-woman-chapter-5/
+friends-or-f-buddies | 4 | 2bfceeb3-304b-4dfd-a6df-c377d1a311f7 | https://04x.manhwaland.land/friends-or-f-buddies-chapter-4/
+i-wanna-be-a-daughter-thief | 65 | 2c34108c-2db2-4ea9-bf0b-b87e9c7b524f | https://04x.manhwaland.land/i-wanna-be-a-daughter-thief-chapter-65/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 14.2 | 2c53cde4-b32b-4321-9298-5856a25f1d3b | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-14.2/
+block-69 | 52 | 2c857b27-33e6-4a49-9a1f-52ff5a90df81 | https://04x.manhwaland.land/block-69-chapter-52/
+shuumatsu-no-harem | 4 | 2cb435c3-6c19-4e0c-b755-f7103cf45911 | https://04x.manhwaland.land/shuumatsu-no-harem-chapter-4/
+wonderful-new-world | 194 | 2d00be9d-bc56-4a79-b7c6-2faa34f21865 | https://04x.manhwaland.land/wonderful-new-world-chapter-194/
+only-with-consent-uncensored | 45 | 2d124ea2-6646-428e-8f77-6c3f095a6718 | https://04x.manhwaland.land/only-with-consent-uncensored-chapter-45/
+immortal-swordsman-in-the-reverse-world | 258 | 2d1809b8-1e08-4222-bb0d-ba35ff6047c9 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-258/
+milf-hunting-in-another-world | 126 | 2d30a00d-c89f-4d2a-8dc3-3740b2a4663c | https://04x-1s.manhwaland.land/milf-hunting-in-another-world-chapter-126/
+immortal-swordsman-in-the-reverse-world | 223 | 2d62f7e4-093e-42c5-9202-8fe9ac2cabdc | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-223/
+bandit-nieces | 6 | 2d77fb8f-b1a0-4351-8a8a-cf07a3bb78d2 | https://04x.manhwaland.land/bandit-nieces-chapter-6/
+succubus-system | 19 | 2d780f68-5214-4e80-8b59-9589bdbefce1 | https://04x.manhwaland.land/succubus-system-chapter-19/
+tokidoki-bosotto-roshiago-de-dereru-tonari-no-alya-san | 31 | 2d7d7468-8c40-4cef-814b-a6c990b0ded2 | https://04x.manhwaland.land/tokidoki-bosotto-roshiago-de-dereru-tonari-no-alya-san-chapter-31/
+immortal-swordsman-in-the-reverse-world | 266 | 2dd2c77b-a810-4e72-ac69-b2616457bc6a | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-266/
+immortal-swordsman-in-the-reverse-world | 79 | 2e90a97e-bdf2-49cd-b345-708783e50dad | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-79/
+touch-to-unlock | 60.5 | 2ea0cc73-a136-4bcf-bdec-4093e91ec9a1 | https://04x.manhwaland.land/touch-to-unlock-chapter-60-5-2/
+please-take-care | 41 | 2f036b66-dafb-4633-832b-26063bb458ff | https://04x.manhwaland.land/please-take-care-chapter-41/
+kangcheols-bosses | 13.2 | 2fc7893a-5c6e-44f7-a3b4-09040c879944 | https://04x.manhwaland.land/kangcheols-bosses-chapter-13.2/
+block-69 | 51 | 2fc7fe62-90ec-4f8c-aedf-76abfc4e831d | https://04x.manhwaland.land/block-69-chapter-51/
+the-four-of-us-cant-live-together | 13 | 2ffc4d50-4d4f-43f0-ac51-015ad3ea21ba | https://04x.manhwaland.land/the-four-of-us-cant-live-together-chapter-13-2/
+no-men-allowed | 70 | 305ce7c7-a2f5-46e0-88ff-3b0f2bd98185 | https://04x-1s.manhwaland.land/no-men-allowed-chapter-70/
+troublesome-sister | 1 | 306638fd-e3cf-47fc-a788-6f2f76a3a48e | https://04x.manhwaland.land/troublesome-sister-chapter-1/
+wonderful-new-world | 176 | 30c9a4d0-dd70-4f24-8df3-e36683ffb8ae | https://04x.manhwaland.land/wonderful-new-world-chapter-176/
+noona-and-her-big-little-bro | 23 | 30e98ab2-cc64-4d93-9273-f7810b2dd116 | https://04x.manhwaland.land/noona-and-her-big-little-bro-chapter-23/
+human-scum | 2 | 30fcefb5-78dd-4f31-9387-e8d3750c57ac | https://04x.manhwaland.land/human-scum-chapter-2/
+stepmothers-friends | 89 | 311d51e0-207f-4104-83d5-d59f3f4a031d | https://04x.manhwaland.land/stepmothers-friends-chapter-89/
+the-main-character-is-the-villain | 50.2 | 31311958-eed2-4337-a91f-cfea106bfdd7 | https://04x.manhwaland.land/the-main-character-is-the-villain-chapter-50-5-2/
+the-four-of-us-cant-live-together | 23 | 313af3d5-91ba-4a16-b0ce-0fa2302565e3 | https://04x.manhwaland.land/the-four-of-us-cant-live-together-chapter-23-2/
+a-wise-drivers-life | 23 | 3159325a-adc9-407b-85bb-baedd6a41af7 | https://04x.manhwaland.land/a-wise-drivers-life-chapter-23/
+pheromone-holic | 2 | 317e11dc-4a25-4bba-90d4-485ee162cafc | https://04x.manhwaland.land/pheromone-holic-chapter-2/
+back-with-a-bang | 3 | 317ff447-2c17-4f37-becd-e6ee923c6432 | https://04x.manhwaland.land/back-with-a-bang-chapter-3/
+daddy-in-law | 7 | 31aedce9-cd3b-4fd5-9f8c-c566aacdf86a | https://04x.manhwaland.land/daddy-in-law-chapter-7/
+mousukoshi-dake-konomama-de | 8 | 31c55d4b-fc0a-40ae-9130-e44ae24c4336 | https://04x.manhwaland.land/mousukoshi-dake-konomama-de-chapter-8/
+immortal-swordsman-in-the-reverse-world | 102 | 31fa9c43-f4a7-4a3c-8db8-effe2e084115 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-102/
+ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta | 12.1 | 325578eb-b365-4ebb-96b3-95a72e4bdb21 | https://04x.manhwaland.land/ore-no-genjitsu-wa-renai-game-ka-to-omottara-inochigake-no-game-datta-chapter-12.1/
+she-wants-to-get-drunk | 41 | 326281c5-d5f6-4a84-ae64-6234c96ec995 | https://04x.manhwaland.land/she-wants-to-get-drunk-chapter-41/
+shh-her-secret | 57 | 33298dec-1e31-49cf-ae81-d71dfb589d4e | https://04x.manhwaland.land/shh-her-secret-chapter-57/
+pay-with-your-body | 24 | 335d1f5b-b67c-4f79-b5ce-91f4d209c450 | https://04x.manhwaland.land/pay-with-your-body-chapter-24/
+milf-hunting-in-another-world | 128 | 33ac71df-d024-44ff-b243-cd2f3ccd524f | https://04x-1s.manhwaland.land/milf-hunting-in-another-world-chapter-128/
+administrator-privileges | 124 | 33d6ee5d-02f2-47de-8bac-e36d05451888 | https://04x.manhwaland.land/administrator-privileges-chapter-124/
+administrator-privileges | 129 | 33e108f3-4e5f-453e-8028-946af0b8eedb | https://04x.manhwaland.land/administrator-privileges-chapter-129/
+wonderful-new-world | 141 | 341bbdfd-011c-46bf-87cd-04407770fb9c | https://04x.manhwaland.land/wonderful-new-world-chapter-141/
+hontou-wa-kowai-tomodachi-no-okaa-san | 1 | 34687ed0-aa4f-4dfa-90ea-e027e304c712 | https://04x.manhwaland.land/hontou-wa-kowai-tomodachi-no-okaa-san-chapter-1/
+administrator-privileges | 125 | 3514e793-5eff-44b7-bb19-b37f73fc9c42 | https://04x.manhwaland.land/administrator-privileges-chapter-125/
+pay-with-your-body | 17 | 3536428b-5f10-4c97-bfa7-28d58a9a527f | https://04x.manhwaland.land/pay-with-your-body-chapter-17/
+desperate-housewives | 11 | 3556c021-5d9b-4cde-a7d2-4333aa398f88 | https://04x.manhwaland.land/desperate-housewives-chapter-11/
+desperate-housewives | 34 | 358397cb-9cac-4178-8607-da7124038aa2 | https://04x.manhwaland.land/desperate-housewives-chapter-34/
+wonderful-new-world | 152 | 3590468c-81f5-44b8-9622-c2e21a4a1d0a | https://04x.manhwaland.land/wonderful-new-world-chapter-152/
+romantic-camping | 68 | 35dae098-f275-4f20-b5d8-a851006505b0 | https://04x.manhwaland.land/romantic-camping-chapter-68/
+ie-de-munou-to-iware-tsuzuketa-ore-desu-ga-sekaiteki-ni-wa-chou-yuunou-datta-you-desu | 14 | 360a6b17-950d-46c0-8cf8-b21067c113a9 | https://04x.manhwaland.land/ie-de-munou-to-iware-tsuzuketa-ore-desu-ga-sekaiteki-ni-wa-chou-yuunou-datta-you-desu-chapter-14/
+immortal-swordsman-in-the-reverse-world | 100 | 360f8f23-4ff9-4266-9f02-03d531d9e0a8 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-100/
+love-limit-exceeded | 26 | 3651a16d-9ff6-463e-9cb0-ec373900a67b | https://04x.manhwaland.land/love-limit-exceeded-chapter-26/
+today-dinner | 90 | 365d1b46-23da-43d7-9364-c75775328f7d | https://04x.manhwaland.land/today-dinner-chapter-90-2/
+the-teacher-secret | 30 | 3744c815-29dc-4e26-aa74-3aa9032cfe48 | https://04x.manhwaland.land/the-teacher-secret-chapter-30/
+boarding-school | 25 | 37a9abff-d370-4a10-961b-767c4f4b035c | https://04x.manhwaland.land/boarding-school-chapter-25/
+immortal-swordsman-in-the-reverse-world | 82 | 37f10632-c6d1-4a82-afed-31b6ba439b63 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-82/
+analog | 2 | 383d9583-d23e-4e9c-8940-c551ba87f6d5 | https://04x.manhwaland.land/analog-chapter-2-2/
+office-trouble-appeal | 1 | 387d03da-2470-4d90-a0f0-6f60159043d5 | https://04x.manhwaland.land/office-trouble-appeal-chapter-1/
+wreck-my-bias | 3 | 388b82c7-dd7e-4879-bee2-a36d60d175be | https://04x.manhwaland.land/wreck-my-bias-chapter-3-2/
+body-bind | 18 | 38c0aed5-0f43-46a5-8de6-78c356ee39b6 | https://04x.manhwaland.land/body-bind-chapter-18/
+in-love-with-the-friends-mother | 15 | 38c9a37a-42d5-4031-a386-ed91c6668cfc | https://04x.manhwaland.land/in-love-with-the-friends-mother-chapter-15/
+my-high-school-bully | 150 | 3903b240-eb72-4a3f-9728-b3875ab3c486 | https://04x.manhwaland.land/my-high-school-bully-chapter-150-2/
+gamers | 75 | 393a9b7b-b0ee-452a-8ca8-6e75e0f20000 | https://04x.manhwaland.land/gamers-chapter-75/
+friends-atz | 39 | 393be3c1-e85a-426c-b95b-93ebf845fe6c | https://04x.manhwaland.land/friends-atz-chapter-39/
+love-limit-exceeded | 27 | 394a43ea-9952-462a-b070-aef75eef4af2 | https://04x.manhwaland.land/love-limit-exceeded-chapter-27/
+immortal-swordsman-in-the-reverse-world | 96 | 398d9449-2c35-4059-a068-e823251abf0c | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-96/
+each-building-has-its-own-concept | 32 | 39fe62c1-a508-4a2e-b5e3-8b475ac359c0 | https://04x.manhwaland.land/each-building-has-its-own-concept-chapter-32/
+thats-not-how-its-done | 57 | 3a6b6fe8-057f-4a40-a722-26abe71f2c4c | https://04x.manhwaland.land/thats-not-how-its-done-chapter-57-2/
+i-want-to-work-quietly | 27 | 3a77e048-fde2-42d4-8065-9b67b474263f | https://04x-1s.manhwaland.land/i-want-to-work-quietly-chapter-27/
+desperate-housewives | 28 | 3a7b3955-99a0-4045-a067-1dbc3465ed50 | https://04x.manhwaland.land/desperate-housewives-chapter-28/
+ankai-no-umi | 1 | 3a8616d0-d6b8-4adf-8e0c-225e5a785299 | https://04x.manhwaland.land/ankai-no-umi-chapter-1/
+club-and-big-boobs | 1 | 3a89e256-bcf4-4886-a366-581cafeccc36 | https://04x.manhwaland.land/club-and-big-boobs-chapter-1/
+friends-or-f-buddies | 7 | 3ace0352-d60e-41ff-a946-7de5470e21f9 | https://04x.manhwaland.land/friends-or-f-buddies-chapter-7/
+block-69 | 45 | 3b1a1073-ec99-4e23-8265-edaac059d2ba | https://04x.manhwaland.land/block-69-chapter-45/
+the-girlfriend-dice | 1 | 3b6d5f18-bb30-4f62-b43a-41ea8d1d2d72 | https://04x.manhwaland.land/the-girlfriend-dice-chapter-01/
+tomodachi-onee-san-wa-shigeki-ga-tsuyoi | 1 | 3bb0a85a-dd8f-4ef2-9940-5d08d531a294 | https://04x.manhwaland.land/tomodachi-onee-san-wa-shigeki-ga-tsuyoi-chapter-1/
+daddy-in-law | 12 | 3bcf998c-a8ec-4d20-81fb-f3d55a16f4a2 | https://04x.manhwaland.land/daddy-in-law-chapter-12/
+twice-the-love | 24 | 3c37beed-e73b-4e8b-b4f2-76f398ee1bd6 | https://04x.manhwaland.land/twice-the-love-chapter-24/
+immortal-swordsman-in-the-reverse-world | 117 | 3c3f8d15-575d-4fea-9461-2cb6993d4f0e | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-117/
+back-with-a-bang | 9 | 3c42aac7-a54b-4939-bc1c-7e120e83524d | https://04x.manhwaland.land/back-with-a-bang-chapter-9/
+secret-class | 284 | 3c6cac38-27f3-4e6d-887b-2769e792956c | https://04x.manhwaland.land/secret-class-chapter-284/
+a-wise-drivers-life | 36 | 3c7b3f86-7c3d-4eab-9821-1fa5af20e0a4 | https://04x.manhwaland.land/a-wise-drivers-life-chapter-36/
+friends-or-f-buddies | 8 | 3cc7731e-ab4d-4db5-84f6-a149781000b3 | https://04x.manhwaland.land/friends-or-f-buddies-chapter-8/
+mind-control | 13 | 3cd3a556-085d-444e-984a-fd36af78b987 | https://04x.manhwaland.land/mind-control-chapter-13/
+stargram-goddess | 52 | 3d1617fc-57df-4136-94ec-ad837cf0778a | https://04x.manhwaland.land/stargram-goddess-chapter-52/
+immortal-swordsman-in-the-reverse-world | 255 | 3d1dc1e1-2962-4676-965c-54fe08d8f7cb | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-255/
+gamers | 74 | 3d24e13b-2b95-4e9d-aed2-ec4dfb06e0d5 | https://04x.manhwaland.land/gamers-chapter-74/
+genkyou-cabecilla | 1 | 3d2ad282-a4f9-4ac2-bf42-7fc3efceda14 | https://04x.manhwaland.land/genkyou-cabecilla-chapter-1/
+back-with-a-bang | 4 | 3d841c3e-d727-4877-acb0-95dfb0d18b47 | https://04x.manhwaland.land/back-with-a-bang-chapter-4/
+immortal-swordsman-in-the-reverse-world | 93 | 3d86a550-0de8-4a03-a102-e2d303ef55e4 | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-93/
+botan-to-sakura | 1 | 3d8d52fc-3f4f-415f-9eee-83967c5efded | https://04x.manhwaland.land/botan-to-sakura-chapter-1/
+secret-class-uncensored | 61 | 3dd36483-c41a-45a1-a243-c6f277912555 | https://04x.manhwaland.land/secret-class-uncensored-chapter-61/
+twenty | 43 | 3df0a73c-b880-45d7-9002-19c5985686e0 | https://04x.manhwaland.land/twenty-chapter-43/
+my-girlfriends-naughty-sister | 11 | 3e3d0e98-4d54-491a-864f-1cc051d33a49 | https://04x.manhwaland.land/my-girlfriends-naughty-sister-chapter-11/
+please-scan-here | 3 | 3e43abbb-cf52-4652-8b2b-03b2611fd78a | https://04x.manhwaland.land/please-scan-here-chapter-3/
+daddy-in-law | 23 | 3e68a83d-361e-443d-a660-063192f8e044 | https://04x.manhwaland.land/daddy-in-law-chapter-23/
+she-has-three-flavors | 28 | 3e6ab51f-5bf1-475d-a3d3-5aa332744e73 | https://04x.manhwaland.land/she-has-three-flavors-chapter-28/
+valhalla-otintin-kan | 12.1 | 3eacbfcf-66b9-4d2c-aa02-8f6dbea9237c | https://04x.manhwaland.land/valhalla-otintin-kan-chapter-12-2-2/
+my-high-school-bully | 157 | 3eb7da06-6472-44ac-a0a1-57e89dc77f79 | https://04x.manhwaland.land/my-high-school-bully-chapter-157-2/
+noona-and-her-big-little-bro | 24 | 3eecf19a-2913-44e0-83b8-169aeaf74c8d | https://04x.manhwaland.land/noona-and-her-big-little-bro-chapter-24/
+wonderful-new-world | 124 | 3f262fbf-e058-4e3c-93dc-fcfae790f8ed | https://04x.manhwaland.land/wonderful-new-world-chapter-124/
+mind-control | 9 | 3f45e350-b3b8-473b-a4b3-4e3401e620fb | https://04x.manhwaland.land/mind-control-chapter-9/
+watashi-no-kareshi-no-okasan-wa-yumenonakade-sore-o-te-ni-iremashita | 2 | 3f54e837-a8d7-42dc-acbd-aa39aa6e4a07 | https://04x.manhwaland.land/watashi-no-kareshi-no-okasan-wa-yumenonakade-sore-o-te-ni-iremashita-chapter-2-2/
+administrator-privileges | 132 | 3f64fe0a-fffa-40d9-8afd-aa432ed7a696 | https://04x.manhwaland.land/administrator-privileges-chapter-132/
+genkai-dungeon-no-hanshoku-jijou | 1 | 3f7d30f4-36fb-4023-a7e1-01d2670a8a14 | https://04x.manhwaland.land/genkai-dungeon-no-hanshoku-jijou-chapter-1/
+200-nen-mo-no-shojo-elf-shota-o-kau | 1 | 3fa27a2c-5d0c-4fd4-83fd-a1acaf2ebcbb | https://04x.manhwaland.land/200-nen-mo-no-shojo-elf-shota-o-kau-chapter-1/
+secret-class-uncensored | 63 | 40841911-6690-415a-bc0f-998b3164e587 | https://04x.manhwaland.land/secret-class-uncensored-chapter-63/
+immortal-swordsman-in-the-reverse-world | 134 | 40a2baae-91ca-4a8c-a289-7009421146fd | https://04x.manhwaland.land/immortal-swordsman-in-the-reverse-world-chapter-134/
+deviant-diary | 42 | 40ad1206-45e9-4626-a34d-8573832b943d | https://04x.manhwaland.land/deviant-diary-chapter-42/
+wonderful-new-world | 220 | 40c28d79-3966-4780-9f07-1e3592fd7787 | https://04x.manhwaland.land/wonderful-new-world-chapter-220/
+a-wise-drivers-life | 45 | 41167b44-58b7-4650-9b22-4f6cdff2008c | https://04x.manhwaland.land/a-wise-drivers-life-chapter-45/
+itabasami-na-wakachi-ai | 2 | 4124edd9-4333-4510-8c60-00eb37ba467e | https://04x.manhwaland.land/itabasami-na-wakachi-ai-chapter-2/
+hole-shop | 26 | 41407b6a-02f1-4bf0-a325-218d076a2027 | https://04x.manhwaland.land/hole-shop-chapter-26/
+paws-on-campus | 8 | 41569cfb-9f57-4fce-b611-997f266126ca | https://04x.manhwaland.land/paws-on-campus-chapter-8/
+by-spring | 1 | 41ba62bc-63db-4764-9267-7f23d10f6483 | https://04x.manhwaland.land/by-spring-chapter-1/
+bitch-na-inane-sama | 4.5 | 41c53597-b5fc-4b5b-877a-73d4f810728b | https://04x.manhwaland.land/bitch-na-inane-sama-chapter-4.5/
+the-unforeseen-guest | 74 | 41cdb266-2a3f-4592-9bb0-c3c1f83d456b | https://04x.manhwaland.land/the-unforeseen-guest-chapter-74-2/

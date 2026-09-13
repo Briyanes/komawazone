@@ -35,6 +35,52 @@
 
 ---
 
+## 🛡️ Safety: Auto-Batch-Pause (Anti-CDN-Block)
+
+Untuk backfill skala besar (24K+ chapters), tool ini punya **auto-batch-pause** built-in:
+
+| Flag | Default | Fungsi |
+|------|---------|--------|
+| `--batch-size <n>` | `500` | Pause setiap N manga |
+| `--batch-pause <ms>` | `600000` (10min) | Durasi cooldown antar batch |
+
+**Cara kerja:**
+1. Setiap 500 manga → save progress + pause 10 menit
+2. Memberi CDN server waktu "lupa" pattern request kita
+3. Progress tersimpan ke `.import-progress.json` (crash-safe)
+4. Skip otomatis pada batch terakhir (tidak waste time)
+
+**Contoh custom:**
+```bash
+# Pause 5 menit setiap 300 manga (lebih konservatif)
+npm run import:local -- auto-update --batch-size 300 --batch-pause 300000
+
+# Disable batch-pause (untuk daily update kecil)
+npm run import:local -- auto-update --batch-size 0
+```
+
+**Rekomendasi Expert (10 proxy Webshare):**
+```bash
+# Sweet spot: 7 concurrency × 10 proxy = 0.7 req/IP (aman <5% block rate)
+npm run import:local -- auto-update \
+  --concurrency 7 \
+  --parallel-images 4 \
+  --proxy \
+  --delay 4000 \
+  --batch-size 500 \
+  --batch-pause 600000 \
+  --resume
+```
+
+**5 Lapis Keamanan:**
+1. ☕ `caffeinate` auto-start — MacBook tidak sleep
+2. 🔄 Proxy rotation — ganti IP setiap 20 request
+3. ⏸️ CDN-down detection — 3 smart-skip → pause 5 menit
+4. 🛡️ Circuit breaker — 10 error → STOP otomatis
+5. 📊 Auto-batch-pause — cooldown 10min setiap 500 manga
+
+---
+
 ## 🚀 Quick Start
 
 Buka terminal di folder project, lalu pilih salah satu:
@@ -44,7 +90,11 @@ Buka terminal di folder project, lalu pilih salah satu:
 Untuk manga baru yang belum ada di database — scrape metadata, daftar chapter, download semua gambar, upload ke R2:
 
 ```bash
+# Default: 3 chapters paralel, 3 image uploads paralel per chapter
 npm run import:local -- full --url "https://04x-1s.manhwaland.land/manga/prison-revenge/"
+
+# MAXIMUM SPEED: 10 chapters paralel, 5 image uploads paralel ⚡
+npm run import:local -- full --url "..." --concurrency 10 --parallel-images 5
 ```
 
 ### 2. Import Manga Saja (Metadata)
@@ -71,17 +121,95 @@ Scan semua URL manga dari sitemap XML sumber, lalu import satu per satu:
 npm run import:local -- sitemap
 ```
 
-### 5. Auto-Update Chapter Manga yang Sudah Ada
+### 5. 🔄 Auto-Update Chapter Baru (DAILY USE — YANG PALING SERING DIPAKAI)
 
-Scan semua manga di database yang punya `source_url`, cek chapter baru:
+> ⚠️ **PENTING:** Ini adalah command yang tepat untuk **menambah chapter baru**.
+> **JANGAN pakai** `backfill-empty` atau `backfill-all-empty-images` untuk update chapter baru — itu untuk mengisi gambar yang kosong/missing, BUKAN untuk mencari chapter baru.
+
+**Cara kerja `auto-update`:**
+1. Scan semua manga di database yang punya `source_url`
+2. Cek halaman sumber untuk chapter baru
+3. **Skip chapter yang sudah ada** (by source URL) — efisien, tidak re-download
+4. Download & upload hanya chapter yang belum ada
 
 ```bash
-npm run import:local -- auto-update
+# ⭐ CARA PALING GAMPANG (recommended):
+npm run import:local:update
+
+# Dengan proxy (jika IP diblokir CDN):
+npm run import:local:update:safe
+
+# Mode cepat (concurrency tinggi):
+npm run import:local:update:fast
+
+# Resume jika crash (lanjut dari manga terakhir):
+npm run import:local:update:resume
 ```
+
+**Equivalent manual commands:**
+```bash
+# Basic auto-update
+npm run import:local -- auto-update
+
+# Dengan proxy + batch safety
+npm run import:local -- auto-update --proxy --batch-size 50 --batch-pause 300000
+
+# Full config (expert recommendation)
+npm run import:local -- auto-update \
+  --concurrency 7 \
+  --parallel-images 4 \
+  --proxy \
+  --delay 4000 \
+  --batch-size 500 \
+  --batch-pause 600000 \
+  --resume
+```
+
+**Filter manga spesifik:**
+```bash
+# Hanya manga tertentu (by slug)
+npm run import:local -- auto-update --slug "hana-kana"
+
+# Hanya N manga pertama (testing)
+npm run import:local -- auto-update --limit 5
+```
+
+> 💡 **Bedanya dengan `backfill-empty`:**
+> | Command | Fungsi | Use Case |
+> |---------|--------|----------|
+> | `auto-update` | Cari & download **chapter baru** yang belum ada | Daily update |
+> | `backfill-empty` | Isi gambar yang **null/kosong** di chapter yang sudah ada | Fix missing images |
+> | `chapters` | Import **semua chapter** dari URL (tidak skip yang sudah ada) | Initial import |
 
 ---
 
 ## ⚙️ Opsi Lanjutan
+
+### ⚡ Parallel Processing (NEW!)
+
+Tool sekarang memproses **multiple chapters secara paralel** dan **multiple image uploads paralel per chapter**:
+
+| Flag | Default | Max | Description |
+|------|---------|-----|-------------|
+| `--concurrency <n>` | 3 | **30** | Jumlah chapter diproses paralel |
+| `--parallel-images <n>` | 3 | **10** | Jumlah upload R2 paralel per chapter |
+
+```bash
+# Fast: 5 chapters paralel, 3 uploads paralel
+npm run import:local -- chapters --slug hana --concurrency 5
+
+# MAXIMUM: 15 chapters paralel, 8 uploads paralel (butuh bandwidth besar)
+npm run import:local -- auto-update --concurrency 15 --parallel-images 8 --proxy
+
+# Conservative: 2 chapters paralel (untuk koneksi lambat)
+npm run import:local -- full --url "..." --concurrency 2 --parallel-images 2
+```
+
+**Tips tuning:**
+- MacBook M1/M2/M3: aman dengan `--concurrency 10 --parallel-images 5`
+- Jika R2 sering timeout: turunkan `--parallel-images 2`
+- Jika source CDN rate-limit: tetap `--concurrency 3` tapi naikkan `--delay 5000`
+- Browser batch-download tetap 1 per chapter (Playwright), tapi upload ke R2 paralel
 
 ### Download dengan Proxy
 
@@ -253,9 +381,25 @@ grep R2_ .env
 
 ### Source CDN memblokir (403/429)
 
-Aktifkan proxy:
+Cek dulu status CDN source:
+```bash
+npm run cdn:check:quick    # quick check (1 chapter)
+npm run cdn:check          # full check
+```
+
+Jika **ISP (Internet Positif)** memblokir source site, script akan menampilkan:
+```
+🚫 ISP BLOCKED → https://internet-positif.info/...
+```
+
+Solusi — aktifkan proxy:
 ```bash
 npm run import:local -- full --url "..." --proxy
+```
+
+Atau set `PROXY_LIST` di `.env` jika Webshare rotating endpoint tidak bekerja:
+```env
+PROXY_LIST=host1:port1:user1:pass1,host2:port2:user2:pass2
 ```
 
 ### Scraping gagal (struktur berubah)

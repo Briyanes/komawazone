@@ -1,0 +1,217 @@
+{
+  "timestamp": "2026-07-27T07:20:26.835Z",
+  "sourceSite": "https://04x.manhwaland.land",
+  "checkedChapters": 1,
+  "cdnDomains": [
+    {
+      "hostname": "jablay.gmbr.pro",
+      "imageCount": 12,
+      "browserStatuses": {
+        "200": 12
+      },
+      "httpTest": {
+        "status": 403,
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": "https://jablay.gmbr.pro/id/BM88---Banner-Iklan-(JPG)-(720x90)(1).gif",
+      "verdict": "PARTIAL"
+    },
+    {
+      "hostname": "02.manhwaland.land",
+      "imageCount": 1,
+      "browserStatuses": {
+        "301": 1
+      },
+      "httpTest": {
+        "status": "ERR",
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": "https://02.manhwaland.land/wp-content/uploads/2025/07/lg_manhwaland.png",
+      "verdict": "PARTIAL"
+    },
+    {
+      "hostname": "i.ibb.co.com",
+      "imageCount": 2,
+      "browserStatuses": {
+        "200": 2
+      },
+      "httpTest": {
+        "status": 200,
+        "ok": true
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": "https://i.ibb.co.com/Y447DG2F/banner-app-manhwaland.jpg",
+      "verdict": "ALIVE"
+    },
+    {
+      "hostname": "upload.gmbr.pro",
+      "imageCount": 3,
+      "browserStatuses": {
+        "200": 3
+      },
+      "httpTest": {
+        "status": 403,
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": "https://upload.gmbr.pro/uploads/756fypLVmzaq/Darling-in-the-FranXXmanhwaland_20260101_132516.gif",
+      "verdict": "PARTIAL"
+    },
+    {
+      "hostname": "04x-1s.manhwaland.land",
+      "imageCount": 2,
+      "browserStatuses": {
+        "200": 2
+      },
+      "httpTest": {
+        "status": 200,
+        "ok": true
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": "https://04x-1s.manhwaland.land/wp-content/themes/mangareader/assets/img/btn_close.gif",
+      "verdict": "ALIVE"
+    },
+    {
+      "hostname": "api-l.gmbr.pro",
+      "imageCount": 31,
+      "browserStatuses": {
+        "200": 31
+      },
+      "httpTest": {
+        "status": 403,
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": "https://api-l.gmbr.pro/manga/manito/ch-82/002.jpg",
+      "verdict": "PARTIAL"
+    },
+    {
+      "hostname": "z6v2p9a8.bkcdn.net",
+      "imageCount": 8,
+      "browserStatuses": {
+        "200": 8
+      },
+      "httpTest": {
+        "status": 200,
+        "ok": true
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": "https://z6v2p9a8.bkcdn.net/library/159176/9edaafa4e9d34e85b4ff159764cb36bdcc14468d.webp",
+      "verdict": "ALIVE"
+    },
+    {
+      "hostname": "s.w.org",
+      "imageCount": 3,
+      "browserStatuses": {
+        "200": 3
+      },
+      "httpTest": {
+        "status": 200,
+        "ok": true
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": "https://s.w.org/images/core/emoji/17.0.2/svg/1f4cd.svg",
+      "verdict": "ALIVE"
+    },
+    {
+      "hostname": "gmbr.pro",
+      "imageCount": 0,
+      "browserStatuses": {},
+      "httpTest": {
+        "status": "ERR",
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": null,
+      "verdict": "DEAD",
+      "note": "Not detected in browser capture"
+    },
+    {
+      "hostname": "cdn-okto.gmbr.pro",
+      "imageCount": 0,
+      "browserStatuses": {},
+      "httpTest": {
+        "status": 403,
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": null,
+      "verdict": "DEAD",
+      "note": "Not detected in browser capture"
+    },
+    {
+      "hostname": "gmbar.xyz",
+      "imageCount": 0,
+      "browserStatuses": {},
+      "httpTest": {
+        "status": 200,
+        "ok": true
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": null,
+      "verdict": "ALIVE",
+      "note": "Not detected in browser capture"
+    },
+    {
+      "hostname": "uwakjawa.xyz",
+      "imageCount": 0,
+      "browserStatuses": {},
+      "httpTest": {
+        "status": "ERR",
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": null,
+      "verdict": "DEAD",
+      "note": "Not detected in browser capture"
+    },
+    {
+      "hostname": "kambingjantan.cc",
+      "imageCount": 0,
+      "browserStatuses": {},
+      "httpTest": {
+        "status": "ERR",
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": null,
+      "verdict": "DEAD",
+      "note": "Not detected in browser capture"
+    },
+    {
+      "hostname": "manhwaland.in",
+      "imageCount": 0,
+      "browserStatuses": {},
+      "httpTest": {
+        "status": "ERR",
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": null,
+      "verdict": "DEAD",
+      "note": "Not detected in browser capture"
+    },
+    {
+      "hostname": "cdn.manhwaland.land",
+      "imageCount": 0,
+      "browserStatuses": {},
+      "httpTest": {
+        "status": "ERR",
+        "ok": false
+      },
+      "avgResponseTimeMs": null,
+      "sampleUrl": null,
+      "verdict": "DEAD",
+      "note": "Not detected in browser capture"
+    }
+  ],
+  "summary": {
+    "total": 15,
+    "alive": 5,
+    "partial": 4,
+    "dead": 6,
+    "bestCdn": "z6v2p9a8.bkcdn.net"
+  }
+}

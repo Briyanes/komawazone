@@ -25,6 +25,80 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PROJECT_ROOT = path.join(__dirname, '..', '..');
 
+// ─── Parallel Worker Pool ────────────────────────────────────────
+
+/**
+ * Run async tasks with bounded concurrency (worker pool pattern).
+ *
+ * @param {Array} items - Items to process
+ * @param {Function} fn - Async function(item, index) → result
+ * @param {Object} opts
+ * @param {number} opts.concurrency - Max parallel tasks (default: 5)
+ * @param {Function} opts.onProgress - Called with (completed, total, result) on each completion
+ * @param {Function} opts.onError - Called with (error, item, index) on failure (if not thrown)
+ * @param {boolean} opts.stopOnError - Stop all on first error (default: false)
+ * @returns {Promise<Array>} Results in same order as items
+ *
+ * @example
+ *   const results = await runParallel(urls, downloadUrl, {
+ *     concurrency: 10,
+ *     onProgress: (done, total) => console.log(`${done}/${total}`)
+ *   });
+ */
+export async function runParallel(items, fn, opts = {}) {
+  const {
+    concurrency = 5,
+    onProgress = null,
+    onError = null,
+    stopOnError = false,
+  } = opts;
+
+  const results = new Array(items.length);
+  let completed = 0;
+  let failed = 0;
+  let nextIndex = 0;
+  let fatalError = null;
+
+  async function worker() {
+    while (nextIndex < items.length && !fatalError) {
+      const myIndex = nextIndex++;
+      const item = items[myIndex];
+
+      try {
+        const result = await fn(item, myIndex);
+        results[myIndex] = { ok: true, value: result };
+      } catch (err) {
+        failed++;
+        results[myIndex] = { ok: false, error: err };
+
+        if (onError) {
+          try { onError(err, item, myIndex); } catch {}
+        }
+
+        if (stopOnError) {
+          fatalError = err;
+          return;
+        }
+      } finally {
+        completed++;
+        if (onProgress) {
+          try { onProgress(completed, items.length, results[myIndex]); } catch {}
+        }
+      }
+    }
+  }
+
+  // Spawn `concurrency` workers
+  const workers = [];
+  for (let i = 0; i < Math.min(concurrency, items.length); i++) {
+    workers.push(worker());
+  }
+
+  await Promise.all(workers);
+
+  return { results, completed, failed, total: items.length };
+}
+
 // ─── Env Loader ──────────────────────────────────────────────────
 
 export function loadEnv() {
@@ -120,17 +194,18 @@ export function initR2() {
 // ─── Proxy Pool ──────────────────────────────────────────────────
 
 // Same fallback proxies as src/lib/proxy.ts (Webshare 10-IP plan)
+// Updated 2026-07-27: New credentials (nyjltniw) — old ones (ozfcoksy) expired
 const FALLBACK_PROXIES = [
-  '31.59.20.176:6754:ozfcoksy:862ttfhg7gcb',
-  '92.113.242.158:6742:ozfcoksy:862ttfhg7gcb',
-  '23.95.150.145:6114:ozfcoksy:862ttfhg7gcb',
-  '38.154.203.95:5863:ozfcoksy:862ttfhg7gcb',
-  '198.105.121.200:6462:ozfcoksy:862ttfhg7gcb',
-  '64.137.96.74:6641:ozfcoksy:862ttfhg7gcb',
-  '38.154.185.97:6370:ozfcoksy:862ttfhg7gcb',
-  '142.111.67.146:5611:ozfcoksy:862ttfhg7gcb',
-  '191.96.254.138:6185:ozfcoksy:862ttfhg7gcb',
-  '2.57.20.2:6983:ozfcoksy:862ttfhg7gcb',
+  '31.59.20.176:6754:nyjltniw:bmybfkz4plhk',
+  '31.56.127.193:7684:nyjltniw:bmybfkz4plhk',
+  '45.38.107.97:6014:nyjltniw:bmybfkz4plhk',
+  '198.105.121.200:6462:nyjltniw:bmybfkz4plhk',
+  '64.137.96.74:6641:nyjltniw:bmybfkz4plhk',
+  '198.23.243.226:6361:nyjltniw:bmybfkz4plhk',
+  '38.154.185.97:6370:nyjltniw:bmybfkz4plhk',
+  '84.247.60.125:6095:nyjltniw:bmybfkz4plhk',
+  '142.111.67.146:5611:nyjltniw:bmybfkz4plhk',
+  '191.96.254.138:6185:nyjltniw:bmybfkz4plhk',
 ].join(',');
 
 export class ProxyPool {
@@ -782,11 +857,17 @@ export async function downloadImage(url, proxyPool, { maxRetries = 3, timeoutMs 
       } else {
         const statusInfo = lastStatus > 0 ? ` (last HTTP ${lastStatus})` : '';
 
-        // Browser fallback ONLY for 403 (anti-hotlink) — browser won't help
-        // if the server is genuinely down (522/503/502 etc.)
-        if (lastStatus === 403 && useBrowserFallback) {
-          console.log(`  🔄 undici got 403 — falling back to browser download...`);
-          const browserResult = await downloadImageViaBrowser(currentUrl, { timeoutMs: 15_000, retries: 2 });
+        // Detect DNS-level failures (domain doesn't resolve in system DNS).
+        // Chromium uses DoH (DNS over HTTPS) built-in, so it can resolve domains
+        // that the system resolver can't (e.g. gmbr.pro returns ENODATA).
+        const isDnsError = err.code === 'ENOTFOUND' || err.code === 'ENODATA' || err.code === 'EAI_AGAIN';
+
+        // Browser fallback for 403 (anti-hotlink) OR DNS errors.
+        // Browser won't help if the server is genuinely down (522/503/502 etc.)
+        if ((lastStatus === 403 || isDnsError) && useBrowserFallback) {
+          const reason = isDnsError ? `DNS fail (${err.code})` : '403 anti-hotlink';
+          console.log(`  🔄 undici ${reason} — falling back to browser download...`);
+          const browserResult = await downloadImageViaBrowser(currentUrl, { timeoutMs: 15_000, retries: 2, refererUrl });
           if (browserResult) {
             console.log(`  ✅ Browser download succeeded!`);
             return browserResult;
@@ -807,7 +888,7 @@ export async function downloadImage(url, proxyPool, { maxRetries = 3, timeoutMs 
   // Browser fallback ONLY for 403 (anti-hotlink), NOT for 5xx (server down — browser can't help)
   if (useBrowserFallback && lastStatus === 403) {
     console.log(`  🔄 undici exhausted — falling back to browser download...`);
-    const browserResult = await downloadImageViaBrowser(currentUrl, { timeoutMs: 15_000, retries: 2 });
+    const browserResult = await downloadImageViaBrowser(currentUrl, { timeoutMs: 15_000, retries: 2, refererUrl });
     if (browserResult) {
       console.log(`  ✅ Browser download succeeded!`);
       return browserResult;
@@ -826,29 +907,213 @@ export async function downloadImage(url, proxyPool, { maxRetries = 3, timeoutMs 
 // For CDNs that block node-fetch/undici (403 Forbidden) despite correct
 // Referer headers — e.g. gmbr.pro uses TLS fingerprinting or Cloudflare
 // challenge. A real browser (Chromium) bypasses these protections.
+//
+// CRITICAL: Chromium has memory leaks when opening hundreds of pages.
+// We use auto-rotation: restart browser every BROWSER_MAX_PAGES pages
+// (≈25 chapters × 10 images) to prevent crash after ~35 chapters.
 
 let _browserInstance = null;
 let _browserContext = null;
+let _browserPageCount = 0;       // Total pages opened since browser start
+const BROWSER_MAX_PAGES = 250;   // Restart browser after this many pages
 
-export async function getBrowserContext() {
-  if (_browserContext) return _browserContext;
-
+async function _launchBrowser() {
   console.log('🌐 Launching headless browser for image downloads...');
-  _browserInstance = await chromium.launch({ headless: true });
-  _browserContext = await _browserInstance.newContext({
+  const instance = await chromium.launch({
+    headless: true,
+    args: [
+      '--ignore-certificate-errors',
+      '--disable-web-security',
+      '--disable-dev-shm-usage',       // Fix for low /dev/shm in containers
+      '--disable-gpu',                  // Reduce memory in headless
+      '--no-sandbox',                   // Compatibility
+      '--disable-setuid-sandbox',
+    ],
+  });
+  const context = await instance.newContext({
     userAgent: USER_AGENTS[1], // Chrome macOS
     viewport: { width: 1280, height: 720 },
+    ignoreHTTPSErrors: true,
     extraHTTPHeaders: {
       'Accept-Language': 'id,en-US;q=0.9,en;q=0.8',
     },
   });
   console.log('✅ Browser ready');
+  return { instance, context };
+}
+
+export async function getBrowserContext() {
+  // Auto-rotation: restart browser if page count exceeds limit
+  if (_browserContext && _browserPageCount >= BROWSER_MAX_PAGES) {
+    console.log(`\n🔄 Browser rotation: ${_browserPageCount} pages reached — restarting browser...`);
+    await closeBrowser();
+    _browserPageCount = 0;
+  }
+
+  if (!_browserContext) {
+    const { instance, context } = await _launchBrowser();
+    _browserInstance = instance;
+    _browserContext = context;
+  }
+
   return _browserContext;
 }
 
+/**
+ * Tracked page creation — increments the global counter for auto-rotation.
+ * Always use this instead of ctx.newPage() directly in download functions.
+ */
+export async function newTrackedPage() {
+  const ctx = await getBrowserContext();
+  const page = await ctx.newPage();
+  _browserPageCount++;
+  return page;
+}
+
+/**
+ * Get current page count (for diagnostics/logging).
+ */
+export function getBrowserPageCount() {
+  return _browserPageCount;
+}
+
 export async function closeBrowser() {
-  if (_browserContext) { await _browserContext.close(); _browserContext = null; }
-  if (_browserInstance) { await _browserInstance.close(); _browserInstance = null; }
+  if (_browserContext) {
+    try { await _browserContext.close(); } catch {}
+    _browserContext = null;
+  }
+  if (_browserInstance) {
+    try { await _browserInstance.close(); } catch {}
+    _browserInstance = null;
+  }
+}
+
+/**
+ * Fetch a fully-rendered HTML page via Playwright browser.
+ * Use this when the page loads content via JavaScript (e.g. chapter lists
+ * rendered by jQuery/AJAX). Unlike undici, a real browser executes JS.
+ *
+ * Waits for chapter list selectors to appear before extracting HTML.
+ * Returns { html, statusCode, finalUrl }.
+ */
+export async function fetchHtmlViaBrowser(url, { timeoutMs = 30_000, waitForSelector = null } = {}) {
+  const page = await newTrackedPage();
+
+  try {
+    const resp = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+    const statusCode = resp ? resp.status() : 0;
+    const finalUrl = page.url();
+
+    if (statusCode !== 0 && (statusCode < 200 || statusCode >= 400)) {
+      return { html: '', statusCode, finalUrl };
+    }
+
+    // Wait for network to settle (JS AJAX calls to complete)
+    try {
+      await page.waitForLoadState('networkidle', { timeout: Math.min(timeoutMs, 15_000) });
+    } catch {
+      // networkidle timeout is OK — page may have long-polling connections
+    }
+
+    // If a specific selector is provided, wait for it
+    if (waitForSelector) {
+      try {
+        await page.waitForSelector(waitForSelector, { timeout: Math.min(timeoutMs, 15_000) });
+      } catch {
+        // Selector not found — continue anyway, we'll check chapters count later
+      }
+    } else {
+      // Auto-detect manhwaland eplister / chapterlist selectors
+      const selectors = [
+        '#chapterlist li',
+        '.eplister li',
+        'li[data-num]',
+        'li.wp-manga-chapter',
+        '.listing-chapters li',
+        '.version-chap',
+      ];
+      for (const sel of selectors) {
+        try {
+          await page.waitForSelector(sel, { timeout: 5_000 });
+          break;
+        } catch {
+          // try next selector
+        }
+      }
+    }
+
+    const html = await page.content();
+    return { html, statusCode: statusCode || 200, finalUrl };
+  } finally {
+    await page.close();
+  }
+}
+
+/**
+ * Fetch HTML with automatic browser fallback for JS-rendered chapter lists.
+ *
+ * Flow:
+ *   1. Try undici (fast, lightweight)
+ *   2. Run scrapeChapterList(html) to check if chapters exist
+ *   3. If 0 chapters found → fall back to Playwright (renders JS)
+ *   4. Return whichever HTML yielded chapters
+ *
+ * Returns { html, statusCode, finalUrl, usedBrowser }
+ */
+export async function fetchHtmlWithChapterFallback(url, proxyPool, opts = {}) {
+  const { delayMs = 2000, ...rest } = opts;
+
+  // Anti-bot domains: skip undici entirely (saves 10-15s of wasted retries)
+  // These domains return 404/403 to non-browser clients (TLS fingerprint detection)
+  const isAntiBotDomain = /manhwaland|manhwain|manhwa|ikifeng|komikav|westmanga|komikcast/i.test(url);
+
+  let html = '';
+  let statusCode = 0;
+  let finalUrl = url;
+
+  if (!isAntiBotDomain) {
+    // Step 1: Try undici first (for non-anti-bot domains)
+    try {
+      const result = await fetchHtml(url, proxyPool, { delayMs, ...rest });
+      html = result.html;
+      statusCode = result.statusCode;
+      finalUrl = result.finalUrl || url;
+    } catch (err) {
+      console.warn(`  ⚠️  fetchHtml failed: ${err.message} — will try browser directly`);
+    }
+
+    // Step 2: Check if chapters OR images exist in static HTML
+    const chapters = scrapeChapterList(html);
+    const images = parseChapterImages(html);
+    if (chapters.length > 0 || images.length > 0) {
+      return { html, statusCode, finalUrl, usedBrowser: false };
+    }
+  } else {
+    console.log(`  🌐 Anti-bot domain — skipping undici, using browser directly`);
+  }
+
+  // Step 3: Fall back to Playwright (JS rendering)
+  console.log(`  🔄 Falling back to browser (JS render)...`);
+  try {
+    const browserResult = await fetchHtmlViaBrowser(finalUrl, { timeoutMs: 30_000 });
+    if (browserResult.html) {
+      const browserChapters = scrapeChapterList(browserResult.html);
+      if (browserChapters.length > 0) {
+        console.log(`  ✅ Browser rendered ${browserChapters.length} chapters!`);
+      }
+      // Return browser HTML regardless — chapter pages have images, not chapter lists
+      return {
+        html: browserResult.html,
+        statusCode: browserResult.statusCode,
+        finalUrl: browserResult.finalUrl,
+        usedBrowser: true,
+      };
+    }
+  } catch (err) {
+    console.warn(`  ⚠️  Browser fallback failed: ${err.message}`);
+  }
+
+  return { html, statusCode, finalUrl, usedBrowser: false };
 }
 
 /**
@@ -856,15 +1121,17 @@ export async function closeBrowser() {
  * This bypasses TLS fingerprinting and Cloudflare challenges.
  * Returns { buffer, contentType } or null on failure.
  */
-export async function downloadImageViaBrowser(url, { timeoutMs = 15_000, retries = 2 } = {}) {
-  const ctx = await getBrowserContext();
-  const page = await ctx.newPage();
+export async function downloadImageViaBrowser(url, { timeoutMs = 15_000, retries = 2, refererUrl = null } = {}) {
+  const page = await newTrackedPage();
 
   try {
     for (let attempt = 0; attempt <= retries; attempt++) {
       try {
         if (attempt > 0) await sleep(1000 * attempt);
-        const resp = await page.goto(url, { waitUntil: 'commit', timeout: timeoutMs });
+        // Set Referer header — critical for bypassing anti-hotlink protection
+        const gotoOpts = { waitUntil: 'commit', timeout: timeoutMs };
+        if (refererUrl) gotoOpts.referer = refererUrl;
+        const resp = await page.goto(url, gotoOpts);
         if (!resp || resp.status() !== 200) continue;
         const ct = resp.headers()['content-type'] || '';
         if (!ct.startsWith('image/')) continue;
@@ -876,6 +1143,213 @@ export async function downloadImageViaBrowser(url, { timeoutMs = 15_000, retries
       }
     }
     return null;
+  } finally {
+    await page.close();
+  }
+}
+
+/**
+ * Download ALL images from a chapter page using a single browser session.
+ *
+ * CRITICAL FIX for Cloudflare-protected CDNs (cdn-okto.gmbr.pro):
+ * The old approach (downloadImageViaBrowser → page.goto(imageUrl)) fails
+ * because Cloudflare challenges the navigation to the image URL itself.
+ *
+ * NEW APPROACH:
+ *   1. Navigate to the chapter page (solves CF challenge → gets cf_clearance cookie)
+ *   2. Use page.evaluate(() => fetch(imageUrl)) for each image — the request
+ *      originates FROM the chapter page, so CF allows it (same session cookies)
+ *   3. Return buffers with proper content types
+ *
+ * This is exactly how a real browser loads images in <img> tags.
+ *
+ * @param {string} chapterUrl - The chapter page URL (e.g. manhwaland.land/...chapter-1/)
+ * @param {string[]} imageUrls - Array of image URLs to download
+ * @param {object} opts - { timeoutMs, maxParallel, onProgress }
+ * @returns {Promise<Array<{buffer: Buffer, contentType: string, url: string} | null>>}
+ */
+export async function downloadImagesFromChapterPage(chapterUrl, imageUrls, opts = {}) {
+  const { timeoutMs = 120_000, onProgress = null } = opts;
+
+  if (imageUrls.length === 0) return [];
+
+  const page = await newTrackedPage();
+
+  // Create a lookup set for fast matching
+  const urlSet = new Set(imageUrls);
+  // Also store basename matches (URLs may have query params or slight variations)
+  const urlBasenameMap = new Map();
+  for (const u of imageUrls) {
+    try {
+      const basename = new URL(u).pathname.split('/').pop();
+      if (basename) urlBasenameMap.set(basename, u);
+    } catch {}
+  }
+
+  const results = new Array(imageUrls.length).fill(null);
+  const captured = new Set();
+
+  // Intercept ALL responses — capture image downloads naturally loaded by <img> tags
+  // This bypasses CORS entirely because the browser's rendering engine handles the request
+  let errorStatuses = {}; // Track error codes for reporting
+
+  page.on('response', async (response) => {
+    try {
+      const url = response.url();
+      const status = response.status();
+
+      // Match by full URL or basename FIRST (before checking content type)
+      let targetIdx = -1;
+      if (urlSet.has(url)) {
+        targetIdx = imageUrls.indexOf(url);
+      } else {
+        try {
+          const basename = new URL(url).pathname.split('/').pop();
+          if (basename && urlBasenameMap.has(basename)) {
+            const originalUrl = urlBasenameMap.get(basename);
+            targetIdx = imageUrls.indexOf(originalUrl);
+          }
+        } catch {}
+      }
+
+      // Not one of our target images — skip
+      if (targetIdx === -1 || captured.has(targetIdx)) return;
+
+      // Track error statuses for reporting
+      if (status !== 200) {
+        errorStatuses[status] = (errorStatuses[status] || 0) + 1;
+        return;
+      }
+
+      const ct = response.headers()['content-type'] || '';
+      if (!ct.startsWith('image/')) return;
+
+      const body = await response.body();
+      if (body.length < 1024) return;
+
+      results[targetIdx] = {
+        buffer: Buffer.from(body),
+        contentType: ct,
+        url,
+      };
+      captured.add(targetIdx);
+      if (onProgress) onProgress(captured.size, imageUrls.length);
+    } catch {
+      // Response body already consumed or error — skip
+    }
+  });
+
+  // Expose error summary via closure
+  page._errorStatuses = errorStatuses;
+
+  try {
+    // Step 1: Navigate to chapter page — browser gets CF cookies + cookies
+    console.log(`  🌐 Navigating to chapter page: ${chapterUrl.substring(0, 80)}...`);
+    const resp = await page.goto(chapterUrl, { waitUntil: 'domcontentloaded', timeout: timeoutMs });
+
+    if (!resp || resp.status() !== 200) {
+      console.warn(`  ⚠️  Chapter page returned status ${resp?.status() || 'unknown'}`);
+    }
+
+    // Wait a bit for page to stabilize
+    try {
+      await page.waitForLoadState('networkidle', { timeout: Math.min(timeoutMs, 20_000) });
+    } catch {
+      // networkidle timeout is OK
+    }
+
+    // Step 2: INJECT real <img> tags to FORCE the browser to load every image URL.
+    // This is the critical fix: manhwaland uses <noscript> + data-src lazy-load,
+    // so the browser never actually fetches the images. We create real img tags
+    // with the actual URLs → browser fetches them → response intercept captures them.
+    await page.evaluate((urls) => {
+      // Remove existing images in readerarea (they may have wrong src / lazy-load)
+      const readerarea = document.getElementById('readerarea') || document.querySelector('.reading-content');
+      if (readerarea) readerarea.innerHTML = '';
+
+      // Create a container for our injected images
+      const container = document.getElementById('readerarea') || document.body;
+
+      // Inject one real <img> per URL — browser will fetch each one
+      for (let i = 0; i < urls.length; i++) {
+        const img = document.createElement('img');
+        img.src = urls[i];           // Set REAL src (not data-src) → forces load
+        img.style.display = 'block';  // Must be visible for browser to load
+        img.style.width = '100%';
+        img.setAttribute('data-injected', 'true');
+        img.setAttribute('data-idx', String(i));
+        container.appendChild(img);
+      }
+    }, imageUrls);
+
+    // Step 3: Wait for injected images to load (they fire HTTP requests → intercept captures)
+    console.log(`  ⏳ Waiting for ${imageUrls.length} injected images to load...`);
+
+    // Poll for completion — check every 2s, timeout after remaining timeoutMs
+    const pollStart = Date.now();
+    const maxWait = Math.min(80_000, timeoutMs - 10_000);
+    while (captured.size < imageUrls.length && Date.now() - pollStart < maxWait) {
+      await sleep(2000);
+    }
+
+    const successCount = results.filter(r => r !== null).length;
+    console.log(`  📊 Response intercept: ${successCount}/${imageUrls.length} images captured`);
+
+    // Step 4: If some images still not captured, try page.evaluate(() => fetch(url)) approach
+    // This uses the browser's fetch() from within the page context (same cookies/CF session)
+    if (successCount < imageUrls.length) {
+      const missing = [];
+      for (let i = 0; i < results.length; i++) {
+        if (!results[i]) missing.push({ idx: i, url: imageUrls[i] });
+      }
+
+      if (missing.length > 0 && missing.length <= imageUrls.length) {
+        console.log(`  🔄 Trying in-page fetch() for ${missing.length} missing images...`);
+
+        for (const { idx, url } of missing) {
+          if (results[idx]) continue; // Already captured
+          try {
+            const base64 = await page.evaluate(async (imgUrl) => {
+              const resp = await fetch(imgUrl, { credentials: 'include' });
+              if (!resp.ok) return null;
+              const blob = await resp.blob();
+              return new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve({ data: reader.result, type: blob.type });
+                reader.onerror = () => resolve(null);
+                reader.readAsDataURL(blob);
+              });
+            }, url);
+
+            if (base64 && base64.data) {
+              const base64Data = base64.data.split(',')[1];
+              const buffer = Buffer.from(base64Data, 'base64');
+              if (buffer.length > 1024) {
+                results[idx] = {
+                  buffer,
+                  contentType: base64.type || 'image/jpeg',
+                  url,
+                };
+                captured.add(idx);
+                if (onProgress) onProgress(captured.size, imageUrls.length);
+              }
+            }
+          } catch {
+            // fetch() failed — image remains null
+          }
+        }
+
+        const finalCount = results.filter(r => r !== null).length;
+        if (finalCount > successCount) {
+          console.log(`  ✅ In-page fetch() recovered ${finalCount - successCount} more images`);
+        }
+      }
+    }
+
+    return results;
+  } catch (err) {
+    console.error(`  ❌ Chapter page intercept failed: ${err.message}`);
+    return results;
   } finally {
     await page.close();
   }
@@ -1038,14 +1512,24 @@ export function scrapeChapterList(html) {
       ? html.slice(eplisterIdx, sectionEnd + 10)
       : html.slice(eplisterIdx, eplisterIdx + 100_000);
 
-    // Match: <li data-num="5"> ... <a href="URL"> ... <span class="chapternum">Chapter 5</span> ... <span class="chapterdate">DATE</span>
-    const eplRe = /<li[^>]*data-num="([\d.]+)"[^>]*>[\s\S]*?<a[^>]+href="([^"]+)"[^>]*>[\s\S]*?<span[^>]*class="[^"]*chapternum[^"]*"[^>]*>([^<]*)<\/span>(?:[\s\S]*?<span[^>]*class="[^"]*chapterdate[^"]*"[^>]*>([^<]*)<\/span>)?/gi;
+    // Match: <li data-num="..."> ... <a href="URL"> ... <span class="chapternum">...</span> ... <span class="chapterdate">DATE</span>
+    // NOTE: data-num can be numeric ("5") OR text ("a fluffy thief cat – one piece")
+    //       so we accept any value and extract number from chapternum text instead.
+    const eplRe = /<li[^>]*data-num="([^"]*)"[^>]*>[\s\S]*?<a[^>]+href="([^"]+)"[^>]*>[\s\S]*?<span[^>]*class="[^"]*chapternum[^"]*"[^>]*>([^<]*)<\/span>(?:[\s\S]*?<span[^>]*class="[^"]*chapterdate[^"]*"[^>]*>([^<]*)<\/span>)?/gi;
     let m;
     while ((m = eplRe.exec(section)) !== null) {
-      const number = parseFloat(m[1]);
+      const dataNum = m[1];   // Can be "5" or "a fluffy thief cat – one piece"
       const url = m[2];
       const titleText = m[3]?.trim() || '';
       const dateStr = m[4]?.trim() || '';
+
+      // Extract number from data-num if numeric, otherwise from chapternum text
+      let number = parseFloat(dataNum);
+      if (isNaN(number)) {
+        // data-num is text — try extracting number from chapternum text
+        const numMatch = titleText.match(/chapter\s*([\d.]+)/i);
+        number = numMatch ? parseFloat(numMatch[1]) : 0;
+      }
 
       // Parse Indonesian date like "Mei 10, 2026" or "Jul 23, 2026"
       let releaseDate = null;
@@ -1153,6 +1637,21 @@ export async function parseSitemapUrls(sitemapUrl, proxyPool) {
 
 // ─── Progress Bar ────────────────────────────────────────────────
 
+/**
+ * Format seconds into human-readable duration string.
+ * Examples: 45 → "45s", 90 → "1m 30s", 3700 → "1h 1m"
+ */
+export function formatDuration(seconds) {
+  seconds = Math.max(0, Math.floor(seconds));
+  if (seconds < 60) return `${seconds}s`;
+  const h = Math.floor(seconds / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const s = seconds % 60;
+  if (h > 0) return `${h}h ${m}m`;
+  if (m > 0 && s > 0) return `${m}m ${s}s`;
+  return `${m}m`;
+}
+
 export class ProgressBar {
   constructor(total, label = 'Processing') {
     this.total = total;
@@ -1162,26 +1661,45 @@ export class ProgressBar {
     this.successCount = 0;
     this.failCount = 0;
     this.skipCount = 0;
+    // Sliding window for accurate recent rate (last 30 completions)
+    this._recentTimes = [];
+    this._lastTickTime = Date.now();
   }
 
   tick(success = true, skipped = false) {
+    const now = Date.now();
     this.current++;
     if (skipped) this.skipCount++;
     else if (success) this.successCount++;
     else this.failCount++;
 
-    if (this.current % 10 === 0 || this.current === this.total) {
-      const elapsed = (Date.now() - this.startTime) / 1000;
-      const rate = this.current / Math.max(elapsed, 1);
-      const remaining = (this.total - this.current) / Math.max(rate, 0.01);
-      const remainingMin = Math.floor(remaining / 60);
-      const remainingSec = Math.floor(remaining % 60);
+    // Track time between ticks (sliding window of 30 items)
+    const delta = now - this._lastTickTime;
+    this._lastTickTime = now;
+    this._recentTimes.push(delta);
+    if (this._recentTimes.length > 30) this._recentTimes.shift();
+
+    if (this.current % 5 === 0 || this.current === this.total) {
+      const elapsed = (now - this.startTime) / 1000;
+      const overallRate = this.current / Math.max(elapsed, 1);
+
+      // Recent rate: average ms per item from sliding window → items/sec
+      const avgMs = this._recentTimes.length > 0
+        ? this._recentTimes.reduce((a, b) => a + b, 0) / this._recentTimes.length
+        : 1000;
+      const recentRate = Math.min(1000 / Math.max(avgMs, 1), overallRate * 3); // Cap at 3x overall
+
+      // ETA based on recent rate (more accurate for changing conditions)
+      const remaining = (this.total - this.current) / Math.max(recentRate, 0.01);
       const pct = this.total > 0 ? (this.current / this.total * 100).toFixed(1) : '0.0';
+
+      // Format ETA as Hh Mm Ss (handles long batches)
+      const etaStr = formatDuration(remaining);
 
       process.stdout.write(
         `\r  ${this.label}: ${this.current}/${this.total} (${pct}%) | ` +
         `✅${this.successCount} ❌${this.failCount} ⏭️${this.skipCount} | ` +
-        `⚡${rate.toFixed(1)}/s | ETA: ${remainingMin}m${remainingSec}s  `
+        `⚡${recentRate.toFixed(1)}/s | ETA: ${etaStr}  `
       );
     }
   }

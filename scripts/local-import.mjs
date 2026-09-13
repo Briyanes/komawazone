@@ -26,11 +26,13 @@
 
 import {
   loadEnv, initSupabase, initR2, ProxyPool,
-  fetchHtml, downloadImage, parseChapterImages,
+  fetchHtml, fetchHtmlWithChapterFallback, downloadImage, downloadImagesFromChapterPage,
+  parseChapterImages,
   scrapeMangaMeta, scrapeChapterList,
   parseSitemapIndex, parseSitemapUrls,
   rewriteSourceUrl, DomainRotator, closeBrowser, ServerError, SERVER_ERROR_CODES,
   ProgressBar, sleep, sleepWithJitter, getDomainDelay, RateLimiter, slugify,
+  runParallel,
 } from './lib/local-import-utils.mjs';
 
 // ─── Parse CLI Args ──────────────────────────────────────────────
@@ -58,8 +60,11 @@ function parseArgs() {
 
   // Defaults
   opts.delay = parseInt(opts.delay || '2000', 10);
-  opts.concurrency = Math.min(parseInt(opts.concurrency || '2', 10), 5);
+  opts.concurrency = Math.min(parseInt(opts.concurrency || '3', 10), 30);
+  opts.parallelImages = opts.parallelImages === true ? 5 : Math.min(parseInt(opts.parallelImages || '3', 10), 10);
   opts.rating = opts.rating || 'general';
+  opts.batchSize = parseInt(opts.batchSize || '500', 10);     // Pause every N manga
+  opts.batchPause = parseInt(opts.batchPause || '600000', 10); // 10 min cooldown (ms)
 
   return opts;
 }
@@ -121,7 +126,10 @@ OPTIONS:
   --file <path>      Path file teks berisi daftar URL (untuk batch)
   --limit <n>        Batasi jumlah chapter yang diimport
   --delay <ms>       Delay antar request (default: 2000)
-  --concurrency <n>  Parallel downloads (default: 2, max: 5)
+  --concurrency <n>  Parallel chapters (default: 3, max: 30) ⚡
+  --parallel-images <n>  Parallel image uploads per chapter (default: 3, max: 10)
+  --batch-size <n>   Pause every N manga — anti-CDN-block (default: 500)
+  --batch-pause <ms> Cooldown duration between batches (default: 600000 = 10min)
   --dry-run          Preview tanpa write ke DB/R2
   --skip-images      Skip download gambar (metadata chapter saja)
   --proxy            Force gunakan proxy pool (Webshare rotating IPs)
@@ -133,6 +141,7 @@ TIPS:
   • Tidak ada timeout seperti Vercel cron — bisa import ratusan chapter
   • Untuk import semalam, gunakan tmux: tmux new -s import
   • Progress tersimpan ke DB, bisa dipantau di /admin/import
+  • Auto-batch-pause: cooldown 10min setiap 500 manga (anti-CDN-block)
 `);
 }
 
@@ -315,11 +324,13 @@ async function importChapters(mangaSlug, opts, ctx) {
   console.log(`🔗 Source: ${sourceUrl}\n`);
 
   // Scrape chapter list from manga page
+  // Uses fetchHtmlWithChapterFallback: tries undici first, falls back to
+  // Playwright browser if chapters are JS-rendered (e.g. manhwaland eplister)
   console.log('📖 Scraping chapter list...');
-  const { html } = await fetchHtml(sourceUrl, ctx.proxyPool, { delayMs: opts.delay });
+  const { html, usedBrowser } = await fetchHtmlWithChapterFallback(sourceUrl, ctx.proxyPool, { delayMs: opts.delay });
   const sourceChapters = scrapeChapterList(html);
 
-  console.log(`   Found ${sourceChapters.length} chapters di source\n`);
+  console.log(`   Found ${sourceChapters.length} chapters di source${usedBrowser ? ' (via browser JS render)' : ''}\n`);
 
   if (sourceChapters.length === 0) {
     console.error('❌ Tidak ada chapter ditemukan di halaman source!');
@@ -382,17 +393,42 @@ async function importChapters(mangaSlug, opts, ctx) {
   const delayMs = opts.delay;
 
   // CDN-down detection: track consecutive chapters smart-skipped due to server errors
-  let consecutiveCdnSkips = 0;
+  // Shared across parallel workers via sharedState object
+  const sharedState = {
+    consecutiveCdnSkips: 0,
+    paused: false,
+    pauseUntil: 0,
+  };
   const CDN_PAUSE_THRESHOLD = 3;       // Pause after 3 consecutive smart-skips
   const CDN_PAUSE_DURATION = 300_000;  // 5 minutes pause
 
-  // Process chapters sequentially (to respect rate limits)
-  for (const ch of toImport) {
+  // ─── Parallel chapter processing ────────────────────────────────
+  // Multiple chapters processed concurrently (default: 3 workers, max: 30).
+  // Each worker: scrape chapter page → batch-download images via browser → upload to R2.
+  // CDN-down detection and circuit breaker coordinated via sharedState.
+  console.log(`⚡ Parallel mode: ${opts.concurrency} chapters concurrently\n`);
+
+  /**
+   * Process a single chapter (worker function for runParallel).
+   * Stagger start with index-based delay to avoid thundering herd.
+   */
+  async function processOneChapter(ch, idx) {
     // Circuit breaker check
     if (ctx.rateLimiter?.isTripped()) {
-      console.error('\n🚨 CIRCUIT BREAKER TRIPPED — terlalu banyak error berturut-turut!');
-      console.error('   Hentikan import untuk keamanan. Coba lagi nanti atau gunakan --proxy.');
-      break;
+      throw new Error('CIRCUIT BREAKER TRIPPED — skipped by worker');
+    }
+
+    // CDN pause check: if sharedState says paused, wait until pause ends
+    if (sharedState.paused && Date.now() < sharedState.pauseUntil) {
+      const waitMs = sharedState.pauseUntil - Date.now();
+      console.log(`  ⏸️  Ch ${ch.number}: waiting ${Math.ceil(waitMs / 1000)}s (CDN pause)...`);
+      await sleep(waitMs);
+    }
+
+    // Stagger start: workers start at different times to spread load
+    // Worker 0 starts immediately, worker 1 after delayMs, worker 2 after 2*delayMs, etc.
+    if (idx > 0) {
+      await sleepWithJitter(delayMs * (idx % opts.concurrency));
     }
 
     let chapterSmartSkipped = false; // Flag: was this chapter smart-skipped?
@@ -407,7 +443,7 @@ async function importChapters(mangaSlug, opts, ctx) {
       if (imageUrls.length === 0) {
         console.warn(`\n  ⚠️  Ch ${ch.number}: No images found — skipping`);
         progress.tick(false);
-        continue;
+        return; // Not a loop — early exit from async worker function
       }
 
       let chapterId = ch.chapterId;
@@ -430,55 +466,95 @@ async function importChapters(mangaSlug, opts, ctx) {
         if (chError) {
           console.warn(`\n  ⚠️  Ch ${ch.number}: DB error — ${chError.message}`);
           progress.tick(false);
-          continue;
+          return; // Early exit from async worker function
         }
         chapterId = newCh.id;
       }
 
-      // Download & upload images
+      // Download & upload images — BROWSER BATCH DOWNLOAD approach
+      // Uses downloadImagesFromChapterPage(): navigates to chapter page once,
+      // browser naturally loads all <img> tags, we intercept responses.
+      // This bypasses CORS, Cloudflare challenges, and anti-hotlink protection.
       if (!opts.skipImages) {
-        const imgProgress = [];
-        let consecutiveServerErrors = 0; // Track consecutive 5xx for smart-skip
+        const imgProgress = new Array(imageUrls.length).fill(null);
+
+        // Phase 1: Check which images are already in R2 (skip those)
+        const needDownload = []; // { idx, url, r2Key }
         for (let i = 0; i < imageUrls.length; i++) {
           const imgUrl = imageUrls[i];
           const safeExt = (imgUrl.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg';
           const ext = ['jpg', 'jpeg', 'png', 'webp'].includes(safeExt) ? safeExt : 'jpg';
           const r2Key = `pages/${chapterId}/${i + 1}.${ext}`;
 
-          // Skip if already in R2
           if (await ctx.r2.exists(r2Key)) {
-            imgProgress.push({ page: i + 1, url: `/api/r2/image/${r2Key}`, status: 'skip' });
-            continue;
+            imgProgress[i] = { page: i + 1, url: `/api/r2/image/${r2Key}`, status: 'skip' };
+          } else {
+            needDownload.push({ idx: i, url: imgUrl, r2Key, ext });
           }
+        }
 
-          try {
-            const { buffer, contentType } = await downloadImage(imgUrl, ctx.proxyPool, { delayMs, timeoutMs: 30_000, refererUrl: ch.url });
-            const r2Url = await ctx.r2.upload(buffer, contentType, r2Key);
-            imgProgress.push({ page: i + 1, url: r2Url, status: 'ok' });
-            consecutiveServerErrors = 0; // Reset on success
-          } catch (imgErr) {
-            // Smart-skip: if 5 consecutive CDN/server errors (522/503/502), skip rest of chapter
-            if (imgErr.isServerError) {
-              consecutiveServerErrors++;
-              if (consecutiveServerErrors >= 5) {
-                const remaining = imageUrls.length - i - 1;
-                console.warn(`\n  🚨 Ch ${ch.number}: 5 consecutive server errors (HTTP ${imgErr.statusCode}) — SKIPPING remaining ${remaining} pages`);
-                console.warn(`     Server CDN sedang down. Chapter akan ditandai partial, coba lagi nanti.`);
-                // Mark remaining pages as failed (keep original URL)
-                for (let j = i + 1; j < imageUrls.length; j++) {
-                  imgProgress.push({ page: j + 1, url: imageUrls[j], status: 'fail' });
+        const skipCount = imgProgress.filter(i => i !== null).length;
+
+        if (needDownload.length > 0) {
+          // Phase 2: Batch download via browser response intercept
+          // Single browser navigation captures ALL images — no per-image HTTP requests
+          console.log(`\n  🌐 Ch ${ch.number}: Batch download ${needDownload.length} images via browser (skip ${skipCount} already in R2)...`);
+
+          const urlsToDownload = needDownload.map(d => d.url);
+          const batchResults = await downloadImagesFromChapterPage(ch.url, urlsToDownload, {
+            timeoutMs: 120_000,
+            onProgress: (done, total) => {
+              process.stdout.write(`\r  📥 Ch ${ch.number}: ${done}/${total} images captured   `);
+            },
+          });
+
+          // Phase 3: Upload captured buffers to R2 (PARALLEL)
+          // Step A: Assess download quality — separate valid buffers from failures
+          const validUploads = [];
+          let consecFail = 0;
+
+          for (let di = 0; di < needDownload.length; di++) {
+            const item = needDownload[di];
+            const batchIdx = urlsToDownload.indexOf(item.url);
+            const result = batchIdx >= 0 ? batchResults[batchIdx] : null;
+
+            if (result && result.buffer && result.buffer.length > 1024) {
+              validUploads.push({ item, result });
+              consecFail = 0;
+            } else {
+              // Browser didn't capture this image — CDN likely returned 5xx
+              imgProgress[item.idx] = { page: item.idx + 1, url: item.url, status: 'fail' };
+              consecFail++;
+
+              // Smart-skip after 5 consecutive failures (CDN is down)
+              if (consecFail >= 5) {
+                console.warn(`\n  🚨 Ch ${ch.number}: 5 consecutive download failures — CDN likely DOWN`);
+                console.warn(`     Skipping remaining ${needDownload.length - di - 1} pages. Coba lagi nanti.`);
+                for (let ri = di + 1; ri < needDownload.length; ri++) {
+                  const rem = needDownload[ri];
+                  imgProgress[rem.idx] = { page: rem.idx + 1, url: rem.url, status: 'fail' };
                 }
-                chapterSmartSkipped = true; // Flag for CDN-down auto-pause
+                chapterSmartSkipped = true;
                 break;
               }
             }
-            console.warn(`\n  ⚠️  Ch ${ch.number} page ${i + 1}: ${imgErr.message}`);
-            // Fallback: keep original URL
-            imgProgress.push({ page: i + 1, url: imgUrl, status: 'fail' });
           }
 
-          // Domain-aware delay between images with jitter
-          await sleepWithJitter(getDomainDelay(imgUrl, 800));
+          // Step B: Upload valid buffers to R2 in parallel (⚡ opts.parallelImages workers)
+          if (validUploads.length > 0) {
+            await runParallel(validUploads, async ({ item, result }) => {
+              try {
+                const r2Url = await ctx.r2.upload(result.buffer, result.contentType, item.r2Key);
+                imgProgress[item.idx] = { page: item.idx + 1, url: r2Url, status: 'ok' };
+              } catch (r2Err) {
+                console.warn(`\n  ⚠️  Ch ${ch.number} page ${item.idx + 1}: R2 upload failed — ${r2Err.message}`);
+                imgProgress[item.idx] = { page: item.idx + 1, url: item.url, status: 'fail' };
+              }
+            }, { concurrency: opts.parallelImages });
+          }
+
+          // Small delay after batch to let CDN recover
+          await sleepWithJitter(1000);
         }
 
         // Insert chapter_images
@@ -498,9 +574,9 @@ async function importChapters(mangaSlug, opts, ctx) {
           await ctx.supabase.from('chapter_images').insert(imageRows.slice(i, i + 100));
         }
 
-        const okCount = imgProgress.filter(i => i.status === 'ok').length;
-        const skipCount = imgProgress.filter(i => i.status === 'skip').length;
-        const failCount = imgProgress.filter(i => i.status === 'fail').length;
+        const okCount = imgProgress.filter(i => i && i.status === 'ok').length;
+        const skipTotal = imgProgress.filter(i => i && i.status === 'skip').length;
+        const failCount = imgProgress.filter(i => i && i.status === 'fail').length;
 
         // Update thumbnail to 5th image (project convention)
         if (imgProgress.length >= 5) {
@@ -525,24 +601,45 @@ async function importChapters(mangaSlug, opts, ctx) {
       progress.tick(false);
     }
 
-    // ─── CDN-Down Auto-Pause ──────────────────────────────────────
+    // ─── CDN-Down Auto-Pause (shared across workers) ─────────────
     // If this chapter was smart-skipped (5 consecutive 5xx errors),
-    // increment counter. After 3 consecutive smart-skips, the CDN is
-    // clearly down — pause for 5 minutes to let it recover.
+    // increment shared counter. After 3 consecutive smart-skips, the CDN is
+    // clearly down — set pause flag for all workers.
     if (chapterSmartSkipped) {
-      consecutiveCdnSkips++;
-      if (consecutiveCdnSkips >= CDN_PAUSE_THRESHOLD) {
-        console.log(`\n\n⏸️  CDN DOWN DETECTED — ${consecutiveCdnSkips} chapters smart-skipped berturut-turut`);
+      sharedState.consecutiveCdnSkips++;
+      if (sharedState.consecutiveCdnSkips >= CDN_PAUSE_THRESHOLD && !sharedState.paused) {
+        sharedState.paused = true;
+        sharedState.pauseUntil = Date.now() + CDN_PAUSE_DURATION;
+        console.log(`\n⏸️  CDN DOWN DETECTED — ${sharedState.consecutiveCdnSkips} chapters smart-skipped berturut-turut`);
         console.log(`   Pausing ${CDN_PAUSE_DURATION / 60_000} menit untuk recovery server...`);
         console.log(`   (Tekan Ctrl+C untuk batalkan, atau tunggu otomatis)`);
+        // Wait for pause duration in this worker; others will check pauseUntil
         await sleep(CDN_PAUSE_DURATION);
+        sharedState.paused = false;
+        sharedState.consecutiveCdnSkips = 0; // Reset after pause
         console.log(`\n▶️  Resuming import setelah CDN pause...\n`);
-        consecutiveCdnSkips = 0; // Reset after pause
       }
     } else {
       // Reset counter if a chapter succeeded (CDN is back up)
-      consecutiveCdnSkips = 0;
+      sharedState.consecutiveCdnSkips = 0;
     }
+  } // end of processOneChapter
+
+  // Run chapters in parallel with bounded concurrency
+  const { results, completed, failed } = await runParallel(toImport, processOneChapter, {
+    concurrency: opts.concurrency,
+    onError: (err, ch, idx) => {
+      // Don't spam circuit breaker messages for every worker
+      if (!err.message.includes('CIRCUIT BREAKER')) {
+        console.warn(`\n  ❌ Ch ${ch.number}: ${err.message}`);
+      }
+    },
+  });
+
+  // If circuit breaker tripped, report it once
+  if (ctx.rateLimiter?.isTripped()) {
+    console.error('\n🚨 CIRCUIT BREAKER TRIPPED — import dihentikan untuk keamanan!');
+    console.error('   Coba lagi nanti atau gunakan --proxy.\n');
   }
 
   progress.done();
@@ -804,6 +901,39 @@ async function autoUpdate(opts, ctx) {
 
     stats.processed++;
 
+    // ─── Auto-Batch-Pause: cooldown every N manga (anti-CDN-block) ───
+    // After processing opts.batchSize manga, pause opts.batchPause ms.
+    // This gives CDN servers time to "forget" our request pattern.
+    // Skipped on first batch (i === 0) and on last manga.
+    if (
+      opts.batchSize > 0 &&
+      stats.processed > 0 &&
+      stats.processed % opts.batchSize === 0 &&
+      mangaNum < mangaList.length
+    ) {
+      const batchNum = Math.floor(stats.processed / opts.batchSize);
+      const pauseMin = opts.batchPause / 60_000;
+      console.log(`\n${'━'.repeat(60)}`);
+      console.log(`  ☕ BATCH PAUSE #${batchNum} — ${stats.processed} manga processed`);
+      console.log(`  ⏸️  Cooldown ${pauseMin} menit (anti-CDN-block strategy)`);
+      console.log(`  📊 Stats so far: ${stats.ok}✅ ${stats.errors}❌ ${stats.skipped}⏭️`);
+      console.log(`${'━'.repeat(60)}\n`);
+
+      // Save progress before pausing (crash safety)
+      await saveProgress(progressFile, {
+        ...stats,
+        elapsedTime: formatDuration(Date.now() - stats.startTime),
+        lastSlug: manga.slug,
+        batchPauseStarted: new Date().toISOString(),
+        timestamp: new Date().toISOString(),
+      });
+
+      await sleep(opts.batchPause);
+
+      console.log(`\n${'━'.repeat(60)}`);
+      console.log(`  ▶️  Batch pause selesai — melanjutkan import...\n`);
+    }
+
     // Save progress every 5 manga
     if (stats.processed % 5 === 0) {
       await saveProgress(progressFile, {
@@ -844,7 +974,7 @@ async function autoUpdate(opts, ctx) {
 
 // ─── Main ────────────────────────────────────────────────────────
 
-const VALID_MODES = ['manga', 'chapters', 'full', 'batch', 'sitemap', 'auto-update'];
+const VALID_MODES = ['manga', 'chapters', 'full', 'batch', 'sitemap', 'auto-update', 'backfill-empty'];
 
 async function main() {
   const opts = parseArgs();
@@ -868,6 +998,14 @@ async function main() {
 
   // Load env + init clients
   loadEnv();
+
+  // ─── CDN Health Check (pre-flight) ───────────────────────────────
+  // Quick warning if source sites are known to be ISP-blocked
+  // Full check: npm run cdn:check
+  if (!opts.dryRun) {
+    console.log('💡 Tip: Jalankan `npm run cdn:check:quick` untuk cek status CDN sebelum import.');
+    console.log('    Jika ISP (Internet Positif) memblokir source site, gunakan --proxy flag.\n');
+  }
 
   // ─── macOS Sleep Prevention: auto-start caffeinate ───────────────
   // MacBook sleep kills the import process. caffeinate prevents it.
@@ -913,7 +1051,10 @@ async function main() {
 
   const ctx = { supabase, r2, proxyPool, rateLimiter, domainRotator };
 
-  console.log(`⚙️  Config: delay=${opts.delay}ms, concurrency=${opts.concurrency}, dryRun=${!!opts.dryRun}, skipImages=${!!opts.skipImages}, proxy=${!!opts.proxy}, rating=${opts.rating}\n`);
+  const batchInfo = opts.mode === 'auto-update' || opts.mode === 'batch' || opts.mode === 'sitemap'
+    ? `, batchSize=${opts.batchSize}, batchPause=${opts.batchPause / 60_000}min`
+    : '';
+  console.log(`⚙️  Config: delay=${opts.delay}ms, concurrency=${opts.concurrency} chapters, parallelImages=${opts.parallelImages}${batchInfo}, dryRun=${!!opts.dryRun}, skipImages=${!!opts.skipImages}, proxy=${!!opts.proxy}, rating=${opts.rating}\n`);
 
   try {
     switch (opts.mode) {
@@ -983,6 +1124,27 @@ async function main() {
       case 'auto-update':
         await autoUpdate(opts, ctx);
         break;
+
+      case 'backfill-empty': {
+        // Delegate to backfill-all-empty-images.mjs (standalone script)
+        // This script handles its own proxy/R2/concurrency logic.
+        const { spawn } = await import('child_process');
+        const passArgs = ['scripts/backfill-all-empty-images.mjs'];
+        if (opts.manga) passArgs.push(`--manga=${opts.manga}`);
+        if (opts.limit) passArgs.push(`--limit=${opts.limit}`);
+        passArgs.push(`--concurrency=${opts.concurrency}`);
+        if (opts.dryRun) passArgs.push('--dry-run');
+        // --proxy is implicit (default). Use --direct only if explicitly no proxy.
+        if (opts.direct === true) passArgs.push('--direct');
+
+        console.log(`🚀 Spawning backfill: node ${passArgs.join(' ')}\n`);
+        const child = spawn('node', passArgs, { stdio: 'inherit', cwd: process.cwd() });
+        await new Promise((resolve, reject) => {
+          child.on('close', code => code === 0 ? resolve() : reject(new Error(`Backfill exited ${code}`)));
+          child.on('error', reject);
+        });
+        break;
+      }
     }
 
     console.log('\n═══════════════════════════════════════════════════════════');

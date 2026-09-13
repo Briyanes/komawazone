@@ -53,16 +53,16 @@ function parseProxyList(raw: string): ProxyEntry[] {
 }
 
 const FALLBACK_PROXIES = [
-  '31.59.20.176:6754:ozfcoksy:862ttfhg7gcb',
-  '92.113.242.158:6742:ozfcoksy:862ttfhg7gcb',
-  '23.95.150.145:6114:ozfcoksy:862ttfhg7gcb',
-  '38.154.203.95:5863:ozfcoksy:862ttfhg7gcb',
-  '198.105.121.200:6462:ozfcoksy:862ttfhg7gcb',
-  '64.137.96.74:6641:ozfcoksy:862ttfhg7gcb',
-  '38.154.185.97:6370:ozfcoksy:862ttfhg7gcb',
-  '142.111.67.146:5611:ozfcoksy:862ttfhg7gcb',
-  '191.96.254.138:6185:ozfcoksy:862ttfhg7gcb',
-  '2.57.20.2:6983:ozfcoksy:862ttfhg7gcb',
+  '31.59.20.176:6754:nyjltniw:bmybfkz4plhk',
+  '31.56.127.193:7684:nyjltniw:bmybfkz4plhk',
+  '45.38.107.97:6014:nyjltniw:bmybfkz4plhk',
+  '198.105.121.200:6462:nyjltniw:bmybfkz4plhk',
+  '64.137.96.74:6641:nyjltniw:bmybfkz4plhk',
+  '198.23.243.226:6361:nyjltniw:bmybfkz4plhk',
+  '38.154.185.97:6370:nyjltniw:bmybfkz4plhk',
+  '84.247.60.125:6095:nyjltniw:bmybfkz4plhk',
+  '142.111.67.146:5611:nyjltniw:bmybfkz4plhk',
+  '191.96.254.138:6185:nyjltniw:bmybfkz4plhk',
 ].join(',');
 
 export function getProxyPool(): ProxyEntry[] {
