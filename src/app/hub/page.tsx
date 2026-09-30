@@ -106,16 +106,29 @@ export default async function HubPage() {
         {/* Spacer */}
         <div style={{ height: '64px' }} />
 
-        {/* Logo */}
+        {/* Logo — mata adaptif tema (ring hitam di light, putih di dark) */}
         <Image
           src="/logo/olluq-favicon-512.png"
           alt="OLLUQ"
           width={80}
           height={80}
           priority
+          className="hub-logo-light"
           style={{
             width: '80px', height: '80px', borderRadius: '24px',
             boxShadow: '0 8px 32px rgba(255, 107, 53, 0.3)',
+          }}
+        />
+        <Image
+          src="/logo/olluq-eye-white.png"
+          alt=""
+          width={80}
+          height={80}
+          priority
+          className="hub-logo-dark"
+          style={{
+            width: '80px', height: '80px', borderRadius: '24px',
+            boxShadow: '0 8px 32px rgba(255, 107, 53, 0.35)',
           }}
         />
 

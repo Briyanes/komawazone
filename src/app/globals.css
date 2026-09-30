@@ -276,6 +276,12 @@ footer .olluq-logo-dark {
   height: 40px !important; /* → lebar ±127px */
 }
 
+/* ── Logo hub (olluq.com) — mata hitam di light, putih di dark ── */
+.hub-logo-light { display: block; }
+.hub-logo-dark  { display: none; }
+[data-theme="dark"] .hub-logo-light { display: none; }
+[data-theme="dark"] .hub-logo-dark  { display: block; }
+
 /* ── Reader ────────────────────────────────────────────────────────── */
 .reader-image {
   display: block;
