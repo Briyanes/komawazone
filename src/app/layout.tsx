@@ -44,6 +44,9 @@ export const metadata: Metadata = {
     telephone: false,
   },
   manifest: '/manifest.webmanifest',
+  verification: {
+    google: 'oPUZ9SJ4Z5HY7_5OZ2gcduLOqsDWmSWxqpZ2t8KcXi8',
+  },
 };
 
 export const viewport: Viewport = {
