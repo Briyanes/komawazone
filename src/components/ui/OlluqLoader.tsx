@@ -1,6 +1,7 @@
 'use client';
 
 import { CSSProperties } from 'react';
+import Image from 'next/image';
 
 type Size = 'sm' | 'md' | 'lg' | 'xl';
 
@@ -92,7 +93,13 @@ export default function OlluqLoader({
         <div style={ringStyle} />
         <div style={ringStyle2} />
         <div style={logoStyle}>
-          <span style={logoTextStyle}>O</span>
+          <Image
+            src="/logo/olluq-favicon-512.png"
+            alt=""
+            width={s.box}
+            height={s.box}
+            style={{ width: s.box * 0.8, height: s.box * 0.8 }}
+          />
         </div>
       </div>
       {text && (
@@ -110,10 +117,3 @@ export default function OlluqLoader({
     </div>
   );
 }
-
-const logoTextStyle: CSSProperties = {
-  background: 'linear-gradient(135deg, var(--accent-primary, #6366f1), var(--accent-secondary, #8b5cf6))',
-  WebkitBackgroundClip: 'text',
-  WebkitTextFillColor: 'transparent',
-  backgroundClip: 'text',
-};

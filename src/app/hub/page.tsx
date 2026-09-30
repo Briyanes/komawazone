@@ -1,5 +1,6 @@
 import { Metadata } from 'next';
-import { Zap, BookOpen, Compass, Search, Flame, TrendingUp, Gift, Sparkles, ArrowRight, Crown } from 'lucide-react';
+import Image from 'next/image';
+import { BookOpen, Compass, Search, Flame, TrendingUp, Gift, Sparkles, ArrowRight, Crown } from 'lucide-react';
 import { READER_DOMAIN } from '@/config/domains';
 import { createClient } from '@/lib/supabase/server';
 
@@ -106,14 +107,17 @@ export default async function HubPage() {
         <div style={{ height: '64px' }} />
 
         {/* Logo */}
-        <div style={{
-          width: '80px', height: '80px', borderRadius: '24px',
-          background: 'linear-gradient(135deg, #FF6B35 0%, #E85A28 100%)',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          boxShadow: '0 8px 32px rgba(255, 107, 53, 0.3)',
-        }}>
-          <Zap size={40} color="white" />
-        </div>
+        <Image
+          src="/logo/olluq-favicon-512.png"
+          alt="OLLUQ"
+          width={80}
+          height={80}
+          priority
+          style={{
+            width: '80px', height: '80px', borderRadius: '24px',
+            boxShadow: '0 8px 32px rgba(255, 107, 53, 0.3)',
+          }}
+        />
 
         {/* Title */}
         <h1 style={{

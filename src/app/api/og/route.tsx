@@ -11,6 +11,22 @@ export async function GET(request: NextRequest) {
   const status = searchParams.get('status') ?? '';
   const rating = searchParams.get('rating') ?? '';
 
+  // Brand eye logo → base64 data URI (satori cannot read local files in edge runtime)
+  let logoSrc = '';
+  try {
+    const logoRes = await fetch(new URL('/logo/olluq-favicon-512.png', request.url));
+    if (logoRes.ok) {
+      const bytes = new Uint8Array(await logoRes.arrayBuffer());
+      let binary = '';
+      for (let i = 0; i < bytes.length; i += 8192) {
+        binary += String.fromCharCode(...bytes.subarray(i, i + 8192));
+      }
+      logoSrc = `data:image/png;base64,${btoa(binary)}`;
+    }
+  } catch {
+    // fallback: emoji badge below
+  }
+
   return new ImageResponse(
     (
       <div
@@ -95,7 +111,18 @@ export async function GET(request: NextRequest) {
               width: 'fit-content',
             }}
           >
-            <span style={{ color: '#FF6B35', fontSize: 14, fontWeight: 700 }}>📚 OLLUQ</span>
+            {logoSrc ? (
+              <img
+                src={logoSrc}
+                alt="OLLUQ"
+                width={26}
+                height={26}
+                style={{ width: 26, height: 26, borderRadius: 6, display: 'block' }}
+              />
+            ) : (
+              <span style={{ fontSize: 14 }}>📚</span>
+            )}
+            <span style={{ color: '#FF6B35', fontSize: 14, fontWeight: 700, letterSpacing: 1 }}>OLLUQ</span>
           </div>
 
           {/* Title */}

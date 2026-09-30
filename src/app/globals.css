@@ -248,6 +248,12 @@ img, video {
   filter: invert(1);
 }
 
+/* ── OLLUQ wordmark — adaptif tema (teks gelap di light, putih di dark) ── */
+.olluq-logo-light { display: block; }
+.olluq-logo-dark  { display: none; }
+[data-theme="dark"] .olluq-logo-light { display: none; }
+[data-theme="dark"] .olluq-logo-dark  { display: block; }
+
 /* ── Reader ────────────────────────────────────────────────────────── */
 .reader-image {
   display: block;

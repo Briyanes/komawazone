@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 import { InAppBrowserBanner } from '@/components/InAppBrowserBanner';
 
 export const metadata: Metadata = {
@@ -11,15 +12,25 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   return (
     <div className="min-h-dvh flex flex-col items-center justify-center px-4 py-12"
       style={{ background: 'var(--bg-secondary)' }}>
-      {/* Brand header */}
+      {/* Brand header — wordmark adaptif tema */}
       <div className="mb-8 text-center">
-        <Link href="/" className="inline-block">
-          <span
-            className="text-3xl font-bold"
-            style={{ fontFamily: 'var(--font-playfair)', color: 'var(--color-primary)' }}
-          >
-            OLLUQ
-          </span>
+        <Link href="/" aria-label="OLLUQ — Beranda" className="inline-block">
+          <Image
+            src="/logo/olluq-logo-dark-trim.png"
+            alt="OLLUQ"
+            width={720}
+            height={227}
+            priority
+            className="olluq-logo-light mx-auto h-10 w-auto"
+          />
+          <Image
+            src="/logo/olluq-logo-white-trim.png"
+            alt=""
+            width={720}
+            height={227}
+            priority
+            className="olluq-logo-dark mx-auto h-10 w-auto"
+          />
         </Link>
       </div>
 

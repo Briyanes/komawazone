@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { useState } from 'react';
 import { Gift, ShieldCheck, Heart, ChevronDown } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
@@ -51,18 +52,25 @@ export function Footer() {
 
           {/* Card 1 — Brand */}
           <div className="rounded-2xl p-6" style={{ background: 'var(--bg-secondary)', border: '1px solid var(--border-light)' }}>
-            <Link href="/" className="mb-4 flex items-center gap-3">
-              <div
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white font-black text-base shadow-lg"
-                style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}
-              >
-                OQ
-              </div>
-              <div>
-                <div className="text-base font-black leading-none" style={{ color: 'var(--text-primary)' }}>OLLUQ</div>
-                <div className="mt-0.5 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: '#FF6B35' }}>All Look Beyond Fantasy</div>
-              </div>
+            <Link href="/" aria-label="OLLUQ — Beranda" className="mb-1 flex items-center gap-3">
+              <Image
+                src="/logo/olluq-logo-dark-trim.png"
+                alt="OLLUQ"
+                width={720}
+                height={227}
+                className="olluq-logo-light h-9 w-auto"
+              />
+              <Image
+                src="/logo/olluq-logo-white-trim.png"
+                alt=""
+                width={720}
+                height={227}
+                className="olluq-logo-dark h-9 w-auto"
+              />
             </Link>
+            <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: '#FF6B35' }}>
+              All Look Beyond Fantasy
+            </div>
             <p className="mb-5 text-xs leading-relaxed" style={{ color: 'var(--text-tertiary)' }}>
               <strong>OLLUQ</strong> menghadirkan pengalaman membaca manga, manhwa, dan manhua Indonesia dengan tampilan modern, cepat, dan nyaman.
             </p>

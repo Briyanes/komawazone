@@ -22,27 +22,27 @@ export default function manifest(): MetadataRoute.Manifest {
         short_name: 'Jelajah',
         description: 'Cari manga, manhwa, manhua',
         url: '/search?source=pwa_shortcut',
-        icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+        icons: [{ src: '/icons/olluq-icon-192.png', sizes: '192x192', type: 'image/png' }],
       },
       {
         name: 'Daftar Baca',
         short_name: 'Bookmark',
         description: 'Manga yang disimpan',
         url: '/bookmarks?source=pwa_shortcut',
-        icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+        icons: [{ src: '/icons/olluq-icon-192.png', sizes: '192x192', type: 'image/png' }],
       },
       {
         name: 'Klaim VIP Gratis',
         short_name: 'VIP Gratis',
         description: 'Aktifkan 1 bulan VIP gratis',
         url: '/vip?source=pwa_shortcut',
-        icons: [{ src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' }],
+        icons: [{ src: '/icons/olluq-icon-192.png', sizes: '192x192', type: 'image/png' }],
       },
     ],
     icons: [
-      { src: '/icons/icon-192.png', sizes: '192x192', type: 'image/png' },
-      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png' },
-      { src: '/icons/icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      { src: '/icons/olluq-icon-192.png', sizes: '192x192', type: 'image/png' },
+      { src: '/icons/olluq-icon-512.png', sizes: '512x512', type: 'image/png' },
+      { src: '/icons/olluq-icon-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
     ],
   };
 }

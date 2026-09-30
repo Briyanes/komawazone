@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import { Search, X, LogIn, UserPlus, User as UserIcon, Bookmark, LogOut, Crown, LayoutDashboard } from 'lucide-react';
 import { useState, useRef, useEffect } from 'react';
@@ -43,20 +44,23 @@ export function Header() {
       }}
     >
       <div className="mx-auto flex h-14 md:h-20 max-w-7xl items-center gap-3 px-4 md:px-6">
-        {/* Logo */}
-        <Link href="/" className="mr-2 shrink-0 flex items-center gap-2">
-          <span
-            className="flex h-8 w-8 md:h-10 md:w-10 items-center justify-center rounded-xl md:rounded-2xl text-sm md:text-base font-black shadow-lg text-white"
-            style={{ background: 'linear-gradient(135deg, #FF6B35, #E85A28)' }}
-          >
-            OQ
-          </span>
-          <span
-            className="hidden sm:inline text-xl font-black tracking-tight"
-            style={{ color: 'var(--text-primary)' }}
-          >
-            OLLUQ
-          </span>
+        {/* Logo — wordmark adaptif tema (teks gelap di light, putih di dark) */}
+        <Link href="/" aria-label="OLLUQ — Beranda" className="mr-2 shrink-0 flex items-center">
+          <Image
+            src="/logo/olluq-logo-dark-trim.png"
+            alt="OLLUQ"
+            width={720}
+            height={227}
+            priority
+            className="olluq-logo-light h-8 w-auto md:h-10"
+          />
+          <Image
+            src="/logo/olluq-logo-white-trim.png"
+            alt=""
+            width={720}
+            height={227}
+            className="olluq-logo-dark h-8 w-auto md:h-10"
+          />
         </Link>
 
         {/* Desktop nav */}

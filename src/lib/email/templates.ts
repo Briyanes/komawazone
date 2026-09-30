@@ -39,8 +39,8 @@ function emailShell(
             <!-- Header -->
             <tr>
               <td style="padding:28px 32px 16px;background:linear-gradient(135deg,#7c3aed 0%,#a855f7 100%);">
-                <div style="font-size:24px;font-weight:800;color:#ffffff;letter-spacing:-0.5px;">Olluq</div>
-                <div style="font-size:13px;color:#e9d5ff;margin-top:2px;">Baca Manga Tanpa Batas</div>
+                <img src="https://olluq.xyz/logo/olluq-logo-white-trim.png" alt="Olluq" width="140" height="44" style="display:block;width:140px;height:44px;max-width:100%;border:0;outline:none;text-decoration:none;">
+                <div style="font-size:13px;color:#e9d5ff;margin-top:6px;">Baca Manga Tanpa Batas</div>
               </td>
             </tr>
 
