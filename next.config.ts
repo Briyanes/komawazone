@@ -12,6 +12,14 @@ const nextConfig: NextConfig = {
       {
         pathname: '/api/r2/image/**',
       },
+      {
+        // Brand assets (OLLUQ wordmark + eye logo) served via <Image>
+        pathname: '/logo/**',
+      },
+      {
+        // Static icons folder (PWA icons, social icons)
+        pathname: '/icons/**',
+      },
     ],
     remotePatterns: [
       {
