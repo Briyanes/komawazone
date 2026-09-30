@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { READER_DOMAIN } from '@/config/domains';
+import { HUB_DOMAIN, READER_DOMAIN } from '@/config/domains';
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? `https://${READER_DOMAIN}`;
 
@@ -13,7 +13,40 @@ function xmlEscape(str: string) {
     .replace(/'/g, '&apos;');
 }
 
-export async function GET() {
+const XML_HEADERS = {
+  'Content-Type': 'application/xml; charset=utf-8',
+  'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
+};
+
+export async function GET(request: NextRequest) {
+  const host = request.headers.get('host')?.split(':')[0] ?? '';
+
+  // ── Hub domain (olluq.com): sitemap kecil khusus halaman landing ──
+  // Sitemap untuk property GSC https://olluq.com/ harus berisi URL olluq.com saja.
+  if (host === HUB_DOMAIN) {
+    const hubPages = [
+      { url: '/', priority: '1.0', changefreq: 'weekly' },
+      { url: '/about', priority: '0.5', changefreq: 'monthly' },
+      { url: '/contact', priority: '0.5', changefreq: 'monthly' },
+      { url: '/terms', priority: '0.3', changefreq: 'monthly' },
+      { url: '/privacy', priority: '0.3', changefreq: 'monthly' },
+    ];
+    const hubXml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${hubPages
+  .map(
+    entry => `  <url>
+    <loc>${xmlEscape(`https://${HUB_DOMAIN}${entry.url}`)}</loc>
+    <changefreq>${entry.changefreq}</changefreq>
+    <priority>${entry.priority}</priority>
+  </url>`
+  )
+  .join('\n')}
+</urlset>`;
+    return new NextResponse(hubXml, { headers: XML_HEADERS });
+  }
+
+  // ── Reader domain (olluq.xyz): sitemap penuh ──
   const supabase = await createClient();
 
   const [{ data: mangaList }, { data: genreRows }, { data: chapterRows }] = await Promise.all([
@@ -83,9 +116,6 @@ ${allEntries
 </urlset>`;
 
   return new NextResponse(xml, {
-    headers: {
-      'Content-Type': 'application/xml; charset=utf-8',
-      'Cache-Control': 'public, max-age=3600, stale-while-revalidate=86400',
-    },
+    headers: XML_HEADERS,
   });
 }

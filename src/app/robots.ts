@@ -1,8 +1,15 @@
 import type { MetadataRoute } from 'next';
+import { headers } from 'next/headers';
+import { HUB_DOMAIN, READER_DOMAIN } from '@/config/domains';
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'https://olluq.com';
+export default async function robots(): Promise<MetadataRoute.Robots> {
+  // Host-aware: robots.txt tiap domain menunjuk sitemap domainnya sendiri
+  const host = (await headers()).get('host')?.split(':')[0] ?? '';
+  const isHub = host === HUB_DOMAIN;
+  const sitemapUrl = isHub
+    ? `https://${HUB_DOMAIN}/sitemap.xml`
+    : `https://${READER_DOMAIN}/sitemap.xml`;
 
-export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
@@ -16,6 +23,6 @@ export default function robots(): MetadataRoute.Robots {
         disallow: '/',
       },
     ],
-    sitemap: `${SITE_URL}/sitemap.xml`,
+    sitemap: sitemapUrl,
   };
 }
