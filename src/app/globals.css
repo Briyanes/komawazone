@@ -248,11 +248,33 @@ img, video {
   filter: invert(1);
 }
 
-/* ── OLLUQ wordmark — adaptif tema (teks gelap di light, putih di dark) ── */
+/* ── OLLUQ wordmark — adaptif tema + ukuran (unlayered agar menang atas reset img) ── */
 .olluq-logo-light { display: block; }
 .olluq-logo-dark  { display: none; }
 [data-theme="dark"] .olluq-logo-light { display: none; }
 [data-theme="dark"] .olluq-logo-dark  { display: block; }
+
+/* Ukuran: 40–50% tinggi navbar (praktik UI standar untuk wordmark) */
+.olluq-logo-light,
+.olluq-logo-dark {
+  height: 28px;   /* header mobile: 50% dari bar h-14 (56px) → lebar ±89px */
+  width: auto;
+}
+@media (min-width: 768px) {
+  .olluq-logo-light,
+  .olluq-logo-dark {
+    height: 36px; /* header desktop: 45% dari bar h-20 (80px) → lebar ±114px */
+  }
+}
+/* Footer: skala kartu brand, tidak menyaingi judul */
+footer .olluq-logo-light,
+footer .olluq-logo-dark {
+  height: 32px;   /* → lebar ±101px */
+}
+/* Auth: brand mark standalone terpusat */
+.olluq-logo-lg {
+  height: 40px !important; /* → lebar ±127px */
+}
 
 /* ── Reader ────────────────────────────────────────────────────────── */
 .reader-image {

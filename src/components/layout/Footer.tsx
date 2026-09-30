@@ -58,14 +58,14 @@ export function Footer() {
                 alt="OLLUQ"
                 width={720}
                 height={227}
-                className="olluq-logo-light h-9 w-auto"
+                className="olluq-logo-light"
               />
               <Image
                 src="/logo/olluq-logo-white-trim.png"
                 alt=""
                 width={720}
                 height={227}
-                className="olluq-logo-dark h-9 w-auto"
+                className="olluq-logo-dark"
               />
             </Link>
             <div className="mb-4 text-[10px] font-bold uppercase tracking-[0.2em]" style={{ color: '#FF6B35' }}>

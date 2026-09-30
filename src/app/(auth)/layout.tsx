@@ -21,7 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             width={720}
             height={227}
             priority
-            className="olluq-logo-light mx-auto h-10 w-auto"
+            className="olluq-logo-light olluq-logo-lg mx-auto"
           />
           <Image
             src="/logo/olluq-logo-white-trim.png"
@@ -29,7 +29,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             width={720}
             height={227}
             priority
-            className="olluq-logo-dark mx-auto h-10 w-auto"
+            className="olluq-logo-dark olluq-logo-lg mx-auto"
           />
         </Link>
       </div>

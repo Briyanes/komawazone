@@ -52,14 +52,14 @@ export function Header() {
             width={720}
             height={227}
             priority
-            className="olluq-logo-light h-8 w-auto md:h-10"
+            className="olluq-logo-light"
           />
           <Image
             src="/logo/olluq-logo-white-trim.png"
             alt=""
             width={720}
             height={227}
-            className="olluq-logo-dark h-8 w-auto md:h-10"
+            className="olluq-logo-dark"
           />
         </Link>
 
