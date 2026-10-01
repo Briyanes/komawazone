@@ -1,0 +1,48 @@
+name: Image Backfill (Playwright)
+
+# Mengisi gambar chapter ke R2 via browser nyata (lolos Cloudflare).
+# Laptop TIDAK diperlukan — berjalan di runner GitHub (repo public = gratis).
+
+on:
+  workflow_dispatch:
+    inputs:
+      limit:
+        description: 'Jumlah chapter per run'
+        default: '5'
+      minutes:
+        description: 'Time-box (menit)'
+        default: '10'
+  # schedule diaktifkan setelah uji pertama lolos:
+  # schedule:
+  #   - cron: '30 17 * * *'   # 00:30 WIB harian
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run image backfill
+        run: node scripts/image-backfill.mjs
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_BUCKET: ${{ secrets.R2_BUCKET }}
+          NEXT_PUBLIC_R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
+          LIMIT: ${{ inputs.limit || '5' }}
+          MINUTES: ${{ inputs.minutes || '10' }}
