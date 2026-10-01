@@ -12,9 +12,9 @@ on:
       minutes:
         description: 'Time-box (menit)'
         default: '10'
-  # schedule diaktifkan setelah uji pertama lolos:
-  # schedule:
-  #   - cron: '30 17 * * *'   # 00:30 WIB harian
+  # Diaktifkan 2026-10-01 — uji pertama lolos di runner GH (Cloudflare passed):
+  schedule:
+    - cron: '30 17 * * *'   # 00:30 WIB harian
 
 jobs:
   backfill:
