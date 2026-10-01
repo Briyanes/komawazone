@@ -151,7 +151,8 @@ export async function GET(request: NextRequest) {
   });
 }
 
-async function runBackfill(
+// Exported for reuse by /api/cron/storage-backfill (cron has no user session)
+export async function runBackfill(
   jobId: string | null,
   type: 'manga' | 'chapters' | 'all',
   limit: number,

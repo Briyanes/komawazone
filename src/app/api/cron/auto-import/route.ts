@@ -92,14 +92,14 @@ async function runAutoImport(sources: ActiveSource[]) {
   // ~1K rows × ~50 bytes = ~50KB egress ONCE vs. hundreds of round-trips.
   const { data: allManga } = await supabase
     .from('manga')
-    .select('id, slug, source_url')
+    .select('id, slug, source_url, source_id')
     .is('deleted_at', null);
 
-  const existingBySlug = new Map<string, { id: string; source_url: string | null }>();
-  const existingByUrl = new Map<string, { id: string; source_url: string | null }>();
-  for (const m of (allManga ?? []) as Array<{ id: string; slug: string; source_url: string | null }>) {
-    existingBySlug.set(m.slug, { id: m.id, source_url: m.source_url });
-    if (m.source_url) existingByUrl.set(m.source_url, { id: m.id, source_url: m.source_url });
+  const existingBySlug = new Map<string, { id: string; source_url: string | null; source_id: string | null }>();
+  const existingByUrl = new Map<string, { id: string; source_url: string | null; source_id: string | null }>();
+  for (const m of (allManga ?? []) as unknown as Array<{ id: string; slug: string; source_url: string | null; source_id: string | null }>) {
+    existingBySlug.set(m.slug, { id: m.id, source_url: m.source_url, source_id: m.source_id });
+    if (m.source_url) existingByUrl.set(m.source_url, { id: m.id, source_url: m.source_url, source_id: m.source_id });
   }
   console.log(`[AutoImport] Loaded ${existingBySlug.size} existing manga into memory`);
 
@@ -176,8 +176,8 @@ async function runAutoImport(sources: ActiveSource[]) {
             if (result === 'new') {
               totalNew++; newThisSource++;
               // Add to in-memory maps so subsequent sitemap items don't re-import
-              existingBySlug.set(item.slug, { id: 'pending', source_url: item.url });
-              existingByUrl.set(item.url, { id: 'pending', source_url: item.url });
+              existingBySlug.set(item.slug, { id: 'pending', source_url: item.url, source_id: source.id });
+              existingByUrl.set(item.url, { id: 'pending', source_url: item.url, source_id: source.id });
             }
             else if (result === 'failed') totalFailed++;
             else totalSkipped++;
@@ -191,6 +191,18 @@ async function runAutoImport(sources: ActiveSource[]) {
               continue;
             }
             checkedThisSource++;
+
+            // ── DOMAIN MIGRATION ─────────────────────────────────────────────
+            // Sumber yang sama tapi URL-nya berubah (rotasi domain, spt.
+            // manhwaindo) → update source_url di DB agar cron check-new-chapters
+            // (yang membaca manga.source_url) otomatis mengikuti domain baru.
+            if (existing.source_id === source.id && existing.source_url && existing.source_url !== item.url) {
+              await supabase.from('manga').update({ source_url: item.url }).eq('id', existing.id);
+              existingByUrl.delete(existing.source_url);
+              existing.source_url = item.url;
+              existingByUrl.set(item.url, existing);
+              console.log(`[AutoImport] ↻ ${item.slug}: source_url dimigrasi → ${item.url}`);
+            }
 
             // Use in-memory chapter count (no DB query)
             const dbCount = chapterCountMap.get(existing.id) ?? 0;
