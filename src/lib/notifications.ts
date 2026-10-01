@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 /**
  * Notification helpers — creates rows in the `notifications` table.
@@ -23,7 +23,8 @@ interface CreateNotificationInput {
 }
 
 export async function createNotification(input: CreateNotificationInput) {
-  const supabase = await createClient();
+  // Service-role: dipanggil dari cron (tanpa sesi user)
+  const supabase = createAdminClient();
   const { error } = await supabase.from('notifications').insert({
     user_id: input.userId,
     type: input.type,
@@ -48,7 +49,8 @@ export async function notifyNewChapters(
   mangaTitle: string,
   newChapterCount: number
 ) {
-  const supabase = await createClient();
+  // Service-role: dipanggil dari cron (tanpa sesi user)
+  const supabase = createAdminClient();
 
   // Find all users who bookmarked this manga
   const { data: bookmarks, error } = await supabase

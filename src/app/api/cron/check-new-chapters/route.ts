@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export const maxDuration = 300;
 
@@ -19,7 +19,8 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = await createClient();
+  // Service-role: cron tanpa sesi user (RLS)
+  const supabase = createAdminClient();
 
   // Ambil manga yang punya source_url dan belum di-soft-delete
   const { data: mangaList, error } = await supabase
@@ -51,7 +52,8 @@ export async function GET(req: NextRequest) {
 async function runChapterCheck(
   mangaList: Array<{ id: string; slug: string; title: string; source_url: string }>
 ) {
-  const supabase = await createClient();
+  // Service-role: cron tanpa sesi user (RLS)
+  const supabase = createAdminClient();
   const { parseChapterListFromHtml } = await import('@/lib/scrapers/manga-scraper');
   const { buildScraperHeaders } = await import('@/lib/scrapers/scraper-utils');
   const { importAllChapters } = await import('@/app/api/v1/admin/scrape/manga-chapters/route');

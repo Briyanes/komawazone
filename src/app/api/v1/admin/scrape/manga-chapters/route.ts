@@ -157,7 +157,9 @@ export async function importAllChapters(
   jobId: string | null = null,
   timeBudgetMs = 40_000,
 ): Promise<ChapterImportResult> {
-  const supabase = await createClient();
+  // Dipanggil dari cron (tanpa sesi) & admin UI — pakai service-role agar
+  // upsert chapter/chapter_images tidak diblokir RLS di konteks cron.
+  const supabase = createAdminClient();
   const adminSupabase = createAdminClient();
   const startTime = Date.now();
 

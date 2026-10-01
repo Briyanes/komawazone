@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse, after } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 import { parseAllSitemaps } from '@/lib/scrapers/sitemap-parser';
 import { scrapeMangaFromUrl } from '@/lib/scrapers/manga-scraper';
 import { buildScraperHeaders } from '@/lib/scrapers/scraper-utils';
@@ -30,7 +30,9 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const supabase = await createClient();
+  // Cron berjalan tanpa sesi user — wajib service-role (RLS memblokir anon
+  // pada tabel manga_sources; sebelumnya cron selalu "No active sources")
+  const supabase = createAdminClient();
 
   // Fetch all active sources
   const { data: sources, error: srcError } = await supabase
@@ -66,7 +68,8 @@ interface ActiveSource {
 }
 
 async function runAutoImport(sources: ActiveSource[]) {
-  const supabase = await createClient();
+  // Service-role: cron context, bypass RLS untuk baca manga & tulis migrasi
+  const supabase = createAdminClient();
 
   let totalNew = 0;
   let totalUpdated = 0;
@@ -261,7 +264,8 @@ async function importNewManga(
   contentRating: 'general' | 'mature',
   sourceType: string,
 ): Promise<'new' | 'skipped' | 'failed'> {
-  const supabase = await createClient();
+  // Service-role: cron context, upsert manga butuh bypass RLS
+  const supabase = createAdminClient();
 
   try {
     const scraped = await scrapeMangaFromUrl(url);
