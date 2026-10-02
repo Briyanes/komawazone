@@ -453,10 +453,11 @@ async function printMetrics() {
       const r = await REST(`${table}?${q}&limit=1`, { headers: { Prefer: 'count=exact' } });
       return (r.headers.get('content-range') || '?/').split('/')[1];
     };
-    const imgs = await countOf('chapter_images', 'select=id');
+    // Backlog = chapter tanpa thumbnail (thumbnail diset saat gambar terisi)
+    const backlog = await countOf('chapters', 'select=id&deleted_at=is.null&thumbnail_url=is.null');
     const chaptersTotal = await countOf('chapters', 'select=id');
     const deadCovers = await countOf('manga', 'select=id&deleted_at=is.null&or=(cover_url.like.*gmbr.pro*,cover_url.like.*gmbar.xyz*,cover_url.like.*uwakjawa.xyz*)');
-    console.log(`[metrics] chapter_images=${imgs} | chapters=${chaptersTotal} | cover-mati=${deadCovers}`);
+    console.log(`[metrics] backlog-chapter-tanpa-gambar=${backlog} | chapters=${chaptersTotal} | cover-mati=${deadCovers}`);
   } catch (e) {
     console.log(`[metrics] gagal: ${e.message}`);
   }
@@ -556,22 +557,25 @@ async function printMetrics() {
           const rows = [];
           for (let i = 0; i < images.length; i++) {
             const up = await uploadToR2(images[i].buffer, images[i].contentType);
-            rows.push({ chapter_id: t.id, number: i + 1, image_url: up.url });
+            rows.push({ number: i + 1, image_url: up.url });
           }
-          // Hapus baris lama sebelum insert: hasil scrape fresh bisa lebih pendek
-          // dari data lama (iklan terbuang) — upsert saja akan menyisakan baris
-          // nomor lama yang tidak valid / duplikat halaman terakhir.
-          const del = await REST(`chapter_images?chapter_id=eq.${t.id}`, { method: 'DELETE' });
-          if (!del.ok) throw new Error(`delete chapter_images HTTP ${del.status}`);
 
-          const ins = await REST(`chapter_images`, {
-            method: 'POST',
-            body: JSON.stringify(rows),
-          });
-          if (!ins.ok) throw new Error(`insert chapter_images HTTP ${ins.status}: ${(await ins.text()).slice(0, 150)}`);
+          // 2026-10-02 "R2-first": daftar halaman ditulis sebagai manifest JSON
+          // ke R2 (dibaca reader via CDN) — BUKAN baris chapter_images di DB,
+          // demi ukuran DB Supabase free tier. Manifest atomik per objek;
+          // refresh chapter = overwrite manifest (cache CDN 5 menit).
+          const manifest = { v: 1, images: rows.map((r) => ({ n: r.number, u: r.image_url })) };
+          await s3.send(new PutObjectCommand({
+            Bucket: ENV.R2_BUCKET,
+            Key: `manifests/ch/${t.id}.json`,
+            Body: JSON.stringify(manifest),
+            ContentType: 'application/json',
+            CacheControl: 'public, max-age=300',
+          }));
 
           // Thumbnail = gambar ke-5 DARI BELAKANG (aturan migration 039 + admin
-          // routes); fallback gambar pertama.
+          // routes); fallback gambar pertama. Tetap disimpan di tabel chapters
+          // (kecil) untuk daftar chapter di halaman manga.
           const thumbIdx = rows.length >= 5 ? rows.length - 5 : 0;
           await REST(`chapters?id=eq.${t.id}`, { method: 'PATCH', body: JSON.stringify({ thumbnail_url: rows[thumbIdx].image_url }) });
 

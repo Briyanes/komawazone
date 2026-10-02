@@ -16,11 +16,27 @@ export default async function EditChapterPage({ params }: Props) {
 
   if (!chapter) notFound();
 
-  const { data: images } = await supabase
-    .from('chapter_images')
-    .select('id, number, image_url, width, height')
-    .eq('chapter_id', id)
-    .order('number', { ascending: true });
+  // 2026-10-02 "R2-first": daftar gambar utama kini manifest JSON di R2/CDN.
+  // Fallback Supabase hanya untuk chapter tanpa manifest.
+  const manifestBase = (process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL || 'https://cdn.olluq.xyz').replace(/\/$/, '');
+  let images: Array<{ id: string; number: number; image_url: string; width: number; height: number }> | null = null;
+  try {
+    const r = await fetch(`${manifestBase}/manifests/ch/${id}.json`, { next: { revalidate: 300 } });
+    if (r.ok) {
+      const m = (await r.json()) as { images?: Array<{ n: number; u: string; w?: number | null; h?: number | null }> };
+      if (Array.isArray(m.images)) {
+        images = m.images.map((im) => ({ id: `${id}:${im.n}`, number: im.n, image_url: im.u, width: im.w ?? 0, height: im.h ?? 0 }));
+      }
+    }
+  } catch { /* fallback di bawah */ }
+  if (!images || images.length === 0) {
+    const { data: imgs } = await supabase
+      .from('chapter_images')
+      .select('id, number, image_url, width, height')
+      .eq('chapter_id', id)
+      .order('number', { ascending: true });
+    images = (imgs ?? []) as typeof images;
+  }
 
   const manga = chapter.manga as unknown as { id: string; title: string; slug: string } | null;
 

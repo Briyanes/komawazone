@@ -304,20 +304,53 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
   //   4. Insert to DB (more queries)
   // This caused ~3GB+ egress per billing cycle. Images are now backfilled
   // offline via scripts/backfill-dead-parallel.mjs instead.
+  //
+  // 2026-10-02 "R2-first": daftar URL gambar kini dilayani manifest JSON dari
+  // CDN R2 (manifests/ch/<id>.json, cache 5 menit) — tabel chapter_images
+  // dipurga agar DB muat free tier (518 MB → ±75 MB). Worker menulis manifest
+  // saat backfill. Fallback Supabase tetap ada untuk chapter tanpa manifest.
   const adminClient = createAdminClient();
   const { data, error } = await adminClient
     .from('chapters')
     .select(`
       id, number, title, manga_id, source_url,
-      chapter_images(id, number, image_url, width, height),
       manga(id, slug, title, content_rating, source_url, cover_url)
     `)
     .eq('id', chapterId)
     .single();
 
-  if (error) return null;
+  if (error || !data) return null;
+  const chapter = data as unknown as ChapterDetail;
+  chapter.chapter_images = [];
 
-  return data as unknown as ChapterDetail;
+  const base = (process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL || 'https://cdn.olluq.xyz').replace(/\/$/, '');
+  try {
+    const r = await fetch(`${base}/manifests/ch/${chapterId}.json`, { next: { revalidate: 300 } });
+    if (r.ok) {
+      const m = (await r.json()) as { images?: Array<{ n: number; u: string; w?: number | null; h?: number | null }> };
+      if (Array.isArray(m.images) && m.images.length > 0) {
+        chapter.chapter_images = m.images.map((im) => ({
+          id: `${chapterId}:${im.n}`,
+          number: im.n,
+          image_url: im.u,
+          width: im.w ?? 0,
+          height: im.h ?? 0,
+        }));
+        return chapter;
+      }
+    }
+  } catch {
+    // jatuh ke fallback Supabase di bawah
+  }
+
+  // Fallback: embed lama dari Supabase (chapter tanpa manifest, mis. buatan admin)
+  const { data: imgs } = await adminClient
+    .from('chapter_images')
+    .select('id, number, image_url, width, height')
+    .eq('chapter_id', chapterId)
+    .order('number', { ascending: true });
+  chapter.chapter_images = (imgs ?? []) as unknown as ChapterImage[];
+  return chapter;
 }
 
 export async function getAdjacentChapters(mangaId: string, currentNumber: number): Promise<{
