@@ -98,7 +98,9 @@ async function uploadToR2(buffer, contentType) {
 const DEAD_COVER_RE = /gmbr\.pro|gmbar\.xyz|uwakjawa\.xyz/i;
 
 async function selectBrokenCovers(limit) {
-  const rows = await (await REST(`manga?select=id,slug,source_url,cover_url&deleted_at=is.null&order=created_at.desc&limit=400`)).json();
+  // Jendela 1500 manga terbaru: cover mati tersebar juga di manga lama
+  // (impor era gmbr), bukan hanya manga baru.
+  const rows = await (await REST(`manga?select=id,slug,source_url,cover_url&deleted_at=is.null&order=created_at.desc&limit=1500`)).json();
   if (!Array.isArray(rows)) return [];
   return rows
     .filter((m) => m.source_url && (!m.cover_url || DEAD_COVER_RE.test(m.cover_url)))
