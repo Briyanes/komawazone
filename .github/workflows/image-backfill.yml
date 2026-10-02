@@ -8,10 +8,13 @@ on:
     inputs:
       limit:
         description: 'Jumlah chapter per run'
-        default: '20'
+        default: '30'
       minutes:
         description: 'Time-box (menit)'
         default: '25'
+      lanes:
+        description: 'Jumlah lane browser paralel'
+        default: '2'
       covers:
         description: 'Jumlah cover mati yang direhost per run (0=off)'
         default: '10'
@@ -19,11 +22,11 @@ on:
         description: 'Jumlah manga tanpa chapter yang diimport daftar chapternya (0=off)'
         default: '3'
   # Diaktifkan 2026-10-01 — uji pertama lolos di runner GH (Cloudflare passed).
-  # 4×/hari (00:30/06:30/12:30/18:30 WIB): backlog gambar ±7.4k chapter hasil
-  # import metadata 2026-10-02; repo public = menit Actions gratis.
+  # 6×/hari tiap 4 jam (00:30/04:30/08:30/12:30/16:30/20:30 WIB) + 2 lane
+  # paralel: backlog gambar ±7.4k chapter (±190-230/hari → tuntas ±5 minggu);
+  # repo public = menit Actions gratis.
   schedule:
-    - cron: '30 17,23 * * *'    # 00:30 & 06:30 WIB
-    - cron: '30 5,11 * * *'     # 12:30 & 18:30 WIB
+    - cron: '30 */4 * * *'
 
 jobs:
   backfill:
@@ -53,7 +56,8 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           NEXT_PUBLIC_R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
-          LIMIT: ${{ inputs.limit || '20' }}
+          LIMIT: ${{ inputs.limit || '30' }}
           MINUTES: ${{ inputs.minutes || '25' }}
+          LANES: ${{ inputs.lanes || '2' }}
           COVER_LIMIT: ${{ inputs.covers || '10' }}
           CHAPTERS_LIMIT: ${{ inputs.chapters || '3' }}

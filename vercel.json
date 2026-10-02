@@ -75,10 +75,6 @@
       "schedule": "0 3 * * *"
     },
     {
-      "path": "/api/cron/check-new-chapters",
-      "schedule": "0 5 * * *"
-    },
-    {
       "path": "/api/cron/auto-import",
       "schedule": "30 1 * * *"
     },

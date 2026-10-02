@@ -54,6 +54,9 @@ const ENV = {
 };
 const LIMIT = Number(process.env.LIMIT || 5);            // max chapter per run
 const MINUTES = Number(process.env.MINUTES || 10);        // time-box
+// Lane paralel: tiap lane punya browser sendiri dan menarik chapter dari
+// antrean bersama. GH ubuntu-latest (2 vCPU/7GB) nyaman dengan 2 lane.
+const LANES = Number(process.env.LANES ?? 2);
 // Fase COVER: rehost cover yang mati (gmbr/gmbar/uwakjawa diblokir Cloudflare
 // 403 global) atau NULL → R2. Diambil dari halaman manga source via browser
 // nyata (og:image), lolos proteksi yang sama dengan halaman chapter.
@@ -214,9 +217,8 @@ async function selectChapters(limit) {
   return result;
 }
 // ── Ambil gambar chapter via browser nyata ────────────────────────────────
-async function fetchChapterImages(origin, slug, number) {
+async function fetchChapterImages(browser, origin, slug, number) {
   const pageUrl = `${origin}/${slug}-chapter-${number}/`;
-  const browser = await chromium.launch({ headless: true });
   const context = await browser.newContext({
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
     viewport: { width: 1280, height: 900 },
@@ -352,7 +354,7 @@ async function fetchChapterImages(origin, slug, number) {
     console.log(`[backfill] ${buffers.length} gambar berhasil diambil${missed ? `, ${missed} gagal` : ''}`);
     return buffers;
   } finally {
-    await browser.close();
+    await context.close(); // browser di-launch per lane oleh main, jangan ditutup di sini
   }
 }
 
@@ -362,6 +364,7 @@ async function fetchChapterImages(origin, slug, number) {
 // chapter = JSON inline ber-escape di HTML (tema AGC) — format yang sama
 // dengan fallback ketiga parseChapterListFromHtml.
 const CHAPTERS_LIMIT = Number(process.env.CHAPTERS_LIMIT ?? 3); // 0 = off
+const SYNC_LIMIT = Number(process.env.SYNC_LIMIT ?? 5);   // manga ongoing dicek/run (0 = off)
 const AGC_CHAPTER_RE = /\{"id":\d+,"title":"[^"]*","url":"https?:\/\/[^"]+","chapter":"\d+(?:\.\d+)?","time":"[^"]*"\}/g;
 
 async function selectChapterlessManga(limit) {
@@ -417,6 +420,39 @@ async function importChaptersFromSeries(m) {
   }
 }
 
+// ── Fase SYNC: manga ongoing → deteksi & insert chapter baru ────────────────
+// Pengganti cron Vercel check-new-chapters (403 oleh CF utk IP datacenter).
+// Window acak dari manga yang paling lama di-update (stale-first) supaya
+// seluruh koleksi tersapu seiring waktu tanpa kolom marker tambahan.
+async function selectOngoingManga(limit) {
+  const off = Math.floor(Math.random() * 240);
+  const rows = (await (await REST(`manga?select=id,slug,source_url&deleted_at=is.null&order=updated_at.asc&limit=400&offset=${off}`)).json()) || [];
+  const out = [];
+  for (const m of rows) {
+    if (!m.source_url || !m.source_url.includes(HOST_FILTER)) continue;
+    const cnt = (await (await REST(`chapters?select=id&manga_id=eq.${m.id}&deleted_at=is.null&limit=1`)).json()) || [];
+    if (cnt.length > 0) out.push(m); // ongoing = sudah punya chapter
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+// ── Metrik penutup: progres terlihat di log tiap run ────────────────────────
+async function printMetrics() {
+  try {
+    const countOf = async (table, q) => {
+      const r = await REST(`${table}?${q}&limit=1`, { headers: { Prefer: 'count=exact' } });
+      return (r.headers.get('content-range') || '?/').split('/')[1];
+    };
+    const imgs = await countOf('chapter_images', 'select=id');
+    const chaptersTotal = await countOf('chapters', 'select=id');
+    const deadCovers = await countOf('manga', 'select=id&deleted_at=is.null&or=(cover_url.like.*gmbr.pro*,cover_url.like.*gmbar.xyz*,cover_url.like.*uwakjawa.xyz*)');
+    console.log(`[metrics] chapter_images=${imgs} | chapters=${chaptersTotal} | cover-mati=${deadCovers}`);
+  } catch (e) {
+    console.log(`[metrics] gagal: ${e.message}`);
+  }
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 (async () => {
   const started = Date.now();
@@ -437,6 +473,33 @@ async function importChaptersFromSeries(m) {
       } catch (e) {
         chaptersFail++;
         console.error(`[chapters] ✗ ${m.slug}: ${e.message}`);
+      }
+    }
+  }
+
+  // ── Fase 0b: sync chapter baru untuk manga ongoing ───────────────────────
+  let syncOk = 0, syncFail = 0, syncAdded = 0;
+  if (SYNC_LIMIT > 0) {
+    const syncTargets = await selectOngoingManga(SYNC_LIMIT);
+    console.log(`[sync] ${syncTargets.length} manga ongoing dicek: ${syncTargets.map((m) => m.slug).join(', ')}`);
+    for (const m of syncTargets) {
+      if (Date.now() > DEADLINE - 60_000) { console.log('[sync] budget habis, berhenti'); break; }
+      try {
+        const n = await importChaptersFromSeries(m);
+        syncAdded += n;
+        if (n > 0) {
+          syncOk++;
+          // updated_at HANYA dinaikkan bila benar-benar ada chapter baru —
+          // kolom ini dipakai sorting "Terbaru" di UI, jangan digerakkan
+          // oleh pemeriksaan kosong.
+          await REST(`manga?id=eq.${m.id}`, { method: 'PATCH', body: JSON.stringify({ updated_at: new Date().toISOString() }) });
+          console.log(`[sync] ✓ ${m.slug}: +${n} chapter baru`);
+        } else {
+          console.log(`[sync] = ${m.slug}: up to date`);
+        }
+      } catch (e) {
+        syncFail++;
+        console.error(`[sync] ✗ ${m.slug}: ${e.message}`);
       }
     }
   }
@@ -466,43 +529,59 @@ async function importChaptersFromSeries(m) {
   const targets = await selectChapters(LIMIT);
   console.log(`[backfill] ${targets.length} chapter butuh gambar: ${targets.map((t) => `${t.slug}#ch${t.number}`).join(', ')}`);
 
+  // ── Fase 2: isi gambar chapter — LANES browser paralel dari antrean ──────
   let ok = 0, fail = 0;
-  for (const t of targets) {
-    if (Date.now() > DEADLINE - 60_000) { console.log('[backfill] budget habis, berhenti'); break; }
+  let nextIdx = 0;
+  const lane = async (laneId) => {
+    // Stagger 20 dtk: dua lane tidak membuka halaman pada milidetik yang sama
+    if (laneId > 1) await new Promise((r) => setTimeout(r, 20_000));
+    const browser = await chromium.launch({ headless: true });
     try {
-      const images = await fetchChapterImages(t.origin, t.slug, t.number);
-      if (!images.length) { fail++; continue; }
+      while (Date.now() <= DEADLINE - 60_000) {
+        const t = targets[nextIdx++];
+        if (!t) break;
+        try {
+          const images = await fetchChapterImages(browser, t.origin, t.slug, t.number);
+          if (!images.length) { fail++; continue; }
 
-      const rows = [];
-      for (let i = 0; i < images.length; i++) {
-        const up = await uploadToR2(images[i].buffer, images[i].contentType);
-        rows.push({ chapter_id: t.id, number: i + 1, image_url: up.url });
+          const rows = [];
+          for (let i = 0; i < images.length; i++) {
+            const up = await uploadToR2(images[i].buffer, images[i].contentType);
+            rows.push({ chapter_id: t.id, number: i + 1, image_url: up.url });
+          }
+          // Hapus baris lama sebelum insert: hasil scrape fresh bisa lebih pendek
+          // dari data lama (iklan terbuang) — upsert saja akan menyisakan baris
+          // nomor lama yang tidak valid / duplikat halaman terakhir.
+          const del = await REST(`chapter_images?chapter_id=eq.${t.id}`, { method: 'DELETE' });
+          if (!del.ok) throw new Error(`delete chapter_images HTTP ${del.status}`);
+
+          const ins = await REST(`chapter_images`, {
+            method: 'POST',
+            body: JSON.stringify(rows),
+          });
+          if (!ins.ok) throw new Error(`insert chapter_images HTTP ${ins.status}: ${(await ins.text()).slice(0, 150)}`);
+
+          // Thumbnail = gambar ke-5 DARI BELAKANG (aturan migration 039 + admin
+          // routes); fallback gambar pertama.
+          const thumbIdx = rows.length >= 5 ? rows.length - 5 : 0;
+          await REST(`chapters?id=eq.${t.id}`, { method: 'PATCH', body: JSON.stringify({ thumbnail_url: rows[thumbIdx].image_url }) });
+
+          ok++;
+          console.log(`[lane${laneId}] ✓ ${t.slug} ch.${t.number}: ${rows.length} gambar → R2, thumbnail diset`);
+        } catch (e) {
+          fail++;
+          console.error(`[lane${laneId}] ✗ ${t.slug} ch.${t.number}: ${e.message}`);
+        }
       }
-      // Hapus baris lama sebelum insert: hasil scrape fresh bisa lebih pendek
-      // dari data lama (iklan terbuang) — upsert saja akan menyisakan baris
-      // nomor lama yang tidak valid / duplikat halaman terakhir.
-      const del = await REST(`chapter_images?chapter_id=eq.${t.id}`, { method: 'DELETE' });
-      if (!del.ok) throw new Error(`delete chapter_images HTTP ${del.status}`);
-
-      const ins = await REST(`chapter_images`, {
-        method: 'POST',
-        body: JSON.stringify(rows),
-      });
-      if (!ins.ok) throw new Error(`insert chapter_images HTTP ${ins.status}: ${(await ins.text()).slice(0, 150)}`);
-
-      // Thumbnail = gambar ke-5 DARI BELAKANG (aturan migration 039 + admin
-      // routes); fallback gambar pertama.
-      const thumbIdx = rows.length >= 5 ? rows.length - 5 : 0;
-      await REST(`chapters?id=eq.${t.id}`, { method: 'PATCH', body: JSON.stringify({ thumbnail_url: rows[thumbIdx].image_url }) });
-
-      ok++;
-      console.log(`[backfill] ✓ ${t.slug} ch.${t.number}: ${rows.length} gambar → R2, thumbnail diset`);
-    } catch (e) {
-      fail++;
-      console.error(`[backfill] ✗ ${t.slug} ch.${t.number}: ${e.message}`);
+      if (Date.now() > DEADLINE - 60_000) console.log(`[lane${laneId}] budget habis`);
+    } finally {
+      await browser.close();
     }
-  }
+  };
+  console.log(`[backfill] ${LANES} lane paralel aktif`);
+  await Promise.all(Array.from({ length: LANES }, (_, i) => lane(i + 1)));
 
-  console.log(`\n[backfill] SELESAI dalam ${Math.round((Date.now() - started) / 1000)}s — chapter-list: ✓${chaptersOk} ✗${chaptersFail}; cover: ✓${coversOk} ✗${coversFail}; gambar chapter: sukses ${ok}, gagal ${fail}`);
+  await printMetrics();
+  console.log(`\n[backfill] SELESAI dalam ${Math.round((Date.now() - started) / 1000)}s — sync: ✓${syncOk} +${syncAdded}ch ✗${syncFail}; chapter-list: ✓${chaptersOk} ✗${chaptersFail}; cover: ✓${coversOk} ✗${coversFail}; gambar chapter: sukses ${ok}, gagal ${fail}`);
   process.exit(0);
 })().catch((e) => { console.error('[backfill] fatal:', e); process.exit(1); });
