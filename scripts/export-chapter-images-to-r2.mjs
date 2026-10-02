@@ -73,6 +73,32 @@ async function uploadManifest(chapterId, images) {
   }));
 }
 
+// Antrean upload paralel — manifest antar-chapter independen, idempotent.
+const UPLOAD_CONCURRENCY = 8;
+const uploadQueue = [];
+let uploadErrors = 0;
+let doneReading = false;
+const uploadWorkers = Array.from({ length: UPLOAD_CONCURRENCY }, async () => {
+  while (true) {
+    const job = uploadQueue.shift();
+    if (!job) {
+      if (doneReading) return;
+      await new Promise((r) => setTimeout(r, 50));
+      continue;
+    }
+    for (let attempt = 1; attempt <= 4; attempt++) {
+      try {
+        await uploadManifest(job.chapterId, job.images);
+        break;
+      } catch (e) {
+        if (attempt === 4) { uploadErrors++; console.error(`[export] ✗ upload manifest ${job.chapterId} gagal: ${e.message}`); }
+        else await new Promise((r) => setTimeout(r, 1500 * attempt));
+      }
+    }
+  }
+});
+const enqueueUpload = (chapterId, images) => { uploadQueue.push({ chapterId, images }); };
+
 async function verify() {
   // Hitung manifest di R2 (perbandingan dengan DB dilakukan via psql di shell —
   // count(DISTINCT chapter_id) server-side, nol egress).
@@ -132,7 +158,7 @@ while (true) {
   for (; i < rows.length; ) {
     const cid = rows[i].chapter_id;
     if (carried && carried.chapterId !== cid) {
-      if (!DRY) await uploadManifest(carried.chapterId, carried.images);
+      if (!DRY) enqueueUpload(carried.chapterId, carried.images);
       uploaded++;
     }
     carried = { chapterId: cid, images: [] };
@@ -142,12 +168,20 @@ while (true) {
   }
   offset += PAGE;
   if (rows.length < PAGE) break;
-  if (offset % 50000 === 0) console.log(`[export] ...${rowsRead} baris, ${uploaded} manifest (${Math.round((Date.now() - t0) / 1000)}s)`);
+  if (offset % 50000 === 0) console.log(`[export] ...${rowsRead} baris, ${uploaded} manifest (queue=${uploadQueue.length}, ${Math.round((Date.now() - t0) / 1000)}s)`);
 }
 if (carried) {
-  if (!DRY) await uploadManifest(carried.chapterId, carried.images);
+  if (!DRY) enqueueUpload(carried.chapterId, carried.images);
   uploaded++;
 }
 
-console.log(`[export] ${DRY ? 'DRY-RUN ' : ''}selesai: ${rowsRead} baris → ${uploaded} manifest dalam ${Math.round((Date.now() - t0) / 1000)}s`);
+// Tunggu semua upload selesai
+doneReading = true;
+await Promise.all(uploadWorkers);
+
+console.log(`[export] ${DRY ? 'DRY-RUN ' : ''}selesai: ${rowsRead} baris → ${uploaded} manifest, error upload=${uploadErrors} dalam ${Math.round((Date.now() - t0) / 1000)}s`);
+if (!DRY && uploadErrors > 0) {
+  console.error('[export] ✗ ada upload gagal — JANGAN purge! Jalankan ulang ekspor (idempotent).');
+  process.exit(1);
+}
 if (!DRY) await verify();
