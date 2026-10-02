@@ -27,6 +27,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { getImageDimensions } from './lib/image-dims.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -54,6 +55,16 @@ const ENV = {
 const LIMIT = Number(process.env.LIMIT || 5);            // max chapter per run
 const MINUTES = Number(process.env.MINUTES || 10);        // time-box
 const HOST_FILTER = process.env.HOST_FILTER || 'manhwaindo';
+// Halaman manga asli hampir selalu ≥600px di kedua sisi. Semua slot iklan
+// standar (728×90, 970×250, 300×250, 300×600, 336×280, 400×25, …) punya
+// minimal satu sisi ≤400px — banner "BANDAR36" 400×25 menyamar alt="Page 1".
+const MIN_IMG_SIDE = Number(process.env.MIN_IMG_SIDE || 400);
+// Iklan menurut URL: kata banner/advert/sponsor, segmen "ads" yang berdiri
+// sendiri (/ads/, /ad/, ads-x, "ads.example.com"), atau thumbnail/cover manga
+// yang kebetulan besar (720×1013) sehingga lolos filter dimensi.
+// Regex polos /ads[-_/]/ SALAH — cocok dengan substring "ads/" di "uploads/"
+// dan membuang semua halaman asli dari gmbr.pro (/uploads/manga-images/...).
+const AD_URL_RE = /banner|advert|sponsor|(^|[/_.-])ads?([-_/.]|$)|(^|[/_.-])thumb(nail)?s?([-_/.]|$)/i;
 const DEADLINE = Date.now() + MINUTES * 60_000;
 
 for (const [k, v] of Object.entries(ENV)) {
@@ -127,8 +138,13 @@ async function fetchChapterImages(origin, slug, number) {
   page.on('response', async (res) => {
     try {
       const url = res.url();
-      if (!/\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(url)) return;
-      if (/banner|advert|ads[-_/]|logo|icon/i.test(url)) return;
+      // gif dibuang: animasi iklan + bermasalah di reader (kebijakan sama
+      // dengan parseChapterImages di scraper-utils)
+      if (!/\.(jpe?g|png|webp|avif)(\?|$)/i.test(url)) return;
+      // "ads" hanya dianggap iklan bila berdiri sendiri (/ads/, ads-x, ads_)
+      // — JANGAN pakai ads[-_/] polos: itu cocok dengan "uploads/" dan
+      // menghabiskan semua URL halaman asli (/uploads/manga-images/...)!
+      if (AD_URL_RE.test(url)) return;
       if (!res.ok()) return;
       const ct = res.headers()['content-type'] || '';
       if (!ct.startsWith('image/') || ct.includes('svg')) return;
@@ -139,29 +155,9 @@ async function fetchChapterImages(origin, slug, number) {
     console.log(`[backfill] buka ${pageUrl}`);
     await page.goto(pageUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
 
-    const collectUrls = () => page.evaluate(() => {
-      const urls = [];
-      for (const img of document.querySelectorAll('img')) {
-        const src = img.getAttribute('src') || img.getAttribute('data-src') || '';
-        if (!/^https?:\/\//.test(src)) continue;
-        if (!/\.(jpe?g|png|webp|gif|avif)(\?|$)/i.test(src)) continue;
-        if (/banner|advert|ads[-_/]|logo|icon/i.test(src)) continue;
-        if ((img.naturalWidth || 0) < 200) continue; // kecil = UI/iklan
-        urls.push(src);
-      }
-      return urls;
-    });
-
-    let urls = [];
-    for (let t = 0; t < 45; t++) {
-      await page.waitForTimeout(1000);
-      urls = await collectUrls();
-      if (urls.length >= 3) break;
-    }
-    if (!urls.length) throw new Error('tidak ada gambar terdeteksi (CF challenge atau struktur berubah)');
-
-    // Paksa semua lazy-load: scroll + ganti data-src → src
-    await page.evaluate(async () => {
+    // Paksa semua lazy-load: scroll + ganti data-src → src, supaya semua
+    // halaman mulai di-download (strip webtoon tinggi butuh puluhan detik).
+    const forceLazyLoad = () => page.evaluate(async () => {
       document.querySelectorAll('img[data-src]').forEach((img) => {
         if (img.getAttribute('src') !== img.getAttribute('data-src')) img.setAttribute('src', img.getAttribute('data-src'));
       });
@@ -170,22 +166,100 @@ async function fetchChapterImages(origin, slug, number) {
         await new Promise((r) => setTimeout(r, 250));
       }
     });
-    await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
-    urls = [...new Set([...urls, ...(await collectUrls())])];
-    console.log(`[backfill] ${urls.length} gambar kandidat, ${imageResponses.size} respons tertangkap`);
+    await forceLazyLoad();
 
-    // Ambil buffer dari respons yang diintersepsi (urut DOM)
-    const buffers = [];
-    for (const u of urls) {
-      const res = imageResponses.get(u);
-      if (!res) continue;
-      try {
-        const buf = await res.body();
-        const ct = res.headers()['content-type'] || 'image/jpeg';
-        buffers.push({ contentType: ct, buffer: buf });
-      } catch { /* ignore */ }
+    // Kandidat halaman: <img> http(s) non-gif, selesai decode, dan min-side
+    // ≥ MIN_IMG_SIDE. Banner iklan sering menyamar alt="Page 1" + w-full —
+    // dimensi pixel adalah sinyal paling andal. `pending` = kandidat yang
+    // masih loading (harus ditunggu, bukan dibuang).
+    const collectUrls = () => page.evaluate(({ minSide, adRe }) => {
+      const urls = [];
+      const dropped = [];
+      let pending = 0;
+      for (const img of document.querySelectorAll('img')) {
+        const src = img.getAttribute('src') || img.getAttribute('data-src') || '';
+        if (!/^https?:\/\//.test(src)) continue;
+        if (!/\.(jpe?g|png|webp|avif)(\?|$)/i.test(src)) continue; // gif dibuang (iklan animasi)
+        if (adRe.test(src)) continue;
+        if (!img.complete) { pending++; continue; }
+        const w = img.naturalWidth || 0;
+        const h = img.naturalHeight || 0;
+        if (w === 0 || h === 0) continue; // gagal load / belum decode
+        if (Math.min(w, h) < minSide) { dropped.push(`${w}x${h} ${src}`); continue; }
+        urls.push(src);
+      }
+      return { urls, dropped, pending };
+    }, { minSide: MIN_IMG_SIDE, adRe: AD_URL_RE });
+
+    // Tunggu halaman termuat. Keluar lebih awal hanya jika:
+    //  a) ≥3 halaman valid DAN semua kandidat sudah selesai loading, atau
+    //  b) daftar stabil 4 polling (8 dtk) dengan ≥3 halaman — menunggu
+    //     iklan yang loading selamanya itu sia-sia; halaman sisanya
+    //     diambil via fetch langsung di bawah.
+    let urls = [];
+    let droppedDom = [];
+    let stable = 0;
+    let prev = -1;
+    const waitStart = Date.now();
+    for (;;) {
+      const r = await collectUrls();
+      urls = r.urls;
+      droppedDom = r.dropped;
+      if (urls.length >= 3 && r.pending === 0) break;
+      if (urls.length === prev) stable++; else stable = 0;
+      prev = urls.length;
+      if (stable >= 4 && urls.length >= 3) break;
+      if (Date.now() - waitStart > 120_000) break;
+      await page.waitForTimeout(2000);
     }
-    console.log(`[backfill] ${buffers.length} gambar berhasil diambil dari respons jaringan`);
+    if (!urls.length) throw new Error('tidak ada gambar terdeteksi (CF challenge atau struktur berubah)');
+
+    await forceLazyLoad();
+    await page.waitForLoadState('networkidle', { timeout: 20_000 }).catch(() => {});
+    const recollect = await collectUrls();
+    urls = [...new Set([...urls, ...recollect.urls])];
+    droppedDom = [...new Set([...droppedDom, ...recollect.dropped])];
+    if (droppedDom.length) {
+      console.log(`[backfill] buang ${droppedDom.length} kandidat kecil/iklan (DOM):`);
+      for (const d of droppedDom.slice(0, 5)) console.log(`[backfill]   - ${d}`);
+    }
+    console.log(`[backfill] ${urls.length} gambar kandidat, ${imageResponses.size} respons tertangkap (${Math.round((Date.now() - waitStart) / 1000)}s tunggu)`);
+
+    // Ambil buffer (urut DOM) + verifikasi dimensi dari byte gambar asli.
+    // Lookup respons intersepsi; URL http:// dicoba varian https://
+    // (Chrome auto-upgrade mixed content), lalu fallback fetch langsung
+    // pakai konteks browser (bawa cookies/UA) untuk yang tak tertangkap.
+    const getBuffer = async (u) => {
+      let res = imageResponses.get(u);
+      if (!res && u.startsWith('http://')) res = imageResponses.get(`https://${u.slice(7)}`);
+      if (res) {
+        try {
+          return { buffer: await res.body(), contentType: res.headers()['content-type'] || 'image/jpeg' };
+        } catch { /* jatuh ke fetch */ }
+      }
+      try {
+        const r = await context.request.get(u, { timeout: 30_000 });
+        if (r.ok()) return { buffer: await r.body(), contentType: r.headers()['content-type'] || 'image/jpeg' };
+      } catch { /* ignore */ }
+      return null;
+    };
+
+    const buffers = [];
+    let droppedBuf = 0;
+    let missed = 0;
+    for (const u of urls) {
+      const got = await getBuffer(u);
+      if (!got) { missed++; console.log(`[backfill] ! tanpa buffer: ${u}`); continue; }
+      const dims = getImageDimensions(got.buffer);
+      if (dims && Math.min(dims.width, dims.height) < MIN_IMG_SIDE) {
+        droppedBuf++;
+        console.log(`[backfill] buang (buffer ${dims.width}x${dims.height}) ${u}`);
+        continue;
+      }
+      buffers.push({ contentType: got.contentType, buffer: got.buffer });
+    }
+    if (droppedBuf) console.log(`[backfill] ${droppedBuf} gambar dibuang dari respons jaringan (sisi < ${MIN_IMG_SIDE}px)`);
+    console.log(`[backfill] ${buffers.length} gambar berhasil diambil${missed ? `, ${missed} gagal` : ''}`);
     return buffers;
   } finally {
     await browser.close();
@@ -211,16 +285,22 @@ async function fetchChapterImages(origin, slug, number) {
         const up = await uploadToR2(images[i].buffer, images[i].contentType);
         rows.push({ chapter_id: t.id, number: i + 1, image_url: up.url });
       }
-      const ins = await REST(`chapter_images?on_conflict=chapter_id,number`, {
+      // Hapus baris lama sebelum insert: hasil scrape fresh bisa lebih pendek
+      // dari data lama (iklan terbuang) — upsert saja akan menyisakan baris
+      // nomor lama yang tidak valid / duplikat halaman terakhir.
+      const del = await REST(`chapter_images?chapter_id=eq.${t.id}`, { method: 'DELETE' });
+      if (!del.ok) throw new Error(`delete chapter_images HTTP ${del.status}`);
+
+      const ins = await REST(`chapter_images`, {
         method: 'POST',
-        headers: { Prefer: 'resolution=merge-duplicates' },
         body: JSON.stringify(rows),
       });
-      if (!ins.ok) throw new Error(`upsert chapter_images HTTP ${ins.status}: ${(await ins.text()).slice(0, 150)}`);
+      if (!ins.ok) throw new Error(`insert chapter_images HTTP ${ins.status}: ${(await ins.text()).slice(0, 150)}`);
 
-      // Thumbnail = gambar ke-5 (aturan sama dengan backfill route)
-      const thumb = rows.length >= 5 ? rows[4].image_url : rows[rows.length - 1].image_url;
-      await REST(`chapters?id=eq.${t.id}`, { method: 'PATCH', body: JSON.stringify({ thumbnail_url: thumb }) });
+      // Thumbnail = gambar ke-5 DARI BELAKANG (aturan migration 039 + admin
+      // routes); fallback gambar pertama.
+      const thumbIdx = rows.length >= 5 ? rows.length - 5 : 0;
+      await REST(`chapters?id=eq.${t.id}`, { method: 'PATCH', body: JSON.stringify({ thumbnail_url: rows[thumbIdx].image_url }) });
 
       ok++;
       console.log(`[backfill] ✓ ${t.slug} ch.${t.number}: ${rows.length} gambar → R2, thumbnail diset`);

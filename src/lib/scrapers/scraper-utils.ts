@@ -109,50 +109,68 @@ export function validateScraperUrl(rawUrl: string): string | null {
 // ─── Chapter image extraction ──────────────────────────────────────────────
 
 /**
+ * Atribut width/height eksplisit di bawah ambang ini menandai iklan/banner
+ * (mis. 400×25 "BANDAR36", 728×90 leaderboard) yang menyamar jadi halaman
+ * (alt="Page 1"). Halaman manga asli hampir selalu ≥600px di kedua sisi.
+ */
+const MIN_DECLARED_SIDE = 400;
+
+function isTinyImgTag(tag: string): boolean {
+  const w = tag.match(/\swidth\s*=\s*["'](\d{1,5})["']/i);
+  const h = tag.match(/\sheight\s*=\s*["'](\d{1,5})["']/i);
+  if (w && Number(w[1]) < MIN_DECLARED_SIDE) return true;
+  if (h && Number(h[1]) < MIN_DECLARED_SIDE) return true;
+  return false;
+}
+
+/**
  * Extract chapter page image URLs from Madara theme HTML (manhwaland, etc).
  *
  * Strategy order:
  *  1. <noscript> tags inside #readerarea (lazy-load fallback — most reliable)
  *  2. data-src attributes (another lazy-load pattern)
  *  3. <img src> tags inside #readerarea matching chapter/manga path patterns
+ *
+ * Images yang mendeklarasikan ukuran kecil (width/height attr < 400px)
+ * dibuang — itu iklan/banner, bukan halaman manga.
  */
 export function parseChapterImages(html: string): string[] {
-  const urls: string[] = [];
-
   const readerareaIdx = html.indexOf('id="readerarea"');
   const section =
     readerareaIdx !== -1
       ? html.slice(readerareaIdx, readerareaIdx + 80_000)
       : html;
 
+  // Kumpulkan URL dari semua <img> di fragment (skip yang deklarasinya kecil)
+  const collect = (fragment: string, attr: 'src' | 'data-src'): string[] => {
+    const out: string[] = [];
+    const imgTagRe = /<img\b[^>]*>/gi;
+    let t: RegExpExecArray | null;
+    while ((t = imgTagRe.exec(fragment)) !== null) {
+      if (isTinyImgTag(t[0])) continue;
+      const am = t[0].match(
+        attr === 'src' ? /\ssrc\s*=\s*["']([^"']+)["']/i : /\sdata-src\s*=\s*["']([^"']+)["']/i,
+      );
+      if (am && /^https?:\/\//i.test(am[1])) out.push(am[1]);
+    }
+    return out;
+  };
+
+  let urls: string[] = [];
+
   // Primary: noscript lazy-load fallback
   const noscriptRe = /<noscript>([\s\S]*?)<\/noscript>/g;
   let m: RegExpExecArray | null;
   while ((m = noscriptRe.exec(section)) !== null) {
-    const srcRe = /src=['"]([^'"]+)['"]/g;
-    let s: RegExpExecArray | null;
-    while ((s = srcRe.exec(m[1])) !== null) {
-      if (/^https?:\/\//i.test(s[1])) urls.push(s[1]);
-    }
+    urls.push(...collect(m[1], 'src'));
   }
 
   // Fallback: data-src
-  if (urls.length === 0) {
-    const dataSrcRe = /data-src=['"]([^'"]+)['"]/g;
-    while ((m = dataSrcRe.exec(section)) !== null) {
-      if (/^https?:\/\//i.test(m[1])) urls.push(m[1]);
-    }
-  }
+  if (urls.length === 0) urls = collect(section, 'data-src');
 
   // Last resort: plain img src matching known CDN paths
   if (urls.length === 0) {
-    const imgSrcRe = /<img[^>]+src=['"]([^'"]+)['"]/g;
-    while ((m = imgSrcRe.exec(section)) !== null) {
-      const u = m[1];
-      if (/^https?:\/\//i.test(u) && /chapter|manga[-_.]images|upload/i.test(u)) {
-        urls.push(u);
-      }
-    }
+    urls = collect(section, 'src').filter((u) => /chapter|manga[-_.]images|upload/i.test(u));
   }
 
   // Filter out GIF images — they cause loading issues in the reader

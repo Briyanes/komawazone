@@ -884,43 +884,53 @@ export async function downloadImageViaBrowser(url, { timeoutMs = 15_000, retries
 // ─── Scraper: Chapter Images ─────────────────────────────────────
 // Ported from src/lib/scrapers/scraper-utils.ts → parseChapterImages()
 
-export function parseChapterImages(html) {
-  const urls = [];
+// Atribut width/height eksplisit < 400px = iklan/banner menyamar (400×25,
+// 728×90, dll). Halaman manga asli hampir selalu ≥600px di kedua sisi.
+const MIN_DECLARED_SIDE = 400;
 
+function isTinyImgTag(tag) {
+  const w = tag.match(/\swidth\s*=\s*["'](\d{1,5})["']/i);
+  const h = tag.match(/\sheight\s*=\s*["'](\d{1,5})["']/i);
+  if (w && Number(w[1]) < MIN_DECLARED_SIDE) return true;
+  if (h && Number(h[1]) < MIN_DECLARED_SIDE) return true;
+  return false;
+}
+
+export function parseChapterImages(html) {
   const readerareaIdx = html.indexOf('id="readerarea"');
   const section =
     readerareaIdx !== -1
       ? html.slice(readerareaIdx, readerareaIdx + 80_000)
       : html;
 
+  // Kumpulkan URL dari semua <img> di fragment (skip yang deklarasinya kecil)
+  const collect = (fragment, attr) => {
+    const out = [];
+    const imgTagRe = /<img\b[^>]*>/gi;
+    let t;
+    while ((t = imgTagRe.exec(fragment)) !== null) {
+      if (isTinyImgTag(t[0])) continue;
+      const am = t[0].match(attr === 'src' ? /\ssrc\s*=\s*["']([^"']+)["']/i : /\sdata-src\s*=\s*["']([^"']+)["']/i);
+      if (am && /^https?:\/\//i.test(am[1])) out.push(am[1]);
+    }
+    return out;
+  };
+
+  let urls = [];
+
   // Primary: noscript lazy-load fallback
   const noscriptRe = /<noscript>([\s\S]*?)<\/noscript>/g;
   let m;
   while ((m = noscriptRe.exec(section)) !== null) {
-    const srcRe = /src=['"]([^'"]+)['"]/g;
-    let s;
-    while ((s = srcRe.exec(m[1])) !== null) {
-      if (/^https?:\/\//i.test(s[1])) urls.push(s[1]);
-    }
+    urls.push(...collect(m[1], 'src'));
   }
 
   // Fallback: data-src
-  if (urls.length === 0) {
-    const dataSrcRe = /data-src=['"]([^'"]+)['"]/g;
-    while ((m = dataSrcRe.exec(section)) !== null) {
-      if (/^https?:\/\//i.test(m[1])) urls.push(m[1]);
-    }
-  }
+  if (urls.length === 0) urls = collect(section, 'data-src');
 
   // Last resort: plain img src matching known CDN paths
   if (urls.length === 0) {
-    const imgSrcRe = /<img[^>]+src=['"]([^'"]+)['"]/g;
-    while ((m = imgSrcRe.exec(section)) !== null) {
-      const u = m[1];
-      if (/^https?:\/\//i.test(u) && /chapter|manga[-_.]images|upload/i.test(u)) {
-        urls.push(u);
-      }
-    }
+    urls = collect(section, 'src').filter((u) => /chapter|manga[-_.]images|upload/i.test(u));
   }
 
   // Filter out GIF images
