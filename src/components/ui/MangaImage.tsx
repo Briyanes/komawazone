@@ -21,7 +21,7 @@
 
 import NextImage, { type ImageProps } from 'next/image';
 import { forwardRef, useEffect, useState } from 'react';
-import { proxyImageUrl } from '@/lib/image-proxy';
+import { proxyImageUrl, isR2CdnUrl } from '@/lib/image-proxy';
 
 // External manga image hosts that block hotlinking (use regular img tag)
 // R2 URLs are NOT here — they go through next/image for WebP/AVIF optimization
@@ -84,6 +84,11 @@ function isExternalUrl(src: ImageProps['src']): boolean {
   // even when listed in localPatterns. Direct browser fetch to R2 proxy is faster
   // (no Vercel CPU cost) and R2 already serves WebP + 1-year immutable cache.
   if (src.startsWith('/api/r2/image/') || src.startsWith('/api/proxy/image')) {
+    return true;
+  }
+  // R2 custom CDN (cdn.olluq.xyz): direct <img> fetch — same rationale as the
+  // proxy path (bypass optimizer; Cloudflare edge already serves WebP + cache)
+  if (isR2CdnUrl(src)) {
     return true;
   }
   try {
@@ -180,7 +185,7 @@ export const MangaImage = forwardRef<HTMLImageElement, ImageProps>((props, ref) 
     // CRITICAL: use smart proxy that handles BOTH R2 URLs and external CDN URLs
     // (gmbr.pro, manhwaland, etc.) — prevents hotlink-protection broken images.
     const proxiedSrc = proxyImageUrl(rawSrc as string) ?? (rawSrc as string);
-    const isR2Url = proxiedSrc.startsWith('/api/r2/image/');
+    const isR2Url = proxiedSrc.startsWith('/api/r2/image/') || isR2CdnUrl(proxiedSrc);
 
     // Determine final src based on fallback stage.
     // R2 URLs: retry same endpoint with cache-busting (avoids broken proxy URL bug).

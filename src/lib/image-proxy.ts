@@ -7,11 +7,43 @@
  * This helper routes both through our server proxy.
  */
 
-const R2_PUBLIC_BASE = process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL || process.env.R2_PUBLIC_BASE_URL;
+const R2_PUBLIC_BASE = (process.env.NEXT_PUBLIC_R2_PUBLIC_BASE_URL || process.env.R2_PUBLIC_BASE_URL || '').replace(/\/+$/, '');
+
+function hostnameOf(url: string): string | null {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return null;
+  }
+}
+
+const R2_BASE_HOST = hostnameOf(R2_PUBLIC_BASE);
+
+/**
+ * True when R2_PUBLIC_BASE points at a CUSTOM CDN domain (e.g. cdn.olluq.xyz —
+ * an R2 bucket connected via Cloudflare "Connect Domain"), as opposed to the
+ * rate-limited pub-*.r2.dev / r2.cloudflarestorage.com endpoints.
+ */
+export const R2_BASE_IS_CUSTOM_CDN =
+  !!R2_BASE_HOST &&
+  !R2_BASE_HOST.endsWith('.r2.dev') &&
+  !R2_BASE_HOST.endsWith('.r2.cloudflarestorage.com');
+
+/**
+ * Check whether a URL points at our R2 custom CDN (https://cdn.olluq.xyz/...).
+ * Such URLs are served DIRECTLY from the Cloudflare edge (immutable cache,
+ * no rate limits, no Vercel function cost) and must never be re-proxied.
+ */
+export function isR2CdnUrl(url: string | null | undefined): boolean {
+  if (!url || !R2_BASE_IS_CUSTOM_CDN || !R2_PUBLIC_BASE) return false;
+  return url.startsWith(`${R2_PUBLIC_BASE}/`) || url === R2_PUBLIC_BASE;
+}
 
 /**
  * Convert an R2 public URL to our internal proxy URL
  * Example: https://pub-xxx.r2.dev/chapters/uuid/5.jpg → /api/r2/image/chapters/uuid/5.jpg
+ *
+ * URLs on the R2 CUSTOM domain are returned untouched (served directly).
  */
 export function proxyR2Url(url: string): string {
   if (!url) return url;
@@ -21,8 +53,14 @@ export function proxyR2Url(url: string): string {
     return url;
   }
 
-  // R2 URL → route through our R2 proxy
-  if (R2_PUBLIC_BASE && url.startsWith(R2_PUBLIC_BASE)) {
+  // Custom CDN domain (cdn.olluq.xyz): serve DIRECTLY — never rewrite to proxy
+  if (isR2CdnUrl(url)) {
+    return url;
+  }
+
+  // R2 dev/S3 endpoint behind the configured base → route through our R2 proxy
+  // (only when the base is NOT a custom CDN domain)
+  if (R2_PUBLIC_BASE && !R2_BASE_IS_CUSTOM_CDN && url.startsWith(R2_PUBLIC_BASE)) {
     const key = url.slice(R2_PUBLIC_BASE.length).replace(/^\//, '');
     return `/api/r2/image/${key}`;
   }

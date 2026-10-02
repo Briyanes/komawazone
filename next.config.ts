@@ -68,6 +68,8 @@ const nextConfig: NextConfig = {
       // Cloudflare R2
       { protocol: 'https', hostname: '**.r2.dev' },
       { protocol: 'https', hostname: '**.r2.cloudflarestorage.com' },
+      // R2 custom domain (bucket `olluq`) — primary public image CDN
+      { protocol: 'https', hostname: 'cdn.olluq.xyz' },
       // OAuth provider avatars
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },  // Google
       { protocol: 'https', hostname: 'cdn.discordapp.com' },          // Discord (already above, but explicit)
