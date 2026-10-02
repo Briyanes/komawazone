@@ -135,6 +135,31 @@ export function parseChapterListFromHtml(html: string): ChapterEntry[] {
     chapters.push({ number, title: `Chapter ${number}`, url, releasedAt });
   }
 
+  // --- Fallback: manhwaindo.my AGC inline JSON chapter list ---
+  // Tema baru (2026-10) merender daftar chapter via JS; data mentahnya
+  // tertanam di HTML sebagai array JSON ber-escape:
+  //   {"id":663,"title":"… Chapter 33","url":"https://…-chapter-33/",
+  //    "chapter":"33","time":"7 days lalu"}
+  // HTML server kosong bagi regex eplister/Madara → fallback ini yang
+  // menghidupkan kembali check-new-chapters & import chapter.
+  {
+    const unescaped = html.replace(/\\"/g, '"').replace(/\\\//g, '/');
+    const objRe = /\{"id":\d+,"title":"[^"]*","url":"https?:\/\/[^"]+","chapter":"\d+(?:\.\d+)?","time":"[^"]*"\}/g;
+    const seen = new Set<number>();
+    for (const obj of unescaped.match(objRe) ?? []) {
+      const url = obj.match(/"url":"(https?:\/\/[^"]+)"/)![1];
+      const number = parseFloat(obj.match(/"chapter":"(\d+(?:\.\d+)?)"/)![1]);
+      if (seen.has(number)) continue;
+      seen.add(number);
+      let releasedAt: string | null = null;
+      const timeRaw = obj.match(/"time":"([^"]*)"/)?.[1];
+      if (timeRaw) {
+        try { releasedAt = new Date(normalizeIndonesianDate(timeRaw)).toISOString(); } catch { /* ignore */ }
+      }
+      chapters.push({ number, title: `Chapter ${number}`, url, releasedAt });
+    }
+  }
+
   return chapters.sort((a, b) => a.number - b.number);
 }
 

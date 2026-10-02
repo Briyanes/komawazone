@@ -54,6 +54,10 @@ const ENV = {
 };
 const LIMIT = Number(process.env.LIMIT || 5);            // max chapter per run
 const MINUTES = Number(process.env.MINUTES || 10);        // time-box
+// Fase COVER: rehost cover yang mati (gmbr/gmbar/uwakjawa diblokir Cloudflare
+// 403 global) atau NULL → R2. Diambil dari halaman manga source via browser
+// nyata (og:image), lolos proteksi yang sama dengan halaman chapter.
+const COVER_LIMIT = Number(process.env.COVER_LIMIT ?? 10); // 0 = matikan fase cover
 const HOST_FILTER = process.env.HOST_FILTER || 'manhwaindo';
 // Halaman manga asli hampir selalu ≥600px di kedua sisi. Semua slot iklan
 // standar (728×90, 970×250, 300×250, 300×600, 336×280, 400×25, …) punya
@@ -88,6 +92,65 @@ async function uploadToR2(buffer, contentType) {
   const key = `pages/${Date.now()}-${crypto.randomUUID()}.${ext}`;
   await s3.send(new PutObjectCommand({ Bucket: ENV.R2_BUCKET, Key: key, Body: buffer, ContentType: contentType }));
   return { key, url: `${ENV.R2_PUBLIC_BASE}/${key}` };
+}
+
+// ── Fase COVER: rehost cover mati/null → R2 ────────────────────────────────
+const DEAD_COVER_RE = /gmbr\.pro|gmbar\.xyz|uwakjawa\.xyz/i;
+
+async function selectBrokenCovers(limit) {
+  const rows = await (await REST(`manga?select=id,slug,source_url,cover_url&deleted_at=is.null&order=created_at.desc&limit=400`)).json();
+  if (!Array.isArray(rows)) return [];
+  return rows
+    .filter((m) => m.source_url && (!m.cover_url || DEAD_COVER_RE.test(m.cover_url)))
+    .slice(0, limit);
+}
+
+async function uploadCoverToR2(buffer, contentType) {
+  const ext = ((contentType.split('/')[1] || 'jpg').replace('jpeg', 'jpg').replace(/[^a-z0-9]/gi, '') || 'jpg');
+  const key = `covers/${Date.now()}-${crypto.randomUUID()}.${ext}`;
+  await s3.send(new PutObjectCommand({ Bucket: ENV.R2_BUCKET, Key: key, Body: buffer, ContentType: contentType }));
+  return `${ENV.R2_PUBLIC_BASE}/${key}`;
+}
+
+async function fetchCoverViaPage(sourceUrl) {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      viewport: { width: 1280, height: 900 },
+      extraHTTPHeaders: { 'Accept-Language': 'id-ID,id;q=0.9,en;q=0.8' },
+    });
+    const page = await context.newPage();
+    console.log(`[cover] buka ${sourceUrl}`);
+    await page.goto(sourceUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    // Cover = og:image; fallback: <img> terbesar di halaman
+    const coverUrl = await page.evaluate(() => {
+      const og = document.querySelector('meta[property="og:image"]')?.content
+        || document.querySelector('meta[name="og:image"]')?.content;
+      if (og) return og;
+      let best = ''; let bestArea = 0;
+      for (const img of document.querySelectorAll('img')) {
+        const src = img.getAttribute('src') || img.getAttribute('data-src') || '';
+        if (!/^https?:\/\//.test(src)) continue;
+        const area = (img.naturalWidth || 0) * (img.naturalHeight || 0);
+        if (area > bestArea) { bestArea = area; best = src; }
+      }
+      return best;
+    });
+    if (!coverUrl) return null;
+    // Setelah halaman dibuka browser nyata, clearance CF berlaku untuk request
+    // dalam context yang sama → cover bytes bisa diambil langsung.
+    const r = await context.request.get(coverUrl, { timeout: 30_000 });
+    if (!r.ok()) return null;
+    const buffer = await r.body();
+    const ct = r.headers()['content-type'] || 'image/jpeg';
+    if (!ct.startsWith('image/') || ct.includes('svg')) return null;
+    const dims = getImageDimensions(buffer);
+    if (dims && Math.min(dims.width, dims.height) < 200) return null; // banner kecil bukan cover
+    return { buffer, contentType: ct };
+  } finally {
+    await browser.close();
+  }
 }
 
 // ── Pilih chapter yang butuh gambar (terbaru dulu) ────────────────────────
@@ -269,7 +332,30 @@ async function fetchChapterImages(origin, slug, number) {
 // ── Main ───────────────────────────────────────────────────────────────────
 (async () => {
   const started = Date.now();
-  console.log(`[backfill] mulai — limit ${LIMIT} chapter, budget ${MINUTES} menit`);
+  console.log(`[backfill] mulai — limit ${LIMIT} chapter, ${COVER_LIMIT} cover, budget ${MINUTES} menit`);
+
+  // ── Fase 1: cover rusak → R2 (cepat, dampak langsung di beranda) ────────
+  let coversOk = 0, coversFail = 0;
+  if (COVER_LIMIT > 0) {
+    const coverTargets = await selectBrokenCovers(COVER_LIMIT);
+    console.log(`[cover] ${coverTargets.length} cover butuh rehost: ${coverTargets.map((m) => m.slug).join(', ')}`);
+    for (const m of coverTargets) {
+      if (Date.now() > DEADLINE - 60_000) { console.log('[cover] budget habis, berhenti'); break; }
+      try {
+        const img = await fetchCoverViaPage(m.source_url);
+        if (!img) { coversFail++; console.log(`[cover] ! ${m.slug}: cover tidak terambil`); continue; }
+        const url = await uploadCoverToR2(img.buffer, img.contentType);
+        const patch = await REST(`manga?id=eq.${m.id}`, { method: 'PATCH', body: JSON.stringify({ cover_url: url }) });
+        if (!patch.ok) throw new Error(`PATCH manga HTTP ${patch.status}`);
+        coversOk++;
+        console.log(`[cover] ✓ ${m.slug} → ${url}`);
+      } catch (e) {
+        coversFail++;
+        console.error(`[cover] ✗ ${m.slug}: ${e.message}`);
+      }
+    }
+  }
+
   const targets = await selectChapters(LIMIT);
   console.log(`[backfill] ${targets.length} chapter butuh gambar: ${targets.map((t) => `${t.slug}#ch${t.number}`).join(', ')}`);
 
@@ -310,6 +396,6 @@ async function fetchChapterImages(origin, slug, number) {
     }
   }
 
-  console.log(`\n[backfill] SELESAI dalam ${Math.round((Date.now() - started) / 1000)}s — sukses ${ok}, gagal ${fail}`);
+  console.log(`\n[backfill] SELESAI dalam ${Math.round((Date.now() - started) / 1000)}s — chapter: sukses ${ok}, gagal ${fail}; cover: sukses ${coversOk}, gagal ${coversFail}`);
   process.exit(0);
 })().catch((e) => { console.error('[backfill] fatal:', e); process.exit(1); });

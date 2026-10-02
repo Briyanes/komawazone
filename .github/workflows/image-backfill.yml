@@ -8,9 +8,12 @@ on:
     inputs:
       limit:
         description: 'Jumlah chapter per run'
-        default: '5'
+        default: '10'
       minutes:
         description: 'Time-box (menit)'
+        default: '20'
+      covers:
+        description: 'Jumlah cover mati yang direhost per run (0=off)'
         default: '10'
   # Diaktifkan 2026-10-01 — uji pertama lolos di runner GH (Cloudflare passed):
   schedule:
@@ -19,7 +22,7 @@ on:
 jobs:
   backfill:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
 
@@ -44,5 +47,6 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           NEXT_PUBLIC_R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
-          LIMIT: ${{ inputs.limit || '5' }}
-          MINUTES: ${{ inputs.minutes || '10' }}
+          LIMIT: ${{ inputs.limit || '10' }}
+          MINUTES: ${{ inputs.minutes || '20' }}
+          COVER_LIMIT: ${{ inputs.covers || '10' }}
