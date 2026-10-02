@@ -8,24 +8,27 @@ on:
     inputs:
       limit:
         description: 'Jumlah chapter per run'
-        default: '10'
+        default: '20'
       minutes:
         description: 'Time-box (menit)'
-        default: '20'
+        default: '25'
       covers:
         description: 'Jumlah cover mati yang direhost per run (0=off)'
         default: '10'
       chapters:
         description: 'Jumlah manga tanpa chapter yang diimport daftar chapternya (0=off)'
         default: '3'
-  # Diaktifkan 2026-10-01 — uji pertama lolos di runner GH (Cloudflare passed):
+  # Diaktifkan 2026-10-01 — uji pertama lolos di runner GH (Cloudflare passed).
+  # 4×/hari (00:30/06:30/12:30/18:30 WIB): backlog gambar ±7.4k chapter hasil
+  # import metadata 2026-10-02; repo public = menit Actions gratis.
   schedule:
-    - cron: '30 17 * * *'   # 00:30 WIB harian
+    - cron: '30 17,23 * * *'    # 00:30 & 06:30 WIB
+    - cron: '30 5,11 * * *'     # 12:30 & 18:30 WIB
 
 jobs:
   backfill:
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 35
     steps:
       - uses: actions/checkout@v4
 
@@ -50,7 +53,7 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           NEXT_PUBLIC_R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
-          LIMIT: ${{ inputs.limit || '10' }}
-          MINUTES: ${{ inputs.minutes || '20' }}
+          LIMIT: ${{ inputs.limit || '20' }}
+          MINUTES: ${{ inputs.minutes || '25' }}
           COVER_LIMIT: ${{ inputs.covers || '10' }}
           CHAPTERS_LIMIT: ${{ inputs.chapters || '3' }}
