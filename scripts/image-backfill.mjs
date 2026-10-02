@@ -329,10 +329,90 @@ async function fetchChapterImages(origin, slug, number) {
   }
 }
 
+// ── Fase CHAPTER-LIST: manga manhwaindo tanpa chapter → import metadata ────
+// Halaman seri manhwaindo.my diblokir CF untuk IP datacenter (cron Vercel
+// mendapat 403), tetapi lolos dari browser nyata di runner GH. Data daftar
+// chapter = JSON inline ber-escape di HTML (tema AGC) — format yang sama
+// dengan fallback ketiga parseChapterListFromHtml.
+const CHAPTERS_LIMIT = Number(process.env.CHAPTERS_LIMIT ?? 3); // 0 = off
+const AGC_CHAPTER_RE = /\{"id":\d+,"title":"[^"]*","url":"https?:\/\/[^"]+","chapter":"\d+(?:\.\d+)?","time":"[^"]*"\}/g;
+
+async function selectChapterlessManga(limit) {
+  const rows = (await (await REST(`manga?select=id,slug,source_url&deleted_at=is.null&order=created_at.desc&limit=300`)).json()) || [];
+  const out = [];
+  for (const m of rows) {
+    if (!m.source_url || !m.source_url.includes(HOST_FILTER)) continue;
+    const cnt = (await (await REST(`chapters?select=id&manga_id=eq.${m.id}&deleted_at=is.null&limit=1`)).json()) || [];
+    if (cnt.length === 0) out.push(m);
+    if (out.length >= limit) break;
+  }
+  return out;
+}
+
+async function importChaptersFromSeries(m) {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const context = await browser.newContext({
+      userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+      viewport: { width: 1280, height: 900 },
+      extraHTTPHeaders: { 'Accept-Language': 'id-ID,id;q=0.9,en;q=0.8' },
+    });
+    const page = await context.newPage();
+    console.log(`[chapters] buka ${m.source_url}`);
+    await page.goto(m.source_url, { waitUntil: 'domcontentloaded', timeout: 60_000 });
+    const html = await page.content();
+    const unescaped = html.replace(/\\"/g, '"').replace(/\\\//g, '/');
+    const objs = unescaped.match(AGC_CHAPTER_RE) || [];
+    if (!objs.length) return 0;
+
+    const existing = (await (await REST(`chapters?select=number&manga_id=eq.${m.id}&deleted_at=is.null&limit=10000`)).json()) || [];
+    const have = new Set(existing.map((c) => c.number));
+
+    const rows = [];
+    const seen = new Set();
+    for (const obj of objs) {
+      const number = parseFloat(obj.match(/"chapter":"(\d+(?:\.\d+)?)"/)[1]);
+      if (seen.has(number) || have.has(number)) continue;
+      seen.add(number);
+      rows.push({ manga_id: m.id, number, title: `Chapter ${number}` });
+    }
+    for (let i = 0; i < rows.length; i += 50) {
+      const ins = await REST(`chapters`, {
+        method: 'POST',
+        headers: { Prefer: 'resolution=ignore-duplicates' },
+        body: JSON.stringify(rows.slice(i, i + 50)),
+      });
+      if (!ins.ok) throw new Error(`insert chapters HTTP ${ins.status}: ${(await ins.text()).slice(0, 120)}`);
+    }
+    return rows.length;
+  } finally {
+    await browser.close();
+  }
+}
+
 // ── Main ───────────────────────────────────────────────────────────────────
 (async () => {
   const started = Date.now();
   console.log(`[backfill] mulai — limit ${LIMIT} chapter, ${COVER_LIMIT} cover, budget ${MINUTES} menit`);
+
+  // ── Fase 0: manga tanpa chapter → import daftar chapter (metadata) ──────
+  let chaptersOk = 0, chaptersFail = 0;
+  if (CHAPTERS_LIMIT > 0) {
+    const targets0 = await selectChapterlessManga(CHAPTERS_LIMIT);
+    console.log(`[chapters] ${targets0.length} manga tanpa chapter: ${targets0.map((m) => m.slug).join(', ')}`);
+    for (const m of targets0) {
+      if (Date.now() > DEADLINE - 60_000) { console.log('[chapters] budget habis, berhenti'); break; }
+      try {
+        const n = await importChaptersFromSeries(m);
+        if (n === 0) { chaptersFail++; console.log(`[chapters] ! ${m.slug}: daftar chapter kosong`); continue; }
+        chaptersOk++;
+        console.log(`[chapters] ✓ ${m.slug}: +${n} chapter`);
+      } catch (e) {
+        chaptersFail++;
+        console.error(`[chapters] ✗ ${m.slug}: ${e.message}`);
+      }
+    }
+  }
 
   // ── Fase 1: cover rusak → R2 (cepat, dampak langsung di beranda) ────────
   let coversOk = 0, coversFail = 0;
@@ -396,6 +476,6 @@ async function fetchChapterImages(origin, slug, number) {
     }
   }
 
-  console.log(`\n[backfill] SELESAI dalam ${Math.round((Date.now() - started) / 1000)}s — chapter: sukses ${ok}, gagal ${fail}; cover: sukses ${coversOk}, gagal ${coversFail}`);
+  console.log(`\n[backfill] SELESAI dalam ${Math.round((Date.now() - started) / 1000)}s — chapter-list: ✓${chaptersOk} ✗${chaptersFail}; cover: ✓${coversOk} ✗${coversFail}; gambar chapter: sukses ${ok}, gagal ${fail}`);
   process.exit(0);
 })().catch((e) => { console.error('[backfill] fatal:', e); process.exit(1); });

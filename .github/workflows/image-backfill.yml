@@ -15,6 +15,9 @@ on:
       covers:
         description: 'Jumlah cover mati yang direhost per run (0=off)'
         default: '10'
+      chapters:
+        description: 'Jumlah manga tanpa chapter yang diimport daftar chapternya (0=off)'
+        default: '3'
   # Diaktifkan 2026-10-01 — uji pertama lolos di runner GH (Cloudflare passed):
   schedule:
     - cron: '30 17 * * *'   # 00:30 WIB harian
@@ -50,3 +53,4 @@ jobs:
           LIMIT: ${{ inputs.limit || '10' }}
           MINUTES: ${{ inputs.minutes || '20' }}
           COVER_LIMIT: ${{ inputs.covers || '10' }}
+          CHAPTERS_LIMIT: ${{ inputs.chapters || '3' }}
