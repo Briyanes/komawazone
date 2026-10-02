@@ -121,33 +121,58 @@ async function fetchCoverViaPage(sourceUrl) {
       extraHTTPHeaders: { 'Accept-Language': 'id-ID,id;q=0.9,en;q=0.8' },
     });
     const page = await context.newPage();
+
+    // Host cover (imgx-id.gmbr.pro) menolak SEMUA fetch non-browser (403
+    // bahkan dengan UA+Referer — blokir fingerprint/IP). Satu-satunya jalur
+    // yang terbukti lolos = biarkan browser memuat gambar sebagai sub-sumber
+    // halaman dan ambil bytesnya lewat intersepsi respons (pola yang sama
+    // dengan fetchChapterImages). JANGAN pakai AD_URL_RE di sini: file cover
+    // bernama "thumbnail.png" — filter iklan akan membuangnya!
+    const images = [];
+    page.on('response', async (res) => {
+      try {
+        const url = res.url();
+        if (!/\.(jpe?g|png|webp|avif)(\?|$)/i.test(url)) return;
+        if (!res.ok()) return;
+        const ct = res.headers()['content-type'] || '';
+        if (!ct.startsWith('image/') || ct.includes('svg')) return;
+        const buf = await res.body();
+        const dims = getImageDimensions(buf);
+        if (!dims || Math.min(dims.width, dims.height) < 200) return;
+        images.push({ url, buffer: buf, contentType: ct, area: dims.width * dims.height });
+      } catch { /* ignore */ }
+    });
+
     console.log(`[cover] buka ${sourceUrl}`);
     await page.goto(sourceUrl, { waitUntil: 'domcontentloaded', timeout: 60_000 });
-    // Cover = og:image; fallback: <img> terbesar di halaman
-    const coverUrl = await page.evaluate(() => {
-      const og = document.querySelector('meta[property="og:image"]')?.content
-        || document.querySelector('meta[name="og:image"]')?.content;
-      if (og) return og;
-      let best = ''; let bestArea = 0;
-      for (const img of document.querySelectorAll('img')) {
-        const src = img.getAttribute('src') || img.getAttribute('data-src') || '';
-        if (!/^https?:\/\//.test(src)) continue;
-        const area = (img.naturalWidth || 0) * (img.naturalHeight || 0);
-        if (area > bestArea) { bestArea = area; best = src; }
+
+    // og:image = URL cover otoritatif → paksa <img> memuatnya agar responsnya
+    // terekam intersepsi (sampai 10 dtk — host cover kadang lambat/challenge).
+    const norm = (u) => u.replace(/^http:\/\//i, 'https://').replace(/[?#].*$/, '');
+    const og = await page.evaluate(() =>
+      document.querySelector('meta[property="og:image"]')?.content
+      || document.querySelector('meta[name="og:image"]')?.content || '');
+    if (/^https?:\/\//i.test(og)) {
+      await page.evaluate((u) => {
+        const i = document.createElement('img');
+        i.src = u; i.style.display = 'none';
+        document.body.appendChild(i);
+      }, og);
+      for (let t = 0; t < 20 && !images.some((im) => norm(im.url) === norm(og)); t++) {
+        await page.waitForTimeout(500);
       }
-      return best;
-    });
-    if (!coverUrl) return null;
-    // Setelah halaman dibuka browser nyata, clearance CF berlaku untuk request
-    // dalam context yang sama → cover bytes bisa diambil langsung.
-    const r = await context.request.get(coverUrl, { timeout: 30_000 });
-    if (!r.ok()) return null;
-    const buffer = await r.body();
-    const ct = r.headers()['content-type'] || 'image/jpeg';
-    if (!ct.startsWith('image/') || ct.includes('svg')) return null;
-    const dims = getImageDimensions(buffer);
-    if (dims && Math.min(dims.width, dims.height) < 200) return null; // banner kecil bukan cover
-    return { buffer, contentType: ct };
+    } else {
+      // Tanpa og:image: paksa lazy-load semua gambar, ambil yang terbesar.
+      await page.evaluate(() => {
+        document.querySelectorAll('img[data-src]').forEach((img) => img.setAttribute('src', img.getAttribute('data-src')));
+      });
+      await page.waitForTimeout(6000);
+    }
+
+    const match = (/^https?:\/\//i.test(og) && images.find((im) => norm(im.url) === norm(og))) || null;
+    const pick = match || images.sort((a, b) => b.area - a.area)[0];
+    if (!pick) return null;
+    return { buffer: pick.buffer, contentType: pick.contentType };
   } finally {
     await browser.close();
   }
