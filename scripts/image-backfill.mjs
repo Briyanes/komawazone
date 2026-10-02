@@ -364,7 +364,7 @@ async function fetchChapterImages(browser, origin, slug, number) {
 // chapter = JSON inline ber-escape di HTML (tema AGC) — format yang sama
 // dengan fallback ketiga parseChapterListFromHtml.
 const CHAPTERS_LIMIT = Number(process.env.CHAPTERS_LIMIT ?? 3); // 0 = off
-const SYNC_LIMIT = Number(process.env.SYNC_LIMIT ?? 5);   // manga ongoing dicek/run (0 = off)
+const SYNC_LIMIT = Number(process.env.SYNC_LIMIT ?? 8);   // manga ongoing dicek/run (0 = off)
 const AGC_CHAPTER_RE = /\{"id":\d+,"title":"[^"]*","url":"https?:\/\/[^"]+","chapter":"\d+(?:\.\d+)?","time":"[^"]*"\}/g;
 
 async function selectChapterlessManga(limit) {
@@ -425,8 +425,17 @@ async function importChaptersFromSeries(m) {
 // Window acak dari manga yang paling lama di-update (stale-first) supaya
 // seluruh koleksi tersapu seiring waktu tanpa kolom marker tambahan.
 async function selectOngoingManga(limit) {
-  const off = Math.floor(Math.random() * 240);
-  const rows = (await (await REST(`manga?select=id,slug,source_url&deleted_at=is.null&order=updated_at.asc&limit=400&offset=${off}`)).json()) || [];
+  // Hanya manga manhwaindo berstatus ONGOING (sumber aktif, berpotensi dapat
+  // chapter baru) — manga era sumber lama tidak punya halaman seri yang hidup.
+  // Window acak untuk rotasi sapuan; bila offset melewati ujung (set kecil),
+  // fallback ke offset 0 supaya tidak pernah kosong.
+  const page = (off) => REST(`manga?select=id,slug,source_url&deleted_at=is.null&source_url=like.*manhwaindo*&status=eq.ONGOING&order=updated_at.asc&limit=80&offset=${off}`);
+  const off = Math.floor(Math.random() * 120);
+  let rows = (await (await page(off)).json()) || [];
+  if (!Array.isArray(rows) || (!rows.length && off > 0)) {
+    rows = (await (await page(0)).json()) || [];
+  }
+  if (!Array.isArray(rows)) rows = [];
   const out = [];
   for (const m of rows) {
     if (!m.source_url || !m.source_url.includes(HOST_FILTER)) continue;
