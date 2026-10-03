@@ -25,7 +25,7 @@ export default async function EditChapterPage({ params }: Props) {
     if (r.ok) {
       const m = (await r.json()) as { images?: Array<{ n: number; u: string; w?: number | null; h?: number | null }> };
       if (Array.isArray(m.images)) {
-        images = m.images.map((im) => ({ id: `${id}:${im.n}`, number: im.n, image_url: im.u, width: im.w ?? 0, height: im.h ?? 0 }));
+        images = m.images.map((im) => ({ id: `${id}:${im.n}`, number: im.n, image_url: im.u.replace(/olluq\.xyz\/{2,}/g, 'olluq.xyz/'), width: im.w ?? 0, height: im.h ?? 0 }));
       }
     }
   } catch { /* fallback di bawah */ }

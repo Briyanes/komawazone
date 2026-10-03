@@ -332,7 +332,8 @@ export async function getChapterWithImages(chapterId: string): Promise<ChapterDe
         chapter.chapter_images = m.images.map((im) => ({
           id: `${chapterId}:${im.n}`,
           number: im.n,
-          image_url: im.u,
+          // Normalisasi double-slash warisan migrasi lama (//pages/ → 404 di CDN)
+          image_url: im.u.replace(/olluq\.xyz\/{2,}/g, 'olluq.xyz/'),
           width: im.w ?? 0,
           height: im.h ?? 0,
         }));
