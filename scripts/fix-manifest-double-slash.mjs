@@ -52,16 +52,17 @@ const worker = async () => {
     try {
       const g = await s3.send(new GetObjectCommand({ Bucket: BUCKET, Key: key }));
       const body = await g.Body.transformToString('utf-8');
-      if (!/olluq\.xyz\/{2,}/.test(body)) return;
-      const clean = body.replace(/olluq\.xyz\/{2,}/g, 'olluq.xyz/');
-      if (!DRY) {
-        await s3.send(new PutObjectCommand({
-          Bucket: BUCKET, Key: key, Body: clean,
-          ContentType: 'application/json', CacheControl: 'public, max-age=300',
-        }));
+      if (/olluq\.xyz\/{2,}/.test(body)) {
+        const clean = body.replace(/olluq\.xyz\/{2,}/g, 'olluq.xyz/');
+        if (!DRY) {
+          await s3.send(new PutObjectCommand({
+            Bucket: BUCKET, Key: key, Body: clean,
+            ContentType: 'application/json', CacheControl: 'public, max-age=300',
+          }));
+        }
+        fixed++;
+        if (fixed % 500 === 0) console.log(`[fix] ...${fixed} diperbaiki (${checked}/${keys.length})`);
       }
-      fixed++;
-      if (fixed % 500 === 0) console.log(`[fix] ...${fixed} diperbaiki (${checked}/${keys.length})`);
     } catch (e) {
       console.error(`[fix] ✗ ${key}: ${e.message}`);
     }
