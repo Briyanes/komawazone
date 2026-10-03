@@ -122,17 +122,43 @@ export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
 
 export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
+  const now = new Date().toISOString();
 
-  // Step 1: Find the most recently published chapters to get manga IDs in release order
-  const { data: recentChapters } = await supabase
-    .from('chapters')
-    .select('manga_id, release_date')
-    .is('deleted_at', null)
-    .lte('release_date', new Date().toISOString())
-    .order('release_date', { ascending: false })
-    .limit(limit * 5);
+  // Step 1: Scan recent chapters (newest first) for unique manga IDs.
+  // A bulk import/backfill can stamp thousands of chapters of a single title
+  // with recent release_dates (the One Piece backfill occupied ranks 1-1240),
+  // so a small fixed window would return only 1 manga. Scan in pages until
+  // `limit` unique manga are collected or the scan depth is exhausted.
+  const SCAN_PAGE = 1000; // PostgREST max rows per request
+  const MAX_SCAN_PAGES = 6; // up to 6000 newest chapters
+  const seenManga = new Set<string>();
+  const orderedIds: string[] = [];
 
-  if (!recentChapters || recentChapters.length === 0) {
+  for (let page = 0; page < MAX_SCAN_PAGES && orderedIds.length < limit; page++) {
+    const { data: recentChapters } = await supabase
+      .from('chapters')
+      .select('manga_id, release_date')
+      .is('deleted_at', null)
+      .lte('release_date', now)
+      .order('release_date', { ascending: false })
+      .order('id', { ascending: false }) // deterministic pagination across tied timestamps
+      .range(page * SCAN_PAGE, (page + 1) * SCAN_PAGE - 1);
+
+    if (!recentChapters || recentChapters.length === 0) break;
+
+    for (const ch of recentChapters) {
+      if (!seenManga.has(ch.manga_id)) {
+        seenManga.add(ch.manga_id);
+        orderedIds.push(ch.manga_id);
+        if (orderedIds.length >= limit) break;
+      }
+    }
+
+    // Last page reached — nothing more to scan
+    if (recentChapters.length < SCAN_PAGE) break;
+  }
+
+  if (orderedIds.length === 0) {
     // Fallback: no chapters at all, use updated_at
     const { data, error } = await supabase
       .from('manga')
@@ -144,20 +170,7 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
     return (data ?? []) as unknown as MangaListItem[];
   }
 
-  // Step 2: Deduplicate manga IDs preserving most-recent-first order
-  const seenManga = new Set<string>();
-  const orderedIds: string[] = [];
-  for (const ch of recentChapters) {
-    if (!seenManga.has(ch.manga_id)) {
-      seenManga.add(ch.manga_id);
-      orderedIds.push(ch.manga_id);
-      if (orderedIds.length >= limit) break;
-    }
-  }
-
-  if (orderedIds.length === 0) return [];
-
-  // Step 3: Fetch manga data (NO nested chapters join — saves massive egress)
+  // Step 2: Fetch manga data (NO nested chapters join — saves massive egress)
   const { data: mangaData, error } = await supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at')
@@ -166,13 +179,27 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
 
   if (error) throw new Error(error.message);
 
-  // Step 4: Sort results to match the release-date order from step 2
+  // Step 3: Sort results to match the release-date order from step 1
   const orderMap = new Map(orderedIds.map((id, i) => [id, i]));
   const sorted = (mangaData ?? []).sort(
     (a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999)
-  );
+  ) as unknown as MangaListItem[];
 
-  return sorted as unknown as MangaListItem[];
+  // Step 4: Top-up from newest titles if the scan came up short (e.g. the
+  // newest chapters all belong to mature manga hidden from this viewer by RLS)
+  if (sorted.length < limit) {
+    const extras = await getNewTitles(limit).catch(() => []);
+    const have = new Set(sorted.map((m) => m.id));
+    for (const m of extras) {
+      if (sorted.length >= limit) break;
+      if (!have.has(m.id)) {
+        sorted.push(m);
+        have.add(m.id);
+      }
+    }
+  }
+
+  return sorted;
 }
 
 export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {

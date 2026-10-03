@@ -3,7 +3,7 @@ export const revalidate = 21600; // 6 hours ISR — minimizes Supabase egress (w
 import Link from 'next/link';
 import { Suspense, cache } from 'react';
 import { TrendingUp, Clock, ChevronRight, Flame, Sparkles, CheckCircle2, Gift, ShieldCheck } from 'lucide-react';
-import { getLatestManga, getPopularManga, getFeaturedManga, getTopThisWeek, getTopToday, getNewTitles, getCompletedManga, getRekomByType } from '@/lib/api/manga';
+import { getLatestManga, getPopularManga, getFeaturedManga, getTopThisWeek, getTopToday, getNewTitles, getCompletedManga, getRekomByType, isDeadCdnUrl } from '@/lib/api/manga';
 import { MangaGrid } from '@/components/manga/MangaGrid';
 import { PopularTabs } from '@/components/manga/PopularTabs';
 import { RekomTabs } from '@/components/manga/RekomTabs';
@@ -131,9 +131,13 @@ async function HeroSection() {
     getLatestCached(12).catch(() => []),
   ]);
 
-  const carouselItems = latest.map((m: { id: string; slug: string; title: string; cover_url?: string | null }) => ({
-    id: m.id, slug: m.slug, title: m.title, cover_url: m.cover_url ?? null,
-  }));
+  // Hero covers must actually load — drop entries whose cover points at a dead
+  // legacy CDN (null covers are fine, the carousel renders a placeholder).
+  const carouselItems = latest
+    .filter((m: { cover_url?: string | null }) => !m.cover_url || !isDeadCdnUrl(m.cover_url))
+    .map((m: { id: string; slug: string; title: string; cover_url?: string | null }) => ({
+      id: m.id, slug: m.slug, title: m.title, cover_url: m.cover_url ?? null,
+    }));
 
   const desktopHero = featured.length > 0
     ? <FeaturedHero items={featured as Parameters<typeof FeaturedHero>[0]['items']} />
