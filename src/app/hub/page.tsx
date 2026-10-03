@@ -31,9 +31,11 @@ export default async function HubPage() {
   // Parallel: settings + trending manga + counts
   const [{ data: settings }, { data: trendingManga }, { count: mangaCount }, { count: chapterCount }] = await Promise.all([
     supabase.from('site_settings').select('key, value').in('key', ['bio_tagline', 'bio_description', 'reader_domain']),
-    supabase.from('manga').select('slug, title, cover_url').is('deleted_at', null).order('updated_at', { ascending: false }).limit(6),
+    // Public bio page — guests only: never surface mature covers here
+    supabase.from('manga').select('slug, title, cover_url').is('deleted_at', null).neq('content_rating', 'mature').order('updated_at', { ascending: false }).limit(6),
     supabase.from('manga').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-    supabase.from('chapters').select('id', { count: 'exact', head: true }),
+    // Count only live chapters — soft-deleted (dead source) rows must not inflate the stat
+    supabase.from('chapters').select('id', { count: 'exact', head: true }).is('deleted_at', null),
   ]);
 
   const get = (key: string) => {

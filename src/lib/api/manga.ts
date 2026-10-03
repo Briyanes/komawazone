@@ -234,14 +234,18 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
   return (data ?? []) as unknown as MangaListItem[];
 }
 
-export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
+export async function getNewTitles(limit = 12, opts?: { includeMature?: boolean }): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  const q = supabase
+  let q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at')
-    .is('deleted_at', null)
-    .order('created_at', { ascending: false })
-    .limit(limit);
+    .is('deleted_at', null);
+  // Hide 18+ titles from guests and non-VIP users — admins/VIP still see all
+  // (no NULL content_rating rows in DB, so neq is safe).
+  if (!opts?.includeMature && !(await isMatureAllowed(supabase))) {
+    q = q.neq('content_rating', 'mature');
+  }
+  q = q.order('created_at', { ascending: false }).limit(limit);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
