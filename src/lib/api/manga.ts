@@ -1,4 +1,3 @@
-import { cache } from 'react';
 import { createClient } from '@/lib/supabase/server';
 import { createAdminClient } from '@/lib/supabase/admin';
 
@@ -107,22 +106,15 @@ async function isMatureAllowed(supabase: SupabaseServerClient): Promise<boolean>
   return !!exp && new Date(exp) > new Date();
 }
 
-// Request-scoped memoization — every listing query below checks this without
-// repeating the auth round-trip within a single render.
-const isMatureAllowedCached = cache(isMatureAllowed);
-
 export async function getFeaturedManga(limit = 5): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, banner_url, status, rating, views, description, genres, content_rating, updated_at')
     .is('deleted_at', null)
-    .eq('is_featured', true);
-  // Hide 18+ from guests & non-VIP (admins/VIP still see everything)
-  if (!(await isMatureAllowedCached(supabase))) {
-    q = q.neq('content_rating', 'mature');
-  }
-  q = q.order('updated_at', { ascending: false }).limit(limit);
+    .eq('is_featured', true)
+    .order('updated_at', { ascending: false })
+    .limit(limit);
   const { data, error } = await q;
   if (error) return [];
   return (data ?? []) as unknown as MangaListItem[];
@@ -178,18 +170,12 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
     return (data ?? []) as unknown as MangaListItem[];
   }
 
-  // Step 2: Fetch manga data (NO nested chapters join — saves massive egress).
-  // Mature titles are dropped here for guests/non-VIP (chapters RLS does NOT
-  // hide them) — the getNewTitles top-up below refills the list when short.
-  let mangaQuery = supabase
+  // Step 2: Fetch manga data (NO nested chapters join — saves massive egress)
+  const { data: mangaData, error } = await supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at')
     .in('id', orderedIds)
     .is('deleted_at', null);
-  if (!(await isMatureAllowedCached(supabase))) {
-    mangaQuery = mangaQuery.neq('content_rating', 'mature');
-  }
-  const { data: mangaData, error } = await mangaQuery;
 
   if (error) throw new Error(error.message);
 
@@ -218,15 +204,12 @@ export async function getLatestManga(limit = 12): Promise<MangaListItem[]> {
 
 export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at')
-    .is('deleted_at', null);
-  // Hide 18+ from guests & non-VIP
-  if (!(await isMatureAllowedCached(supabase))) {
-    q = q.neq('content_rating', 'mature');
-  }
-  q = q.order('views', { ascending: false }).limit(limit);
+    .is('deleted_at', null)
+    .order('views', { ascending: false })
+    .limit(limit);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -235,15 +218,13 @@ export async function getPopularManga(limit = 12): Promise<MangaListItem[]> {
 export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
   const since = new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at')
-    .is('deleted_at', null);
-  // Hide 18+ from guests & non-VIP
-  if (!(await isMatureAllowedCached(supabase))) {
-    q = q.neq('content_rating', 'mature');
-  }
-  q = q.gte('updated_at', since).order('views', { ascending: false }).limit(limit);
+    .is('deleted_at', null)
+    .gte('updated_at', since)
+    .order('views', { ascending: false })
+    .limit(limit);
   const { data, error } = await q;
   if (error || !data || data.length === 0) {
     // Return empty instead of fallback to getPopularManga()
@@ -253,18 +234,14 @@ export async function getTopThisWeek(limit = 12): Promise<MangaListItem[]> {
   return (data ?? []) as unknown as MangaListItem[];
 }
 
-export async function getNewTitles(limit = 12, opts?: { includeMature?: boolean }): Promise<MangaListItem[]> {
+export async function getNewTitles(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at')
-    .is('deleted_at', null);
-  // Hide 18+ titles from guests and non-VIP users — admins/VIP still see all
-  // (no NULL content_rating rows in DB, so neq is safe).
-  if (!opts?.includeMature && !(await isMatureAllowedCached(supabase))) {
-    q = q.neq('content_rating', 'mature');
-  }
-  q = q.order('created_at', { ascending: false }).limit(limit);
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(limit);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -272,16 +249,13 @@ export async function getNewTitles(limit = 12, opts?: { includeMature?: boolean 
 
 export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at')
     .is('deleted_at', null)
-    .eq('status', 'COMPLETED');
-  // Hide 18+ from guests & non-VIP
-  if (!(await isMatureAllowedCached(supabase))) {
-    q = q.neq('content_rating', 'mature');
-  }
-  q = q.order('rating', { ascending: false }).limit(limit);
+    .eq('status', 'COMPLETED')
+    .order('rating', { ascending: false })
+    .limit(limit);
   const { data, error } = await q;
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as MangaListItem[];
@@ -290,15 +264,13 @@ export async function getCompletedManga(limit = 12): Promise<MangaListItem[]> {
 export async function getTopToday(limit = 12): Promise<MangaListItem[]> {
   const supabase = await createClient();
   const since = new Date(Date.now() - 24 * 3600 * 1000).toISOString();
-  let q = supabase
+  const q = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at')
-    .is('deleted_at', null);
-  // Hide 18+ from guests & non-VIP
-  if (!(await isMatureAllowedCached(supabase))) {
-    q = q.neq('content_rating', 'mature');
-  }
-  q = q.gte('updated_at', since).order('views', { ascending: false }).limit(limit);
+    .is('deleted_at', null)
+    .gte('updated_at', since)
+    .order('views', { ascending: false })
+    .limit(limit);
   const { data, error } = await q;
   if (error || !data || data.length === 0) return [];
   return (data ?? []) as unknown as MangaListItem[];
@@ -309,12 +281,9 @@ export async function getRekomByType(type: 'MANGA' | 'MANHWA' | 'MANHUA' | null,
   let query = supabase
     .from('manga')
     .select('id, slug, title, cover_url, status, type, rating, views, content_rating, updated_at')
-    .is('deleted_at', null);
-  // Hide 18+ from guests & non-VIP
-  if (!(await isMatureAllowedCached(supabase))) {
-    query = query.neq('content_rating', 'mature');
-  }
-  query = query.order('rating', { ascending: false }).limit(limit);
+    .is('deleted_at', null)
+    .order('rating', { ascending: false })
+    .limit(limit);
   if (type) query = query.eq('type', type);
   const { data, error } = await query;
   if (error) throw new Error(error.message);
