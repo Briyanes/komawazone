@@ -26,7 +26,7 @@ async function getStats(supabase: ServiceClient) {
   // Fallback: 4 separate count/head queries (no fetch-all)
   const [mangaRes, chapterRes, userRes, viewsRes] = await Promise.all([
     supabase.from('manga').select('id', { count: 'exact', head: true }).is('deleted_at', null),
-    supabase.from('chapters').select('id', { count: 'exact', head: true }),
+    supabase.from('chapters').select('id', { count: 'exact', head: true }).is('deleted_at', null),
     supabase.from('users').select('id', { count: 'exact', head: true }),
     supabase.from('manga').select('views', { count: 'exact', head: true }).is('deleted_at', null),
   ]);
@@ -68,6 +68,7 @@ async function getRecentChapters(supabase: ServiceClient) {
   const { data } = await supabase
     .from('chapters')
     .select('id, number, title, release_date, manga(title, slug)')
+    .is('deleted_at', null)
     .order('release_date', { ascending: false })
     .limit(5);
   return data ?? [];

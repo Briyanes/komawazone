@@ -4,7 +4,36 @@ import { z } from 'zod';
 import type { Database } from '@/types/database';
 
 import { createServiceClient } from '@/lib/supabase/service';
+import { getR2ObjectText, putR2ObjectText, deleteObjectFromR2 } from '@/lib/storage/r2';
 type ChapterUpdate = Database['public']['Tables']['chapters']['Update'];
+
+// ── Manifest chapter (R2-first) ─────────────────────────────────────────────
+// Daftar gambar chapter disimpan sebagai JSON di R2 (manifests/ch/<id>.json)
+// sejak tabel chapter_images dipurga. ID gambar di API = "<chapterId>:<n>"
+// (format sintetis yang sama dengan halaman editor).
+type ManifestImage = { n: number; u: string; w?: number; h?: number };
+
+async function readChapterManifest(chapterId: string): Promise<ManifestImage[]> {
+  try {
+    const text = await getR2ObjectText(`manifests/ch/${chapterId}.json`);
+    if (!text) return [];
+    const m = JSON.parse(text) as { images?: ManifestImage[] };
+    return Array.isArray(m.images) ? m.images.sort((a, b) => a.n - b.n) : [];
+  } catch {
+    return [];
+  }
+}
+
+async function writeChapterManifest(chapterId: string, images: ManifestImage[]): Promise<void> {
+  await putR2ObjectText(`manifests/ch/${chapterId}.json`, JSON.stringify({ v: 1, images }));
+}
+
+// Aturan thumbnail proyek: gambar ke-5 DARI BELAKANG, fallback pertama
+function thumbFromImages(images: ManifestImage[]): string | null {
+  if (!images.length) return null;
+  const idx = images.length >= 5 ? images.length - 5 : 0;
+  return images[idx].u;
+}
 
 const ChapterUpdateSchema = z.object({
   number: z.number().min(0).optional(),
@@ -23,14 +52,15 @@ const ImageAddSchema = z.object({
   })).min(1),
 });
 
+// image_id boleh ID sintetis manifest ("<chapterId>:<n>") — bukan UUID
 const ImageDeleteSchema = z.object({
   action: z.literal('delete_image'),
-  image_id: z.string().uuid(),
+  image_id: z.string().min(1),
 });
 
 const ImageReorderSchema = z.object({
   action: z.literal('reorder_images'),
-  order: z.array(z.object({ id: z.string().uuid(), number: z.number().int().min(1) })),
+  order: z.array(z.object({ id: z.string().min(1), number: z.number().int().min(1) })),
 });
 
 async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
@@ -41,6 +71,14 @@ async function assertAdmin(supabase: Awaited<ReturnType<typeof createClient>>) {
     .from('users').select('role').eq('id', user.id).single();
   if (profile?.role !== 'ADMIN') return null;
   return user;
+}
+
+// Ekstrak nomor halaman dari ID gambar sintetis "<chapterId>:<n>"
+function pageNumberOf(imageId: string, chapterId: string): number | null {
+  const prefix = `${chapterId}:`;
+  if (!imageId.startsWith(prefix)) return null;
+  const n = Number(imageId.slice(prefix.length));
+  return Number.isFinite(n) ? n : null;
 }
 
 interface Params { params: Promise<{ id: string }> }
@@ -59,13 +97,27 @@ export async function GET(_req: NextRequest, { params }: Params) {
   if (error || !chapter)
     return NextResponse.json({ status: 'error', error: 'Not found' }, { status: 404 });
 
-  const { data: images } = await supabase
-    .from('chapter_images')
-    .select('id, number, image_url, width, height')
-    .eq('chapter_id', id)
-    .order('number', { ascending: true });
+  // Sumber gambar: manifest R2 (fallback tabel lama utk chapter pra-migrasi)
+  let manifest = await readChapterManifest(id);
+  if (manifest.length === 0) {
+    const { data: imgs } = await supabase
+      .from('chapter_images')
+      .select('id, number, image_url, width, height')
+      .eq('chapter_id', id)
+      .order('number', { ascending: true });
+    if (imgs && imgs.length > 0) {
+      manifest = imgs.map((im) => ({ n: im.number, u: im.image_url, w: im.width ?? undefined, h: im.height ?? undefined }));
+    }
+  }
 
-  return NextResponse.json({ status: 'success', data: { ...chapter, images: images ?? [] } });
+  const images = manifest.map((im) => ({
+    id: `${id}:${im.n}`,
+    number: im.n,
+    image_url: im.u,
+    width: im.w ?? 0,
+    height: im.h ?? 0,
+  }));
+  return NextResponse.json({ status: 'success', data: { ...chapter, images } });
 }
 
 export async function PATCH(req: NextRequest, { params }: Params) {
@@ -84,35 +136,51 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     if (action === 'add_images') {
       const p = ImageAddSchema.safeParse(body);
       if (!p.success) return NextResponse.json({ status: 'error', error: p.error.flatten() }, { status: 400 });
-      const rows = p.data.images.map(img => ({
-        chapter_id: id,
-        image_url: img.image_url,
-        number: img.number,
-        width: img.width ?? 0,
-        height: img.height ?? 0,
-      }));
-      const { error } = await supabase.from('chapter_images').insert(rows);
-      if (error) return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
-      return NextResponse.json({ status: 'success' });
+      const images = await readChapterManifest(id);
+      // Nomor baru = max+1, max+2, ... (hindari tabrakan dengan nomor klien)
+      let next = images.reduce((m, im) => Math.max(m, im.n), 0);
+      for (const img of p.data.images) {
+        images.push({ n: ++next, u: img.image_url, w: img.width ?? 0, h: img.height ?? 0 });
+      }
+      images.sort((a, b) => a.n - b.n);
+      await writeChapterManifest(id, images);
+      await supabase.from('chapters').update({ thumbnail_url: thumbFromImages(images) }).eq('id', id);
+      return NextResponse.json({ status: 'success', count: images.length });
     }
 
     if (action === 'delete_image') {
       const p = ImageDeleteSchema.safeParse(body);
       if (!p.success) return NextResponse.json({ status: 'error', error: p.error.flatten() }, { status: 400 });
-      const { error } = await supabase.from('chapter_images').delete().eq('id', p.data.image_id);
-      if (error) return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });
-      return NextResponse.json({ status: 'success' });
+      const num = pageNumberOf(p.data.image_id, id);
+      if (num === null) {
+        // ID legacy (UUID baris lama) — hapus dari tabel lama bila masih ada
+        await supabase.from('chapter_images').delete().eq('id', p.data.image_id);
+        return NextResponse.json({ status: 'success' });
+      }
+      const images = (await readChapterManifest(id)).filter((im) => im.n !== num);
+      // Rapikan penomoran berurutan 1..n
+      const renumbered = images.sort((a, b) => a.n - b.n).map((im, i) => ({ ...im, n: i + 1 }));
+      await writeChapterManifest(id, renumbered);
+      await supabase.from('chapters').update({ thumbnail_url: thumbFromImages(renumbered) }).eq('id', id);
+      return NextResponse.json({ status: 'success', count: renumbered.length });
     }
 
     if (action === 'reorder_images') {
       const p = ImageReorderSchema.safeParse(body);
       if (!p.success) return NextResponse.json({ status: 'error', error: p.error.flatten() }, { status: 400 });
-      // Use raw SQL-style update via rpc or update each row — chapter_images.number field
-      await Promise.all(
-        p.data.order.map(({ id: imgId, number: num }) =>
-          supabase.from('chapter_images').update({ number: num }).eq('id', imgId)
-        )
-      );
+      const images = await readChapterManifest(id);
+      const byN = new Map(images.map((im) => [im.n, im]));
+      const reordered: ManifestImage[] = [];
+      for (const item of p.data.order) {
+        const src = byN.get(pageNumberOf(item.id, id) ?? -1);
+        if (src) reordered.push({ ...src, n: item.number });
+      }
+      // Sisipkan yang tidak disebut dalam urutan baru di ekor
+      for (const im of images) {
+        if (!reordered.some((r) => r.u === im.u)) reordered.push(im);
+      }
+      await writeChapterManifest(id, reordered);
+      await supabase.from('chapters').update({ thumbnail_url: thumbFromImages(reordered) }).eq('id', id);
       return NextResponse.json({ status: 'success' });
     }
   }
@@ -143,7 +211,8 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   if (!await assertAdmin(supabase))
     return NextResponse.json({ status: 'error', error: 'Forbidden' }, { status: 403 });
 
-  // Delete images first (storage cleanup should be done client-side if needed)
+  // Bersihkan manifest R2 juga (hindari orphan), lalu hapus chapter
+  await deleteObjectFromR2(`manifests/ch/${id}.json`);
   await supabase.from('chapter_images').delete().eq('chapter_id', id);
   const { error } = await supabase.from('chapters').delete().eq('id', id);
   if (error) return NextResponse.json({ status: 'error', error: error.message }, { status: 500 });

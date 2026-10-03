@@ -69,6 +69,40 @@ function inferExtension(fileName: string, contentType: string): string {
   return MIME_EXTENSIONS[contentType] ?? 'bin';
 }
 
+// ── Manifest helpers (R2-first: daftar gambar chapter = JSON di R2) ─────────
+export async function getR2ObjectText(key: string): Promise<string | null> {
+  const config = getR2Config();
+  const client = createR2Client(config);
+  try {
+    const { GetObjectCommand } = await import('@aws-sdk/client-s3');
+    const res = await client.send(new GetObjectCommand({ Bucket: config.bucket, Key: key }));
+    if (!res.Body) return null;
+    return await res.Body.transformToString('utf-8');
+  } catch (e: unknown) {
+    const code = (e as { name?: string }).name ?? '';
+    if (code === 'NoSuchKey') return null;
+    throw e;
+  }
+}
+
+export async function putR2ObjectText(
+  key: string,
+  body: string,
+  contentType = 'application/json',
+  cacheControl = 'public, max-age=300',
+): Promise<void> {
+  const config = getR2Config();
+  const client = createR2Client(config);
+  const { PutObjectCommand } = await import('@aws-sdk/client-s3');
+  await client.send(new PutObjectCommand({
+    Bucket: config.bucket,
+    Key: key,
+    Body: body,
+    ContentType: contentType,
+    CacheControl: cacheControl,
+  }));
+}
+
 export function buildR2PublicUrl(key: string): string {
   // CRITICAL: Cloudflare R2 public dev URLs (pub-*.r2.dev) are UNRELIABLE and
   // frequently return 403/404. The S3 API endpoint is NOT publicly accessible.

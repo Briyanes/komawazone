@@ -31,7 +31,6 @@ const breadcrumbMap: Record<string, string> = {
   '/admin/voucher-codes': 'Voucher Codes',
   '/admin/stats': 'Analytics',
   '/admin/settings': 'Settings',
-  '/admin/storage-backfill': 'Storage Backfill',
 };
 
 export function AdminHeader({ profile, onMenuClick }: AdminHeaderProps) {

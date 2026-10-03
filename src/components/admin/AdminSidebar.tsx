@@ -43,8 +43,6 @@ const navGroups = [
     label: 'System',
     items: [
       { href: '/admin/settings', icon: Settings, label: 'Settings' },
-      { href: '/admin/storage-backfill', icon: HardDrive, label: 'Storage Backfill' },
-      { href: '/admin/thumbnails', icon: Image, label: 'Thumbnail Audit' },
       { href: '/admin/activity-logs', icon: ScrollText, label: 'Activity Logs' },
     ],
   },

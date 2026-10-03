@@ -949,6 +949,10 @@ export interface Database {
         Args: { manga_id: string };
         Returns: undefined;
       };
+      increment_chapter_views: {
+        Args: { p_chapter_id: string };
+        Returns: undefined;
+      };
     };
     Enums: {
       manga_status: 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED';

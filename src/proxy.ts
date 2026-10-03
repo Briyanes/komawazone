@@ -14,6 +14,7 @@ const RATE_LIMIT_PATHS = [
   '/api/v1/auth/',
   '/api/v1/user/',
   '/api/v1/vip/',
+  '/api/v1/chapters/', // view counter — cegah spam inflasi views oleh bot
 ];
 
 interface RateLimitEntry { count: number; resetAt: number; }
