@@ -49,23 +49,29 @@ ${hubPages
   // ── Reader domain (olluq.xyz): sitemap penuh ──
   const supabase = await createClient();
 
-  const [{ data: mangaList }, { data: genreRows }, { data: chapterRows }] = await Promise.all([
-    supabase
+  // SEMUA manga aktif, paginasi 1000/halaman (bukan cuma 1000 terbaru —
+  // 70% katalog pernah tertinggal di luar sitemap). Entri chapter TIDAK
+  // dimasukkan: halamannya noindex by design, memasukkannya = sinyal
+  // campur aduk + boros crawl budget.
+  const PAGE_SIZE = 1000;
+  const mangaList: Array<{ slug: string; updated_at: string }> = [];
+  for (let from = 0; ; from += PAGE_SIZE) {
+    const { data: page } = await supabase
       .from('manga')
       .select('slug, updated_at')
       .is('deleted_at', null)
       .order('updated_at', { ascending: false })
-      .limit(1000),
+      .range(from, from + PAGE_SIZE - 1);
+    if (!page || page.length === 0) break;
+    mangaList.push(...(page as Array<{ slug: string; updated_at: string }>));
+    if (page.length < PAGE_SIZE) break;
+  }
+
+  const [{ data: genreRows }] = await Promise.all([
     supabase
       .from('genres')
       .select('slug')
       .order('name'),
-    supabase
-      .from('chapters')
-      .select('id, manga_id, manga:manga!inner(slug), created_at')
-      .is('manga.deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(2000),
   ]);
 
   const staticPages = [
@@ -92,14 +98,7 @@ ${hubPages
     changefreq: 'weekly',
   }));
 
-  const chapterEntries = (chapterRows ?? []).map(c => ({
-    url: `/manga/${(c.manga as unknown as { slug: string })?.slug}/chapter/${c.id}`,
-    priority: '0.5',
-    changefreq: 'monthly',
-    lastmod: new Date(c.created_at).toISOString().split('T')[0],
-  }));
-
-  const allEntries = [...staticPages, ...mangaEntries, ...genreEntries, ...chapterEntries];
+  const allEntries = [...staticPages, ...mangaEntries, ...genreEntries];
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

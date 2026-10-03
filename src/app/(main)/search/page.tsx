@@ -2,7 +2,13 @@ import { Suspense } from 'react';
 import SearchContent from './SearchContent';
 import { MangaCardSkeleton } from '@/components/ui/Skeleton';
 
-export const metadata = { title: 'Cari Manga', description: 'Cari manga dan manhwa berdasarkan genre, status, dan rating.' };
+export const metadata = {
+  title: 'Cari Manga',
+  description: 'Cari manga dan manhwa berdasarkan genre, status, dan rating.',
+  // Halaman hasil pencarian = konten tipis/parameterized — jangan diindex
+  // (standar SEO); link tetap diikuti agar manga/genre tetap ter-crawl.
+  robots: { index: false, follow: true },
+};
 
 export default function SearchPage() {
   return (
