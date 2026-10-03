@@ -275,6 +275,7 @@ export async function getMangaBySlug(slug: string): Promise<MangaWithChapters | 
     .select(`*, chapters(id, number, title, release_date, views, thumbnail_url), uploader:users(username, email)`)
     .eq('slug', slug)
     .is('deleted_at', null)
+    .is('chapters.deleted_at', null) // jangan tampilkan chapter yang di-soft-delete
     .lte('chapters.release_date', new Date().toISOString())
     .single();
 
@@ -364,6 +365,7 @@ export async function getAdjacentChapters(mangaId: string, currentNumber: number
       .from('chapters')
       .select('id, number')
       .eq('manga_id', mangaId)
+      .is('deleted_at', null)
       .lt('number', currentNumber)
       .order('number', { ascending: false })
       .limit(1)
@@ -372,6 +374,7 @@ export async function getAdjacentChapters(mangaId: string, currentNumber: number
       .from('chapters')
       .select('id, number')
       .eq('manga_id', mangaId)
+      .is('deleted_at', null)
       .gt('number', currentNumber)
       .order('number', { ascending: true })
       .limit(1)
@@ -389,6 +392,7 @@ export async function getMangaChapterList(mangaId: string): Promise<Array<{ id: 
     .from('chapters')
     .select('id, number, title')
     .eq('manga_id', mangaId)
+    .is('deleted_at', null)
     .order('number', { ascending: true });
   return (data ?? []) as Array<{ id: string; number: number; title: string | null }>;
 }
