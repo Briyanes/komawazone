@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { rateLimit, RateLimits } from '@/lib/rate-limit';
+import { isMatureAllowed } from '@/lib/api/manga';
 
 const PER_PAGE = 20;
 
@@ -31,14 +32,17 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // All manga (general + mature) visible at search/browse level.
-    // Mature gating is enforced in the reader (preview limit) and MangaCard (18+ badge).
+    // Mature (18+) titles are hidden from guests & non-VIP users — admins/VIP
+    // still see everything. Reader-level gating (3-chapter preview) stays as is.
     // updated_at powers the BARU/HOT badge + time overlay (consistent with homepage).
     let query = supabase
       .from('manga')
       .select('id, slug, title, cover_url, status, rating, views, content_rating, updated_at', { count: 'exact' })
       .is('deleted_at', null)
       .range(from, to);
+
+    const matureAllowed = await isMatureAllowed(supabase);
+    if (!matureAllowed) query = query.neq('content_rating', 'mature');
 
     if (q)              query = query.ilike('title', `%${q}%`);
     if (status)         query = query.eq('status', status as 'ONGOING' | 'COMPLETED' | 'HIATUS' | 'DROPPED');
@@ -72,8 +76,10 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Cache public search results for 60s, allow stale for 300s
-    if (!q && !author) {
+    // Cache public browse results for 60s, allow stale for 300s.
+    // Only the mature-free (guest) variant may be cached publicly — a VIP
+    // response containing 18+ rows must never leak through a shared cache.
+    if (!q && !author && !matureAllowed) {
       response.headers.set('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=300');
     }
     return response;
