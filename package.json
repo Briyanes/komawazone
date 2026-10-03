@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "typecheck": "tsc --noEmit",
+    "backfill:loop": "node scripts/backfill-loop.mjs",
     "migrate:covers": "node scripts/migrate-images-to-r2.mjs --type=covers",
     "migrate:chapters": "node scripts/migrate-images-to-r2.mjs --type=chapters",
     "migrate:all": "node scripts/migrate-images-to-r2.mjs --type=all",

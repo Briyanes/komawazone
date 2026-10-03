@@ -184,7 +184,23 @@ async function fetchCoverViaPage(sourceUrl) {
 }
 
 // ── Pilih chapter yang butuh gambar (terbaru dulu) ────────────────────────
+// MANGA_SLUG: mode terarah — satu manga diprioritaskan penuh (dipakai saat
+// pembaca melaporkan chapter kosong; tidak menunggu rotasi window 300
+// chapter terbaru yang bisa didominasi manga lain).
+const MANGA_SLUG = process.env.MANGA_SLUG || '';
+
 async function selectChapters(limit) {
+  if (MANGA_SLUG) {
+    const m = (await (await REST(`manga?select=id,slug,source_url&slug=eq.${MANGA_SLUG}`)).json()) || [];
+    if (!m.length || !m[0].source_url) {
+      console.log(`[backfill] MANGA_SLUG=${MANGA_SLUG} tidak ditemukan / tanpa source_url`);
+      return [];
+    }
+    const rows = (await (await REST(`chapters?select=id,manga_id,number,created_at&deleted_at=is.null&thumbnail_url=is.null&manga_id=eq.${m[0].id}&order=number.asc&limit=${limit}`)).json()) || [];
+    const origin = new URL(m[0].source_url).origin;
+    return rows.map((c) => ({ id: c.id, number: c.number, slug: m[0].slug, origin }));
+  }
+
   const chapters = await (await REST(`chapters?select=id,manga_id,number,created_at&deleted_at=is.null&order=created_at.desc&limit=300`)).json();
   if (!Array.isArray(chapters) || !chapters.length) return [];
 

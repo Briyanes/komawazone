@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { formatDistanceToNow } from 'date-fns';
-import { Eye, Lock } from 'lucide-react';
+import { Eye, Lock, Clock } from 'lucide-react';
 import { cn } from '@/lib/cn';
 import { proxyImageUrl } from '@/lib/image-proxy';
 
@@ -39,6 +39,9 @@ export function ChapterItem({
   const proxiedThumb = proxyImageUrl(thumbnailUrl);
   const [imgError, setImgError] = useState(false);
   const showThumb = !!proxiedThumb && !imgError;
+  // Chapter belum punya gambar (antrean backfill) — tandai agar pembaca
+  // tidak mengira chapter rusak. thumbnail_url diset worker saat gambar siap.
+  const isProcessing = !isLocked && !thumbnailUrl;
 
   return (
     <Link
@@ -94,6 +97,15 @@ export function ChapterItem({
           <span className="text-xs" style={{ color: 'var(--text-tertiary)' }}>
             {timeAgo}
           </span>
+          {isProcessing && (
+            <span
+              title="Gambar chapter ini masih diproses — coba lagi nanti"
+              className="flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[10px] font-semibold"
+              style={{ background: 'rgba(59,130,246,0.12)', color: '#60a5fa', border: '1px solid rgba(59,130,246,0.25)' }}
+            >
+              <Clock size={9} />Proses
+            </span>
+          )}
           {views !== undefined && views > 0 && (
             <span className="flex items-center gap-0.5 text-xs" style={{ color: 'var(--text-tertiary)' }}>
               <Eye size={11} />
