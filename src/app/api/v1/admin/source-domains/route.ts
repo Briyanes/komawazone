@@ -37,8 +37,8 @@ export async function GET(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ status: 'success', data: data || [] });
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Failed to fetch domains', detail: err.message }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed to fetch domains', detail: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
 
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
           http_status: res.status,
           latency_ms: Date.now() - start,
         });
-      } catch (err: any) {
+      } catch (err) {
         await supabase.from('source_domains').update({
           status: 'down',
           last_check: new Date().toISOString(),
@@ -94,7 +94,7 @@ export async function POST(req: NextRequest) {
           status: 'success',
           domain: domain.domain,
           health: 'down',
-          error: err.message,
+          error: err instanceof Error ? err.message : String(err),
           latency_ms: Date.now() - start,
         });
       }
@@ -123,8 +123,8 @@ export async function POST(req: NextRequest) {
 
     if (insertError) throw insertError;
     return NextResponse.json({ status: 'success', data });
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Failed', detail: err.message }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed', detail: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
 
@@ -138,7 +138,7 @@ export async function PATCH(req: NextRequest) {
     const { id } = body;
     if (!id) return NextResponse.json({ error: 'id required' }, { status: 400 });
 
-    const updates: any = {};
+    const updates: Record<string, unknown> = {};
     if (body.priority !== undefined) updates.priority = body.priority;
     if (body.status !== undefined) updates.status = body.status;
     if (body.requires_cf_bypass !== undefined) updates.requires_cf_bypass = body.requires_cf_bypass;
@@ -157,8 +157,8 @@ export async function PATCH(req: NextRequest) {
 
     if (error) throw error;
     return NextResponse.json({ status: 'success', data });
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Failed', detail: err.message }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed', detail: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }
 
@@ -175,7 +175,7 @@ export async function DELETE(req: NextRequest) {
     if (error) throw error;
 
     return NextResponse.json({ status: 'success', deleted: true });
-  } catch (err: any) {
-    return NextResponse.json({ error: 'Failed', detail: err.message }, { status: 500 });
+  } catch (err) {
+    return NextResponse.json({ error: 'Failed', detail: err instanceof Error ? err.message : String(err) }, { status: 500 });
   }
 }

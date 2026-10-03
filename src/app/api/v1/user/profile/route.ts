@@ -21,11 +21,12 @@ export async function GET() {
 
     // 2. Fetch profile using service role (bypass RLS)
     const serviceClient = createServiceClient();
-    let { data, error } = await serviceClient
+    const { data: profile, error } = await serviceClient
       .from('users')
       .select('id, email, username, avatar_url, bio, role, created_at, vip_expires_at')
       .eq('id', user.id)
       .single();
+    let data = profile;
 
     // Auto-create profile row if trigger missed it
     if (error) {

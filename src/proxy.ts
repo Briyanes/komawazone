@@ -82,7 +82,13 @@ function logSuspiciousActivity(
   });
 }
 
-export async function middleware(request: NextRequest) {
+/**
+ * Next.js Proxy (dulu "middleware" — konvensi deprecated di Next 16,
+ * lihat node_modules/next/dist/docs/.../proxy.md). Berjalan sebelum request
+ * selesai: rate limit, honeypot, redirect multi-domain, rewrite hub,
+ * hotlink protection /api/r2/image/, refresh sesi auth, security headers.
+ */
+export async function proxy(request: NextRequest) {
   const host = request.headers.get('host') ?? '';
   const { pathname } = request.nextUrl;
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
