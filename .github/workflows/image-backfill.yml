@@ -21,12 +21,11 @@ on:
       chapters:
         description: 'Jumlah manga tanpa chapter yang diimport daftar chapternya (0=off)'
         default: '3'
-  # Diaktifkan 2026-10-01 — uji pertama lolos di runner GH (Cloudflare passed).
-  # 6×/hari tiap 4 jam (00:30/04:30/08:30/12:30/16:30/20:30 WIB) + 2 lane
-  # paralel: backlog gambar ±7.4k chapter (±190-230/hari → tuntas ±5 minggu);
-  # repo public = menit Actions gratis.
+  # 12x/hari tiap 2 jam sejak 2026-10-04 (mode GitHub-only, laptop bebas):
+  # backlog ±8.7k chapter → ±360/hari (12 run × 30) → tuntas ±3,5-4 minggu.
+  # Setelah backlog habis, turunkan kembali ke 6x/hari ('30 */4 * * *').
   schedule:
-    - cron: '30 */4 * * *'
+    - cron: '30 */2 * * *'
 
 jobs:
   backfill:

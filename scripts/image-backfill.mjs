@@ -201,13 +201,38 @@ async function selectChapters(limit) {
     return rows.map((c) => ({ id: c.id, number: c.number, slug: m[0].slug, origin }));
   }
 
+  // Helper: id→manga (slug + source_url) untuk sekelompok chapter
+  const mangaMapFor = async (rows) => {
+    const ids = [...new Set(rows.map((c) => c.manga_id))];
+    if (!ids.length) return new Map();
+    const mangaRows = await (await REST(`manga?select=id,slug,source_url&id=in.(${ids.join(',')})`)).json();
+    return new Map((mangaRows || []).map((m) => [m.id, m]));
+  };
+
+  // ── Prioritas 1: backlog "Proses" — chapter TANPA gambar sama sekali ──────
+  // thumbnail_url IS NULL, APAPUN umurnya. Tanpa pool ini worker hanya memindai
+  // 300 chapter terbaru → backlog lama (ribuan) tak pernah tergarap, dan
+  // chapter era-manifest (tanpa baris chapter_images) terproses ulang tiap run.
+  const nullRows = (await (await REST(`chapters?select=id,manga_id,number&deleted_at=is.null&thumbnail_url=is.null&order=created_at.desc&limit=${limit * 3}`)).json()) || [];
+  const result = [];
+  if (Array.isArray(nullRows) && nullRows.length) {
+    const mangaById = await mangaMapFor(nullRows);
+    for (const c of nullRows) {
+      const manga = mangaById.get(c.manga_id);
+      if (!manga?.slug || !manga.source_url || !manga.source_url.includes(HOST_FILTER)) continue;
+      result.push({ id: c.id, number: c.number, slug: manga.slug, origin: new URL(manga.source_url).origin });
+      if (result.length >= limit) return result;
+    }
+  }
+
+  // ── Prioritas 2 (pengisi sisa kuota): chapter terbaru yang masih memakai ──
+  // URL sumber (rehost ke R2). Catatan: imgs.length===0 TIDAK lagi dianggap
+  // butuh di pool ini — chapter manifest-era memang tanpa baris chapter_images.
   const chapters = await (await REST(`chapters?select=id,manga_id,number,created_at&deleted_at=is.null&order=created_at.desc&limit=300`)).json();
-  if (!Array.isArray(chapters) || !chapters.length) return [];
+  if (!Array.isArray(chapters) || !chapters.length) return result;
 
-  const mangaIds = [...new Set(chapters.map((c) => c.manga_id))];
-  const mangaRows = await (await REST(`manga?select=id,slug,source_url&id=in.(${mangaIds.join(',')})`)).json();
-  const mangaById = new Map((mangaRows || []).map((m) => [m.id, m]));
-
+  const done = new Set(result.map((t) => t.id));
+  const mangaById = await mangaMapFor(chapters);
   const chapterIds = chapters.map((c) => c.id);
   const imgsByChapter = new Map();
   for (let i = 0; i < chapterIds.length; i += 200) {
@@ -219,15 +244,15 @@ async function selectChapters(limit) {
     }
   }
 
-  const result = [];
   for (const c of chapters) {
+    if (result.length >= limit) break;
+    if (done.has(c.id)) continue;
     const manga = mangaById.get(c.manga_id);
     if (!manga?.slug || !manga.source_url || !manga.source_url.includes(HOST_FILTER)) continue;
     const imgs = imgsByChapter.get(c.id) || [];
-    const needs = imgs.length === 0 || imgs.some((im) => !isR2(im.image_url));
+    const needs = imgs.length > 0 && imgs.some((im) => !isR2(im.image_url)); // punya baris tapi masih URL sumber
     if (needs) {
       result.push({ id: c.id, number: c.number, slug: manga.slug, origin: new URL(manga.source_url).origin });
-      if (result.length >= limit) break;
     }
   }
   return result;
