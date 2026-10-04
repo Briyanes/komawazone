@@ -21,7 +21,12 @@ on:
       chapters:
         description: 'Jumlah manga tanpa chapter yang diimport daftar chapternya (0=off)'
         default: '3'
+      skip_slugs:
+        description: 'Slug manga yang di-skip dulu, pisah koma (kosong = tidak skip)'
+        default: 'one-piece'
   # 12x/hari tiap 2 jam sejak 2026-10-04 (mode GitHub-only, laptop bebas):
+  # one-piece di-skip dulu (backlog 1k+ chapter) via SKIP_SLUGS — resume kapan
+  # saja dengan menjalankan manual & mengosongkan skip_slugs.
   # backlog ±8.7k chapter → ±360/hari (12 run × 30) → tuntas ±3,5-4 minggu.
   # Setelah backlog habis, turunkan kembali ke 6x/hari ('30 */4 * * *').
   schedule:
@@ -60,3 +65,4 @@ jobs:
           LANES: ${{ inputs.lanes || '2' }}
           COVER_LIMIT: ${{ inputs.covers || '10' }}
           CHAPTERS_LIMIT: ${{ inputs.chapters || '3' }}
+          SKIP_SLUGS: ${{ inputs.skip_slugs || 'one-piece' }}

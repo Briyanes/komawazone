@@ -201,6 +201,19 @@ async function selectChapters(limit) {
     return rows.map((c) => ({ id: c.id, number: c.number, slug: m[0].slug, origin }));
   }
 
+  // ── SKIP_SLUGS: manga yang dilewati dulu (mis. backlog raksasa di-defer).  ──
+  // Dipakai di kedua pool mode umum; mode MANGA_SLUG tetap menang (operator
+  // eksplisit). Kosong/tak ditemukan → filter tidak ditempel (no-op).
+  const SKIP_SLUGS = (process.env.SKIP_SLUGS || '').split(',').map((s) => s.trim()).filter(Boolean);
+  let skipFilter = '';
+  if (SKIP_SLUGS.length) {
+    const skipRows = (await (await REST(`manga?select=id,slug&slug=in.(${SKIP_SLUGS.join(',')})`)).json()) || [];
+    if (skipRows.length) {
+      skipFilter = `&manga_id=not.in.(${skipRows.map((r) => r.id).join(',')})`;
+      console.log(`[backfill] skip: ${skipRows.map((r) => r.slug).join(', ')} (${skipRows.length} manga)`);
+    }
+  }
+
   // Helper: id→manga (slug + source_url) untuk sekelompok chapter
   const mangaMapFor = async (rows) => {
     const ids = [...new Set(rows.map((c) => c.manga_id))];
@@ -213,7 +226,7 @@ async function selectChapters(limit) {
   // thumbnail_url IS NULL, APAPUN umurnya. Tanpa pool ini worker hanya memindai
   // 300 chapter terbaru → backlog lama (ribuan) tak pernah tergarap, dan
   // chapter era-manifest (tanpa baris chapter_images) terproses ulang tiap run.
-  const nullRows = (await (await REST(`chapters?select=id,manga_id,number&deleted_at=is.null&thumbnail_url=is.null&order=created_at.desc&limit=${limit * 3}`)).json()) || [];
+  const nullRows = (await (await REST(`chapters?select=id,manga_id,number&deleted_at=is.null&thumbnail_url=is.null${skipFilter}&order=created_at.desc&limit=${limit * 3}`)).json()) || [];
   const result = [];
   if (Array.isArray(nullRows) && nullRows.length) {
     const mangaById = await mangaMapFor(nullRows);
@@ -228,7 +241,7 @@ async function selectChapters(limit) {
   // ── Prioritas 2 (pengisi sisa kuota): chapter terbaru yang masih memakai ──
   // URL sumber (rehost ke R2). Catatan: imgs.length===0 TIDAK lagi dianggap
   // butuh di pool ini — chapter manifest-era memang tanpa baris chapter_images.
-  const chapters = await (await REST(`chapters?select=id,manga_id,number,created_at&deleted_at=is.null&order=created_at.desc&limit=300`)).json();
+  const chapters = await (await REST(`chapters?select=id,manga_id,number,created_at&deleted_at=is.null${skipFilter}&order=created_at.desc&limit=300`)).json();
   if (!Array.isArray(chapters) || !chapters.length) return result;
 
   const done = new Set(result.map((t) => t.id));
