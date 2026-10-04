@@ -29,8 +29,10 @@ on:
   # saja dengan menjalankan manual & mengosongkan skip_slugs.
   # backlog ±8.7k chapter → ±360/hari (12 run × 30) → tuntas ±3,5-4 minggu.
   # Setelah backlog habis, turunkan kembali ke 6x/hari ('30 */4 * * *').
+  # Menit :47 — menghindari slot padat GitHub (:00/:30) yang sering di-skip
+  # saat beban tinggi; run terjadwal jadi jauh lebih andal tereksekusi.
   schedule:
-    - cron: '30 */2 * * *'
+    - cron: '47 */2 * * *'
 
 jobs:
   backfill:
