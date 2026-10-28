@@ -8,7 +8,7 @@ on:
     inputs:
       limit:
         description: 'Jumlah chapter per run'
-        default: '30'
+        default: '120'
       minutes:
         description: 'Time-box (menit)'
         default: '25'
@@ -27,7 +27,9 @@ on:
   # 12x/hari tiap 2 jam sejak 2026-10-04 (mode GitHub-only, laptop bebas):
   # one-piece di-skip dulu (backlog 1k+ chapter) via SKIP_SLUGS — resume kapan
   # saja dengan menjalankan manual & mengosongkan skip_slugs.
-  # backlog ±8.7k chapter → ±360/hari (12 run × 30) → tuntas ±3,5-4 minggu.
+  # 2026-10-28: backlog 5,8k; GitHub efektif eksekusi ~4-5/12 slot per hari.
+  # Run kini cepat (30 ch ≈ 5-9 mnt dari budget 25 mnt) → LIMIT 30→120
+  # → efektif ~400-500 ch/hari → backlog tuntas ±2 minggu lagi.
   # Setelah backlog habis, turunkan kembali ke 6x/hari ('30 */4 * * *').
   # Menit :47 — menghindari slot padat GitHub (:00/:30) yang sering di-skip
   # saat beban tinggi; run terjadwal jadi jauh lebih andal tereksekusi.
@@ -62,7 +64,7 @@ jobs:
           R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           R2_BUCKET: ${{ secrets.R2_BUCKET }}
           NEXT_PUBLIC_R2_PUBLIC_BASE_URL: ${{ secrets.R2_PUBLIC_BASE_URL }}
-          LIMIT: ${{ inputs.limit || '30' }}
+          LIMIT: ${{ inputs.limit || '120' }}
           MINUTES: ${{ inputs.minutes || '25' }}
           LANES: ${{ inputs.lanes || '2' }}
           COVER_LIMIT: ${{ inputs.covers || '10' }}
